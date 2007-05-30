@@ -1,4 +1,4 @@
-package squickcheck
+package scalacheck
 
 
 // Generation //////////////////////////////////////////////////////////////////
@@ -135,6 +135,9 @@ case class Testable(prop: Gen[Result]) {
   def apply(prms: GenPrms): Option[Result] = prop.get(prms)
 }
 
+/** Test parameters */
+case class TestPrms(maxSuccessTests: Int, maxTryTests: Int, maxSize: Int)
+
 object Test {
 
   import Gen.{arbitrary, value, fail}
@@ -148,16 +151,42 @@ object Test {
 
   // Testing functions
 
-  def quickCheck(t: Testable) = {
-    val prms = GenPrms(10, StdRand)
-    t(prms) match {
-      case None => Console.println("Test UNDECIDABLE")
-      case Some(r) => if (r.ok) Console.println("Test SUCCESS")
-        else {
-          Console.println("Test FAILURE")
-          Console.println(r.args)
-        }
+  val defaultPrms = TestPrms(100,500,100)
+
+  def check(t: Testable): Unit = check(defaultPrms,t)
+
+  def check(prms: TestPrms, t: Testable): Unit = {
+    val sizeStep = prms.maxSize / prms.maxSuccessTests
+    var size = 0
+    var successCount = 0
+    var totalCount = 0
+    var failed = false
+    var failing: Result = null
+
+    while(!failed && totalCount < prms.maxTryTests &&
+          successCount < prms.maxSuccessTests)
+    {
+      val p = GenPrms(size, StdRand)
+      t(p) match {
+        case Some(r) =>
+          if(r.ok) successCount = successCount + 1
+          else { 
+            failed = true
+            failing = r
+          }
+        case None => ()
+      }
+      totalCount = totalCount + 1
+      size = size + sizeStep
     }
+
+    if(failed) {
+      Console.println("Test FAILURE:")
+      Console.println(failing.args)
+    } 
+    else if(successCount < prms.maxSuccessTests)
+      Console.println("Exhausted after " + successCount + " succesful tests and " + (totalCount-successCount) + " undecidable tests")
+    else Console.println("Passed " + successCount + " tests (" + (totalCount-successCount) + " undecidable tests)")
   }
 
 
@@ -233,11 +262,11 @@ object TestIt extends Application {
   Console.println(x.get(prms))
 
 
-  val pf1 = (n:Int) => (n == 3) ==> (n > 3)
+  val pf1 = (n:Int) => (n == 3) ==> (n > 2)
 
-  quickCheck(testable(pf1))
+  check(testable(pf1))
 
   val pf2: (List[Int], Int) => Testable = (n,m) => n.length == m
 
-  quickCheck(testable(pf2))
+  check(testable(pf2))
 }
