@@ -124,7 +124,6 @@ object Gen {
 }
 
 
-
 // Testing /////////////////////////////////////////////////////////////////////
 
 /** A result from a single test */
@@ -136,7 +135,17 @@ case class Testable(prop: Gen[Result]) {
 }
 
 /** Test parameters */
-case class TestPrms(maxSuccessTests: Int, maxTryTests: Int, maxSize: Int)
+case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
+  maxSize: Int)
+
+/** A result from a call to check */
+case class TestStats(result: TestResult, succeeded: Int, discarded: Int)
+
+abstract sealed class TestResult
+case class TestPassed extends TestResult
+case class TestFailed(failure: Result) extends TestResult
+case class TestExhausted extends TestResult
+
 
 object Test {
 
@@ -151,42 +160,59 @@ object Test {
 
   // Testing functions
 
-  val defaultPrms = TestPrms(100,500,100)
+  val defaultTestPrms = TestPrms(100,500,100)
 
-  def check(t: Testable): Unit = check(defaultPrms,t)
+  def check(prms: TestPrms, t: Testable,
+            f: (Option[Result],Int,Int) => Unit): TestStats =
+  {
+    var discarded = 0
+    var succeeded = 0
+    var failure: Result = null
 
-  def check(prms: TestPrms, t: Testable): Unit = {
-    val sizeStep = prms.maxSize / prms.maxSuccessTests
-    var size = 0
-    var successCount = 0
-    var totalCount = 0
-    var failed = false
-    var failing: Result = null
-
-    while(!failed && totalCount < prms.maxTryTests &&
-          successCount < prms.maxSuccessTests)
+    while((failure == null) &&
+          discarded < prms.maxDiscardedTests &&
+          succeeded < prms.minSuccessfulTests)
     {
-      val p = GenPrms(size, StdRand)
-      t(p) match {
-        case Some(r) =>
-          if(r.ok) successCount = successCount + 1
-          else { 
-            failed = true
-            failing = r
-          }
-        case None => ()
+      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests + discarded / 10
+      val res = t(GenPrms(size, StdRand))
+      res match {
+        case Some(r) => if(r.ok) succeeded = succeeded + 1 else failure = r
+        case None => discarded = discarded + 1
       }
-      totalCount = totalCount + 1
-      size = size + sizeStep
+      f(res,succeeded,discarded)
     }
 
-    if(failed) {
-      Console.println("Test FAILURE:")
-      Console.println(failing.args)
-    } 
-    else if(successCount < prms.maxSuccessTests)
-      Console.println("Exhausted after " + successCount + " succesful tests and " + (totalCount-successCount) + " undecidable tests")
-    else Console.println("Passed " + successCount + " tests (" + (totalCount-successCount) + " undecidable tests)")
+    val res = if(failure != null) TestFailed(failure)
+              else if(succeeded >= prms.minSuccessfulTests) TestPassed
+              else TestExhausted
+
+    TestStats(res, succeeded, discarded)
+  }
+
+  def check(t: Testable): TestStats =
+  {
+    def f(res: Option[Result], succeeded: Int, discarded: Int) = {
+      if(discarded > 0)
+        Console.printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
+      else Console.printf("\rPassed {0} tests",succeeded)
+      Console.flush
+    }
+
+    val tr = check(defaultTestPrms,t,f)
+
+    tr.result match {
+      case TestFailed(failure) =>
+        Console.printf("\r*** Failed, after {0} tests:\n", tr.succeeded)
+        Console.println(failure.args)
+      case TestExhausted() =>
+        Console.printf(
+          "\r*** Gave up, after only {1} passed tests. {0} tests were discarded.\n",
+          tr.discarded, tr.succeeded)
+      case TestPassed() =>
+        Console.printf("\r+++ OK, passed {0} tests.\n", tr.succeeded)
+    }
+
+    tr
   }
 
 
@@ -257,16 +283,16 @@ object TestIt extends Application {
 
   val prms = GenPrms(100, StdRand)
 
-  Console.println(n.get(prms))
-  Console.println(l.get(prms))
-  Console.println(x.get(prms))
+//  Console.println(n.get(prms))
+//  Console.println(l.get(prms))
+//  Console.println(x.get(prms))
 
 
-  val pf1 = (n:Int) => (n == 3) ==> (n > 2)
+  val pf1 = (n:Int) => (n == 0) ==> true
 
   check(testable(pf1))
 
-  val pf2: (List[Int], Int) => Testable = (n,m) => n.length == m
+//  val pf2: (List[Int], Int) => Testable = (n,m) => n.length == m
 
-  check(testable(pf2))
+//  check(testable(pf2))
 }
