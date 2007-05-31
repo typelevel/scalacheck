@@ -66,6 +66,11 @@ object Gen {
 
   private def mkGen[T](g: GenPrms => Option[T]): Gen[T] = new Gen(g) {}
 
+  private def consGen[T](gt: Gen[T], gts: Gen[List[T]]): Gen[List[T]] = for {
+    t  <- gt
+    ts <- gts
+  } yield t::ts
+
 
   // Generator combinators
 
@@ -87,38 +92,68 @@ object Gen {
   def choose(inclusiveRange: (Int,Int)) =
     parameterized(prms => value(prms.rand.choose(inclusiveRange)))
 
+  /** Creates a generator that can access its generation parameters 
+   */
   def parameterized[T](f: GenPrms => Gen[T]): Gen[T] =
     mkGen(prms => f(prms).get(prms))
 
+  /** Creates a generator that can access its generation size 
+   */
   def sized[T](f: Int => Gen[T]) = parameterized(prms => f(prms.size))
 
+  /** Creates a resized version of a generator 
+   */
   def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g.get(prms.resize(s)))
 
+  /** A generator that returns a random element from a list
+   */
   def elements[T](xs: Seq[T]) = for {
     i <- choose((0,xs.length-1))
   } yield xs(i)
 
-  def oneof[T](gs: Seq[Gen[T]]) = for {
+  /** Picks a random generator from a list
+   */
+  def oneOf[T](gs: Seq[Gen[T]]) = for {
     i <- choose((0,gs.length-1))
     x <- gs(i)
   } yield x
 
+  /** Generates a list of random length. The maximum length depends on the
+   *  size parameter
+   */
+  def listOf[T](g: Gen[T]) = arbitraryList(null)(a => g)
+
+  /** Generates a non-empty list of random length. The maximum length depends
+   *  on the size parameter
+   */
+  def listOf1[T](g: Gen[T]) = for {
+    x  <- g
+    xs <- arbitraryList(null)(a => g)
+  } yield x::xs
+
+  /** Generates a list of the given length
+   */
+  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = 
+    List.make(n,()).map(x => g).foldRight(emptyList[T])(consGen _)
+
+  /** Generates an empty list of any type
+   */
+  def emptyList[T]: Gen[List[T]] = value(Nil)
+
 
   // Implicit generators for common types
 
+  /** Generates an arbitrary integer */
   implicit def arbitraryInt(x: Arbitrary[Int]) = sized (s => choose((0,s)))
 
+  /** Generates a list of arbitrary elements. The maximum length of the list
+   *  depends on the size parameter.
+   */
   implicit def arbitraryList[T](x: Arbitrary[List[T]])
     (implicit f: Arbitrary[T] => Gen[T]): Gen[List[T]] =
   {
-    def g(gt: Gen[T], gts: Gen[List[T]]): Gen[List[T]] = for {
-      t  <- gt
-      ts <- gts
-    } yield t::ts
-
-    val e: Gen[List[T]] = value(Nil)
-
-    sized(s => List.make(s, ()).map(x => f(arbitrary)).foldRight(e)(g _))
+    sized(s => 
+      List.make(s,()).map(x => f(arbitrary)).foldRight(emptyList[T])(consGen _))
   }
 
 }
@@ -145,7 +180,6 @@ abstract sealed class TestResult
 case class TestPassed extends TestResult
 case class TestFailed(failure: Result) extends TestResult
 case class TestExhausted extends TestResult
-
 
 object Test {
 
@@ -189,16 +223,18 @@ object Test {
     TestStats(res, succeeded, discarded)
   }
 
+  def check(p: TestPrms, t: Testable): TestStats = check(p,t, (r,s,d) => ())
+
   def check(t: Testable): TestStats =
   {
-    def f(res: Option[Result], succeeded: Int, discarded: Int) = {
+    def printTmp(res: Option[Result], succeeded: Int, discarded: Int) = {
       if(discarded > 0)
         Console.printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
       else Console.printf("\rPassed {0} tests",succeeded)
       Console.flush
     }
 
-    val tr = check(defaultTestPrms,t,f)
+    val tr = check(defaultTestPrms,t,printTmp)
 
     tr.result match {
       case TestFailed(failure) =>
@@ -226,9 +262,15 @@ object Test {
 
   // Testables
 
+  def rejected = Testable(fail)
+
   def ==> (p: Boolean, t: Testable): Testable = if (p) t else rejected
 
-  def rejected = Testable(fail)
+  def forAll[T](g: Gen[T])(f: T => Testable): Testable = Testable(for
+  {
+    t <- g
+    r <- f(t).prop
+  } yield r)
 
   def testable[A1]
     (f:  Function1[A1,Testable])(implicit
