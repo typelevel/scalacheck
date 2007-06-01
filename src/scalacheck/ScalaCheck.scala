@@ -8,9 +8,13 @@ trait RandomGenerator {
 }
 
 object StdRand extends RandomGenerator {
+  import scala.Math._
   private val r = new java.util.Random
   def choose(range: (Int,Int)) = range match {
-    case (low,high) => r.nextInt(low + high + 1) + low
+    case (l,h) if(l <  0 && h <  0) => -(r.nextInt(abs(l) + 1) + abs(h))
+    case (l,h) if(l <  0 && h >= 0) => r.nextInt(abs(l) + h + 1) + l
+    case (l,h) if(l >= 0 && h >= 0) => r.nextInt(h + 1) + l
+    case (l,h)                      => l
   }
 }
 
@@ -66,10 +70,14 @@ object Gen {
 
   private def mkGen[T](g: GenPrms => Option[T]): Gen[T] = new Gen(g) {}
 
-  private def consGen[T](gt: Gen[T], gts: Gen[List[T]]): Gen[List[T]] = for {
-    t  <- gt
-    ts <- gts
-  } yield t::ts
+  private def sequence[T](l: List[Gen[T]]): Gen[List[T]] = {
+    def consGen(gt: Gen[T], gts: Gen[List[T]]) = for {
+      t  <- gt
+      ts <- gts
+    } yield t::ts
+
+    l.foldRight(value[List[T]](Nil))(consGen _)
+  }
 
 
   // Generator combinators
@@ -133,27 +141,73 @@ object Gen {
 
   /** Generates a list of the given length
    */
-  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] =
-    List.make(n,g).foldRight(emptyList[T])(consGen _)
-
-  /** Generates an empty list of any type
-   */
-  def emptyList[T]: Gen[List[T]] = value(Nil)
+  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = sequence(List.make(n,g))
 
 
   // Implicit generators for common types
 
+  implicit def arbitraryBool(x: Arbitrary[Boolean]): Gen[Boolean] =
+    elements(List(true,false))
+
   /** Generates an arbitrary integer */
-  implicit def arbitraryInt(x: Arbitrary[Int]) = sized (s => choose((0,s)))
+  implicit def arbitraryInt(x: Arbitrary[Int]) = sized (s => choose((-s,s)))
+
+  /** Generates an arbitrary char */
+  implicit def arbitraryChar(x: Arbitrary[Char]): Gen[Char] =
+    for {n <- choose((0,255))} yield n.toChar
+
+  /** Generates an arbitrary string */
+  implicit def arbitraryString(x: Arbitrary[String]): Gen[String] = for {
+    cs <- listOf(arbitrary[Char])
+  } yield List.toString(cs)
+
+sized (s => choose((-s,s)))
 
   /** Generates a list of arbitrary elements. The maximum length of the list
    *  depends on the size parameter.
    */
   implicit def arbitraryList[T](x: Arbitrary[List[T]])
-    (implicit f: Arbitrary[T] => Gen[T]): Gen[List[T]] =
+    (implicit f: Arbitrary[T] => Gen[T]): Gen[List[T]] = sized(size => for
   {
-    sized(s => List.make(s,f(arbitrary)).foldRight(emptyList[T])(consGen _))
-  }
+    n <- choose(0,size)
+    l <- sequence(List.make(n, f(arbitrary)))
+  } yield l )
+
+  implicit def arbitraryTuple2[T1,T2](x: Arbitrary[Tuple2[T1,T2]])
+    (implicit
+      f1: Arbitrary[T1] => Gen[T1],
+      f2: Arbitrary[T2] => Gen[T2]
+    ): Gen[Tuple2[T1,T2]] = for
+  {
+    t1 <- f1(arbitrary)
+    t2 <- f2(arbitrary)
+  } yield (t1,t2)
+
+  implicit def arbitraryTuple3[T1,T2,T3](x: Arbitrary[Tuple3[T1,T2,T3]])
+    (implicit
+      f1: Arbitrary[T1] => Gen[T1],
+      f2: Arbitrary[T2] => Gen[T2],
+      f3: Arbitrary[T3] => Gen[T3]
+    ): Gen[Tuple3[T1,T2,T3]] = for
+  {
+    t1 <- f1(arbitrary)
+    t2 <- f2(arbitrary)
+    t3 <- f3(arbitrary)
+  } yield (t1,t2,t3)
+
+  implicit def arbitraryTuple4[T1,T2,T3,T4](x: Arbitrary[Tuple4[T1,T2,T3,T4]])
+    (implicit
+      f1: Arbitrary[T1] => Gen[T1],
+      f2: Arbitrary[T2] => Gen[T2],
+      f3: Arbitrary[T3] => Gen[T3],
+      f4: Arbitrary[T4] => Gen[T4]
+    ): Gen[Tuple4[T1,T2,T3,T4]] = for
+  {
+    t1 <- f1(arbitrary)
+    t2 <- f2(arbitrary)
+    t3 <- f3(arbitrary)
+    t4 <- f4(arbitrary)
+  } yield (t1,t2,t3,t4)
 
 }
 
@@ -290,7 +344,7 @@ object Test {
           discarded < prms.maxDiscardedTests &&
           succeeded < prms.minSuccessfulTests)
     {
-      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests + 
+      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests +
                  discarded / 10
       val propRes = p(GenPrms(size, StdRand))
       propRes match {
@@ -334,32 +388,5 @@ object Test {
 
     tr
   }
-
-}
-
-
-// Usage ///////////////////////////////////////////////////////////////////////
-
-object TestIt extends Application {
-
-  import Gen._
-  import Prop._
-  import Test._
-
-  val n = arbitrary[Int]
-
-  val l = arbitrary[List[Int]]
-
-  val x = for {
-    x <- elements(List(1,6,8)) suchThat (_ < 6)
-    y <- arbitrary[Int]
-  } yield (x, y)
-
-  val prms = GenPrms(100, StdRand)
-
-
-  val pf1 = (n:Int) => (n == 0) ==> true
-
-  check(property(pf1))
 
 }

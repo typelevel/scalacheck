@@ -1,0 +1,30 @@
+RELEASE NOTES
+
+ScalaCheck 0.1
+
+ScalaCheck is a Scala implementation of the QuickCheck library for Haskell.
+It tries to keep the look and feel of QuickCheck as much as possible, while
+being open for improvements and extensions that can ease the task of
+property-based, randomized testing of Scala programs.
+
+This is an early release of ScalaCheck, with basic functionality. Most of
+the generator and property combinators from QuickCheck are implemented, as
+well as a basic checker function that prints results to the console in
+QuickCheck-style. There are default generators for integers, characters,
+strings, booleans, and lists ans tuples over arbitrary types.
+
+For more info, see the project site at:
+http://code.google.com/p/scalacheck
+
+
+Downloading ScalaCheck:
+
+  * Direct install with sbaz:
+
+    sbaz update
+    sbaz install scalacheck
+
+  * http://scalacheck.googlecode.com/files/ScalaCheck-0.1.jar
+
+  * Source repository:
+    http://scalacheck.googlecode.com/svn/
