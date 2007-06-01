@@ -14,11 +14,6 @@ object StdRand extends RandomGenerator {
   }
 }
 
-/** Record that encapsulates all parameters required for data generation */
-case class GenPrms(size: Int, rand: RandomGenerator) {
-  def resize(newSize: Int) = GenPrms(newSize,rand)
-}
-
 /** Dummy type that represents types that supports the arbitrary function.
  *  This could have been done more like a Haskell type class, with arbitrary as
  *  a member of Arbitrary, but placing the arbitrary function in the Gen object
@@ -30,6 +25,11 @@ case class GenPrms(size: Int, rand: RandomGenerator) {
  *  its just there to make it a usable implicit function.
  */
 sealed class Arbitrary[T] {}
+
+/** Record that encapsulates all parameters required for data generation */
+case class GenPrms(size: Int, rand: RandomGenerator) {
+  def resize(newSize: Int) = GenPrms(newSize,rand)
+}
 
 /** Class that represents a generator. You shouldn't (and couldn't) make
  *  instances or subclasses of this class directly. To create custom
@@ -246,8 +246,8 @@ object Prop {
 
 }
 
-// Testing /////////////////////////////////////////////////////////////////////
 
+// Testing /////////////////////////////////////////////////////////////////////
 
 /** Test parameters */
 case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
@@ -274,13 +274,13 @@ object Test {
   /** Tests a property with the given testing parameters, and returns
    *  the test results.
    */
-  def check(p: TestPrms, t: Prop): TestStats = check(p,t, (r,s,d) => ())
+  def check(prms: TestPrms, p: Prop): TestStats = check(prms,p, (r,s,d) => ())
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time the property is evaluted.
    */
-  def check(prms: TestPrms, t: Prop, f: TestInspector): TestStats =
+  def check(prms: TestPrms, p: Prop, f: TestInspector): TestStats =
   {
     var discarded = 0
     var succeeded = 0
@@ -290,20 +290,21 @@ object Test {
           discarded < prms.maxDiscardedTests &&
           succeeded < prms.minSuccessfulTests)
     {
-      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests + discarded / 10
-      val res = t(GenPrms(size, StdRand))
-      res match {
+      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests + 
+                 discarded / 10
+      val propRes = p(GenPrms(size, StdRand))
+      propRes match {
         case Some(r) => if(r.ok) succeeded = succeeded + 1 else failure = r
         case None => discarded = discarded + 1
       }
-      f(res,succeeded,discarded)
+      f(propRes,succeeded,discarded)
     }
 
-    val res = if(failure != null) TestFailed(failure)
-              else if(succeeded >= prms.minSuccessfulTests) TestPassed
-              else TestExhausted
+    val testRes = if(failure != null) TestFailed(failure)
+                  else if(succeeded >= prms.minSuccessfulTests) TestPassed
+                  else TestExhausted
 
-    TestStats(res, succeeded, discarded)
+    TestStats(testRes, succeeded, discarded)
   }
 
   /** Tests a property and prints results to the console

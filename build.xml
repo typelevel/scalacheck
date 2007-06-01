@@ -1,0 +1,89 @@
+<project name="ScalaCheck" basedir="." default="build">
+  
+  <!-- Global properties -->
+  
+  <property environment="env"/>
+  <property name="scala.home" value="${env.SCALA_HOME}"/>
+  <path id="scala.classpath">
+    <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
+    <pathelement location="${scala.home}/lib/scala-library.jar"/>
+  </path>
+  <taskdef resource="scala/tools/ant/antlib.xml"
+           classpathref="scala.classpath"/>
+  <taskdef name="quickdoc" 
+           classname="scala.tools.ant.Scaladoc"
+           classpathref="scala.classpath"/>
+
+
+
+  <!-- Project properties -->
+  
+  <property name="version"       value="0.1"/>
+  <property name="src.dir"       value="src"/>
+  <property name="build.dir"     value="build"/>
+  <property name="dist.dir"      value="dist"/>
+  <property name="dist.jar"      value="${dist.dir}/${ant.project.name}-${version}.jar"/>
+  <property name="dist.doc"      value="${dist.dir}/doc"/>
+  <property name="dist.doc.api"  value="${dist.doc}/api"/>
+  
+
+
+  <!-- External libs -->
+
+  <property name="scala-library.jar" value="${scala.home}/lib/scala-library.jar" />
+  
+
+
+  <!-- Classpaths -->
+  
+  <path id="build.classpath">
+    <pathelement location="${scala-library.jar}"/>
+  </path>
+   
+  <path id="run.classpath">
+    <path refid="build.classpath"/>
+    <pathelement location="${build.dir}"/>
+  </path>
+ 
+
+
+  <!-- Targets -->
+
+  <target name="prepare">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.doc}"/>
+    <mkdir dir="${dist.doc.api}"/>
+  </target>
+  
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${dist.dir}"/>
+  </target>
+  
+  <target name="build" depends="prepare">
+
+    <scalac srcdir="${src.dir}"
+            destdir="${build.dir}"
+            classpathref="build.classpath"/>
+            
+  </target>
+  
+  <target name="doc" depends="prepare">
+    <scaladoc
+      srcdir="${src.dir}"
+      destdir="${dist.doc}"
+      windowtitle="${ant.project.name} ${app.version}"
+      classpathref="run.classpath">
+      <include name="**/*.scala"/>
+    </scaladoc>
+    
+  </target>
+  
+  <target name="dist" depends="build">
+    <jar destfile="${dist.jar}">
+      <fileset dir="${build.dir}"/>
+    </jar>
+  </target>
+  
+</project>
