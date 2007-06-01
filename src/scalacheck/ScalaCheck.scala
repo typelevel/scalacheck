@@ -37,19 +37,19 @@ sealed class Arbitrary[T] {}
  */
 abstract sealed class Gen[+T](g: GenPrms => Option[T]) {
 
-  def get(prms: GenPrms) = g(prms)
+  def apply(prms: GenPrms) = g(prms)
 
   def map[U](f: T => U): Gen[U] = Gen.mkGen(prms => for {
-    t <- get(prms)
+    t <- this(prms)
   } yield f(t))
 
   def flatMap[U](f: T => Gen[U]): Gen[U] = Gen.mkGen(prms => for {
-    t <- get(prms)
-    u <- f(t).get(prms)
+    t <- this(prms)
+    u <- f(t)(prms)
   } yield u)
 
   def filter(p: T => Boolean): Gen[T] = Gen.mkGen(prms => for {
-    t <- get(prms)
+    t <- this(prms)
     u <- if (p(t)) Some(t) else None
   } yield u)
 
@@ -92,18 +92,18 @@ object Gen {
   def choose(inclusiveRange: (Int,Int)) =
     parameterized(prms => value(prms.rand.choose(inclusiveRange)))
 
-  /** Creates a generator that can access its generation parameters 
+  /** Creates a generator that can access its generation parameters
    */
   def parameterized[T](f: GenPrms => Gen[T]): Gen[T] =
-    mkGen(prms => f(prms).get(prms))
+    mkGen(prms => f(prms)(prms))
 
-  /** Creates a generator that can access its generation size 
+  /** Creates a generator that can access its generation size
    */
   def sized[T](f: Int => Gen[T]) = parameterized(prms => f(prms.size))
 
-  /** Creates a resized version of a generator 
+  /** Creates a resized version of a generator
    */
-  def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g.get(prms.resize(s)))
+  def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g(prms.resize(s)))
 
   /** A generator that returns a random element from a list
    */
@@ -133,8 +133,8 @@ object Gen {
 
   /** Generates a list of the given length
    */
-  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = 
-    List.make(n,()).map(x => g).foldRight(emptyList[T])(consGen _)
+  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] =
+    List.make(n,g).foldRight(emptyList[T])(consGen _)
 
   /** Generates an empty list of any type
    */
@@ -152,56 +152,139 @@ object Gen {
   implicit def arbitraryList[T](x: Arbitrary[List[T]])
     (implicit f: Arbitrary[T] => Gen[T]): Gen[List[T]] =
   {
-    sized(s => 
-      List.make(s,()).map(x => f(arbitrary)).foldRight(emptyList[T])(consGen _))
+    sized(s => List.make(s,f(arbitrary)).foldRight(emptyList[T])(consGen _))
   }
 
 }
 
 
+// Properties //////////////////////////////////////////////////////////////////
+
+object Prop {
+
+  import Gen.{arbitrary, value, fail}
+
+  type Prop = Gen[PropRes]
+
+  /** A result from a single test */
+  case class PropRes(ok: Boolean, args: List[String])
+
+
+  // Private support functions
+
+  private def consPropRes(r: PropRes, as: Any*) =
+    PropRes(r.ok, as.map(_.toString).toList ::: r.args)
+
+
+  // Property combinators
+
+  def rejected = fail
+
+  def ==> (b: Boolean, p: Prop): Prop = if (b) p else rejected
+
+  def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
+    t <- g
+    r <- f(t)
+  } yield r
+
+
+  // Convenience functions
+
+  implicit def extBoolean(b: Boolean) = new ExtBoolean(b)
+  class ExtBoolean(b: Boolean) {
+    def ==>(t: Prop) = Prop.==>(b,t)
+  }
+
+
+  // Implicit properties for common types
+
+  implicit def propBoolean(b: Boolean) = value(PropRes(b,Nil))
+
+  def property[A1]
+    (f:  Function1[A1,Prop])(implicit
+     g1: Arbitrary[A1] => Gen[A1]) = for
+  {
+    a1 <- g1(arbitrary)
+    r  <- f(a1)
+  } yield consPropRes(r, a1)
+
+  def property[A1,A2]
+    (f:  Function2[A1,A2,Prop])(implicit
+     g1: Arbitrary[A1] => Gen[A1],
+     g2: Arbitrary[A2] => Gen[A2]) = for
+  {
+    a1 <- g1(arbitrary)
+    a2 <- g2(arbitrary)
+    r  <- f(a1,a2)
+  } yield consPropRes(r, a1, a2)
+
+  def property[A1,A2,A3]
+    (f:  Function3[A1,A2,A3,Prop])(implicit
+     g1: Arbitrary[A1] => Gen[A1],
+     g2: Arbitrary[A2] => Gen[A2],
+     g3: Arbitrary[A3] => Gen[A3]) = for
+  {
+    a1 <- g1(arbitrary)
+    a2 <- g2(arbitrary)
+    a3 <- g3(arbitrary)
+    r  <- f(a1,a2,a3)
+  } yield consPropRes(r, a1, a2, a3)
+
+  def property[A1,A2,A3,A4]
+    (f:  Function4[A1,A2,A3,A4,Prop])(implicit
+     g1: Arbitrary[A1] => Gen[A1],
+     g2: Arbitrary[A2] => Gen[A2],
+     g3: Arbitrary[A2] => Gen[A3],
+     g4: Arbitrary[A3] => Gen[A4]) = for
+  {
+    a1 <- g1(arbitrary)
+    a2 <- g2(arbitrary)
+    a3 <- g3(arbitrary)
+    a4 <- g4(arbitrary)
+    r  <- f(a1,a2,a3,a4)
+  } yield consPropRes(r, a1, a2, a3, a4)
+
+}
+
 // Testing /////////////////////////////////////////////////////////////////////
 
-/** A result from a single test */
-case class Result(ok: Boolean, args: List[String])
-
-/** Represents something that can be tested */
-case class Testable(prop: Gen[Result]) {
-  def apply(prms: GenPrms): Option[Result] = prop.get(prms)
-}
 
 /** Test parameters */
 case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
   maxSize: Int)
 
-/** A result from a call to check */
+/** Test statistics */
 case class TestStats(result: TestResult, succeeded: Int, discarded: Int)
 
 abstract sealed class TestResult
 case class TestPassed extends TestResult
-case class TestFailed(failure: Result) extends TestResult
+case class TestFailed(failure: Prop.PropRes) extends TestResult
 case class TestExhausted extends TestResult
 
 object Test {
 
-  import Gen.{arbitrary, value, fail}
-
-
-  // Private support functions
-
-  private def mkRes(r: Result, as: Any*) =
-    Result(r.ok, as.map(_.toString).toList ::: r.args)
-
+  import Prop.{Prop, PropRes}
 
   // Testing functions
 
-  val defaultTestPrms = TestPrms(100,500,100)
+  val defaultTestPrms = TestPrms(100,50000,100)
 
-  def check(prms: TestPrms, t: Testable,
-            f: (Option[Result],Int,Int) => Unit): TestStats =
+  type TestInspector = (Option[PropRes],Int,Int) => Unit
+
+  /** Tests a property with the given testing parameters, and returns
+   *  the test results.
+   */
+  def check(p: TestPrms, t: Prop): TestStats = check(p,t, (r,s,d) => ())
+
+  /** Tests a property with the given testing parameters, and returns
+   *  the test results. <code>f</code> is a function which is called each
+   *  time the property is evaluted.
+   */
+  def check(prms: TestPrms, t: Prop, f: TestInspector): TestStats =
   {
     var discarded = 0
     var succeeded = 0
-    var failure: Result = null
+    var failure: PropRes = null
 
     while((failure == null) &&
           discarded < prms.maxDiscardedTests &&
@@ -223,11 +306,11 @@ object Test {
     TestStats(res, succeeded, discarded)
   }
 
-  def check(p: TestPrms, t: Testable): TestStats = check(p,t, (r,s,d) => ())
-
-  def check(t: Testable): TestStats =
+  /** Tests a property and prints results to the console
+   */
+  def check(t: Prop): TestStats =
   {
-    def printTmp(res: Option[Result], succeeded: Int, discarded: Int) = {
+    def printTmp(res: Option[PropRes], succeeded: Int, discarded: Int) = {
       if(discarded > 0)
         Console.printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
       else Console.printf("\rPassed {0} tests",succeeded)
@@ -251,59 +334,6 @@ object Test {
     tr
   }
 
-
-  // Convenience functions
-
-  implicit def extBoolean(b: Boolean) = new ExtBoolean(b)
-  class ExtBoolean(b: Boolean) {
-    def ==>(t: Testable) = Test.==>(b,t)
-  }
-
-
-  // Testables
-
-  def rejected = Testable(fail)
-
-  def ==> (p: Boolean, t: Testable): Testable = if (p) t else rejected
-
-  def forAll[T](g: Gen[T])(f: T => Testable): Testable = Testable(for
-  {
-    t <- g
-    r <- f(t).prop
-  } yield r)
-
-  def testable[A1]
-    (f:  Function1[A1,Testable])(implicit
-     g1: Arbitrary[A1] => Gen[A1]) = Testable(for
-  {
-    a1 <- g1(arbitrary)
-    r  <- f(a1).prop
-  } yield mkRes(r, a1))
-
-  def testable[A1,A2]
-    (f:  Function2[A1,A2,Testable])(implicit
-     g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2]) = Testable(for
-  {
-    a1 <- g1(arbitrary)
-    a2 <- g2(arbitrary)
-    r  <- f(a1,a2).prop
-  } yield mkRes(r, a1, a2))
-
-  def testable[A1,A2,A3]
-    (f:  Function3[A1,A2,A3,Testable])(implicit
-     g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2],
-     g3: Arbitrary[A3] => Gen[A3]) = Testable(for
-  {
-    a1 <- g1(arbitrary)
-    a2 <- g2(arbitrary)
-    a3 <- g3(arbitrary)
-    r  <- f(a1,a2,a3).prop
-  } yield mkRes(r, a1, a2, a3))
-
-  implicit def testable(b: Boolean) = Testable(value(Result(b,Nil)))
-
 }
 
 
@@ -312,6 +342,7 @@ object Test {
 object TestIt extends Application {
 
   import Gen._
+  import Prop._
   import Test._
 
   val n = arbitrary[Int]
@@ -325,16 +356,9 @@ object TestIt extends Application {
 
   val prms = GenPrms(100, StdRand)
 
-//  Console.println(n.get(prms))
-//  Console.println(l.get(prms))
-//  Console.println(x.get(prms))
-
 
   val pf1 = (n:Int) => (n == 0) ==> true
 
-  check(testable(pf1))
+  check(property(pf1))
 
-//  val pf2: (List[Int], Int) => Testable = (n,m) => n.length == m
-
-//  check(testable(pf2))
 }
