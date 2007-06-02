@@ -18,13 +18,17 @@
 
   <!-- Project properties -->
   
-  <property name="version"       value="0.1"/>
-  <property name="src.dir"       value="src"/>
-  <property name="build.dir"     value="build"/>
-  <property name="dist.dir"      value="dist"/>
-  <property name="dist.jar"      value="${dist.dir}/${ant.project.name}-${version}.jar"/>
-  <property name="dist.doc"      value="${dist.dir}/doc"/>
-  <property name="dist.doc.api"  value="${dist.doc}/api"/>
+  <property name="version"       value="0.1.1"/>
+  <property name="author"        value="Rickard Nilsson"/>
+  <property name="package.root"  value="scalacheck"/>
+  <property name="src"           value="src"/>
+  <property name="build"         value="build"/>
+  <property name="build.doc"     value="${build}/doc"/>
+  <property name="build.doc.api" value="${build.doc}/api"/>
+  <property name="build.pkg"     value="${build}/pkg"/>
+  <property name="build.pkg.lib" value="${build.pkg}/lib"/>
+  <property name="dist"          value="dist"/>
+  <property name="dist.jar"      value="${dist}/${ant.project.name}-${version}.jar"/>
   
 
 
@@ -42,7 +46,7 @@
    
   <path id="run.classpath">
     <path refid="build.classpath"/>
-    <pathelement location="${build.dir}"/>
+    <pathelement location="${build}"/>
   </path>
  
 
@@ -50,40 +54,85 @@
   <!-- Targets -->
 
   <target name="prepare">
-    <mkdir dir="${build.dir}"/>
-    <mkdir dir="${dist.dir}"/>
-    <mkdir dir="${dist.doc}"/>
-    <mkdir dir="${dist.doc.api}"/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${dist}"/>
+    <mkdir dir="${build.doc}"/>
+    <mkdir dir="${build.doc.api}"/>
+    <mkdir dir="${build.pkg}"/>
+    <mkdir dir="${build.pkg.lib}"/>
   </target>
   
   <target name="clean">
-    <delete dir="${build.dir}"/>
-    <delete dir="${dist.dir}"/>
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
   </target>
   
   <target name="build" depends="prepare">
 
-    <scalac srcdir="${src.dir}"
-            destdir="${build.dir}"
+    <scalac srcdir="${src}"
+            destdir="${build}"
             classpathref="build.classpath"/>
             
   </target>
   
   <target name="doc" depends="prepare">
+
+    <copy todir="${build.doc}">
+      <fileset dir=".">
+        <include name="LICENSE"/>
+        <include name="RELEASE"/>
+      </fileset>
+    </copy>
+
     <scaladoc
-      srcdir="${src.dir}"
-      destdir="${dist.doc}"
-      windowtitle="${ant.project.name} ${app.version}"
+      srcdir="${src}"
+      destdir="${build.doc.api}"
+      windowtitle="${ant.project.name} ${version}"
       classpathref="run.classpath">
       <include name="**/*.scala"/>
     </scaladoc>
     
   </target>
   
-  <target name="dist" depends="build">
+  <target name="dist" depends="clean,build,doc">
+
     <jar destfile="${dist.jar}">
-      <fileset dir="${build.dir}"/>
+      <fileset dir="${build}">
+        <include name="${package.root}/**"/>
+        <include name="doc/**"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${author}"/>
+        <attribute name="Export-Package" value='${package.root};version=""${version}""'/>
+        <section name="${package.root}">
+          <attribute name="Specification-Title"    value="${ant.project.name}"/>
+          <attribute name="Specification-Version"  value="${version}"/>
+          <attribute name="Specification-Vendor"   value="${author}"/>
+          <attribute name="Implementation-Title"   value="${package.root}"/>
+          <attribute name="Implementation-Version" value="${version}"/> 
+          <attribute name="Implementation-Vendor"  value="${author}"/>
+        </section>
+      </manifest>
     </jar>
+
+    <copy file="${dist.jar}" todir="${build.pkg.lib}"/>
+
+    <exec executable="sbaz" failonerror="true">
+      <arg value="pack"/>
+      <arg value="${ant.project.name}"/>
+      <arg value="${build.pkg}"/>
+      <arg value="--version"/>
+      <arg value="${version}"/>
+      <arg value="--outdir"/>
+      <arg value="${dist}"/>
+      <arg value="--linkbase"/>
+      <arg value="http://scalacheck.googlecode.com/files/"/>
+      <arg value="--description"/>
+      <arg value='ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library'/>
+    </exec>    
+
+    <move file="${ant.project.name}-${version}.advert" todir="${dist}"/>
+
   </target>
   
 </project>
