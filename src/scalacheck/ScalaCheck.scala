@@ -161,8 +161,6 @@ object Gen {
     cs <- listOf(arbitrary[Char])
   } yield List.toString(cs)
 
-sized (s => choose((-s,s)))
-
   /** Generates a list of arbitrary elements. The maximum length of the list
    *  depends on the size parameter.
    */
@@ -264,26 +262,29 @@ object Prop {
   implicit def propBoolean(b: Boolean) =
     value(if(b) PropTrue(Nil) else PropFalse(Nil))
 
-  def property[A1]
-    (f:  Function1[A1,Prop])(implicit
+  def property[A1,P]
+    (f:  Function1[A1,P])(implicit
+     p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1]) = for
   {
     a1 <- g1(arbitrary)
-    r  <- mkProp(f(a1), a1)
+    r  <- mkProp(p(f(a1)), a1)
   } yield r
 
-  def property[A1,A2]
-    (f:  Function2[A1,A2,Prop])(implicit
+  def property[A1,A2,P]
+    (f:  Function2[A1,A2,P])(implicit
+     p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2]) = for
   {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
-    r  <- mkProp(f(a1,a2),a1,a2)
+    r  <- mkProp(p(f(a1,a2)),a1,a2)
   } yield r
 
-  def property[A1,A2,A3]
-    (f:  Function3[A1,A2,A3,Prop])(implicit
+  def property[A1,A2,A3,P]
+    (f:  Function3[A1,A2,A3,P])(implicit
+     p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
      g3: Arbitrary[A3] => Gen[A3]) = for
@@ -291,11 +292,12 @@ object Prop {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
     a3 <- g3(arbitrary)
-    r  <- mkProp(f(a1,a2,a3),a1,a2,a3)
+    r  <- mkProp(p(f(a1,a2,a3)),a1,a2,a3)
   } yield r
 
-  def property[A1,A2,A3,A4]
-    (f:  Function4[A1,A2,A3,A4,Prop])(implicit
+  def property[A1,A2,A3,A4,P]
+    (f:  Function4[A1,A2,A3,A4,P])(implicit
+     p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
      g3: Arbitrary[A2] => Gen[A3],
@@ -305,7 +307,7 @@ object Prop {
     a2 <- g2(arbitrary)
     a3 <- g3(arbitrary)
     a4 <- g4(arbitrary)
-    r  <- mkProp(f(a1,a2,a3,a4),a1,a2,a3,a4)
+    r  <- mkProp(p(f(a1,a2,a3,a4)),a1,a2,a3,a4)
   } yield r
 
 }
