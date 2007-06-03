@@ -1,24 +1,37 @@
 <project name="ScalaCheck" basedir="." default="build">
-  
+
   <!-- Global properties -->
-  
+
   <property environment="env"/>
   <property name="scala.home" value="${env.SCALA_HOME}"/>
+
   <path id="scala.classpath">
     <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
     <pathelement location="${scala.home}/lib/scala-library.jar"/>
   </path>
+
+  <path id="svnant.classpath">
+    <pathelement location="support/svnant/svnant.jar"/>
+    <pathelement location="support/svnant/svnClientAdapter.jar"/>
+    <pathelement location="support/svnant/svnjavahl.jar"/>
+  </path>
+
+  <typedef resource="org/tigris/subversion/svnant/svnantlib.xml" 
+           classpathref="svnant.classpath"/>
   <taskdef resource="scala/tools/ant/antlib.xml"
            classpathref="scala.classpath"/>
-  <taskdef name="quickdoc" 
-           classname="scala.tools.ant.Scaladoc"
-           classpathref="scala.classpath"/>
+
+  <svn>
+    <wcVersion path="."/>
+  </svn> 
 
 
 
   <!-- Project properties -->
-  
-  <property name="version"       value="0.1.1"/>
+
+  <property name="name"          value="${ant.project.name}"/>
+  <property name="version.nr"    value="0.1.1"/>
+  <property name="version"       value="${version.nr}-r${revision.max-with-flags}"/>
   <property name="author"        value="Rickard Nilsson"/>
   <property name="package.root"  value="scalacheck"/>
   <property name="src"           value="src"/>
@@ -28,27 +41,26 @@
   <property name="build.pkg"     value="${build}/pkg"/>
   <property name="build.pkg.lib" value="${build.pkg}/lib"/>
   <property name="dist"          value="dist"/>
-  <property name="dist.jar"      value="${dist}/${ant.project.name}-${version}.jar"/>
-  
+
 
 
   <!-- External libs -->
 
   <property name="scala-library.jar" value="${scala.home}/lib/scala-library.jar" />
-  
+
 
 
   <!-- Classpaths -->
-  
+
   <path id="build.classpath">
     <pathelement location="${scala-library.jar}"/>
   </path>
-   
+
   <path id="run.classpath">
     <path refid="build.classpath"/>
     <pathelement location="${build}"/>
   </path>
- 
+
 
 
   <!-- Targets -->
@@ -61,20 +73,23 @@
     <mkdir dir="${build.pkg}"/>
     <mkdir dir="${build.pkg.lib}"/>
   </target>
-  
+
+
   <target name="clean">
     <delete dir="${build}"/>
     <delete dir="${dist}"/>
   </target>
-  
+
+
   <target name="build" depends="prepare">
 
     <scalac srcdir="${src}"
             destdir="${build}"
             classpathref="build.classpath"/>
-            
+
   </target>
-  
+
+
   <target name="doc" depends="prepare">
 
     <copy todir="${build.doc}">
@@ -87,39 +102,45 @@
     <scaladoc
       srcdir="${src}"
       destdir="${build.doc.api}"
-      windowtitle="${ant.project.name} ${version}"
+      windowtitle="${name} ${version}"
       classpathref="run.classpath">
       <include name="**/*.scala"/>
     </scaladoc>
-    
-  </target>
-  
-  <target name="dist" depends="clean,build,doc">
 
-    <jar destfile="${dist.jar}">
+  </target>
+
+
+  <target name="jar" depends="clean,build,doc">
+
+    <jar destfile="${dist}/${name}-${version}.jar">
       <fileset dir="${build}">
         <include name="${package.root}/**"/>
         <include name="doc/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
-        <attribute name="Export-Package" value='${package.root};version=""${version}""'/>
+        <attribute name="Export-Package" value='${package.root};version="${version}"'/>
         <section name="${package.root}">
-          <attribute name="Specification-Title"    value="${ant.project.name}"/>
+          <attribute name="Specification-Title"    value="${name}"/>
           <attribute name="Specification-Version"  value="${version}"/>
           <attribute name="Specification-Vendor"   value="${author}"/>
           <attribute name="Implementation-Title"   value="${package.root}"/>
-          <attribute name="Implementation-Version" value="${version}"/> 
+          <attribute name="Implementation-Version" value="${version}"/>
           <attribute name="Implementation-Vendor"  value="${author}"/>
         </section>
       </manifest>
     </jar>
 
-    <copy file="${dist.jar}" todir="${build.pkg.lib}"/>
+  </target>
+
+
+  <target name="dist" depends="jar">
+
+    <copy file="${dist}/${name}-${version}.jar" todir="${build.pkg.lib}"/>
 
     <exec executable="sbaz" failonerror="true">
       <arg value="pack"/>
-      <arg value="${ant.project.name}"/>
+      <arg value="scalacheck"/>
       <arg value="${build.pkg}"/>
       <arg value="--version"/>
       <arg value="${version}"/>
@@ -129,10 +150,30 @@
       <arg value="http://scalacheck.googlecode.com/files/"/>
       <arg value="--description"/>
       <arg value='ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library'/>
-    </exec>    
+    </exec>
 
-    <move file="${ant.project.name}-${version}.advert" todir="${dist}"/>
+    <move file="scalacheck-${version}.advert" todir="${dist}"/>
 
   </target>
-  
+
+
+  <target name="dist-release">
+    
+    <antcall target="dist">
+      <param name="version" value="${version.nr}"/>
+    </antcall>
+
+  </target>
+
+
+  <target name="install" depends="dist">
+
+    <exec executable="sbaz" failonerror="true">
+      <arg value="install"/>
+      <arg value="-f"/>
+      <arg value="${dist}/scalacheck-${version}.sbp"/>
+    </exec>
+
+  </target>
+
 </project>
