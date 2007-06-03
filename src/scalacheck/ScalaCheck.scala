@@ -220,14 +220,23 @@ object Prop {
 
   type Prop = Gen[PropRes]
 
-  /** A result from a single test */
-  case class PropRes(ok: Boolean, args: List[String])
+  abstract sealed class PropRes(val args: List[String])
 
+  case class PropTrue(as: List[String]) extends PropRes(as)
+  case class PropFalse(as: List[String]) extends PropRes(as)
+  case class PropException(e: Throwable, as: List[String]) extends PropRes(as)
 
   // Private support functions
 
-  private def consPropRes(r: PropRes, as: Any*) =
-    PropRes(r.ok, as.map(_.toString).toList ::: r.args)
+  private def mkProp(p: => Prop, as: Any*): Prop = for {
+    r1 <- try { p } catch { case e => value(PropException(e,Nil)) }
+    ss = as.map(_.toString).toList
+    r2 <- r1 match {
+            case PropTrue(ss2)        => value(PropTrue(ss ::: ss2))
+            case PropFalse(ss2)       => value(PropFalse(ss ::: ss2))
+            case PropException(e,ss2) => value(PropException(e,ss ::: ss2))
+          }
+  } yield r2
 
 
   // Property combinators
@@ -238,7 +247,7 @@ object Prop {
 
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
     t <- g
-    r <- f(t)
+    r <- mkProp(f(t), t)
   } yield r
 
 
@@ -252,15 +261,16 @@ object Prop {
 
   // Implicit properties for common types
 
-  implicit def propBoolean(b: Boolean) = value(PropRes(b,Nil))
+  implicit def propBoolean(b: Boolean) =
+    value(if(b) PropTrue(Nil) else PropFalse(Nil))
 
   def property[A1]
     (f:  Function1[A1,Prop])(implicit
      g1: Arbitrary[A1] => Gen[A1]) = for
   {
     a1 <- g1(arbitrary)
-    r  <- f(a1)
-  } yield consPropRes(r, a1)
+    r  <- mkProp(f(a1), a1)
+  } yield r
 
   def property[A1,A2]
     (f:  Function2[A1,A2,Prop])(implicit
@@ -269,8 +279,8 @@ object Prop {
   {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
-    r  <- f(a1,a2)
-  } yield consPropRes(r, a1, a2)
+    r  <- mkProp(f(a1,a2),a1,a2)
+  } yield r
 
   def property[A1,A2,A3]
     (f:  Function3[A1,A2,A3,Prop])(implicit
@@ -281,8 +291,8 @@ object Prop {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
     a3 <- g3(arbitrary)
-    r  <- f(a1,a2,a3)
-  } yield consPropRes(r, a1, a2, a3)
+    r  <- mkProp(f(a1,a2,a3),a1,a2,a3)
+  } yield r
 
   def property[A1,A2,A3,A4]
     (f:  Function4[A1,A2,A3,A4,Prop])(implicit
@@ -295,8 +305,8 @@ object Prop {
     a2 <- g2(arbitrary)
     a3 <- g3(arbitrary)
     a4 <- g4(arbitrary)
-    r  <- f(a1,a2,a3,a4)
-  } yield consPropRes(r, a1, a2, a3, a4)
+    r  <- mkProp(f(a1,a2,a3,a4),a1,a2,a3,a4)
+  } yield r
 
 }
 
@@ -311,13 +321,34 @@ case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
 case class TestStats(result: TestResult, succeeded: Int, discarded: Int)
 
 abstract sealed class TestResult
+
+/** The property test passed
+ */
 case class TestPassed extends TestResult
-case class TestFailed(failure: Prop.PropRes) extends TestResult
+
+/** The property was proved wrong with the given concrete arguments.
+ */
+case class TestFailed(args: List[String]) extends TestResult
+
+/** The property test was exhausted, it wasn't possible to generate enough
+ *  concrete arguments satisfying the preconditions to get enough passing
+ *  property evaluations.
+ */
 case class TestExhausted extends TestResult
+
+/** An exception was raised when trying to evaluate the property with the
+ *  given concrete arguments.
+ */
+case class TestPropException(e: Throwable,args: List[String]) extends TestResult
+
+/** An exception was raised when trying to generate concrete arguments
+ *  for evaluating the property.
+ */
+case class TestGenException(e: Throwable) extends TestResult
 
 object Test {
 
-  import Prop.{Prop, PropRes}
+  import Prop._
 
   // Testing functions
 
@@ -336,34 +367,41 @@ object Test {
    */
   def check(prms: TestPrms, p: Prop, f: TestInspector): TestStats =
   {
-    var discarded = 0
-    var succeeded = 0
-    var failure: PropRes = null
+    abstract sealed class Either[+T,+U]
+    case class Left[+T,+U](l: T) extends Either[T,U]
+    case class Right[+T,+U](r: U) extends Either[T,U]
 
-    while((failure == null) &&
-          discarded < prms.maxDiscardedTests &&
-          succeeded < prms.minSuccessfulTests)
+    var nd = 0
+    var ns = 0
+    var tr: TestResult = null
+
+    while(tr == null)
     {
-      val size = (succeeded * prms.maxSize) / prms.minSuccessfulTests +
-                 discarded / 10
-      val propRes = p(GenPrms(size, StdRand))
-      propRes match {
-        case Some(r) => if(r.ok) succeeded = succeeded + 1 else failure = r
-        case None => discarded = discarded + 1
+      val size = (ns * prms.maxSize) / prms.minSuccessfulTests + nd / 10
+      val genprms = GenPrms(size, StdRand)
+      (try { Right(p(genprms)) } catch { case e => Left(e) }) match {
+        case Left(e)   => tr = TestGenException(e)
+        case Right(pr) =>
+          pr match {
+            case None =>
+              nd = nd + 1
+              if(nd >= prms.maxDiscardedTests) tr = TestExhausted
+            case Some(PropTrue(_)) =>
+              ns = ns + 1
+              if(ns >= prms.minSuccessfulTests) tr = TestPassed
+            case Some(PropFalse(as)) => tr = TestFailed(as)
+            case Some(PropException(e,as)) => tr = TestPropException(e,as)
+          }
+          f(pr,ns,nd)
       }
-      f(propRes,succeeded,discarded)
     }
 
-    val testRes = if(failure != null) TestFailed(failure)
-                  else if(succeeded >= prms.minSuccessfulTests) TestPassed
-                  else TestExhausted
-
-    TestStats(testRes, succeeded, discarded)
+    TestStats(tr, ns, nd)
   }
 
   /** Tests a property and prints results to the console
    */
-  def check(t: Prop): TestStats =
+  def check(p: Prop): TestStats =
   {
     def printTmp(res: Option[PropRes], succeeded: Int, discarded: Int) = {
       if(discarded > 0)
@@ -372,18 +410,24 @@ object Test {
       Console.flush
     }
 
-    val tr = check(defaultTestPrms,t,printTmp)
+    val tr = check(defaultTestPrms,p,printTmp)
 
     tr.result match {
-      case TestFailed(failure) =>
-        Console.printf("\r*** Failed, after {0} tests:\n", tr.succeeded)
-        Console.println(failure.args)
+      case TestGenException(e) =>
+        Console.printf("\r*** Exception raised when generating arguments:\n{0}\n", e)
+      case TestPropException(e,args) =>
+        Console.printf("\r*** Exception raised when evaluating property\n")
+        Console.printf("The arguments that caused the exception was:\n{0}\n\n", args)
+        Console.printf("The raised exception was:\n{0}\n", e)
+      case TestFailed(args) =>
+        Console.printf("\r*** Failed, after {0} tests:                  \n", tr.succeeded)
+        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
       case TestExhausted() =>
         Console.printf(
           "\r*** Gave up, after only {1} passed tests. {0} tests were discarded.\n",
           tr.discarded, tr.succeeded)
       case TestPassed() =>
-        Console.printf("\r+++ OK, passed {0} tests.\n", tr.succeeded)
+        Console.printf("\r+++ OK, passed {0} tests.                    \n", tr.succeeded)
     }
 
     tr
