@@ -241,7 +241,7 @@ object Prop {
 
   def rejected = fail
 
-  def ==> (b: Boolean, p: Prop): Prop = if (b) p else rejected
+  def ==> (b: Boolean, p: => Prop): Prop = if (b) p else rejected
 
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
     t <- g
@@ -253,7 +253,7 @@ object Prop {
 
   implicit def extBoolean(b: Boolean) = new ExtBoolean(b)
   class ExtBoolean(b: Boolean) {
-    def ==>(t: Prop) = Prop.==>(b,t)
+    def ==>(t: => Prop) = if(b) t else fail
   }
 
 
