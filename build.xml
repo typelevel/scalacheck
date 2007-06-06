@@ -16,14 +16,14 @@
     <pathelement location="support/svnant/svnjavahl.jar"/>
   </path>
 
-  <typedef resource="org/tigris/subversion/svnant/svnantlib.xml" 
+  <typedef resource="org/tigris/subversion/svnant/svnantlib.xml"
            classpathref="svnant.classpath"/>
   <taskdef resource="scala/tools/ant/antlib.xml"
            classpathref="scala.classpath"/>
 
   <svn>
     <wcVersion path="."/>
-  </svn> 
+  </svn>
 
 
 
@@ -35,6 +35,7 @@
   <property name="author"        value="Rickard Nilsson"/>
   <property name="package.root"  value="scalacheck"/>
   <property name="src"           value="src"/>
+  <property name="test"          value="test"/>
   <property name="build"         value="build"/>
   <property name="build.doc"     value="${build}/doc"/>
   <property name="build.doc.api" value="${build.doc}/api"/>
@@ -116,6 +117,7 @@
       <fileset dir="${build}">
         <include name="${package.root}/**"/>
         <include name="doc/**"/>
+        <exclude name="test**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
@@ -158,7 +160,7 @@
 
 
   <target name="dist-release">
-    
+
     <antcall target="dist">
       <param name="version" value="${version.nr}"/>
     </antcall>
@@ -173,6 +175,18 @@
       <arg value="-f"/>
       <arg value="${dist}/scalacheck-${version}.sbp"/>
     </exec>
+
+  </target>
+
+  <target name="test" depends="build">
+
+    <scalac srcdir="${test}"
+            destdir="${build}"
+            classpathref="build.classpath"/>
+
+    <java classpathref="run.classpath"
+          classname="test.TestScalaCheck"
+          failonerror="true"/>
 
   </target>
 

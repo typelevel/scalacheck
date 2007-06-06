@@ -7,7 +7,12 @@ case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
 /** Test statistics */
 case class TestStats(result: TestResult, succeeded: Int, discarded: Int)
 
-abstract sealed class TestResult
+abstract sealed class TestResult {
+  def passed = this match {
+    case TestPassed() => true
+    case _ => false
+  }
+}
 
 /** The property test passed
  */
@@ -39,7 +44,7 @@ object Test {
 
   // Testing functions
 
-  val defaultTestPrms = TestPrms(100,50000,100)
+  val defaultTestPrms = TestPrms(100,500,100)
 
   type TestInspector = (Option[PropRes],Int,Int) => Unit
 
