@@ -31,6 +31,9 @@ object Prop {
 
   def ==> (b: Boolean, p: => Prop): Prop = if (b) p else rejected
 
+  def imply[T](x: T, f: PartialFunction[T,Prop]) = 
+    if(f.isDefinedAt(x)) f(x) else rejected
+
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
     t <- g
     r <- mkProp(f(t), t)
@@ -41,7 +44,12 @@ object Prop {
 
   implicit def extBoolean(b: Boolean) = new ExtBoolean(b)
   class ExtBoolean(b: Boolean) {
-    def ==>(t: => Prop) = if(b) t else fail
+    def ==>(p: => Prop) = Prop.==>(b,p)
+  }
+
+  implicit def extAny[T](x: T) = new ExtAny(x)
+  class ExtAny[T](x: T) {
+    def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
   }
 
 
@@ -51,7 +59,7 @@ object Prop {
     value(if(b) PropTrue(Nil) else PropFalse(Nil))
 
   def property[A1,P]
-    (f:  Function1[A1,P])(implicit
+    (f:  A1 => P)(implicit
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1]) = for
   {
@@ -60,7 +68,7 @@ object Prop {
   } yield r
 
   def property[A1,A2,P]
-    (f:  Function2[A1,A2,P])(implicit
+    (f:  (A1,A2) => P)(implicit
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2]) = for
@@ -71,7 +79,7 @@ object Prop {
   } yield r
 
   def property[A1,A2,A3,P]
-    (f:  Function3[A1,A2,A3,P])(implicit
+    (f:  (A1,A2,A3) => P)(implicit
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
@@ -84,7 +92,7 @@ object Prop {
   } yield r
 
   def property[A1,A2,A3,A4,P]
-    (f:  Function4[A1,A2,A3,A4,P])(implicit
+    (f:  (A1,A2,A3,A4) => P)(implicit
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
