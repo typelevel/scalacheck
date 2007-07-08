@@ -186,7 +186,8 @@
 
     <java classpathref="run.classpath"
           classname="test.TestScalaCheck"
-          failonerror="true"/>
+          fork="true"
+          spawn="true"/>
 
   </target>
 

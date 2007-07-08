@@ -6,21 +6,21 @@ import scalacheck.Prop._
 import scalacheck.Test._
 import scala.testing.SUnit._
 
-object TestScalaCheck extends Testable with TestConsoleMain {
+object Props extends Testable {
 
-  val passing = Prop.property ((l1: List[Int], l2: List[Int]) =>
+  val passing = property ((l1: List[Int], l2: List[Int]) =>
     (l2.reverse ::: l1.reverse) == (l1 ::: l2).reverse
   )
 
-  val failing = Prop.property( (n: Int) =>
+  val failing = property( (n: Int) =>
     scala.Math.sqrt(n * n) == n
   )
 
-  val exhausted = Prop.property( (n: Int) =>
+  val exhausted = property( (n: Int) =>
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val propException = Prop.property( (l1: List[String]) =>
+  val propException = property( (l1: List[String]) =>
     l1.head == "foo"
   )
 
@@ -31,35 +31,36 @@ object TestScalaCheck extends Testable with TestConsoleMain {
 
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
-  property("propPassing", Test.check(defaultTestPrms, passing).result match {
+  addProperty("propPassing", check(defaultTestPrms, passing).result match {
     case TestPassed() => true
     case _ => false
   })
 
-  property("propFailing", Test.check(defaultTestPrms, failing).result match {
+  addProperty("propFailing", check(defaultTestPrms, failing).result match {
     case TestFailed(_) => true
     case _ => false
   })
 
-  property("propExhausted", Test.check(defaultTestPrms, exhausted).result match {
+  addProperty("propExhausted", check(defaultTestPrms, exhausted).result match {
     case TestExhausted() => true
     case _ => false
   })
 
-  property("propPropException", Test.check(defaultTestPrms, propException).result match {
+  addProperty("propPropException", check(defaultTestPrms, propException).result match {
     case TestPropException(_,_) => true
     case _ => false
   })
 
-  property("propGenException", Test.check(defaultTestPrms, genException).result match {
+  addProperty("propGenException", check(defaultTestPrms, genException).result match {
     case TestGenException(_) => true
     case _ => false
   })
 
-//  def main(args: Array[String]) = {
-//    val failures = check() filter { case (_,stats) => !stats.result.passed }
-//    java.lang.System.exit(if(failures.isEmpty) 0 else -1)
-//  }
+}
 
-  def suite = new TestSuite(testCases: _*)
+object TestScalaCheck extends Application {
+
+  Props.checkProperties()
+  Gen.checkProperties()
+
 }

@@ -4,14 +4,14 @@ import scalacheck.Prop._
 
 object MathLib extends scalacheck.Testable {
 
-  property("sqr", (n: Int) => 
+  addProperty("sqr", (n: Int) => 
     sqr(n) == n*n
   )
  
   def sqr(n: Int): Int = n*n
 
 
-  property("max", (n: Int, m: Int) => {
+  addProperty("max", (n: Int, m: Int) => {
     val mx = max(m,n)
     mx >= m && mx >= n && (mx == m || mx == n)
   })
@@ -26,7 +26,7 @@ object TestMathLib extends Application {
 
   Console.println("\nExecuting tests with ScalaCheck...\n")
   
-  MathLib.check()
+  MathLib.checkProperties()
 
 
   // ... or use SUnit

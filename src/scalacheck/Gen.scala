@@ -1,5 +1,7 @@
 package scalacheck
 
+import Prop._
+
 trait RandomGenerator {
   def choose(inclusiveRange: (Int,Int)): Int
 }
@@ -8,10 +10,9 @@ object StdRand extends RandomGenerator {
   import scala.Math._
   private val r = new java.util.Random
   def choose(range: (Int,Int)) = range match {
-    case (l,h) if(l <  0 && h <  0) => -(r.nextInt(abs(l) + 1) + abs(h))
-    case (l,h) if(l <  0 && h >= 0) => r.nextInt(abs(l) + h + 1) + l
-    case (l,h) if(l >= 0 && h >= 0) => r.nextInt(h + 1) + l
-    case (l,h)                      => l
+    case (l,h) if(l == h) => l
+    case (l,h) if(h < l)  => h
+    case (l,h)            => l + r.nextInt((h-l)+1)
   }
 }
 
@@ -61,7 +62,7 @@ abstract sealed class Gen[+T](g: GenPrms => Option[T]) {
 /** Contains combinators for building generators, and has implicit functions
  *  for generating arbitrary values of common types.
  */
-object Gen {
+object Gen extends Testable {
 
   // Internal support functions
 
@@ -85,11 +86,27 @@ object Gen {
    */
   def arbitrary[T]: Arbitrary[T] = new Arbitrary[T]
 
+
+  addProperty("Gen.value", (x: Int, sz: Int) => 
+    value(x)(GenPrms(sz,StdRand)).get == x
+  )
+
   /** A generator that always generates a given value */
   def value[T](x: T) = mkGen(p => Some(x))
 
+  
+  addProperty("Gen.fail", (x: Int, sz: Int) => 
+    fail(GenPrms(sz,StdRand)) == None
+  )
+
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = mkGen(p => None)
+
+
+  addProperty("Gen.choose", (l: Int, h: Int, sz: Int) => {
+    val x = choose(l,h)(GenPrms(sz,StdRand)).get
+    h >= l ==> (x >= l && x <= h)
+  })
 
   /** A generator that generates a random integer in the given (inclusive)
    *  range.
@@ -97,36 +114,50 @@ object Gen {
   def choose(inclusiveRange: (Int,Int)) =
     parameterized(prms => value(prms.rand.choose(inclusiveRange)))
 
+
   /** Creates a generator that can access its generation parameters
    */
   def parameterized[T](f: GenPrms => Gen[T]): Gen[T] =
     mkGen(prms => f(prms)(prms))
 
+
   /** Creates a generator that can access its generation size
    */
   def sized[T](f: Int => Gen[T]) = parameterized(prms => f(prms.size))
+
 
   /** Creates a resized version of a generator
    */
   def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g(prms.resize(s)))
 
+
+  addProperty("Gen.elements", (l: List[Int], sz: Int) => 
+    elements(l)(GenPrms(sz,StdRand)) match {
+      case None => l.isEmpty
+      case Some(n) => l.contains(n)
+    }
+  )
+
   /** A generator that returns a random element from a list
    */
-  def elements[T](xs: Seq[T]) = for {
+  def elements[T](xs: Seq[T]) = if(xs.isEmpty) fail else for {
     i <- choose((0,xs.length-1))
   } yield xs(i)
 
+
   /** Picks a random generator from a list
    */
-  def oneOf[T](gs: Seq[Gen[T]]) = for {
+  def oneOf[T](gs: Seq[Gen[T]]) = if(gs.isEmpty) fail else for {
     i <- choose((0,gs.length-1))
     x <- gs(i)
   } yield x
+
 
   /** Generates a list of random length. The maximum length depends on the
    *  size parameter
    */
   def listOf[T](g: Gen[T]) = arbitraryList(null)(a => g)
+
 
   /** Generates a non-empty list of random length. The maximum length depends
    *  on the size parameter
@@ -135,6 +166,18 @@ object Gen {
     x  <- g
     xs <- arbitraryList(null)(a => g)
   } yield x::xs
+
+
+  addProperty("Gen.vectorOf", (len: Int, sz: Int) => 
+    () imply {
+      case () if len == 0 =>
+        vectorOf(len,fail)(GenPrms(sz,StdRand)).get.length == 0 &&
+        vectorOf(len,value(0))(GenPrms(sz,StdRand)).get.length == 0
+      case () if len > 0 =>
+        vectorOf(len,fail)(GenPrms(sz,StdRand)) == None &&
+        vectorOf(len,value(0))(GenPrms(sz,StdRand)).get.length == len
+    }
+  )
 
   /** Generates a list of the given length
    */
