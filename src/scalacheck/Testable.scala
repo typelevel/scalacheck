@@ -79,30 +79,30 @@ trait Testable {
   {
     def printTmp(pn: String, res: Option[PropRes], succ: Int, disc: Int) = {
       if(disc > 0)
-        Console.printf("\r[{3}]: Passed {0} tests; {1} discarded",succ,disc,pn)
+        Console.printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
       else
-        Console.printf("\r[{1}]: Passed {0} tests",succ,pn)
+        Console.printf("\r{1}: Passed {0} tests",succ,pn)
       Console.flush
     }
 
     def printStats(pName: String, stats: TestStats) = stats.result match {
       case TestGenException(e) =>
-        Console.printf("\r[{1}]: *** Exception raised when generating arguments:\n{0}               \n",
+        Console.printf("\r{1}: *** Exception raised when generating arguments:\n{0}               \n\n",
           e, pName)
       case TestPropException(e,args) =>
-        Console.printf("\r[{0}]: *** Exception raised when evaluating property                      \n",
+        Console.printf("\r{0}: *** Exception raised when evaluating property                        \n",
           pName)
         Console.printf("The arguments that caused the exception was:\n{0}\n\n", args)
-        Console.printf("The raised exception was:\n{0}\n", e)
+        Console.printf("The raised exception was:\n{0}\n\n", e)
       case TestFailed(args) =>
-        Console.printf("\r[{1}]: *** Failed, after {0} successful tests:                            \n",
+        Console.printf("\r{1}: *** Failed after {0} successful tests                                \n",
           stats.succeeded, pName)
         Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
       case TestExhausted() =>
-        Console.printf("\r[{2}]: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n",
+        Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
           stats.discarded, stats.succeeded, pName)
       case TestPassed() =>
-        Console.printf("\r[{0}]: +++ OK, test passed.                                               \n",
+        Console.printf("\r{0}: +++ OK, tests passed.                                              \n\n",
           pName)
     }
 
