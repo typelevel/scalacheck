@@ -31,7 +31,7 @@ object Prop {
 
   def ==> (b: Boolean, p: => Prop): Prop = if (b) p else rejected
 
-  def imply[T](x: T, f: PartialFunction[T,Prop]) = 
+  def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
     if(f.isDefinedAt(x)) f(x) else rejected
 
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
@@ -56,7 +56,8 @@ object Prop {
   // Implicit properties for common types
 
   implicit def propBoolean(b: Boolean) =
-    value(if(b) PropTrue(Nil) else PropFalse(Nil))
+    try { value(if(b) PropTrue(Nil) else PropFalse(Nil)) }
+    catch { case e => value(PropException(e,Nil)) }
 
   def property[A1,P]
     (f:  A1 => P)(implicit
