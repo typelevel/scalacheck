@@ -112,7 +112,7 @@ object Test {
         Console.printf("The arguments that caused the exception was:\n{0}\n\n", args)
         Console.printf("The raised exception was:\n{0}\n", e)
       case TestFailed(args) =>
-        Console.printf("\r*** Failed, after {0} tests:                  \n", tr.succeeded)
+        Console.printf("\r*** Failed, after {0} successful tests:      \n", tr.succeeded)
         Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
       case TestExhausted() =>
         Console.printf(

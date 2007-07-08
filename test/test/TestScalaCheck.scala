@@ -4,8 +4,9 @@ import scalacheck._
 import scalacheck.Gen._
 import scalacheck.Prop._
 import scalacheck.Test._
+import scala.testing.SUnit._
 
-object TestScalaCheck extends Testable {
+object TestScalaCheck extends Testable with TestConsoleMain {
 
   val passing = Prop.property ((l1: List[Int], l2: List[Int]) =>
     (l2.reverse ::: l1.reverse) == (l1 ::: l2).reverse
@@ -55,8 +56,10 @@ object TestScalaCheck extends Testable {
     case _ => false
   })
 
-  def main(args: Array[String]) = {
-    val failures = check() filter { case (_,stats) => !stats.result.passed }
-    java.lang.System.exit(if(failures.isEmpty) 0 else -1)
-  }
+//  def main(args: Array[String]) = {
+//    val failures = check() filter { case (_,stats) => !stats.result.passed }
+//    java.lang.System.exit(if(failures.isEmpty) 0 else -1)
+//  }
+
+  def suite = new TestSuite(testCases: _*)
 }

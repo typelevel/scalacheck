@@ -55,9 +55,17 @@ object Prop {
 
   // Implicit properties for common types
 
-  implicit def propBoolean(b: Boolean) =
+  implicit def propBoolean(b: Boolean): Prop =
     try { value(if(b) PropTrue(Nil) else PropFalse(Nil)) }
     catch { case e => value(PropException(e,Nil)) }
+
+  def property[P]
+    (f:  () => P)(implicit
+     p:  P => Prop) = for
+  {
+    dummy <- value(PropTrue(Nil)) // to keep from evaluating f immediately
+    r <- mkProp(p(f()))
+  } yield r
 
   def property[A1,P]
     (f:  A1 => P)(implicit
