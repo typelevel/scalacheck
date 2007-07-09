@@ -88,6 +88,10 @@
             destdir="${build}"
             classpathref="build.classpath"/>
 
+    <scalac srcdir="${test}"
+            destdir="${build}"
+            classpathref="build.classpath"/>
+
   </target>
 
 
@@ -117,7 +121,7 @@
       <fileset dir="${build}">
         <include name="${package.root}/**"/>
         <include name="doc/**"/>
-        <exclude name="test**"/>
+        <exclude name="test/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
@@ -175,19 +179,6 @@
       <arg value="-f"/>
       <arg value="${dist}/scalacheck-${version}.sbp"/>
     </exec>
-
-  </target>
-
-  <target name="test" depends="build">
-
-    <scalac srcdir="${test}"
-            destdir="${build}"
-            classpathref="build.classpath"/>
-
-    <java classpathref="run.classpath"
-          classname="test.TestScalaCheck"
-          fork="true"
-          spawn="true"/>
 
   </target>
 

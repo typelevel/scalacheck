@@ -61,6 +61,12 @@ trait Testable {
   type TestStatsInspector = (String,TestStats) => Unit
 
   /** Tests all properties with the given testing parameters, and returns
+   *  the test results.
+   */
+  def checkProperties(prms: TestPrms): Map[String,TestStats] =
+    checkProperties(prms, (n,r,s,d) => (), (n,s) => ())
+
+  /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested.
@@ -103,8 +109,8 @@ trait Testable {
         Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
           stats.discarded, stats.succeeded, pName)
       case TestPassed() =>
-        Console.printf("\r{0}: +++ OK, tests passed.                                              \n\n",
-          pName)
+        Console.printf("\r{1}: +++ OK, passed {0} tests.                                          \n\n", 
+          stats.succeeded, pName)
     }
 
     checkProperties(Test.defaultTestPrms,printTmp,printStats)
@@ -123,7 +129,7 @@ trait Testable {
           "The arguments that caused the failure was:\n"+args.toString+"\n\n" +
           "The raised exception was:\n"+e.toString+"\n")
         case TestFailed(args) => fail(
-          " Property failed after " + stats.succeeded.toString + 
+          " Property failed after " + stats.succeeded.toString +
           " successful tests.\n" +
           "The arguments that caused the failure was:\n"+args.toString+"\n\n")
         case TestExhausted() => fail(
@@ -138,7 +144,7 @@ trait Testable {
   /** Returns all properties as SUnit.TestCase instances, which can added to
    *  a SUnit.TestSuite.
    */
-  def testCases: List[TestCase] = 
+  def testCases: List[TestCase] =
     (properties map {case (pn,p) => propToTestCase(pn,p)}).toList
 
 }

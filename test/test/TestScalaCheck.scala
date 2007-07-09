@@ -31,27 +31,27 @@ object Props extends Testable {
 
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
-  addProperty("propPassing", check(defaultTestPrms, passing).result match {
+  addProperty("propPassing", () => check(defaultTestPrms, passing).result match {
     case TestPassed() => true
     case _ => false
   })
 
-  addProperty("propFailing", check(defaultTestPrms, failing).result match {
+  addProperty("propFailing", () => check(defaultTestPrms, failing).result match {
     case TestFailed(_) => true
     case _ => false
   })
 
-  addProperty("propExhausted", check(defaultTestPrms, exhausted).result match {
+  addProperty("propExhausted", () => check(defaultTestPrms, exhausted).result match {
     case TestExhausted() => true
     case _ => false
   })
 
-  addProperty("propPropException", check(defaultTestPrms, propException).result match {
+  addProperty("propPropException", () => check(defaultTestPrms, propException).result match {
     case TestPropException(_,_) => true
     case _ => false
   })
 
-  addProperty("propGenException", check(defaultTestPrms, genException).result match {
+  addProperty("propGenException", () => check(defaultTestPrms, genException).result match {
     case TestGenException(_) => true
     case _ => false
   })

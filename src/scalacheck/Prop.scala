@@ -27,12 +27,23 @@ object Prop {
 
   // Property combinators
 
+  /** A property that never is proved or falsified
+   */
   def rejected = fail
 
-  def ==> (b: Boolean, p: => Prop): Prop = if (b) p else rejected
+  /** A property that always is false 
+   */
+  def falsified = value(PropFalse(Nil))
+
+  /** A property that always is true 
+   */
+  def proved = value(PropTrue(Nil))
+
+  def ==>(b: Boolean, p: => Prop): Prop = 
+    property(() => if (b) p else rejected)
 
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
-    if(f.isDefinedAt(x)) f(x) else rejected
+    property(() => if(f.isDefinedAt(x)) f(x) else rejected)
 
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
     t <- g
@@ -55,15 +66,14 @@ object Prop {
 
   // Implicit properties for common types
 
-  implicit def propBoolean(b: Boolean): Prop =
-    try { value(if(b) PropTrue(Nil) else PropFalse(Nil)) }
-    catch { case e => value(PropException(e,Nil)) }
+  implicit def propBoolean(b: Boolean): Prop = 
+    value(if(b) PropTrue(Nil) else PropFalse(Nil)) 
 
   def property[P]
     (f:  () => P)(implicit
      p:  P => Prop) = for
   {
-    dummy <- value(PropTrue(Nil)) // to keep from evaluating f immediately
+    x <- proved // to keep from evaluating f immediately
     r <- mkProp(p(f()))
   } yield r
 
