@@ -1,5 +1,43 @@
 RELEASE NOTES
 
+ScalaCheck 0.2
+
+ScalaCheck is a Scala implementation of the QuickCheck library for Haskell.
+It tries to keep the look and feel of QuickCheck as much as possible, while
+being open for improvements and extensions that can ease the task of
+property-based, randomized testing of Scala programs.
+
+Release 0.2 adds several bug fixes and some improvements. The most noteworthy
+new feature is the Testable trait, which makes it easy to define and check
+a batch of properties, directly in the implementing code if desired.
+
+For more info, tutorials, change history, etc, see the project site at:
+
+  http://code.google.com/p/scalacheck
+
+
+Downloading ScalaCheck:
+
+  * Direct install with sbaz:
+
+    sbaz update
+    sbaz install scalacheck
+
+  * If you already have an earlier version of ScalaCheck installed, you 
+    just need to run:
+
+    sbaz upgrade
+
+  * http://scalacheck.googlecode.com/files/ScalaCheck-0.2.jar
+
+  * Source repository:
+    http://scalacheck.googlecode.com/svn/
+
+
+
+
+PREVIOUS RELEASES
+
 ScalaCheck 0.1
 
 ScalaCheck is a Scala implementation of the QuickCheck library for Haskell.
