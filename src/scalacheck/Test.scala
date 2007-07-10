@@ -1,63 +1,66 @@
 package scalacheck
 
-/** Test parameters */
-case class TestPrms(minSuccessfulTests: Int, maxDiscardedTests: Int,
-  maxSize: Int)
-
-/** Test statistics */
-case class TestStats(result: TestResult, succeeded: Int, discarded: Int)
-
-abstract sealed class TestResult {
-  def passed = this match {
-    case TestPassed() => true
-    case _ => false
-  }
-}
-
-/** The property test passed
- */
-case class TestPassed extends TestResult
-
-/** The property was proved wrong with the given concrete arguments.
- */
-case class TestFailed(args: List[String]) extends TestResult
-
-/** The property test was exhausted, it wasn't possible to generate enough
- *  concrete arguments satisfying the preconditions to get enough passing
- *  property evaluations.
- */
-case class TestExhausted extends TestResult
-
-/** An exception was raised when trying to evaluate the property with the
- *  given concrete arguments.
- */
-case class TestPropException(e: Throwable,args: List[String]) extends TestResult
-
-/** An exception was raised when trying to generate concrete arguments
- *  for evaluating the property.
- */
-case class TestGenException(e: Throwable) extends TestResult
-
 object Test {
 
-  import Prop._
+  import Prop.{PropTrue, PropFalse, PropException}
+
+  // Types
+
+  /** Test parameters */
+  case class Params(minSuccessfulTests: Int, maxDiscardedTests: Int,
+    maxSize: Int, rand: RandomGenerator)
+
+  /** Test statistics */
+  case class Stats(result: Result, succeeded: Int, discarded: Int)
+
+  abstract sealed class Result {
+    def passed = this match {
+      case TestPassed() => true
+      case _ => false
+    }
+  }
+
+  /** The property test passed */
+  case class TestPassed extends Result
+
+  /** The property was proved wrong with the given concrete arguments.  */
+  case class TestFailed(args: List[String]) extends Result
+
+  /** The property test was exhausted, it wasn't possible to generate enough
+  *  concrete arguments satisfying the preconditions to get enough passing
+  *  property evaluations.
+  */
+  case class TestExhausted extends Result
+
+  /** An exception was raised when trying to evaluate the property with the
+  *  given concrete arguments.
+  */
+  case class TestPropException(e: Throwable,args: List[String]) extends Result
+
+  /** An exception was raised when trying to generate concrete arguments
+  *  for evaluating the property.
+  */
+  case class TestGenException(e: Throwable) extends Result
+
+  /** Property evaluation callback. */
+  type TestInspector = (Option[Prop.Result],Int,Int) => Unit
+
+
 
   // Testing functions
 
-  val defaultTestPrms = TestPrms(100,500,100)
-
-  type TestInspector = (Option[PropRes],Int,Int) => Unit
+  val defaultParams = Params(100,500,100,StdRand)
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results.
    */
-  def check(prms: TestPrms, p: Prop): TestStats = check(prms,p, (r,s,d) => ())
+  def check(prms: Params, p: Prop): Stats = check(prms,p, (r,s,d) => ())
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time the property is evaluted.
    */
-  def check(prms: TestPrms, p: Prop, f: TestInspector): TestStats =
+  def check(prms: Params, p: Prop, f: TestInspector): Stats =
   {
     abstract sealed class Either[+T,+U]
     case class Left[+T,+U](l: T) extends Either[T,U]
@@ -65,12 +68,12 @@ object Test {
 
     var nd = 0
     var ns = 0
-    var tr: TestResult = null
+    var tr: Result = null
 
     while(tr == null)
     {
       val size = (ns * prms.maxSize) / prms.minSuccessfulTests + nd / 10
-      val genprms = GenPrms(size, StdRand)
+      val genprms = Gen.Params(size, prms.rand)
       (try { Right(p(genprms)) } catch { case e => Left(e) }) match {
         case Left(e)   => tr = TestGenException(e)
         case Right(pr) =>
@@ -88,21 +91,21 @@ object Test {
       }
     }
 
-    TestStats(tr, ns, nd)
+    Stats(tr, ns, nd)
   }
 
   /** Tests a property and prints results to the console
    */
-  def check(p: Prop): TestStats =
+  def check(p: Prop): Stats =
   {
-    def printTmp(res: Option[PropRes], succeeded: Int, discarded: Int) = {
+    def printTmp(res: Option[Prop.Result], succeeded: Int, discarded: Int) = {
       if(discarded > 0)
         Console.printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
       else Console.printf("\rPassed {0} tests",succeeded)
       Console.flush
     }
 
-    val tr = check(defaultTestPrms,p,printTmp)
+    val tr = check(defaultParams,p,printTmp)
 
     tr.result match {
       case TestGenException(e) =>

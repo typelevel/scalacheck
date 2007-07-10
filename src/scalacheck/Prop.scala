@@ -1,18 +1,33 @@
 package scalacheck
 
+/** A property is a generator that generates a property result */
+abstract class Prop extends Gen[Prop.Result]
+
 object Prop {
 
-  import Gen.{arbitrary, value, fail}
+  import Gen.{value, fail, arbitrary}
 
-  type Prop = Gen[PropRes]
+  // Types
 
-  abstract sealed class PropRes(val args: List[String])
+  /** The result of evaluating a property */
+  abstract sealed class Result(val args: List[String])
 
-  case class PropTrue(as: List[String]) extends PropRes(as)
-  case class PropFalse(as: List[String]) extends PropRes(as)
-  case class PropException(e: Throwable, as: List[String]) extends PropRes(as)
+  /** The property was true with the given arguments */
+  case class PropTrue(as: List[String]) extends Result(as)
+
+  /** The property was false with the given arguments */
+  case class PropFalse(as: List[String]) extends Result(as)
+
+  /** Evaluating the property with the given arguments raised an exception */
+  case class PropException(e: Throwable, as: List[String]) extends Result(as)
+
+
 
   // Private support functions
+
+  private implicit def genToProp(g: Gen[Result]) = new Prop {
+    def apply(prms: Gen.Params) = g(prms)
+  }
 
   private def mkProp(p: => Prop, as: Any*): Prop = for {
     r1 <- try { p } catch { case e => value(PropException(e,Nil)) }
@@ -25,43 +40,49 @@ object Prop {
   } yield r2
 
 
+
   // Property combinators
 
-  /** A property that never is proved or falsified
-   */
+  /** A property that never is proved or falsified */
   def rejected = fail
 
-  /** A property that always is false 
-   */
+  /** A property that always is false */
   def falsified = value(PropFalse(Nil))
 
-  /** A property that always is true 
-   */
+  /** A property that always is true */
   def proved = value(PropTrue(Nil))
 
+  /** Implication */
   def ==>(b: Boolean, p: => Prop): Prop = 
     property(() => if (b) p else rejected)
 
+  /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
     property(() => if(f.isDefinedAt(x)) f(x) else rejected)
 
+  /** Universal quantifier */
   def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
     t <- g
     r <- mkProp(f(t), t)
   } yield r
 
-
-  // Convenience functions
-
-  implicit def extBoolean(b: Boolean) = new ExtBoolean(b)
-  class ExtBoolean(b: Boolean) {
+  class ExtendedBoolean(b: Boolean) {
+    /** Implication */
     def ==>(p: => Prop) = Prop.==>(b,p)
   }
 
-  implicit def extAny[T](x: T) = new ExtAny(x)
-  class ExtAny[T](x: T) {
+  class ExtendedAny[T](x: T) {
+    /** Implication with several conditions */
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
   }
+
+
+
+  // Implicit defs
+
+  implicit def extendedBoolean(b: Boolean) = new ExtendedBoolean(b)
+  implicit def extendedAny[T](x: T) = new ExtendedAny(x)
+
 
 
   // Implicit properties for common types
@@ -71,7 +92,7 @@ object Prop {
 
   def property[P]
     (f:  () => P)(implicit
-     p:  P => Prop) = for
+     p:  P => Prop): Prop = for
   {
     x <- proved // to keep from evaluating f immediately
     r <- mkProp(p(f()))
@@ -80,7 +101,7 @@ object Prop {
   def property[A1,P]
     (f:  A1 => P)(implicit
      p:  P => Prop,
-     g1: Arbitrary[A1] => Gen[A1]) = for
+     g1: Arbitrary[A1] => Gen[A1]): Prop = for
   {
     a1 <- g1(arbitrary)
     r  <- mkProp(p(f(a1)), a1)
@@ -90,7 +111,7 @@ object Prop {
     (f:  (A1,A2) => P)(implicit
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2]) = for
+     g2: Arbitrary[A2] => Gen[A2]): Prop = for
   {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
@@ -102,7 +123,7 @@ object Prop {
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
-     g3: Arbitrary[A3] => Gen[A3]) = for
+     g3: Arbitrary[A3] => Gen[A3]): Prop = for
   {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)
@@ -116,7 +137,7 @@ object Prop {
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2],
      g3: Arbitrary[A2] => Gen[A3],
-     g4: Arbitrary[A3] => Gen[A4]) = for
+     g4: Arbitrary[A3] => Gen[A4]): Prop = for
   {
     a1 <- g1(arbitrary)
     a2 <- g2(arbitrary)

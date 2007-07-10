@@ -1,19 +1,24 @@
 package scalacheck
 
-import scalacheck.Prop._
-import scalacheck.Test._
-import scala.collection.Map
-import scala.testing.SUnit.TestCase
-
 trait Testable {
 
+  import scalacheck.Test.{check, TestPassed, TestFailed, TestGenException,
+    TestPropException, TestExhausted}
+  import scala.collection.Map
+  import scala.testing.SUnit.TestCase
+
   private var properties = scala.collection.immutable.Map.empty[String, Prop]
+
+  // Implicit defs
+
+  implicit def extendedBoolean(b: Boolean) = new Prop.ExtendedBoolean(b)
+  implicit def extendedAny[T](x: T) = new Prop.ExtendedAny(x)
 
   protected def addProperty[P]
     (propName: String, f: () => P)(implicit
      p:  P => Prop): Unit =
   {
-    properties = properties.update(propName,property(f))
+    properties = properties.update(propName,Prop.property(f))
   }
 
   protected def addProperty[A1,P]
@@ -21,7 +26,7 @@ trait Testable {
      p:  P => Prop,
      g1: Arbitrary[A1] => Gen[A1]): Unit =
   {
-    properties = properties.update(propName,property(f))
+    properties = properties.update(propName,Prop.property(f))
   }
 
   protected def addProperty[A1,A2,P]
@@ -30,7 +35,7 @@ trait Testable {
      g1: Arbitrary[A1] => Gen[A1],
      g2: Arbitrary[A2] => Gen[A2]): Unit =
   {
-    properties = properties.update(propName,property(f))
+    properties = properties.update(propName,Prop.property(f))
   }
 
   protected def addProperty[A1,A2,A3,P]
@@ -40,7 +45,7 @@ trait Testable {
      g2: Arbitrary[A2] => Gen[A2],
      g3: Arbitrary[A3] => Gen[A3]): Unit =
   {
-    properties = properties.update(propName,property(f))
+    properties = properties.update(propName,Prop.property(f))
   }
 
   protected def addProperty[A1,A2,A3,A4,P]
@@ -51,19 +56,19 @@ trait Testable {
      g3: Arbitrary[A2] => Gen[A3],
      g4: Arbitrary[A3] => Gen[A4]): Unit =
   {
-    properties = properties.update(propName,property(f))
+    properties = properties.update(propName,Prop.property(f))
   }
 
   protected def addProperty(propName: String, prop: Prop): Unit =
     properties = properties.update(propName, prop)
 
-  type TestsInspector = (String,Option[PropRes],Int,Int) => Unit
-  type TestStatsInspector = (String,TestStats) => Unit
+  type TestsInspector = (String,Option[Prop.Result],Int,Int) => Unit
+  type TestStatsInspector = (String,Test.Stats) => Unit
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results.
    */
-  def checkProperties(prms: TestPrms): Map[String,TestStats] =
+  def checkProperties(prms: Test.Params): Map[String,Test.Stats] =
     checkProperties(prms, (n,r,s,d) => (), (n,s) => ())
 
   /** Tests all properties with the given testing parameters, and returns
@@ -71,8 +76,8 @@ trait Testable {
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested.
    */
-  def checkProperties(prms: TestPrms, f: TestsInspector, g: TestStatsInspector
-  ): Map[String,TestStats] = properties transform { case (pName,p) =>
+  def checkProperties(prms: Test.Params, f: TestsInspector, g: TestStatsInspector
+  ): Map[String,Test.Stats] = properties transform { case (pName,p) =>
     val stats = check(prms,p,f(pName,_,_,_))
     g(pName,stats)
     stats
@@ -82,9 +87,9 @@ trait Testable {
    *  the test results. The results are also printed on the console during
    *  testing.
    */
-  def checkProperties(): Map[String,TestStats] =
+  def checkProperties(): Map[String,Test.Stats] =
   {
-    def printTmp(pn: String, res: Option[PropRes], succ: Int, disc: Int) = {
+    def printTmp(pn: String, res: Option[Prop.Result], succ: Int, disc: Int) = {
       if(disc > 0)
         Console.printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
       else
@@ -92,7 +97,7 @@ trait Testable {
       Console.flush
     }
 
-    def printStats(pName: String, stats: TestStats) = stats.result match {
+    def printStats(pName: String, stats: Test.Stats) = stats.result match {
       case TestGenException(e) =>
         Console.printf("\r{1}: *** Exception raised when generating arguments:\n{0}               \n\n",
           e, pName)
@@ -109,17 +114,17 @@ trait Testable {
         Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
           stats.discarded, stats.succeeded, pName)
       case TestPassed() =>
-        Console.printf("\r{1}: +++ OK, passed {0} tests.                                          \n\n", 
+        Console.printf("\r{1}: +++ OK, passed {0} tests.                                          \n\n",
           stats.succeeded, pName)
     }
 
-    checkProperties(Test.defaultTestPrms,printTmp,printStats)
+    checkProperties(Test.defaultParams,printTmp,printStats)
   }
 
   private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {
 
     protected def runTest() = {
-      val stats = check(Test.defaultTestPrms,p)
+      val stats = check(Test.defaultParams,p)
       stats.result match {
         case TestGenException(e) => fail(
           " Exception raised when generating arguments.\n" +

@@ -1,7 +1,5 @@
 package test
 
-import scalacheck.Prop._
-
 object MathLib extends scalacheck.Testable {
 
   addProperty("sqr", (n: Int) => 

@@ -1,7 +1,5 @@
 package scalacheck
 
-import Prop._
-
 trait RandomGenerator {
   def choose(inclusiveRange: (Int,Int)): Int
 }
@@ -16,6 +14,8 @@ object StdRand extends RandomGenerator {
   }
 }
 
+
+
 /** Dummy type that represents types that supports the arbitrary function.
  *  This could have been done more like a Haskell type class, with arbitrary as
  *  a member of Arbitrary, but placing the arbitrary function in the Gen object
@@ -28,18 +28,15 @@ object StdRand extends RandomGenerator {
  */
 sealed class Arbitrary[T] {}
 
-/** Record that encapsulates all parameters required for data generation */
-case class GenPrms(size: Int, rand: RandomGenerator) {
-  def resize(newSize: Int) = GenPrms(newSize,rand)
-}
+
 
 /** Class that represents a generator. You shouldn't (and couldn't) make
- *  instances or subclasses of this class directly. To create custom
- *  generators, the combinators in the Gen object should be used.
- */
-abstract sealed class Gen[+T](g: GenPrms => Option[T]) {
+*  instances of this class directly. To create custom
+*  generators, the combinators in the Gen object should be used.
+*/
+abstract class Gen[+T] {
 
-  def apply(prms: GenPrms) = g(prms)
+  def apply(prms: Gen.Params): Option[T]
 
   def map[U](f: T => U): Gen[U] = Gen.mkGen(prms => for {
     t <- this(prms)
@@ -59,14 +56,27 @@ abstract sealed class Gen[+T](g: GenPrms => Option[T]) {
 
 }
 
+
+
 /** Contains combinators for building generators, and has implicit functions
  *  for generating arbitrary values of common types.
  */
 object Gen extends Testable {
 
+  // Types
+
+  /** Record that encapsulates all parameters required for data generation */
+  case class Params(size: Int, rand: RandomGenerator) {
+    def resize(newSize: Int) = Params(newSize,rand)
+  }
+
+
+
   // Internal support functions
 
-  private def mkGen[T](g: GenPrms => Option[T]): Gen[T] = new Gen(g) {}
+  private def mkGen[T](g: Params => Option[T]): Gen[T] = new Gen[T] { 
+    def apply(prms: Params) = g(prms)
+  }
 
   private def sequence[T](l: List[Gen[T]]): Gen[List[T]] = {
     def consGen(gt: Gen[T], gts: Gen[List[T]]) = for {
@@ -76,6 +86,7 @@ object Gen extends Testable {
 
     l.foldRight(value[List[T]](Nil))(consGen _)
   }
+
 
 
   // Generator combinators
@@ -88,7 +99,7 @@ object Gen extends Testable {
 
 
   addProperty("Gen.value", (x: Int, sz: Int) => 
-    value(x)(GenPrms(sz,StdRand)).get == x
+    value(x)(Params(sz,StdRand)).get == x
   )
 
   /** A generator that always generates a given value */
@@ -96,7 +107,7 @@ object Gen extends Testable {
 
   
   addProperty("Gen.fail", (x: Int, sz: Int) => 
-    fail(GenPrms(sz,StdRand)) == None
+    fail(Params(sz,StdRand)) == None
   )
 
   /** A generator that never generates a value */
@@ -104,7 +115,7 @@ object Gen extends Testable {
 
 
   addProperty("Gen.choose", (l: Int, h: Int, sz: Int) => {
-    val x = choose(l,h)(GenPrms(sz,StdRand)).get
+    val x = choose(l,h)(Params(sz,StdRand)).get
     h >= l ==> (x >= l && x <= h)
   })
 
@@ -117,7 +128,7 @@ object Gen extends Testable {
 
   /** Creates a generator that can access its generation parameters
    */
-  def parameterized[T](f: GenPrms => Gen[T]): Gen[T] =
+  def parameterized[T](f: Params => Gen[T]): Gen[T] =
     mkGen(prms => f(prms)(prms))
 
 
@@ -132,7 +143,7 @@ object Gen extends Testable {
 
 
   addProperty("Gen.elements", (l: List[Int], sz: Int) => 
-    elements(l)(GenPrms(sz,StdRand)) match {
+    elements(l)(Params(sz,StdRand)) match {
       case None => l.isEmpty
       case Some(n) => l.contains(n)
     }
@@ -171,17 +182,18 @@ object Gen extends Testable {
   addProperty("Gen.vectorOf", (len: Int, sz: Int) => 
     () imply {
       case () if len == 0 =>
-        vectorOf(len,fail)(GenPrms(sz,StdRand)).get.length == 0 &&
-        vectorOf(len,value(0))(GenPrms(sz,StdRand)).get.length == 0
+        vectorOf(len,fail)(Params(sz,StdRand)).get.length == 0 &&
+        vectorOf(len,value(0))(Params(sz,StdRand)).get.length == 0
       case () if len > 0 =>
-        vectorOf(len,fail)(GenPrms(sz,StdRand)) == None &&
-        vectorOf(len,value(0))(GenPrms(sz,StdRand)).get.length == len
+        vectorOf(len,fail)(Params(sz,StdRand)) == None &&
+        vectorOf(len,value(0))(Params(sz,StdRand)).get.length == len
     }
   )
 
   /** Generates a list of the given length
    */
   def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = sequence(List.make(n,g))
+
 
 
   // Implicit generators for common types

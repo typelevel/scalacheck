@@ -1,12 +1,10 @@
 package test
 
-import scalacheck._
-import scalacheck.Gen._
-import scalacheck.Prop._
-import scalacheck.Test._
-import scala.testing.SUnit._
+object Props extends scalacheck.Testable {
 
-object Props extends Testable {
+  import scalacheck.Gen._
+  import scalacheck.Prop._
+  import scalacheck.Test._
 
   val passing = property ((l1: List[Int], l2: List[Int]) =>
     (l2.reverse ::: l1.reverse) == (l1 ::: l2).reverse
@@ -31,27 +29,27 @@ object Props extends Testable {
 
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
-  addProperty("propPassing", () => check(defaultTestPrms, passing).result match {
+  addProperty("propPassing", () => check(defaultParams, passing).result match {
     case TestPassed() => true
     case _ => false
   })
 
-  addProperty("propFailing", () => check(defaultTestPrms, failing).result match {
+  addProperty("propFailing", () => check(defaultParams, failing).result match {
     case TestFailed(_) => true
     case _ => false
   })
 
-  addProperty("propExhausted", () => check(defaultTestPrms, exhausted).result match {
+  addProperty("propExhausted", () => check(defaultParams, exhausted).result match {
     case TestExhausted() => true
     case _ => false
   })
 
-  addProperty("propPropException", () => check(defaultTestPrms, propException).result match {
+  addProperty("propPropException", () => check(defaultParams, propException).result match {
     case TestPropException(_,_) => true
     case _ => false
   })
 
-  addProperty("propGenException", () => check(defaultTestPrms, genException).result match {
+  addProperty("propGenException", () => check(defaultParams, genException).result match {
     case TestGenException(_) => true
     case _ => false
   })
@@ -61,6 +59,6 @@ object Props extends Testable {
 object TestScalaCheck extends Application {
 
   Props.checkProperties()
-  Gen.checkProperties()
+  scalacheck.Gen.checkProperties()
 
 }
