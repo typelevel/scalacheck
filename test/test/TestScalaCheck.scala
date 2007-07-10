@@ -30,27 +30,27 @@ object Props extends scalacheck.Testable {
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
   addProperty("propPassing", () => check(defaultParams, passing).result match {
-    case TestPassed() => true
+    case Passed() => true
     case _ => false
   })
 
   addProperty("propFailing", () => check(defaultParams, failing).result match {
-    case TestFailed(_) => true
+    case Failed(_) => true
     case _ => false
   })
 
   addProperty("propExhausted", () => check(defaultParams, exhausted).result match {
-    case TestExhausted() => true
+    case Exhausted() => true
     case _ => false
   })
 
   addProperty("propPropException", () => check(defaultParams, propException).result match {
-    case TestPropException(_,_) => true
+    case PropException(_,_) => true
     case _ => false
   })
 
   addProperty("propGenException", () => check(defaultParams, genException).result match {
-    case TestGenException(_) => true
+    case GenException(_) => true
     case _ => false
   })
 

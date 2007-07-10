@@ -2,8 +2,6 @@ package scalacheck
 
 trait Testable {
 
-  import scalacheck.Test.{check, TestPassed, TestFailed, TestGenException,
-    TestPropException, TestExhausted}
   import scala.collection.Map
   import scala.testing.SUnit.TestCase
 
@@ -78,7 +76,7 @@ trait Testable {
    */
   def checkProperties(prms: Test.Params, f: TestsInspector, g: TestStatsInspector
   ): Map[String,Test.Stats] = properties transform { case (pName,p) =>
-    val stats = check(prms,p,f(pName,_,_,_))
+    val stats = Test.check(prms,p,f(pName,_,_,_))
     g(pName,stats)
     stats
   }
@@ -98,22 +96,22 @@ trait Testable {
     }
 
     def printStats(pName: String, stats: Test.Stats) = stats.result match {
-      case TestGenException(e) =>
+      case Test.GenException(e) =>
         Console.printf("\r{1}: *** Exception raised when generating arguments:\n{0}               \n\n",
           e, pName)
-      case TestPropException(e,args) =>
+      case Test.PropException(e,args) =>
         Console.printf("\r{0}: *** Exception raised when evaluating property                        \n",
           pName)
         Console.printf("The arguments that caused the exception was:\n{0}\n\n", args)
         Console.printf("The raised exception was:\n{0}\n\n", e)
-      case TestFailed(args) =>
+      case Test.Failed(args) =>
         Console.printf("\r{1}: *** Failed after {0} successful tests                                \n",
           stats.succeeded, pName)
         Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
-      case TestExhausted() =>
+      case Test.Exhausted() =>
         Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
           stats.discarded, stats.succeeded, pName)
-      case TestPassed() =>
+      case Test.Passed() =>
         Console.printf("\r{1}: +++ OK, passed {0} tests.                                          \n\n",
           stats.succeeded, pName)
     }
@@ -124,23 +122,23 @@ trait Testable {
   private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {
 
     protected def runTest() = {
-      val stats = check(Test.defaultParams,p)
+      val stats = Test.check(Test.defaultParams,p)
       stats.result match {
-        case TestGenException(e) => fail(
+        case Test.GenException(e) => fail(
           " Exception raised when generating arguments.\n" +
           "The raised exception was:\n"+e.toString+"\n")
-        case TestPropException(e,args) => fail(
+        case Test.PropException(e,args) => fail(
           " Exception raised when evaluating property.\n\n" +
           "The arguments that caused the failure was:\n"+args.toString+"\n\n" +
           "The raised exception was:\n"+e.toString+"\n")
-        case TestFailed(args) => fail(
+        case Test.Failed(args) => fail(
           " Property failed after " + stats.succeeded.toString +
           " successful tests.\n" +
           "The arguments that caused the failure was:\n"+args.toString+"\n\n")
-        case TestExhausted() => fail(
+        case Test.Exhausted() => fail(
           " Gave up after only " + stats.succeeded.toString + " tests. " +
           stats.discarded.toString + " tests were discarded.")
-        case TestPassed() => ()
+        case Test.Passed() => ()
       }
     }
 

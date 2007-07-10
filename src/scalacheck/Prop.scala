@@ -13,13 +13,13 @@ object Prop {
   abstract sealed class Result(val args: List[String])
 
   /** The property was true with the given arguments */
-  case class PropTrue(as: List[String]) extends Result(as)
+  case class True(as: List[String]) extends Result(as)
 
   /** The property was false with the given arguments */
-  case class PropFalse(as: List[String]) extends Result(as)
+  case class False(as: List[String]) extends Result(as)
 
   /** Evaluating the property with the given arguments raised an exception */
-  case class PropException(e: Throwable, as: List[String]) extends Result(as)
+  case class Exception(e: Throwable, as: List[String]) extends Result(as)
 
 
 
@@ -30,12 +30,12 @@ object Prop {
   }
 
   private def mkProp(p: => Prop, as: Any*): Prop = for {
-    r1 <- try { p } catch { case e => value(PropException(e,Nil)) }
+    r1 <- try { p } catch { case e => value(Exception(e,Nil)) }
     ss = as.map(_.toString).toList
     r2 <- r1 match {
-            case PropTrue(ss2)        => value(PropTrue(ss ::: ss2))
-            case PropFalse(ss2)       => value(PropFalse(ss ::: ss2))
-            case PropException(e,ss2) => value(PropException(e,ss ::: ss2))
+            case True(ss2)        => value(True(ss ::: ss2))
+            case False(ss2)       => value(False(ss ::: ss2))
+            case Exception(e,ss2) => value(Exception(e,ss ::: ss2))
           }
   } yield r2
 
@@ -47,10 +47,10 @@ object Prop {
   def rejected = fail
 
   /** A property that always is false */
-  def falsified = value(PropFalse(Nil))
+  def falsified = value(False(Nil))
 
   /** A property that always is true */
-  def proved = value(PropTrue(Nil))
+  def proved = value(True(Nil))
 
   /** Implication */
   def ==>(b: Boolean, p: => Prop): Prop = 
@@ -88,7 +88,7 @@ object Prop {
   // Implicit properties for common types
 
   implicit def propBoolean(b: Boolean): Prop = 
-    value(if(b) PropTrue(Nil) else PropFalse(Nil)) 
+    value(if(b) True(Nil) else False(Nil)) 
 
   def property[P]
     (f:  () => P)(implicit
