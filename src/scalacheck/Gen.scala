@@ -142,6 +142,23 @@ object Gen extends Testable {
   def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g(prms.resize(s)))
 
 
+  /** Chooses one of the given generators, with a weighted random distribution.
+   */
+  def frequency[T](gs: Seq[(Int,Gen[T])]) = {
+    val tot = (gs.map(_._1) :\ 0) (_+_)
+    
+    def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
+      case Nil => fail
+      case (k,g)::gs => if(n <= k) g else pick(n-k, gs)
+    }
+
+    for {
+      n <- choose(1,tot)
+      x <- pick(n,gs.toList)
+    } yield x
+  }
+
+
   addProperty("Gen.elements", (l: List[Int], sz: Int) => 
     elements(l)(Params(sz,StdRand)) match {
       case None => l.isEmpty
