@@ -38,9 +38,7 @@ abstract class Gen[+T] {
 
   def apply(prms: Gen.Params): Option[T]
 
-  def map[U](f: T => U): Gen[U] = Gen.mkGen(prms => for {
-    t <- this(prms)
-  } yield f(t))
+  def map[U](f: T => U): Gen[U] = Gen.mkGen(prms => this(prms).map(f))
 
   def flatMap[U](f: T => Gen[U]): Gen[U] = Gen.mkGen(prms => for {
     t <- this(prms)
@@ -54,6 +52,9 @@ abstract class Gen[+T] {
 
   def suchThat(p: T => Boolean): Gen[T] = filter(p)
 
+  def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
+    Gen.mkGen(prms => f(this(prms), g(prms)))
+
 }
 
 
@@ -62,6 +63,8 @@ abstract class Gen[+T] {
  *  for generating arbitrary values of common types.
  */
 object Gen extends Testable {
+
+  import Prop._
 
   // Types
 
@@ -74,7 +77,7 @@ object Gen extends Testable {
 
   // Internal support functions
 
-  private def mkGen[T](g: Params => Option[T]): Gen[T] = new Gen[T] { 
+  private def mkGen[T](g: Params => Option[T]): Gen[T] = new Gen[T] {
     def apply(prms: Params) = g(prms)
   }
 
@@ -98,15 +101,15 @@ object Gen extends Testable {
   def arbitrary[T]: Arbitrary[T] = new Arbitrary[T]
 
 
-  addProperty("Gen.value", (x: Int, sz: Int) => 
+  addProperty("Gen.value", (x: Int, sz: Int) =>
     value(x)(Params(sz,StdRand)).get == x
   )
 
   /** A generator that always generates a given value */
   def value[T](x: T) = mkGen(p => Some(x))
 
-  
-  addProperty("Gen.fail", (x: Int, sz: Int) => 
+
+  addProperty("Gen.fail", (x: Int, sz: Int) =>
     fail(Params(sz,StdRand)) == None
   )
 
@@ -146,7 +149,7 @@ object Gen extends Testable {
    */
   def frequency[T](gs: Seq[(Int,Gen[T])]) = {
     val tot = (gs.map(_._1) :\ 0) (_+_)
-    
+
     def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
       case Nil => fail
       case (k,g)::gs => if(n <= k) g else pick(n-k, gs)
@@ -159,7 +162,7 @@ object Gen extends Testable {
   }
 
 
-  addProperty("Gen.elements", (l: List[Int], sz: Int) => 
+  addProperty("Gen.elements", (l: List[Int], sz: Int) =>
     elements(l)(Params(sz,StdRand)) match {
       case None => l.isEmpty
       case Some(n) => l.contains(n)
@@ -196,7 +199,7 @@ object Gen extends Testable {
   } yield x::xs
 
 
-  addProperty("Gen.vectorOf", (len: Int, sz: Int) => 
+  addProperty("Gen.vectorOf", (len: Int, sz: Int) =>
     () imply {
       case () if len == 0 =>
         vectorOf(len,fail)(Params(sz,StdRand)).get.length == 0 &&
@@ -214,6 +217,12 @@ object Gen extends Testable {
 
 
   // Implicit generators for common types
+
+  implicit def arbitraryGen[T](x: Arbitrary[Gen[T]])
+    (implicit f: Arbitrary[T] => Gen[T]): Gen[Gen[T]] = for 
+  {
+    x <- f(arbitrary)
+  } yield value(x)
 
   implicit def arbitraryBool(x: Arbitrary[Boolean]): Gen[Boolean] =
     elements(List(true,false))

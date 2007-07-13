@@ -7,11 +7,6 @@ trait Testable {
 
   private var properties = scala.collection.immutable.Map.empty[String, Prop]
 
-  // Implicit defs
-
-  implicit def extendedBoolean(b: Boolean) = new Prop.ExtendedBoolean(b)
-  implicit def extendedAny[T](x: T) = new Prop.ExtendedAny(x)
-
   protected def addProperty[P]
     (propName: String, f: () => P)(implicit
      p:  P => Prop): Unit =
@@ -149,5 +144,10 @@ trait Testable {
    */
   def testCases: List[TestCase] =
     (properties map {case (pn,p) => propToTestCase(pn,p)}).toList
+
+  /** Returns all properties combined into a single property, that holds
+   *  when all properties hold
+   */
+  def allProperties: Prop = Prop.all((properties map (_._2)).toList)
 
 }

@@ -6,8 +6,8 @@ object Props extends scalacheck.Testable {
   import scalacheck.Prop._
   import scalacheck.Test._
 
-  val passing = property ((l1: List[Int], l2: List[Int]) =>
-    (l2.reverse ::: l1.reverse) == (l1 ::: l2).reverse
+  val passing = property (() => 
+    1 + 1 == 2
   )
 
   val failing = property( (n: Int) =>
@@ -60,5 +60,6 @@ object TestScalaCheck extends Application {
 
   Props.checkProperties()
   scalacheck.Gen.checkProperties()
+  scalacheck.Prop.checkProperties()
 
 }

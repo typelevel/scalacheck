@@ -1,16 +1,112 @@
 package scalacheck
 
 /** A property is a generator that generates a property result */
-abstract class Prop extends Gen[Prop.Result]
+abstract class Prop extends Gen[Prop.Result] {
 
-object Prop {
+  import Prop.{True,False,Exception}
 
-  import Gen.{value, fail, arbitrary}
+  def &&(p: Prop): Prop = combine(p) {
+    case (Some(True(_)), x) => x
+    case (x, Some(True(_))) => x
+
+    case (x@Some(False(_)), _) => x
+    case (_, x@Some(False(_))) => x
+
+    case (None, x) => x
+    case (x, None) => x
+
+    case (x, _) => x
+  }
+
+  def ||(p: Prop): Prop = combine(p) {
+    case (x@Some(True(_)), _) => x
+    case (_, x@Some(True(_))) => x
+
+    case (Some(False(_)), x) => x
+    case (x, Some(False(_))) => x
+
+    case (None, x) => x
+    case (x, None) => x
+
+    case (x, _) => x
+  }
+
+  def ++(p: Prop): Prop = combine(p) {
+    case (None, x) => x
+    case (x, None) => x
+
+    case (Some(True(_)), x) => x
+    case (x, Some(True(_))) => x
+
+    case (x@Some(False(_)), _) => x
+    case (_, x@Some(False(_))) => x
+
+    case (x, _) => x
+  }
+
+  def ==(p: Prop): Prop = new Prop {
+    def apply(prms: Gen.Params) = (Prop.this(prms), p(prms)) match {
+      case (None,None) => Prop.proved(prms)
+      case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
+      case _ => Prop.falsified(prms)
+    }
+  }
+
+  def addArgs(as: List[String]) = new Prop {
+    override def toString = Prop.this.toString
+    def apply(prms: Gen.Params) = Prop.this(prms) match {
+      case None => None
+      case Some(True(as2))        => Some(True(as ::: as2))
+      case Some(False(as2))       => Some(False(as ::: as2))
+      case Some(Exception(e,as2)) => Some(Exception(e,as ::: as2))
+    }
+  }
+
+}
+
+object Prop extends Testable {
+
+  import Gen.{value, fail, arbitrary, frequency, elements}
+
+  // Properties for the Prop class
+
+  addProperty("Prop.Prop.&& Commutativity",
+              (p1: Prop, p2: Prop) => (p1 && p2) == (p2 && p1))
+  addProperty("Prop.Prop.&& Identity",
+              (p: Prop) => (p && proved) == p)
+  addProperty("Prop.Prop.&& False",
+              (p: Prop) => (p && falsified) == falsified)
+
+  addProperty("Prop.Prop.|| Commutativity",
+              (p1: Prop, p2: Prop) => (p1 || p2) == (p2 || p1))
+  addProperty("Prop.Prop.|| Identity",
+              (p: Prop) => (p || falsified) == p)
+  addProperty("Prop.Prop.|| True",
+              (p: Prop) => (p || proved) == proved)
+
+  addProperty("Prop.Prop.++ Commutativity",
+              (p1: Prop, p2: Prop) => (p1 ++ p2) == (p2 ++ p1))
+  addProperty("Prop.Prop.++ Identity",
+              (p: Prop) => (p ++ rejected) == p)
+  addProperty("Prop.Prop.++ False",
+              (p: Prop) => (p ++ falsified) == falsified)
+  addProperty("Prop.Prop.++ True",
+              forAll(elements(List(proved,falsified,exception(null))))
+                    (p => (p ++ proved) == p))
+
+
 
   // Types
 
   /** The result of evaluating a property */
-  abstract sealed class Result(val args: List[String])
+  abstract sealed class Result(val args: List[String]) {
+    override def equals(x: Any) = (this,x) match {
+      case (True(_),True(_))   => true
+      case (False(_),False(_)) => true
+      case (Exception(_,_),Exception(_,_)) => true
+      case _ => false
+    }
+  }
 
   /** The property was true with the given arguments */
   case class True(as: List[String]) extends Result(as)
@@ -22,38 +118,52 @@ object Prop {
   case class Exception(e: Throwable, as: List[String]) extends Result(as)
 
 
+  /** Generates an arbitrary prop */
+  implicit def arbitraryProp(x: Arbitrary[Prop]): Gen[Prop] = frequency(
+    List(
+      (5, value(proved)),
+      (4, value(falsified)),
+      (2, value(rejected)),
+      (1, value(exception(null)))
+    )
+  )
+
 
   // Private support functions
+
+  private def genToProp(g: Gen[Result], descr: String) = new Prop {
+    override def toString = descr
+    def apply(prms: Gen.Params) = g(prms)
+  }
 
   private implicit def genToProp(g: Gen[Result]) = new Prop {
     def apply(prms: Gen.Params) = g(prms)
   }
 
-  private def mkProp(p: => Prop, as: Any*): Prop = for {
-    r1 <- try { p } catch { case e => value(Exception(e,Nil)) }
-    ss = as.map(_.toString).toList
-    r2 <- r1 match {
-            case True(ss2)        => value(True(ss ::: ss2))
-            case False(ss2)       => value(False(ss ::: ss2))
-            case Exception(e,ss2) => value(Exception(e,ss ::: ss2))
-          }
-  } yield r2
+  private def mkProp(p: => Prop, as: Any*): Prop = {
+    val pr = try { p } catch { case e => exception(e) }
+    pr.addArgs(as.map(_.toString).toList)
+  }
 
 
 
   // Property combinators
 
   /** A property that never is proved or falsified */
-  def rejected = fail
+  def rejected: Prop = genToProp(fail, "Prop.rejected")
 
   /** A property that always is false */
-  def falsified = value(False(Nil))
+  def falsified: Prop = genToProp(value(False(Nil)), "Prop.falsified")
 
   /** A property that always is true */
-  def proved = value(True(Nil))
+  def proved: Prop = genToProp(value(True(Nil)), "Prop.proved");
+
+  /** A property that denotes an exception */
+  def exception(e: Throwable): Prop =
+    genToProp(value(Exception(e,Nil)), "Prop.exception")
 
   /** Implication */
-  def ==>(b: Boolean, p: => Prop): Prop = 
+  def ==>(b: Boolean, p: => Prop): Prop =
     property(() => if (b) p else rejected)
 
   /** Implication with several conditions */
@@ -65,6 +175,11 @@ object Prop {
     t <- g
     r <- mkProp(f(t), t)
   } yield r
+
+  /** Combines properties into one, which is true if and only if all the
+   *  properties are true
+   */
+  def all(ps: Seq[Prop]) = (ps :\ proved) (_ && _)
 
   class ExtendedBoolean(b: Boolean) {
     /** Implication */
@@ -87,8 +202,7 @@ object Prop {
 
   // Implicit properties for common types
 
-  implicit def propBoolean(b: Boolean): Prop = 
-    value(if(b) True(Nil) else False(Nil)) 
+  implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
   def property[P]
     (f:  () => P)(implicit
