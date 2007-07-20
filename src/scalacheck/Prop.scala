@@ -5,9 +5,13 @@ abstract class Prop extends Gen[Prop.Result] {
 
   import Prop.{True,False,Exception}
 
+  /** Returns a new property that holds if and only if both this
+   *  and the given property hold. If one of the properties doesn't
+   *  generate a result, the new property will generate false.
+   */
   def &&(p: Prop): Prop = combine(p) {
-    case (Some(True(_)), x) => x
     case (x, Some(True(_))) => x
+    case (Some(True(_)), x) => x
 
     case (x@Some(False(_)), _) => x
     case (_, x@Some(False(_))) => x
@@ -18,6 +22,9 @@ abstract class Prop extends Gen[Prop.Result] {
     case (x, _) => x
   }
 
+  /** Returns a new property that holds if either this
+   *  or the given property (or both) hold.
+   */
   def ||(p: Prop): Prop = combine(p) {
     case (x@Some(True(_)), _) => x
     case (_, x@Some(True(_))) => x
@@ -31,12 +38,17 @@ abstract class Prop extends Gen[Prop.Result] {
     case (x, _) => x
   }
 
+  /** Returns a new property that holds if and only if both this
+   *  and the given property hold. If one of the properties doesn't
+   *  generate a result, the new property will generate the same result
+   *  as the other property.
+   */
   def ++(p: Prop): Prop = combine(p) {
     case (None, x) => x
     case (x, None) => x
 
-    case (Some(True(_)), x) => x
     case (x, Some(True(_))) => x
+    case (Some(True(_)), x) => x
 
     case (x@Some(False(_)), _) => x
     case (_, x@Some(False(_))) => x
@@ -44,6 +56,9 @@ abstract class Prop extends Gen[Prop.Result] {
     case (x, _) => x
   }
 
+  /** Returns a new property that holds if and only if both this
+   *  and the given property generates the same result.
+   */
   def ==(p: Prop): Prop = new Prop {
     def apply(prms: Gen.Params) = (Prop.this(prms), p(prms)) match {
       case (None,None) => Prop.proved(prms)
@@ -52,7 +67,7 @@ abstract class Prop extends Gen[Prop.Result] {
     }
   }
 
-  def addArgs(as: List[String]) = new Prop {
+  private def addArgs(as: List[String]) = new Prop {
     override def toString = Prop.this.toString
     def apply(prms: Gen.Params) = Prop.this(prms) match {
       case None => None
@@ -76,6 +91,14 @@ object Prop extends Testable {
               (p: Prop) => (p && proved) == p)
   addProperty("Prop.Prop.&& False",
               (p: Prop) => (p && falsified) == falsified)
+  addProperty("Prop.Prop.&& Right prio", (sz: Int) => {
+    val p = constantProp(Some(True("RHS"::Nil)),"") && 
+            constantProp(Some(True("LHS"::Nil)),"")
+    p(Gen.Params(sz,StdRand)) match {
+      case Some(r) if r.args == "RHS"::Nil => true
+      case _ => false
+    }
+  })
 
   addProperty("Prop.Prop.|| Commutativity",
               (p1: Prop, p2: Prop) => (p1 || p2) == (p2 || p1))
@@ -106,6 +129,17 @@ object Prop extends Testable {
       case (Exception(_,_),Exception(_,_)) => true
       case _ => false
     }
+
+    def success = this match {
+      case True(_) => true
+      case _ => false
+    }
+
+    def failure = this match {
+      case False(_) => true
+      case Exception(_,_) => true
+      case _ => false
+    }
   }
 
   /** The property was true with the given arguments */
@@ -131,18 +165,18 @@ object Prop extends Testable {
 
   // Private support functions
 
-  private def genToProp(g: Gen[Result], descr: String) = new Prop {
+  private def constantProp(r: Option[Result], descr: String) = new Prop {
     override def toString = descr
-    def apply(prms: Gen.Params) = g(prms)
+    def apply(prms: Gen.Params) = r
   }
 
   private implicit def genToProp(g: Gen[Result]) = new Prop {
     def apply(prms: Gen.Params) = g(prms)
   }
 
-  private def mkProp(p: => Prop, as: Any*): Prop = {
-    val pr = try { p } catch { case e => exception(e) }
-    pr.addArgs(as.map(_.toString).toList)
+  private def mkProp(p: => Prop, args: Any*): Prop = {
+    val prop = try { p } catch { case e => exception(e) }
+    prop.addArgs(args.map(_.toString).toList)
   }
 
 
@@ -150,17 +184,17 @@ object Prop extends Testable {
   // Property combinators
 
   /** A property that never is proved or falsified */
-  def rejected: Prop = genToProp(fail, "Prop.rejected")
+  def rejected: Prop = constantProp(None, "Prop.rejected")
 
   /** A property that always is false */
-  def falsified: Prop = genToProp(value(False(Nil)), "Prop.falsified")
+  def falsified: Prop = constantProp(Some(False(Nil)), "Prop.falsified")
 
   /** A property that always is true */
-  def proved: Prop = genToProp(value(True(Nil)), "Prop.proved");
+  def proved: Prop = constantProp(Some(True(Nil)), "Prop.proved");
 
   /** A property that denotes an exception */
   def exception(e: Throwable): Prop =
-    genToProp(value(Exception(e,Nil)), "Prop.exception")
+    constantProp(Some(Exception(e,Nil)), "Prop.exception")
 
   /** Implication */
   def ==>(b: Boolean, p: => Prop): Prop =
@@ -171,10 +205,19 @@ object Prop extends Testable {
     property(() => if(f.isDefinedAt(x)) f(x) else rejected)
 
   /** Universal quantifier */
-  def forAll[T](g: Gen[T])(f: T => Prop): Prop = for {
-    t <- g
-    r <- mkProp(f(t), t)
+  def forAll[A](g: Gen[A])(f: A => Prop): Prop = for {
+    a <- g
+    r <- mkProp(f(a), a)
   } yield r
+
+  /** Experimental! */
+  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop): Prop = for {
+    a <- g
+    prop = mkProp(f(a), a)
+    r1 <- prop
+    r2 <- if(r1.failure) forAllShrink(elements(shrink(a)), shrink)(f) && prop
+          else prop
+  } yield r2
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true
