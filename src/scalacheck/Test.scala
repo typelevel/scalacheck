@@ -71,7 +71,7 @@ object Test {
 
     while(tr == null)
     {
-      val size = 1000 // (ns * prms.maxSize) / prms.minSuccessfulTests + nd / 10
+      val size = (ns * prms.maxSize) / prms.minSuccessfulTests + nd / 10
       val genprms = Gen.Params(size, prms.rand)
       (try { Right(p(genprms)) } catch { case e => Left(e) }) match {
         case Left(e)   => tr = GenException(e)
