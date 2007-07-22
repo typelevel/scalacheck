@@ -7,52 +7,63 @@ trait Testable {
 
   private var properties = scala.collection.immutable.Map.empty[String, Prop]
 
-  protected def addProperty[P]
-    (propName: String, f: () => P)(implicit
-     p:  P => Prop): Unit =
-  {
-    properties = properties.update(propName,Prop.property(f))
-  }
+  protected def addProperty[P] (
+    propName: String, f: () => P)(
+    implicit p: P => Prop
+  ): Unit = addProperty(propName,Prop.property(f))
 
-  protected def addProperty[A1,P]
-    (propName: String, f: A1 => P)(implicit
-     p:  P => Prop,
-     g1: Arbitrary[A1] => Gen[A1]): Unit =
-  {
-    properties = properties.update(propName,Prop.property(f))
-  }
+  protected def addProperty[A1,P] (
+    propName: String, f: A1 => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1]
+  ): Unit = addProperty(propName,Prop.property(f))
 
-  protected def addProperty[A1,A2,P]
-    (propName: String, f: (A1,A2) => P)(implicit
-     p:  P => Prop,
-     g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2]): Unit =
-  {
-    properties = properties.update(propName,Prop.property(f))
-  }
+  protected def addProperty[A1,A2,P] (
+    propName: String, f: (A1,A2) => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1],
+    a2: Arb[A2] => Arbitrary[A2]
+  ): Unit = addProperty(propName,Prop.property(f))
 
-  protected def addProperty[A1,A2,A3,P]
-    (propName: String, f: (A1,A2,A3) => P)(implicit
-     p:  P => Prop,
-     g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2],
-     g3: Arbitrary[A3] => Gen[A3]): Unit =
-  {
-    properties = properties.update(propName,Prop.property(f))
-  }
+  protected def addProperty[A1,A2,A3,P] (
+    propName: String, f: (A1,A2,A3) => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1],
+    a2: Arb[A2] => Arbitrary[A2],
+    a3: Arb[A3] => Arbitrary[A3]
+  ): Unit = addProperty(propName,Prop.property(f))
 
-  protected def addProperty[A1,A2,A3,A4,P]
-    (propName: String, f: (A1,A2,A3,A4) => P)(implicit
-     p:  P => Prop,
-     g1: Arbitrary[A1] => Gen[A1],
-     g2: Arbitrary[A2] => Gen[A2],
-     g3: Arbitrary[A2] => Gen[A3],
-     g4: Arbitrary[A3] => Gen[A4]): Unit =
-  {
-    properties = properties.update(propName,Prop.property(f))
-  }
+  protected def addProperty[A1,A2,A3,A4,P] (
+    propName: String, f: (A1,A2,A3,A4) => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1],
+    a2: Arb[A2] => Arbitrary[A2],
+    a3: Arb[A3] => Arbitrary[A3],
+    a4: Arb[A4] => Arbitrary[A4]
+  ): Unit = addProperty(propName,Prop.property(f))
 
-  protected def addProperty(propName: String, prop: Prop): Unit =
+  protected def addProperty[A1,A2,A3,A4,A5,P] (
+    propName: String, f: (A1,A2,A3,A4,A5) => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1],
+    a2: Arb[A2] => Arbitrary[A2],
+    a3: Arb[A3] => Arbitrary[A3],
+    a4: Arb[A5] => Arbitrary[A5],
+    a5: Arb[A4] => Arbitrary[A4]
+  ): Unit = addProperty(propName,Prop.property(f))
+
+  protected def addProperty[A1,A2,A3,A4,A5,A6,P] (
+    propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(
+    implicit p: P => Prop,
+    a1: Arb[A1] => Arbitrary[A1],
+    a2: Arb[A2] => Arbitrary[A2],
+    a3: Arb[A3] => Arbitrary[A3],
+    a4: Arb[A4] => Arbitrary[A4],
+    a5: Arb[A5] => Arbitrary[A5],
+    a6: Arb[A6] => Arbitrary[A6]
+  ): Unit = addProperty(propName,Prop.property(f))
+
+  protected def addProperty(propName: String, prop: Prop) =
     properties = properties.update(propName, prop)
 
   type TestsInspector = (String,Option[Prop.Result],Int,Int) => Unit
@@ -94,15 +105,23 @@ trait Testable {
       case Test.GenException(e) =>
         Console.printf("\r{1}: *** Exception raised when generating arguments:\n{0}               \n\n",
           e, pName)
-      case Test.PropException(e,args) =>
+      case Test.PropException(args,shrinks,e) =>
         Console.printf("\r{0}: *** Exception raised when evaluating property                        \n",
           pName)
-        Console.printf("The arguments that caused the exception was:\n{0}\n\n", args)
+        if(shrinks > 0)
+          Console.printf("The arguments that caused the failure was (after {1} shrinks):\n{0}\n\n",
+            args, shrinks)
+        else 
+          Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
         Console.printf("The raised exception was:\n{0}\n\n", e)
-      case Test.Failed(args) =>
+      case Test.Failed(args,shrinks) =>
         Console.printf("\r{1}: *** Failed after {0} successful tests                                \n",
           stats.succeeded, pName)
-        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
+        if(shrinks > 0)
+          Console.printf("The arguments that caused the failure was (after {1} shrinks):\n{0}\n\n",
+            args, shrinks)
+        else 
+          Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
       case Test.Exhausted() =>
         Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
           stats.discarded, stats.succeeded, pName)
@@ -121,18 +140,30 @@ trait Testable {
       stats.result match {
         case Test.GenException(e) => fail(
           " Exception raised when generating arguments.\n" +
-          "The raised exception was:\n"+e.toString+"\n")
-        case Test.PropException(e,args) => fail(
+          "The raised exception was:\n"+e.toString+"\n"
+        )
+        case Test.PropException(args,shrinks,e) => fail(
           " Exception raised when evaluating property.\n\n" +
-          "The arguments that caused the failure was:\n"+args.toString+"\n\n" +
-          "The raised exception was:\n"+e.toString+"\n")
-        case Test.Failed(args) => fail(
+          (if(shrinks > 0)
+            "The arguments that caused the failure was (after " +
+            shrinks.toString+" shrinks):\n"+args.toString+"\n\n"
+          else
+            "The arguments that caused the failure was:\n"+args.toString+"\n\n")
+          + "The raised exception was:\n"+e.toString+"\n"
+        )
+        case Test.Failed(args,shrinks) => fail(
           " Property failed after " + stats.succeeded.toString +
           " successful tests.\n" +
-          "The arguments that caused the failure was:\n"+args.toString+"\n\n")
+          (if(shrinks > 0)
+            "The arguments that caused the failure was (after " +
+            shrinks.toString+" shrinks):\n"+args.toString+"\n\n"
+          else
+            "The arguments that caused the failure was:\n"+args.toString+"\n\n")
+        )
         case Test.Exhausted() => fail(
           " Gave up after only " + stats.succeeded.toString + " tests. " +
-          stats.discarded.toString + " tests were discarded.")
+          stats.discarded.toString + " tests were discarded."
+        )
         case Test.Passed() => ()
       }
     }

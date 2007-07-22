@@ -86,7 +86,8 @@
 
     <scalac srcdir="${src}"
             destdir="${build}"
-            classpathref="build.classpath"/>
+            classpathref="build.classpath"
+            addParams="-unchecked"/>
 
     <scalac srcdir="${test}"
             destdir="${build}"

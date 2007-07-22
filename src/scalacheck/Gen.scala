@@ -1,39 +1,9 @@
 package scalacheck
 
-trait RandomGenerator {
-  def choose(inclusiveRange: (Int,Int)): Int
-}
-
-object StdRand extends RandomGenerator {
-  import scala.Math._
-  private val r = new java.util.Random
-  def choose(range: (Int,Int)) = range match {
-    case (l,h) if(l == h) => l
-    case (l,h) if(h < l)  => h
-    case (l,h)            => l + r.nextInt((h-l)+1)
-  }
-}
-
-
-
-/** Dummy type that represents types that supports the arbitrary function.
- *  This could have been done more like a Haskell type class, with arbitrary as
- *  a member of Arbitrary, but placing the arbitrary function in the Gen object
- *  and adding implicit functions that converts an Arbitrary[T] to a Gen[T],
- *  helps Scala's type inference.
- *  To make your own "instance" of the Arbitrary class for a type U, define an
- *  implicit function that takes a value of type Arbitrary[U] and returns a
- *  value of type Gen[U]. The Arbitrary[U] value has no meaning in itself,
- *  its just there to make it a usable implicit function.
+/** Class that represents a generator. You shouldn't make
+ *  instances of this class directly. To create custom
+ *  generators, the combinators in the Gen object should be used.
  */
-sealed class Arbitrary[T] {}
-
-
-
-/** Class that represents a generator. You shouldn't (and couldn't) make
-*  instances of this class directly. To create custom
-*  generators, the combinators in the Gen object should be used.
-*/
 abstract class Gen[+T] {
 
   def apply(prms: Gen.Params): Option[T]
@@ -58,10 +28,7 @@ abstract class Gen[+T] {
 }
 
 
-
-/** Contains combinators for building generators, and has implicit functions
- *  for generating arbitrary values of common types.
- */
+/** Contains combinators for building generators. */
 object Gen extends Testable {
 
   import Prop._
@@ -81,7 +48,13 @@ object Gen extends Testable {
     def apply(prms: Params) = g(prms)
   }
 
-  private def sequence[T](l: List[Gen[T]]): Gen[List[T]] = {
+
+
+
+  // Generator combinators
+
+  /** Sequences generators */
+  def sequence[T](l: Seq[Gen[T]]): Gen[List[T]] = {
     def consGen(gt: Gen[T], gts: Gen[List[T]]) = for {
       t  <- gt
       ts <- gts
@@ -89,17 +62,6 @@ object Gen extends Testable {
 
     l.foldRight(value[List[T]](Nil))(consGen _)
   }
-
-
-
-  // Generator combinators
-
-  /** Generates an arbitrary value of type T. It should be used as Gen[T],
-   *  so there must exist an implicit function that can convert Arbitrary[T]
-   *  into Gen[T].
-   */
-  def arbitrary[T]: Arbitrary[T] = new Arbitrary[T]
-
 
   addProperty("Gen.value", (x: Int, sz: Int) =>
     value(x)(Params(sz,StdRand)).get == x
@@ -187,7 +149,10 @@ object Gen extends Testable {
   /** Generates a list of random length. The maximum length depends on the
    *  size parameter
    */
-  def listOf[T](g: Gen[T]) = arbitraryList(null)(a => g)
+  def listOf[T](g: Gen[T]) = sized(size => for {
+    n <- choose(0,size)
+    l <- sequence(List.make(n, g))
+  } yield l)
 
 
   /** Generates a non-empty list of random length. The maximum length depends
@@ -195,7 +160,7 @@ object Gen extends Testable {
    */
   def listOf1[T](g: Gen[T]) = for {
     x  <- g
-    xs <- arbitraryList(null)(a => g)
+    xs <- listOf(g)
   } yield x::xs
 
 
@@ -213,76 +178,5 @@ object Gen extends Testable {
   /** Generates a list of the given length
    */
   def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = sequence(List.make(n,g))
-
-
-
-  // Implicit generators for common types
-
-  implicit def arbitraryGen[T](x: Arbitrary[Gen[T]])
-    (implicit f: Arbitrary[T] => Gen[T]): Gen[Gen[T]] = for 
-  {
-    x <- f(arbitrary)
-  } yield value(x)
-
-  implicit def arbitraryBool(x: Arbitrary[Boolean]): Gen[Boolean] =
-    elements(List(true,false))
-
-  /** Generates an arbitrary integer */
-  implicit def arbitraryInt(x: Arbitrary[Int]) = sized (s => choose((-s,s)))
-
-  /** Generates an arbitrary char */
-  implicit def arbitraryChar(x: Arbitrary[Char]): Gen[Char] =
-    for {n <- choose((0,255))} yield n.toChar
-
-  /** Generates an arbitrary string */
-  implicit def arbitraryString(x: Arbitrary[String]): Gen[String] = for {
-    cs <- listOf(arbitrary[Char])
-  } yield List.toString(cs)
-
-  /** Generates a list of arbitrary elements. The maximum length of the list
-   *  depends on the size parameter.
-   */
-  implicit def arbitraryList[T](x: Arbitrary[List[T]])
-    (implicit f: Arbitrary[T] => Gen[T]): Gen[List[T]] = sized(size => for
-  {
-    n <- choose(0,size)
-    l <- sequence(List.make(n, f(arbitrary)))
-  } yield l )
-
-  implicit def arbitraryTuple2[T1,T2](x: Arbitrary[Tuple2[T1,T2]])
-    (implicit
-      f1: Arbitrary[T1] => Gen[T1],
-      f2: Arbitrary[T2] => Gen[T2]
-    ): Gen[Tuple2[T1,T2]] = for
-  {
-    t1 <- f1(arbitrary)
-    t2 <- f2(arbitrary)
-  } yield (t1,t2)
-
-  implicit def arbitraryTuple3[T1,T2,T3](x: Arbitrary[Tuple3[T1,T2,T3]])
-    (implicit
-      f1: Arbitrary[T1] => Gen[T1],
-      f2: Arbitrary[T2] => Gen[T2],
-      f3: Arbitrary[T3] => Gen[T3]
-    ): Gen[Tuple3[T1,T2,T3]] = for
-  {
-    t1 <- f1(arbitrary)
-    t2 <- f2(arbitrary)
-    t3 <- f3(arbitrary)
-  } yield (t1,t2,t3)
-
-  implicit def arbitraryTuple4[T1,T2,T3,T4](x: Arbitrary[Tuple4[T1,T2,T3,T4]])
-    (implicit
-      f1: Arbitrary[T1] => Gen[T1],
-      f2: Arbitrary[T2] => Gen[T2],
-      f3: Arbitrary[T3] => Gen[T3],
-      f4: Arbitrary[T4] => Gen[T4]
-    ): Gen[Tuple4[T1,T2,T3,T4]] = for
-  {
-    t1 <- f1(arbitrary)
-    t2 <- f2(arbitrary)
-    t3 <- f3(arbitrary)
-    t4 <- f4(arbitrary)
-  } yield (t1,t2,t3,t4)
 
 }

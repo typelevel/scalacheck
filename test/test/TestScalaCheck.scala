@@ -5,6 +5,23 @@ object Props extends scalacheck.Testable {
   import scalacheck.Gen._
   import scalacheck.Prop._
   import scalacheck.Test._
+  import scalacheck.Arbitrary._
+
+  addProperty("Test side-effect", () => { Console.println("SIDE_EFFECT"); false })
+
+  Console.println("ADDED SIDE-EFFECT PROPERTY")
+
+  addProperty("Test 4 params", (n: Int, m: Boolean, x: Int, y: Int) => m)
+
+  addProperty("Test shrink (no shrink)", forAll(arbitrary[Int]) { n =>
+    val g = n + 1
+    n == g
+  })
+
+  addProperty("Test shrink (shrink)", forAllShrink(arbitrary[Int], (n: Int) => if(n > 1) List(n-1,n-2) else (if(n < 0) List(n+1) else Nil)) { n =>
+    val g = n + 1
+    n == g
+  })
 
   val passing = property (() => 
     1 + 1 == 2
@@ -30,27 +47,27 @@ object Props extends scalacheck.Testable {
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
   addProperty("propPassing", () => check(defaultParams, passing).result match {
-    case Passed() => true
+    case _:Passed => true
     case _ => false
   })
 
   addProperty("propFailing", () => check(defaultParams, failing).result match {
-    case Failed(_) => true
+    case _:Failed => true
     case _ => false
   })
 
   addProperty("propExhausted", () => check(defaultParams, exhausted).result match {
-    case Exhausted() => true
+    case _:Exhausted => true
     case _ => false
   })
 
   addProperty("propPropException", () => check(defaultParams, propException).result match {
-    case PropException(_,_) => true
+    case _:PropException => true
     case _ => false
   })
 
   addProperty("propGenException", () => check(defaultParams, genException).result match {
-    case GenException(_) => true
+    case _:GenException => true
     case _ => false
   })
 
