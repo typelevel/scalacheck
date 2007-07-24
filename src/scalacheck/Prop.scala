@@ -92,13 +92,13 @@ object Prop extends Testable {
 
   // Properties for the Prop class
 
-  specify("Prop.Prop.&& Commutativity", (p1: Prop, p2: Prop) => 
+  specify("Prop.Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
     (p1 && p2) == (p2 && p1)
   )
-  specify("Prop.Prop.&& Identity", (p: Prop) => 
+  specify("Prop.Prop.&& Identity", (p: Prop) =>
     (p && proved) == p
   )
-  specify("Prop.Prop.&& False", (p: Prop) => 
+  specify("Prop.Prop.&& False", (p: Prop) =>
     (p && falsified) == falsified
   )
   specify("Prop.Prop.&& Right prio", (sz: Int) => {
@@ -109,23 +109,23 @@ object Prop extends Testable {
     }
   })
 
-  specify("Prop.Prop.|| Commutativity", (p1: Prop, p2: Prop) => 
+  specify("Prop.Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
     (p1 || p2) == (p2 || p1)
   )
-  specify("Prop.Prop.|| Identity", (p: Prop) => 
+  specify("Prop.Prop.|| Identity", (p: Prop) =>
     (p || falsified) == p
   )
-  specify("Prop.Prop.|| True", (p: Prop) => 
+  specify("Prop.Prop.|| True", (p: Prop) =>
     (p || proved) == proved
   )
 
-  specify("Prop.Prop.++ Commutativity", (p1: Prop, p2: Prop) => 
+  specify("Prop.Prop.++ Commutativity", (p1: Prop, p2: Prop) =>
     (p1 ++ p2) == (p2 ++ p1)
   )
-  specify("Prop.Prop.++ Identity", (p: Prop) => 
+  specify("Prop.Prop.++ Identity", (p: Prop) =>
     (p ++ rejected) == p
   )
-  specify("Prop.Prop.++ False", (p: Prop) => 
+  specify("Prop.Prop.++ False", (p: Prop) =>
     (p ++ falsified) == falsified
   )
   specify("Prop.Prop.++ True", () => {
@@ -178,7 +178,7 @@ object Prop extends Testable {
   case class False(as: List[String],ss: Int) extends Result(as,ss)
 
   /** Evaluating the property with the given arguments raised an exception */
-  case class Exception(as: List[String], ss: Int, e: Throwable) 
+  case class Exception(as: List[String], ss: Int, e: Throwable)
     extends Result(as,ss)
 
 
@@ -225,14 +225,46 @@ object Prop extends Testable {
   } yield r.addArg(a.toString)
 
   /** Universal quantifier, shrinks failed arguments */
-  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop): Prop = for {
+  def forAllShrink[A,P](g: Gen[A], shrink: A => Seq[A])(f: A => P)
+    (implicit p: P => Prop): Prop = for
+  {
     a <- g
-    prop = forAll(g)(f)
-    r1 <- prop
-    r2 <- if(r1.failure) 
-            forAllShrink(elements(shrink(a)), shrink)(f).shrinked && prop
+    r1 <- try { p(f(a)) } catch { case e => exception(e) }
+    prop = constantProp(Some(r1.addArg(a.toString)), "")
+    r2 <- if(r1.failure) forEachShrink(shrink(a), shrink)(f).shrinked ++ prop
           else prop
   } yield r2
+
+  /** Universal quantifier */
+  def forEach[A,P](xs: List[A])(f: A => P)(implicit p: P => Prop) =
+    all(xs map (a => try { p(f(a)) } catch { case e => exception(e) }))
+
+  /** Universal quantifier, shrinks failed arguments */
+  def forEachShrink[A,P](xs: Seq[A], shrink: A => Seq[A])(f: A => P)
+    (implicit p: P => Prop): Prop = 
+  {
+    def helper(xs: Seq[A], pr: Prop): Prop = if(xs.isEmpty) pr else all(
+      xs map { a => 
+        for {
+          r1 <- try { p(f(a)) } catch { case e => exception(e) }
+          pr1 = constantProp(Some(r1.addArg(a.toString)), "")
+          r2 <- if(r1.failure) helper(shrink(a), pr1)
+                else pr
+        } yield r2.shrinked
+      }
+    )
+
+    all(
+      xs map { a =>
+        for {
+          r1 <- try { p(f(a)) } catch { case e => exception(e) }
+          pr = constantProp(Some(r1.addArg(a.toString)), "")
+          r2 <- if(r1.failure) helper(shrink(a), pr)
+                else pr
+        } yield r2
+      }
+    )
+  }
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true
@@ -266,25 +298,22 @@ object Prop extends Testable {
     f: () => P)(implicit
     p: P => Prop
   ): Prop = new Prop {
-    def apply(prms: Gen.Params) = 
+    def apply(prms: Gen.Params) =
       (try { p(f()) } catch { case e => exception(e) })(prms)
   }
 
   def property[A1,P] (
-    f:  A1 => P)(implicit 
-    p:  P => Prop, 
+    f:  A1 => P)(implicit
+    p:  P => Prop,
     a1: Arb[A1] => Arbitrary[A1]
-  ) = forAll(arbitrary[A1])(f)
+  ) = forAllShrink(arbitrary[A1],shrink[A1])(f)
 
   def property[A1,A2,P] (
     f:  (A1,A2) => P)(implicit
     p:  P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2]
-  ): Prop = for {
-    a <- arbitrary[A1]
-    r <- property(f(a, _:A2))
-  } yield r.addArg(a.toString)
+  ): Prop = property((a: A1) => property(f(a, _:A2)))
 
   def property[A1,A2,A3,P] (
     f:  (A1,A2,A3) => P)(implicit
@@ -292,10 +321,7 @@ object Prop extends Testable {
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3]
-  ): Prop = for {
-    a <- arbitrary[A1]
-    r <- property(f(a, _:A2, _:A3))
-  } yield r.addArg(a.toString)
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3)))
 
   def property[A1,A2,A3,A4,P] (
     f:  (A1,A2,A3,A4) => P)(implicit
@@ -304,10 +330,7 @@ object Prop extends Testable {
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3],
     a4: Arb[A4] => Arbitrary[A4]
-  ): Prop = for {
-    a <- arbitrary[A1]
-    r <- property(f(a, _:A2, _:A3, _:A4))
-  } yield r.addArg(a.toString)
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4)))
 
   def property[A1,A2,A3,A4,A5,P] (
     f:  (A1,A2,A3,A4,A5) => P)(implicit
@@ -317,10 +340,7 @@ object Prop extends Testable {
     a3: Arb[A3] => Arbitrary[A3],
     a4: Arb[A4] => Arbitrary[A4],
     a5: Arb[A5] => Arbitrary[A5]
-  ): Prop = for {
-    a <- arbitrary[A1]
-    r <- property(f(a, _:A2, _:A3, _:A4, _:A5))
-  } yield r.addArg(a.toString)
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5)))
 
   def property[A1,A2,A3,A4,A5,A6,P] (
     f:  (A1,A2,A3,A4,A5,A6) => P)(implicit
@@ -331,9 +351,6 @@ object Prop extends Testable {
     a4: Arb[A4] => Arbitrary[A4],
     a5: Arb[A5] => Arbitrary[A5],
     a6: Arb[A6] => Arbitrary[A6]
-  ): Prop = for {
-    a <- arbitrary[A1]
-    r <- property(f(a, _:A2, _:A3, _:A4, _:A5, _:A6))
-  } yield r.addArg(a.toString)
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5, _:A6)))
 
 }

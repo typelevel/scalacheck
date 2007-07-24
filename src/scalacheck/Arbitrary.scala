@@ -12,9 +12,9 @@ sealed class Arb[T] {}
  *  its just there to make type inference work a bit better. Do not try to use
  *  the Arb[T] value in your implicit function, it will always be null.
  */
-trait Arbitrary[+T] {
-  protected def getArbitrary: Gen[T]
-  protected def getShrink[T](x: T): Seq[T] = Nil
+abstract class Arbitrary[T] {
+  def getArbitrary: Gen[T]
+  def getShrink(x: T): Seq[T] = Nil
 }
 
 
@@ -43,6 +43,10 @@ object Arbitrary {
   /** Arbitrary instance of integer */
   implicit def arbitraryInt(x: Arb[Int]) = new Arbitrary[Int] {
     def getArbitrary = sized (s => choose((-s,s)))
+      override def getShrink(n: Int) =
+      if(n == 0) Nil
+      else if(n > 0) List(n-1)
+      else List(n+1)
   }
 
   /** Arbitrary instance of char */

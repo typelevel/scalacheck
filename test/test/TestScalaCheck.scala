@@ -7,24 +7,11 @@ object Props extends scalacheck.Testable {
   import scalacheck.Test._
   import scalacheck.Arbitrary._
 
-  specify("Test side-effect", () => { Console.println("SIDE_EFFECT"); false })
+  specify("Test forAllShrink", forAllShrink(arbitrary[Int],shrink[Int])(n => n == (n+1)))
 
-  Console.println("ADDED SIDE-EFFECT PROPERTY")
+  specify("Test shrink 1 (shrink)", (n: Int) => n == (n+1))
 
-  specify("Test 4 params", (n: Int, m: Boolean, x: Int, y: Int) => m)
-
-  specify("Test shrink (no shrink)", forAll(arbitrary[Int]) { n =>
-    val g = n + 1
-    n == g
-  })
-
-  specify("Test shrink (shrink)", () => {
-    def shrink(n: Int) = if(n > 1) List(n-1,n-2) else (if(n < 0) List(n+1) else Nil)
-    forAllShrink(arbitrary[Int], shrink) { n =>
-      val g = n + 1
-      n == g
-    }
-  })
+  specify("Test shrink 2 (shrink)", (n: Int, m: Int) => n == m)
 
   val passing = property (() => 
     1 + 1 == 2
