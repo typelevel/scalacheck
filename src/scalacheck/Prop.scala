@@ -92,13 +92,16 @@ object Prop extends Testable {
 
   // Properties for the Prop class
 
-  addProperty("Prop.Prop.&& Commutativity",
-              (p1: Prop, p2: Prop) => (p1 && p2) == (p2 && p1))
-  addProperty("Prop.Prop.&& Identity",
-              (p: Prop) => (p && proved) == p)
-  addProperty("Prop.Prop.&& False",
-              (p: Prop) => (p && falsified) == falsified)
-  addProperty("Prop.Prop.&& Right prio", (sz: Int) => {
+  specify("Prop.Prop.&& Commutativity", (p1: Prop, p2: Prop) => 
+    (p1 && p2) == (p2 && p1)
+  )
+  specify("Prop.Prop.&& Identity", (p: Prop) => 
+    (p && proved) == p
+  )
+  specify("Prop.Prop.&& False", (p: Prop) => 
+    (p && falsified) == falsified
+  )
+  specify("Prop.Prop.&& Right prio", (sz: Int) => {
     val p = proved.addArg("RHS") && proved.addArg("LHS")
     p(Gen.Params(sz,StdRand)) match {
       case Some(r) if r.args == "RHS"::Nil => true
@@ -106,22 +109,29 @@ object Prop extends Testable {
     }
   })
 
-  addProperty("Prop.Prop.|| Commutativity",
-              (p1: Prop, p2: Prop) => (p1 || p2) == (p2 || p1))
-  addProperty("Prop.Prop.|| Identity",
-              (p: Prop) => (p || falsified) == p)
-  addProperty("Prop.Prop.|| True",
-              (p: Prop) => (p || proved) == proved)
+  specify("Prop.Prop.|| Commutativity", (p1: Prop, p2: Prop) => 
+    (p1 || p2) == (p2 || p1)
+  )
+  specify("Prop.Prop.|| Identity", (p: Prop) => 
+    (p || falsified) == p
+  )
+  specify("Prop.Prop.|| True", (p: Prop) => 
+    (p || proved) == proved
+  )
 
-  addProperty("Prop.Prop.++ Commutativity",
-              (p1: Prop, p2: Prop) => (p1 ++ p2) == (p2 ++ p1))
-  addProperty("Prop.Prop.++ Identity",
-              (p: Prop) => (p ++ rejected) == p)
-  addProperty("Prop.Prop.++ False",
-              (p: Prop) => (p ++ falsified) == falsified)
-  addProperty("Prop.Prop.++ True",
-              forAll(elements(List(proved,falsified,exception(null))))
-                    (p => (p ++ proved) == p))
+  specify("Prop.Prop.++ Commutativity", (p1: Prop, p2: Prop) => 
+    (p1 ++ p2) == (p2 ++ p1)
+  )
+  specify("Prop.Prop.++ Identity", (p: Prop) => 
+    (p ++ rejected) == p
+  )
+  specify("Prop.Prop.++ False", (p: Prop) => 
+    (p ++ falsified) == falsified
+  )
+  specify("Prop.Prop.++ True", () => {
+    val g = elements(List(proved,falsified,exception(null)))
+    forAll(g)(p => (p ++ proved) == p)
+  })
 
 
 

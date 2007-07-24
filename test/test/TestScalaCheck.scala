@@ -7,20 +7,23 @@ object Props extends scalacheck.Testable {
   import scalacheck.Test._
   import scalacheck.Arbitrary._
 
-  addProperty("Test side-effect", () => { Console.println("SIDE_EFFECT"); false })
+  specify("Test side-effect", () => { Console.println("SIDE_EFFECT"); false })
 
   Console.println("ADDED SIDE-EFFECT PROPERTY")
 
-  addProperty("Test 4 params", (n: Int, m: Boolean, x: Int, y: Int) => m)
+  specify("Test 4 params", (n: Int, m: Boolean, x: Int, y: Int) => m)
 
-  addProperty("Test shrink (no shrink)", forAll(arbitrary[Int]) { n =>
+  specify("Test shrink (no shrink)", forAll(arbitrary[Int]) { n =>
     val g = n + 1
     n == g
   })
 
-  addProperty("Test shrink (shrink)", forAllShrink(arbitrary[Int], (n: Int) => if(n > 1) List(n-1,n-2) else (if(n < 0) List(n+1) else Nil)) { n =>
-    val g = n + 1
-    n == g
+  specify("Test shrink (shrink)", () => {
+    def shrink(n: Int) = if(n > 1) List(n-1,n-2) else (if(n < 0) List(n+1) else Nil)
+    forAllShrink(arbitrary[Int], shrink) { n =>
+      val g = n + 1
+      n == g
+    }
   })
 
   val passing = property (() => 
@@ -46,27 +49,27 @@ object Props extends scalacheck.Testable {
 
   val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
 
-  addProperty("propPassing", () => check(defaultParams, passing).result match {
+  specify("propPassing", () => check(defaultParams, passing).result match {
     case _:Passed => true
     case _ => false
   })
 
-  addProperty("propFailing", () => check(defaultParams, failing).result match {
+  specify("propFailing", () => check(defaultParams, failing).result match {
     case _:Failed => true
     case _ => false
   })
 
-  addProperty("propExhausted", () => check(defaultParams, exhausted).result match {
+  specify("propExhausted", () => check(defaultParams, exhausted).result match {
     case _:Exhausted => true
     case _ => false
   })
 
-  addProperty("propPropException", () => check(defaultParams, propException).result match {
+  specify("propPropException", () => check(defaultParams, propException).result match {
     case _:PropException => true
     case _ => false
   })
 
-  addProperty("propGenException", () => check(defaultParams, genException).result match {
+  specify("propGenException", () => check(defaultParams, genException).result match {
     case _:GenException => true
     case _ => false
   })

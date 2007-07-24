@@ -63,7 +63,7 @@ object Gen extends Testable {
     l.foldRight(value[List[T]](Nil))(consGen _)
   }
 
-  addProperty("Gen.value", (x: Int, sz: Int) =>
+  specify("Gen.value", (x: Int, sz: Int) =>
     value(x)(Params(sz,StdRand)).get == x
   )
 
@@ -71,7 +71,7 @@ object Gen extends Testable {
   def value[T](x: T) = mkGen(p => Some(x))
 
 
-  addProperty("Gen.fail", (x: Int, sz: Int) =>
+  specify("Gen.fail", (x: Int, sz: Int) =>
     fail(Params(sz,StdRand)) == None
   )
 
@@ -79,7 +79,7 @@ object Gen extends Testable {
   def fail[T]: Gen[T] = mkGen(p => None)
 
 
-  addProperty("Gen.choose", (l: Int, h: Int, sz: Int) => {
+  specify("Gen.choose", (l: Int, h: Int, sz: Int) => {
     val x = choose(l,h)(Params(sz,StdRand)).get
     h >= l ==> (x >= l && x <= h)
   })
@@ -124,7 +124,7 @@ object Gen extends Testable {
   }
 
 
-  addProperty("Gen.elements", (l: List[Int], sz: Int) =>
+  specify("Gen.elements", (l: List[Int], sz: Int) =>
     elements(l)(Params(sz,StdRand)) match {
       case None => l.isEmpty
       case Some(n) => l.contains(n)
@@ -164,7 +164,7 @@ object Gen extends Testable {
   } yield x::xs
 
 
-  addProperty("Gen.vectorOf", (len: Int, sz: Int) =>
+  specify("Gen.vectorOf", (len: Int, sz: Int) =>
     () imply {
       case () if len == 0 =>
         vectorOf(len,fail)(Params(sz,StdRand)).get.length == 0 &&

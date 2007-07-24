@@ -2,14 +2,14 @@ package test
 
 object MathLib extends scalacheck.Testable {
 
-  addProperty("sqr", (n: Int) => 
+  specify("sqr", (n: Int) => 
     sqr(n) == n*n
   )
  
   def sqr(n: Int): Int = n*n
 
 
-  addProperty("max", (n: Int, m: Int) => {
+  specify("max", (n: Int, m: Int) => {
     val mx = max(m,n)
     mx >= m && mx >= n && (mx == m || mx == n)
   })
