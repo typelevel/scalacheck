@@ -6,10 +6,28 @@ object Test {
 
   /** Test parameters */
   case class Params(minSuccessfulTests: Int, maxDiscardedTests: Int,
-    maxSize: Int, rand: RandomGenerator)
+    minSize: Int, maxSize: Int, rand: RandomGenerator)
 
   /** Test statistics */
-  case class Stats(result: Result, succeeded: Int, discarded: Int)
+  case class Stats(result: Result, succeeded: Int, discarded: Int) {
+    def pretty = result match {
+      case Passed() =>
+        "+++ OK, passed " + succeeded + " tests."
+      case Failed(args) =>
+        "*** Failed after " + succeeded + " passed tests.\n" +
+        "  The arguments that caused the failure was:\n  " + prettyArgs(args)
+      case Exhausted() =>
+        "*** Gave up after only " + succeeded + " passed tests. " +
+        discarded + " tests were discarded."
+      case PropException(args,e) =>
+        "*** Exception \"" + e + "\" raised when evaluating property.\n" +
+        "  The arguments that caused the failure was:\n  " + prettyArgs(args)
+      case GenException(e) =>
+        "*** Exception \"" + e + "\" raised when generating arguments."
+    }
+
+    def prettyArgs(args: List[(Any,Int)]) = args.toString 
+  }
 
   abstract sealed class Result {
     def passed = this match {
@@ -25,72 +43,62 @@ object Test {
   case class Failed(args: List[(Any,Int)]) extends Result
 
   /** The property test was exhausted, it wasn't possible to generate enough
-  *  concrete arguments satisfying the preconditions to get enough passing
-  *  property evaluations.
-  */
+   *  concrete arguments satisfying the preconditions to get enough passing
+   *  property evaluations. */
   case class Exhausted extends Result
 
   /** An exception was raised when trying to evaluate the property with the
-  *  given concrete arguments.
-  */
-  case class PropException(args: List[(Any,Int)], e: Throwable) 
-    extends Result
+   *  given concrete arguments. */
+  case class PropException(args: List[(Any,Int)], e: Throwable) extends Result
 
   /** An exception was raised when trying to generate concrete arguments
-  *  for evaluating the property.
-  */
+   *  for evaluating the property. */
   case class GenException(e: Throwable) extends Result
 
   /** Property evaluation callback. */
-  type TestInspector = (Option[Prop.Result],Int,Int) => Unit
+  type PropEvalCallback = (Option[Prop.Result],Int,Int) => Unit
 
 
 
   // Testing functions
 
-  val defaultParams = Params(100,500,100,StdRand)
+  val defaultParams = Params(100,500,0,100,StdRand)
 
   /** Tests a property with the given testing parameters, and returns
-   *  the test results.
-   */
+   *  the test results. */
   def check(prms: Params, p: Prop): Stats = check(prms,p, (r,s,d) => ())
 
   /** Tests a property with the given testing parameters, and returns
-   *  the test results. <code>f</code> is a function which is called each
-   *  time the property is evaluted.
-   */
-  def check(prms: Params, p: Prop, f: TestInspector): Stats =
+   *  the test results. <code>propCallback</code> is a function which is
+   *  called each time the property is evaluted. */
+  def check(prms: Params, p: Prop, propCallback: PropEvalCallback): Stats =
   {
-    abstract sealed class Either[+T,+U]
-    case class Left[+T,+U](l: T) extends Either[T,U]
-    case class Right[+T,+U](r: U) extends Either[T,U]
-
     var discarded = 0
     var successful = 0
     var testRes: Result = null
 
-    while(testRes == null)
-    {
-      val size = (successful*prms.maxSize) / prms.minSuccessfulTests + 
-                 discarded / 10
-      val genprms = Gen.Params(size, prms.rand)
-      (try { Right(p(genprms)) } catch { case e => Left(e) }) match {
-        case Left(e) => testRes = GenException(e)
-        case Right(propRes) =>
-          propRes match {
-            case None =>
-              discarded += 1
-              if(discarded >= prms.maxDiscardedTests) testRes = Exhausted
-            case Some(Prop.True(_)) =>
-              successful += 1
-              if(successful >= prms.minSuccessfulTests) testRes = Passed
-            case Some(Prop.False(as)) => testRes = Failed(as)
-            case Some(Prop.Exception(as,e)) => testRes = PropException(as,e)
-          }
-          f(propRes,successful,discarded)
-      }
-    }
+    def size = scala.Math.min(prms.maxSize, prms.minSize + discarded/10 +
+      (successful * (prms.maxSize-prms.minSize)) / prms.minSuccessfulTests)
 
+    def genprms = Gen.Params(size, prms.rand)
+
+    while(testRes == null) try {
+      val propRes = p(genprms)
+      propRes match {
+        case None =>
+          discarded += 1
+          if(discarded >= prms.maxDiscardedTests) testRes = Exhausted
+        case Some(_:Prop.True) =>
+          successful += 1
+          if(successful >= prms.minSuccessfulTests) testRes = Passed
+        case Some(Prop.False(as)) => testRes = Failed(as)
+        case Some(Prop.Exception(as,e)) => testRes = PropException(as,e)
+      }
+      // Run property evaluation callback
+      propCallback(propRes,successful,discarded)
+    } catch { case e => testRes = GenException(e) }
+
+    // Return the test statistics
     Stats(testRes, successful, discarded)
   }
 
@@ -98,34 +106,16 @@ object Test {
    */
   def check(p: Prop): Stats =
   {
-    def printTmp(res: Option[Prop.Result], succeeded: Int, discarded: Int) = {
+    def printPropEval(res: Option[Prop.Result], succeeded: Int, discarded: Int) = {
       if(discarded > 0)
         Console.printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
       else Console.printf("\rPassed {0} tests",succeeded)
       Console.flush
     }
 
-    val tr = check(defaultParams,p,printTmp)
-
-    tr.result match {
-      case GenException(e) =>
-        Console.printf("\r*** Exception raised when generating arguments:\n{0}\n", e)
-      case PropException(args,e) =>
-        Console.printf("\r*** Exception raised when evaluating property\n")
-        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
-        Console.printf("The raised exception was:\n{0}\n", e)
-      case Failed(args) =>
-        Console.printf("\r*** Failed, after {0} successful tests:      \n", tr.succeeded)
-        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
-      case Exhausted() =>
-        Console.printf(
-          "\r*** Gave up, after only {1} passed tests. {0} tests were discarded.\n",
-          tr.discarded, tr.succeeded)
-      case Passed() =>
-        Console.printf("\r+++ OK, passed {0} tests.                    \n", tr.succeeded)
-    }
-
-    tr
+    val testStats = check(defaultParams,p,printPropEval)
+    Console.println("\r" + testStats.pretty)
+    testStats
   }
 
 }

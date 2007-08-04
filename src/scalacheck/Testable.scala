@@ -64,8 +64,8 @@ trait Testable {
   private def addProp(propName: String, prop: Prop) =
     properties = properties.update(propName, prop)
 
-  type TestsInspector = (String,Option[Prop.Result],Int,Int) => Unit
-  type TestStatsInspector = (String,Test.Stats) => Unit
+  type NamedPropEvalCallback = (String,Option[Prop.Result],Int,Int) => Unit
+  type TestStatsCallback = (String,Test.Stats) => Unit
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results.
@@ -78,20 +78,21 @@ trait Testable {
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested.
    */
-  def checkProperties(prms: Test.Params, f: TestsInspector, g: TestStatsInspector
+  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback, 
+    testCallback: TestStatsCallback
   ): Map[String,Test.Stats] = properties transform { case (pName,p) =>
-    val stats = Test.check(prms,p,f(pName,_,_,_))
-    g(pName,stats)
+    val stats = Test.check(prms,p,propCallback(pName,_,_,_))
+    testCallback(pName,stats)
     stats
   }
 
   /** Tests all properties with default testing parameters, and returns
    *  the test results. The results are also printed on the console during
-   *  testing.
-   */
+   *  testing. */
   def checkProperties(): Map[String,Test.Stats] =
   {
-    def printTmp(pn: String, res: Option[Prop.Result], succ: Int, disc: Int) = {
+    def printPropEval(pn: String,res: Option[Prop.Result],succ: Int,disc: Int) = 
+    {
       if(disc > 0)
         Console.printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
       else
@@ -99,57 +100,20 @@ trait Testable {
       Console.flush
     }
 
-    def printStats(pName: String, stats: Test.Stats) = stats.result match {
-      case Test.GenException(e) =>
-        Console.printf("\r{1}: *** Exception raised when generating arguments:\n{0}               \n\n",
-          e, pName)
-      case Test.PropException(args,e) =>
-        Console.printf("\r{0}: *** Exception raised when evaluating property                        \n",
-          pName)
-        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
-        Console.printf("The raised exception was:\n{0}\n\n", e)
-      case Test.Failed(args) =>
-        Console.printf("\r{1}: *** Failed after {0} successful tests                                \n",
-          stats.succeeded, pName)
-        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
-      case Test.Exhausted() =>
-        Console.printf("\r{2}: *** Gave up, after only {1} passed tests. {0} tests were discarded.\n\n",
-          stats.discarded, stats.succeeded, pName)
-      case Test.Passed() =>
-        Console.printf("\r{1}: +++ OK, passed {0} tests.                                          \n\n",
-          stats.succeeded, pName)
-    }
+    def printLabeled(label: String, str: String) = 
+      Console.println("\r" + label + ": " + str)
 
-    checkProperties(Test.defaultParams,printTmp,printStats)
+    def printStats(pName: String, stats: Test.Stats) = 
+      printLabeled(pName, stats.pretty)
+
+    checkProperties(Test.defaultParams,printPropEval,printStats)
   }
 
   private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {
-
     protected def runTest() = {
       val stats = Test.check(Test.defaultParams,p)
-      stats.result match {
-        case Test.GenException(e) => fail(
-          " Exception raised when generating arguments.\n" +
-          "The raised exception was:\n"+e.toString+"\n"
-        )
-        case Test.PropException(args,e) => fail(
-          " Exception raised when evaluating property.\n\n" +
-          "The arguments that caused the failure was:\n"+args.toString+"\n\n" +
-          "The raised exception was:\n"+e.toString+"\n"
-        )
-        case Test.Failed(args) => fail(
-          " Property failed after " + stats.succeeded.toString +
-          " successful tests.\n" +
-          "The arguments that caused the failure was:\n"+args.toString+"\n\n"
-        )
-        case Test.Exhausted() => fail(
-          " Gave up after only " + stats.succeeded.toString + " tests. " +
-          stats.discarded.toString + " tests were discarded."
-        )
-        case Test.Passed() => ()
-      }
+      if(!stats.result.passed) fail(stats.pretty)
     }
-
   }
 
   /** Returns all properties as SUnit.TestCase instances, which can added to
