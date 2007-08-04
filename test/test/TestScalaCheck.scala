@@ -7,57 +7,51 @@ object Props extends scalacheck.Testable {
   import scalacheck.Test._
   import scalacheck.Arbitrary._
 
-  specify("Test forAllShrink", forAllShrink(arbitrary[Int],shrink[Int])(n => n == (n+1)))
+  val passing = property(1 + 1 == 2)
 
-  specify("Test shrink 1 (shrink)", (n: Int) => n == (n+1))
-
-  specify("Test shrink 2 (shrink)", (n: Int, m: Int) => n == m)
-
-  val passing = property (() => 
-    1 + 1 == 2
-  )
-
-  val failing = property( (n: Int) =>
-    scala.Math.sqrt(n * n) == n
-  )
+  val failing = property( (n: Int) => false )
 
   val exhausted = property( (n: Int) =>
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val propException = property( (l1: List[String]) =>
-    l1.head == "foo"
-  )
+  val shrinked = property( (n: Int) => false )
+
+  val propException = property { throw new java.lang.Exception; true }
 
   val undefinedInt = for{
     n <- arbitrary[Int]
-    m <- arbitrary[Int]
-  } yield n/m
+  } yield n/0
 
-  val genException = forAll(undefinedInt)((n: Int) => (n == n)) 
+  val genException = forAll(undefinedInt)((n: Int) => true) 
 
-  specify("propPassing", () => check(defaultParams, passing).result match {
+  specify("propPassing", check(defaultParams, passing).result match {
     case _:Passed => true
     case _ => false
   })
 
-  specify("propFailing", () => check(defaultParams, failing).result match {
+  specify("propFailing", check(defaultParams, failing).result match {
     case _:Failed => true
     case _ => false
   })
 
-  specify("propExhausted", () => check(defaultParams, exhausted).result match {
+  specify("propExhausted", check(defaultParams, exhausted).result match {
     case _:Exhausted => true
     case _ => false
   })
 
-  specify("propPropException", () => check(defaultParams, propException).result match {
+  specify("propPropException", check(defaultParams, propException).result match {
     case _:PropException => true
     case _ => false
   })
 
-  specify("propGenException", () => check(defaultParams, genException).result match {
+  specify("propGenException", check(defaultParams, genException).result match {
     case _:GenException => true
+    case _ => false
+  })
+
+  specify("propShrinked", check(defaultParams, shrinked).result match {
+    case Failed((a:Int,_)::Nil) => a == 0
     case _ => false
   })
 

@@ -22,7 +22,7 @@ object Test {
   case class Passed extends Result
 
   /** The property was proved wrong with the given concrete arguments.  */
-  case class Failed(args: List[String], shrinks: Int) extends Result
+  case class Failed(args: List[(Any,Int)]) extends Result
 
   /** The property test was exhausted, it wasn't possible to generate enough
   *  concrete arguments satisfying the preconditions to get enough passing
@@ -33,7 +33,7 @@ object Test {
   /** An exception was raised when trying to evaluate the property with the
   *  given concrete arguments.
   */
-  case class PropException(args: List[String], shrinks: Int, e: Throwable) 
+  case class PropException(args: List[(Any,Int)], e: Throwable) 
     extends Result
 
   /** An exception was raised when trying to generate concrete arguments
@@ -65,32 +65,33 @@ object Test {
     case class Left[+T,+U](l: T) extends Either[T,U]
     case class Right[+T,+U](r: U) extends Either[T,U]
 
-    var nd = 0
-    var ns = 0
-    var tr: Result = null
+    var discarded = 0
+    var successful = 0
+    var testRes: Result = null
 
-    while(tr == null)
+    while(testRes == null)
     {
-      val size = (ns * prms.maxSize) / prms.minSuccessfulTests + nd / 10
+      val size = (successful*prms.maxSize) / prms.minSuccessfulTests + 
+                 discarded / 10
       val genprms = Gen.Params(size, prms.rand)
       (try { Right(p(genprms)) } catch { case e => Left(e) }) match {
-        case Left(e)   => tr = GenException(e)
-        case Right(pr) =>
-          pr match {
+        case Left(e) => testRes = GenException(e)
+        case Right(propRes) =>
+          propRes match {
             case None =>
-              nd = nd + 1
-              if(nd >= prms.maxDiscardedTests) tr = Exhausted
-            case Some(Prop.True(_,_)) =>
-              ns = ns + 1
-              if(ns >= prms.minSuccessfulTests) tr = Passed
-            case Some(Prop.False(as,shrinks)) => tr = Failed(as,shrinks)
-            case Some(Prop.Exception(as,shrinks,e)) => tr = PropException(as,shrinks,e)
+              discarded += 1
+              if(discarded >= prms.maxDiscardedTests) testRes = Exhausted
+            case Some(Prop.True(_)) =>
+              successful += 1
+              if(successful >= prms.minSuccessfulTests) testRes = Passed
+            case Some(Prop.False(as)) => testRes = Failed(as)
+            case Some(Prop.Exception(as,e)) => testRes = PropException(as,e)
           }
-          f(pr,ns,nd)
+          f(propRes,successful,discarded)
       }
     }
 
-    Stats(tr, ns, nd)
+    Stats(testRes, successful, discarded)
   }
 
   /** Tests a property and prints results to the console
@@ -109,19 +110,13 @@ object Test {
     tr.result match {
       case GenException(e) =>
         Console.printf("\r*** Exception raised when generating arguments:\n{0}\n", e)
-      case PropException(args,shrinks,e) =>
+      case PropException(args,e) =>
         Console.printf("\r*** Exception raised when evaluating property\n")
-        if(shrinks > 0)
-          Console.printf("The arguments that caused the failure was (after {1} shrinks):\n{0}\n\n", args, shrinks)
-        else 
-          Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
+        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
         Console.printf("The raised exception was:\n{0}\n", e)
-      case Failed(args,shrinks) =>
+      case Failed(args) =>
         Console.printf("\r*** Failed, after {0} successful tests:      \n", tr.succeeded)
-        if(shrinks > 0)
-          Console.printf("The arguments that caused the failure was (after {1} shrinks):\n{0}\n\n", args, shrinks)
-        else 
-          Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
+        Console.printf("The arguments that caused the failure was:\n{0}\n\n", args)
       case Exhausted() =>
         Console.printf(
           "\r*** Gave up, after only {1} passed tests. {0} tests were discarded.\n",

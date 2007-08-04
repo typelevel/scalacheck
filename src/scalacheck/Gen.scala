@@ -1,5 +1,7 @@
 package scalacheck
 
+import scala.collection.mutable.ListBuffer
+
 /** Class that represents a generator. You shouldn't make
  *  instances of this class directly. To create custom
  *  generators, the combinators in the Gen object should be used.
@@ -52,16 +54,6 @@ object Gen extends Testable {
 
 
   // Generator combinators
-
-  /** Sequences generators */
-  def sequence[T](l: Seq[Gen[T]]): Gen[List[T]] = {
-    def consGen(gt: Gen[T], gts: Gen[List[T]]) = for {
-      t  <- gt
-      ts <- gts
-    } yield t::ts
-
-    l.foldRight(value[List[T]](Nil))(consGen _)
-  }
 
   specify("Gen.value", (x: Int, sz: Int) =>
     value(x)(Params(sz,StdRand)).get == x
@@ -138,8 +130,7 @@ object Gen extends Testable {
   } yield xs(i)
 
 
-  /** Picks a random generator from a list
-   */
+  /** Picks a random generator from a list */
   def oneOf[T](gs: Seq[Gen[T]]) = if(gs.isEmpty) fail else for {
     i <- choose((0,gs.length-1))
     x <- gs(i)
@@ -151,8 +142,8 @@ object Gen extends Testable {
    */
   def listOf[T](g: Gen[T]) = sized(size => for {
     n <- choose(0,size)
-    l <- sequence(List.make(n, g))
-  } yield l)
+    l <- vectorOf(n,g)
+  } yield l.toList)
 
 
   /** Generates a non-empty list of random length. The maximum length depends
@@ -175,8 +166,19 @@ object Gen extends Testable {
     }
   )
 
-  /** Generates a list of the given length
-   */
-  def vectorOf[T](n: Int, g: Gen[T]): Gen[List[T]] = sequence(List.make(n,g))
+  /** Generates a list of the given length */
+  def vectorOf[T](n: Int, g: Gen[T]) = new Gen[Seq[T]] {
+    def apply(prms: Params): Option[Seq[T]] = {
+      val l = new ListBuffer[T]
+      var i = 0
+      while(i < n) g(prms) match {
+        case Some(x) => 
+          l += x
+          i += 1
+        case None => return None
+      }
+      Some(l)
+    }
+  }
 
 }

@@ -21,7 +21,7 @@ abstract class Arbitrary[T] {
 /** Contains Arbitrary instances for common types. */
 object Arbitrary {
 
-  import Gen.{value, choose, sequence, sized, elements, listOf, listOf1, 
+  import Gen.{value, choose, sized, elements, listOf, listOf1, 
     frequency}
 
   /** Arbitrary instance of value of type T. */

@@ -1,5 +1,7 @@
 package scalacheck
 
+import scala.collection.mutable.ListBuffer
+
 /** A property is a generator that generates a property result */
 abstract class Prop extends Gen[Prop.Result] {
 
@@ -10,11 +12,11 @@ abstract class Prop extends Gen[Prop.Result] {
    *  generate a result, the new property will generate false.
    */
   def &&(p: Prop): Prop = combine(p) {
-    case (x, Some(True(_,_))) => x
-    case (Some(True(_,_)), x) => x
+    case (x, Some(True(_))) => x
+    case (Some(True(_)), x) => x
 
-    case (x@Some(False(_,_)), _) => x
-    case (_, x@Some(False(_,_))) => x
+    case (x@Some(False(_)), _) => x
+    case (_, x@Some(False(_))) => x
 
     case (None, x) => x
     case (x, None) => x
@@ -26,11 +28,11 @@ abstract class Prop extends Gen[Prop.Result] {
    *  or the given property (or both) hold.
    */
   def ||(p: Prop): Prop = combine(p) {
-    case (x@Some(True(_,_)), _) => x
-    case (_, x@Some(True(_,_))) => x
+    case (x@Some(True(_)), _) => x
+    case (_, x@Some(True(_))) => x
 
-    case (Some(False(_,_)), x) => x
-    case (x, Some(False(_,_))) => x
+    case (Some(False(_)), x) => x
+    case (x, Some(False(_))) => x
 
     case (None, x) => x
     case (x, None) => x
@@ -47,11 +49,11 @@ abstract class Prop extends Gen[Prop.Result] {
     case (None, x) => x
     case (x, None) => x
 
-    case (x, Some(True(_,_))) => x
-    case (Some(True(_,_)), x) => x
+    case (x, Some(True(_))) => x
+    case (Some(True(_)), x) => x
 
-    case (x@Some(False(_,_)), _) => x
-    case (_, x@Some(False(_,_))) => x
+    case (x@Some(False(_)), _) => x
+    case (_, x@Some(False(_))) => x
 
     case (x, _) => x
   }
@@ -67,19 +69,11 @@ abstract class Prop extends Gen[Prop.Result] {
     }
   }
 
-  def addArg(arg: String) = new Prop {
+  def addArg(arg: Any, shrinks: Int) = new Prop {
     override def toString = Prop.this.toString
     def apply(prms: Gen.Params) = Prop.this(prms) match {
       case None => None
-      case Some(r) => Some(r.addArg(arg))
-    }
-  }
-
-  def shrinked = new Prop {
-    override def toString = Prop.this.toString
-    def apply(prms: Gen.Params) = Prop.this(prms) match {
-      case None => None
-      case Some(r) => Some(r.shrinked)
+      case Some(r) => Some(r.addArg(arg,shrinks))
     }
   }
 
@@ -102,9 +96,9 @@ object Prop extends Testable {
     (p && falsified) == falsified
   )
   specify("Prop.Prop.&& Right prio", (sz: Int) => {
-    val p = proved.addArg("RHS") && proved.addArg("LHS")
+    val p = proved.addArg("RHS",0) && proved.addArg("LHS",0)
     p(Gen.Params(sz,StdRand)) match {
-      case Some(r) if r.args == "RHS"::Nil => true
+      case Some(r) if r.args == ("RHS",0)::Nil => true
       case _ => false
     }
   })
@@ -128,7 +122,7 @@ object Prop extends Testable {
   specify("Prop.Prop.++ False", (p: Prop) =>
     (p ++ falsified) == falsified
   )
-  specify("Prop.Prop.++ True", () => {
+  specify("Prop.Prop.++ True", {
     val g = elements(List(proved,falsified,exception(null)))
     forAll(g)(p => (p ++ proved) == p)
   })
@@ -138,11 +132,11 @@ object Prop extends Testable {
   // Types
 
   /** The result of evaluating a property */
-  abstract sealed class Result(val args: List[String], val shrinks: Int) {
+  abstract sealed class Result(val args: List[(Any,Int)]) {
     override def equals(x: Any) = (this,x) match {
-      case (True(_,_),True(_,_))   => true
-      case (False(_,_),False(_,_)) => true
-      case (Exception(_,_,_),Exception(_,_,_)) => true
+      case (True(_),True(_))   => true
+      case (False(_),False(_)) => true
+      case (Exception(_,_),Exception(_,_)) => true
       case _ => false
     }
 
@@ -157,29 +151,22 @@ object Prop extends Testable {
       case _ => false
     }
 
-    def addArg(a: String) = this match {
-      case True(as,s) => True(a::as,s)
-      case False(as,s) => False(a::as,s)
-      case Exception(as,s,e) => Exception(a::as,s,e)
-    }
-
-    def shrinked = this match {
-      case True(as,s) => True(as,s+1)
-      case False(as,s) => False(as,s+1)
-      case Exception(as,s,e) => Exception(as,s+1,e)
+    def addArg(a: Any, shrinks: Int) = this match {
+      case True(as) => True((a,shrinks)::as)
+      case False(as) => False((a,shrinks)::as)
+      case Exception(as,e) => Exception((a,shrinks)::as,e)
     }
 
   }
 
   /** The property was true with the given arguments */
-  case class True(as: List[String], ss: Int) extends Result(as,ss)
+  case class True(as: List[(Any,Int)]) extends Result(as)
 
   /** The property was false with the given arguments */
-  case class False(as: List[String],ss: Int) extends Result(as,ss)
+  case class False(as: List[(Any,Int)]) extends Result(as)
 
   /** Evaluating the property with the given arguments raised an exception */
-  case class Exception(as: List[String], ss: Int, e: Throwable)
-    extends Result(as,ss)
+  case class Exception(as: List[(Any,Int)], e: Throwable) extends Result(as)
 
 
 
@@ -201,75 +188,80 @@ object Prop extends Testable {
   def rejected: Prop = constantProp(None, "Prop.rejected")
 
   /** A property that always is false */
-  def falsified: Prop = constantProp(Some(False(Nil,0)), "Prop.falsified")
+  def falsified: Prop = constantProp(Some(False(Nil)), "Prop.falsified")
 
   /** A property that always is true */
-  def proved: Prop = constantProp(Some(True(Nil,0)), "Prop.proved");
+  def proved: Prop = constantProp(Some(True(Nil)), "Prop.proved");
 
   /** A property that denotes an exception */
   def exception(e: Throwable): Prop =
-    constantProp(Some(Exception(Nil,0,e)), "Prop.exception")
+    constantProp(Some(Exception(Nil,e)), "Prop.exception")
 
   /** Implication */
-  def ==>(b: Boolean, p: => Prop): Prop =
-    property(() => if (b) p else rejected)
+  def ==>(b: => Boolean, p: => Prop): Prop = property(if (b) p else rejected)
 
   /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
-    property(() => if(f.isDefinedAt(x)) f(x) else rejected)
-
-  /** Universal quantifier */
-  def forAll[A,P](g: Gen[A])(f: A => P)(implicit p: P => Prop): Prop = for {
-    a <- g
-    r <- try { p(f(a)) } catch { case e => exception(e) }
-  } yield r.addArg(a.toString)
-
-  /** Universal quantifier, shrinks failed arguments */
-  def forAllShrink[A,P](g: Gen[A], shrink: A => Seq[A])(f: A => P)
-    (implicit p: P => Prop): Prop = for
-  {
-    a <- g
-    r1 <- try { p(f(a)) } catch { case e => exception(e) }
-    prop = constantProp(Some(r1.addArg(a.toString)), "")
-    r2 <- if(r1.failure) forEachShrink(shrink(a), shrink)(f).shrinked ++ prop
-          else prop
-  } yield r2
-
-  /** Universal quantifier */
-  def forEach[A,P](xs: List[A])(f: A => P)(implicit p: P => Prop) =
-    all(xs map (a => try { p(f(a)) } catch { case e => exception(e) }))
-
-  /** Universal quantifier, shrinks failed arguments */
-  def forEachShrink[A,P](xs: Seq[A], shrink: A => Seq[A])(f: A => P)
-    (implicit p: P => Prop): Prop = 
-  {
-    def helper(xs: Seq[A], pr: Prop): Prop = if(xs.isEmpty) pr else all(
-      xs map { a => 
-        for {
-          r1 <- try { p(f(a)) } catch { case e => exception(e) }
-          pr1 = constantProp(Some(r1.addArg(a.toString)), "")
-          r2 <- if(r1.failure) helper(shrink(a), pr1)
-                else pr
-        } yield r2.shrinked
-      }
-    )
-
-    all(
-      xs map { a =>
-        for {
-          r1 <- try { p(f(a)) } catch { case e => exception(e) }
-          pr = constantProp(Some(r1.addArg(a.toString)), "")
-          r2 <- if(r1.failure) helper(shrink(a), pr)
-                else pr
-        } yield r2
-      }
-    )
-  }
+    property(if(f.isDefinedAt(x)) f(x) else rejected)
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true
    */
-  def all(ps: Seq[Prop]) = (ps :\ proved) (_ && _)
+  def all(ps: Seq[Prop]) = (proved /: ps) (_ && _)
+
+  /** Universal quantifier */
+  def forAll[A,P](g: Gen[A])(f: A => Prop): Prop = for {
+    a <- g
+    r <- property(f(a))
+  } yield r.addArg(a,0)
+
+  /** Universal quantifier, shrinks failed arguments */
+  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop): Prop = for
+  {
+    a <- g
+    r <- forEachShrink(List(a),shrink)(f)
+  } yield r
+
+  /** Universal quantifier */
+  def forEach[A](xs: List[A])(f: A => Prop) = all(xs map (a => property(f(a))))
+
+  /** Universal quantifier, shrinks failed arguments */
+  def forEachShrink[A](xs: Seq[A], shrink: A => Seq[A])(f: A => Prop) = new Prop
+  {
+    // Could have been implemented as a for-sequence also, but it was
+    // difficult to avoid stack overflows then
+
+    def apply(prms: Gen.Params) = {
+
+      def getResults(xs: Seq[A], shrinks: Int) = {
+        val successes = new ListBuffer[Result]
+        val fails = new ListBuffer[(A,Result)]
+        for(x <- xs) f(x)(prms) match {
+          case Some(r) if r.success => successes += r.addArg(x,shrinks)
+          case Some(r) if r.failure => fails += (x,r.addArg(x,shrinks))
+          case _ => ()
+        }
+        (successes: Seq[Result], fails: Seq[(A,Result)])
+      }
+
+      def getShrinks(xs: Seq[A]) = xs.flatMap(shrink)
+
+      var shrinks = 0
+      val rs = getResults(xs,shrinks)
+      val successes = rs._1
+      var fails = rs._2
+      if(fails.isEmpty) if(successes.isEmpty) None else Some(successes.last)
+      else {
+        var r: Result = null
+        do {
+          shrinks += 1
+          r = fails.last._2
+          fails = getResults(getShrinks(fails map (_._1)),shrinks)._2
+        } while(!fails.isEmpty)
+        Some(r)
+      }
+    }
+  }
 
   class ExtendedBoolean(b: Boolean) {
     /** Implication */
@@ -294,30 +286,28 @@ object Prop extends Testable {
 
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
-  def property[P] (
-    f: () => P)(implicit
-    p: P => Prop
-  ): Prop = new Prop {
+
+  def property (p: => Prop): Prop = new Prop {
     def apply(prms: Gen.Params) =
-      (try { p(f()) } catch { case e => exception(e) })(prms)
+      (try { p } catch { case e => exception(e) })(prms)
   }
 
   def property[A1,P] (
     f:  A1 => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1]
-  ) = forAllShrink(arbitrary[A1],shrink[A1])(f)
+  ) = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
 
   def property[A1,A2,P] (
     f:  (A1,A2) => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2]
   ): Prop = property((a: A1) => property(f(a, _:A2)))
 
   def property[A1,A2,A3,P] (
     f:  (A1,A2,A3) => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3]
@@ -325,7 +315,7 @@ object Prop extends Testable {
 
   def property[A1,A2,A3,A4,P] (
     f:  (A1,A2,A3,A4) => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3],
@@ -334,7 +324,7 @@ object Prop extends Testable {
 
   def property[A1,A2,A3,A4,A5,P] (
     f:  (A1,A2,A3,A4,A5) => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3],
@@ -344,7 +334,7 @@ object Prop extends Testable {
 
   def property[A1,A2,A3,A4,A5,A6,P] (
     f:  (A1,A2,A3,A4,A5,A6) => P)(implicit
-    p:  P => Prop,
+    p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2],
     a3: Arb[A3] => Arbitrary[A3],
