@@ -24,7 +24,7 @@ object Props extends scalacheck.Testable {
     n <- arbitrary[Int]
   } yield n/0
 
-  val genException = forAll(undefinedInt)((n: Int) => true) 
+  val genException = forAll(undefinedInt)((n: Int) => true)
 
   specify("propFailing", (prms: Test.Params) =>
     check(prms, failing).result match {
@@ -33,14 +33,14 @@ object Props extends scalacheck.Testable {
     }
   )
 
-  specify("propPassing", (prms: Test.Params) => 
+  specify("propPassing", (prms: Test.Params) =>
     check(prms, passing).result match {
       case _:Passed => true
       case _ => false
     }
   )
 
-  specify("propExhausted", (prms: Test.Params) => 
+  specify("propExhausted", (prms: Test.Params) =>
     check(prms, exhausted).result match {
       case _:Exhausted => true
       case _ => false

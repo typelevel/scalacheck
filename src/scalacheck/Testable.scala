@@ -78,7 +78,7 @@ trait Testable {
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested.
    */
-  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback, 
+  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
     testCallback: TestStatsCallback
   ): Map[String,Test.Stats] = properties transform { case (pName,p) =>
     val stats = Test.check(prms,p,propCallback(pName,_,_,_))
@@ -91,20 +91,19 @@ trait Testable {
    *  testing. */
   def checkProperties(): Map[String,Test.Stats] =
   {
-    def printPropEval(pn: String,res: Option[Prop.Result],succ: Int,disc: Int) = 
+    def printPropEval(pn: String,res: Option[Prop.Result],succ: Int,disc: Int) =
     {
-      if(disc > 0)
-        Console.printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
-      else
-        Console.printf("\r{1}: Passed {0} tests",succ,pn)
+      if(disc == 0) printf("\r{1}: Passed {0} tests",succ,pn)
+      else printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
       Console.flush
     }
 
-    def printLabeled(label: String, str: String) = 
-      Console.println("\r" + label + ": " + str)
+    def printLabeled(t: String, label: String, str: String) =
+      printf("\r{0} {1}: {2}{3}\n", t, label, str,
+        List.make(80 - str.length - label.length, " ").mkString(""))
 
-    def printStats(pName: String, stats: Test.Stats) = 
-      printLabeled(pName, stats.pretty)
+    def printStats(pName: String, stats: Test.Stats) =
+      printLabeled(if(stats.result.passed) "+" else "!", pName, stats.pretty)
 
     checkProperties(Test.defaultParams,printPropEval,printStats)
   }

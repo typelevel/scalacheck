@@ -223,14 +223,14 @@ object Prop extends Testable {
 
     def apply(prms: Gen.Params) = {
 
-      def getResult(xs: Seq[A], shrinks: Int) = {
-        val results = xs.toStream.map { x => 
+      def getResult(xs: List[A], shrinks: Int) = {
+        val results = xs.map { x =>
           f(x)(prms).map(r => (x, r.addArg(x,shrinks)))
         }
         val fails = results.dropWhile(!isFailure(_))
         if(!fails.isEmpty) fails.head
         else results.dropWhile(!isSuccess(_)) match {
-          case Stream.cons(xr,_) => xr
+          case xr::_ => xr
           case _ => None
         }
       }
@@ -256,7 +256,7 @@ object Prop extends Testable {
             do {
               shrinks += 1
               r = xr.map(_._2)
-              xr = getResult(shrink(xr.get._1), shrinks)
+              xr = getResult(shrink(xr.get._1).toList, shrinks)
             } while(isFailure(xr))
             r
           }

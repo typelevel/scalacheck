@@ -30,7 +30,7 @@
   <!-- Project properties -->
 
   <property name="name"          value="${ant.project.name}"/>
-  <property name="version.nr"    value="0.2.1"/>
+  <property name="version.nr"    value="0.3"/>
   <property name="version"       value="${version.nr}dev-r${revision.max-with-flags}"/>
   <property name="author"        value="Rickard Nilsson"/>
   <property name="package.root"  value="scalacheck"/>
