@@ -21,15 +21,15 @@ abstract class Arbitrary[T] {
 /** Contains Arbitrary instances for common types. */
 object Arbitrary {
 
-  import Gen.{value, choose, sized, elements, listOf, listOf1, 
+  import Gen.{value, choose, sized, elements, listOf, listOf1,
     frequency}
 
   /** Arbitrary instance of value of type T. */
-  def arbitrary[T](implicit a: Arb[T] => Arbitrary[T]): Gen[T] = 
+  def arbitrary[T](implicit a: Arb[T] => Arbitrary[T]): Gen[T] =
     a(null).getArbitrary
 
   /** Shrinks a generated value */
-  def shrink[T](x: T)(implicit a: Arb[T] => Arbitrary[T]): Seq[T] = 
+  def shrink[T](x: T)(implicit a: Arb[T] => Arbitrary[T]): Seq[T] =
     a(null).getShrink(x)
 
 
@@ -63,7 +63,7 @@ object Arbitrary {
   }
 
   /** Arbitrary instance of string */
-  implicit def arbitraryString(x: Arb[String]): Arbitrary[String] = 
+  implicit def arbitraryString(x: Arb[String]): Arbitrary[String] =
     new Arbitrary[String] {
       def getArbitrary = arbitrary[List[Char]] map (List.toString(_))
     }
@@ -87,7 +87,7 @@ object Arbitrary {
   }
 
   /** Arbitrary instance of test params */
-  implicit def arbitraryTestParams(x: Arb[Test.Params]) = 
+  implicit def arbitraryTestParams(x: Arb[Test.Params]) =
     new Arbitrary[Test.Params] {
       def getArbitrary = for {
         minSuccessfulTests <- choose(10,150)
@@ -114,11 +114,15 @@ object Arbitrary {
     a1: Arb[T1] => Arbitrary[T1],
     a2: Arb[T2] => Arbitrary[T2]
   ): Arbitrary[Tuple2[T1,T2]] = new Arbitrary[Tuple2[T1,T2]] {
-    def getArbitrary = for
-    {
+    def getArbitrary = for {
       t1 <- arbitrary[T1]
       t2 <- arbitrary[T2]
     } yield (t1,t2)
+
+    override def getShrink(t: (T1,T2)) = for {
+      x <- shrink(t._1)
+      y <- shrink(t._2)
+    } yield (x,y)
   }
 
   /** Arbitrary instance of 3-tuple */
@@ -128,12 +132,17 @@ object Arbitrary {
     a2: Arb[T2] => Arbitrary[T2],
     a3: Arb[T3] => Arbitrary[T3]
   ): Arbitrary[Tuple3[T1,T2,T3]] = new Arbitrary[Tuple3[T1,T2,T3]] {
-    def getArbitrary = for
-    {
+    def getArbitrary = for {
       t1 <- arbitrary[T1]
       t2 <- arbitrary[T2]
       t3 <- arbitrary[T3]
     } yield (t1,t2,t3)
+
+    override def getShrink(t: (T1,T2,T3)) = for {
+      x <- shrink(t._1)
+      y <- shrink(t._2)
+      z <- shrink(t._3)
+    } yield (x,y,z)
   }
 
   /** Arbitrary instance of 4-tuple */
@@ -144,13 +153,19 @@ object Arbitrary {
     a3: Arb[T3] => Arbitrary[T3],
     a4: Arb[T4] => Arbitrary[T4]
   ): Arbitrary[Tuple4[T1,T2,T3,T4]] = new Arbitrary[Tuple4[T1,T2,T3,T4]] {
-    def getArbitrary = for
-    {
+    def getArbitrary = for {
       t1 <- arbitrary[T1]
       t2 <- arbitrary[T2]
       t3 <- arbitrary[T3]
       t4 <- arbitrary[T4]
     } yield (t1,t2,t3,t4)
+
+    override def getShrink(t: (T1,T2,T3,T4)) = for {
+      x <- shrink(t._1)
+      y <- shrink(t._2)
+      z <- shrink(t._3)
+      v <- shrink(t._4)
+    } yield (x,y,z,v)
   }
 
 }

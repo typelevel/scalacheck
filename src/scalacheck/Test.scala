@@ -14,12 +14,12 @@ object Test {
       case Passed() =>
         "OK, passed " + succeeded + " tests."
       case Failed(args) =>
-        "Falsified after " + succeeded + " passed tests:\n  " + prettyArgs(args)
+        "Falsified after " + succeeded + " passed tests:\n" + prettyArgs(args)
       case Exhausted() =>
         "Gave up after only " + succeeded + " passed tests. " +
         discarded + " tests were discarded."
       case PropException(args,e) =>
-        "Exception \"" + e + "\" raised on property evaluation:\n  " +
+        "Exception \"" + e + "\" raised on property evaluation:\n" +
         prettyArgs(args)
       case GenException(e) =>
         "Exception \"" + e + "\" raised on argument generation."
@@ -27,7 +27,7 @@ object Test {
 
     def prettyArgs(args: List[(Any,Int)]) = {
       val strs = for((arg,shrinks) <- args) yield
-        arg + (if(shrinks > 0) "(" + shrinks + " shrinks)" else "")
+        arg + (if(shrinks > 0) " (" + shrinks + " shrinks)" else "")
       strs.mkString("\n")
     }
   }
