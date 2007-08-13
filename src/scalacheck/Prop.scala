@@ -123,7 +123,7 @@ object Prop extends Testable {
     (p ++ falsified) == falsified
   )
   specify("Prop.Prop.++ True", {
-    val g = elements(List(proved,falsified,exception(null)))
+    val g = elements(proved,falsified,exception(null))
     forAll(g)(p => (p ++ proved) == p)
   })
 

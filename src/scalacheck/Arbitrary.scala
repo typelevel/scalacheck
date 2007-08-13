@@ -37,7 +37,7 @@ object Arbitrary {
 
   /** Arbitrary instance of bool */
   implicit def arbitraryBool(x: Arb[Boolean]) = new Arbitrary[Boolean] {
-    def getArbitrary = elements(List(true,false))
+    def getArbitrary = elements(true,false)
   }
 
   /** Arbitrary instance of integer */
@@ -52,14 +52,14 @@ object Arbitrary {
       if(n == 0) Nil
       else {
         val ns = Stream.cons(0, iterate((_:Int)/2, n).takeWhile(_ != 0).map(n - _))
-        ns//if(n < 0) Stream.cons(-n,ns) else ns
+        if(n < 0) Stream.cons(-n,ns) else ns
       }
     }
   }
 
   /** Arbitrary instance of char */
   implicit def arbitraryChar(x: Arb[Char]) = new Arbitrary[Char] {
-    def getArbitrary = choose((0,255)) map (_.toChar)
+    def getArbitrary = choose(0,255) map (_.toChar)
   }
 
   /** Arbitrary instance of string */
@@ -79,12 +79,10 @@ object Arbitrary {
   /** Generates an arbitrary property */
   implicit def arbitraryProp(x: Arb[Prop]) = new Arbitrary[Prop] {
     def getArbitrary = frequency(
-      List(
-        (5, value(Prop.proved)),
-        (4, value(Prop.falsified)),
-        (2, value(Prop.rejected)),
-        (1, value(Prop.exception(null)))
-      )
+      (5, value(Prop.proved)),
+      (4, value(Prop.falsified)),
+      (2, value(Prop.rejected)),
+      (1, value(Prop.exception(null)))
     )
   }
 
@@ -92,7 +90,7 @@ object Arbitrary {
   implicit def arbitraryTestParams(x: Arb[Test.Params]) = 
     new Arbitrary[Test.Params] {
       def getArbitrary = for {
-        minSuccessfulTests <- choose((10,150))
+        minSuccessfulTests <- choose(10,150)
         maxDiscardedTests  <- choose(100,500)
         minSize <- choose(0,500)
         sizeDiff <- choose(0,500)
