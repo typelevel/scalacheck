@@ -2,6 +2,7 @@ package test
 
 object Props extends scalacheck.Testable {
 
+  import scalacheck._
   import scalacheck.Gen._
   import scalacheck.Prop._
   import scalacheck.Test._
@@ -25,35 +26,47 @@ object Props extends scalacheck.Testable {
 
   val genException = forAll(undefinedInt)((n: Int) => true) 
 
-  specify("propPassing", check(defaultParams, passing).result match {
-    case _:Passed => true
-    case _ => false
-  })
+  specify("propFailing", (prms: Test.Params) =>
+    check(prms, failing).result match {
+      case _:Failed => true
+      case _ => false
+    }
+  )
 
-  specify("propFailing", check(defaultParams, failing).result match {
-    case _:Failed => true
-    case _ => false
-  })
+  specify("propPassing", (prms: Test.Params) => 
+    check(prms, passing).result match {
+      case _:Passed => true
+      case _ => false
+    }
+  )
 
-  specify("propExhausted", check(defaultParams, exhausted).result match {
-    case _:Exhausted => true
-    case _ => false
-  })
+  specify("propExhausted", (prms: Test.Params) => 
+    check(prms, exhausted).result match {
+      case _:Exhausted => true
+      case _ => false
+    }
+  )
 
-  specify("propPropException", check(defaultParams, propException).result match {
-    case _:PropException => true
-    case _ => false
-  })
+  specify("propPropException", (prms: Test.Params) =>
+    check(prms, propException).result match {
+      case _:PropException => true
+      case _ => false
+    }
+  )
 
-  specify("propGenException", check(defaultParams, genException).result match {
-    case _:GenException => true
-    case _ => false
-  })
+  specify("propGenException", (prms: Test.Params) =>
+    check(prms, genException).result match {
+      case _:GenException => true
+      case _ => false
+    }
+  )
 
-  specify("propShrinked", check(defaultParams, shrinked).result match {
-    case Failed((a:Int,_)::Nil) => a == 0
-    case _ => false
-  })
+  specify("propShrinked", (prms: Test.Params) =>
+    check(prms, shrinked).result match {
+      case Failed((a:Int,_)::Nil) => a == 0
+      case _ => false
+    }
+  )
 
 }
 

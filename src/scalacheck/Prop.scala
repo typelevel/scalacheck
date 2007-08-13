@@ -216,52 +216,54 @@ object Prop extends Testable {
   } yield r.addArg(a,0)
 
   /** Universal quantifier, shrinks failed arguments */
-  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop): Prop = for
-  {
-    a <- g
-    r <- forEachShrink(List(a),shrink)(f)
-  } yield r
-
-  /** Universal quantifier */
-  def forEach[A](xs: List[A])(f: A => Prop) = all(xs map (a => property(f(a))))
-
-  /** Universal quantifier, shrinks failed arguments */
-  def forEachShrink[A](xs: Seq[A], shrink: A => Seq[A])(f: A => Prop) = new Prop
+  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop) = new Prop
   {
     // Could have been implemented as a for-sequence also, but it was
     // difficult to avoid stack overflows then
 
     def apply(prms: Gen.Params) = {
 
-      def getResults(xs: Seq[A], shrinks: Int) = {
-        val successes = new ListBuffer[Result]
-        val fails = new ListBuffer[(A,Result)]
-        for(x <- xs) f(x)(prms) match {
-          case Some(r) if r.success => successes += r.addArg(x,shrinks)
-          case Some(r) if r.failure => fails += (x,r.addArg(x,shrinks))
-          case _ => ()
+      def getResult(xs: Seq[A], shrinks: Int) = {
+        val results = xs.toStream.map { x => 
+          f(x)(prms).map(r => (x, r.addArg(x,shrinks)))
         }
-        (successes: Seq[Result], fails: Seq[(A,Result)])
+        val fails = results.dropWhile(!isFailure(_))
+        if(!fails.isEmpty) fails.head
+        else results.dropWhile(!isSuccess(_)) match {
+          case Stream.cons(xr,_) => xr
+          case _ => None
+        }
       }
 
-      def getShrinks(xs: Seq[A]) = xs.flatMap(shrink)
+      def isSuccess(r: Option[(A,Result)]) = r match {
+        case Some((_,res)) => res.success
+        case _ => false
+      }
 
-      var shrinks = 0
-      val rs = getResults(xs,shrinks)
-      val successes = rs._1
-      var fails = rs._2
-      if(fails.isEmpty) if(successes.isEmpty) None else Some(successes.last)
-      else {
-        var r: Result = null
-        do {
-          shrinks += 1
-          r = fails.last._2
-          fails = getResults(getShrinks(fails map (_._1)),shrinks)._2
-        } while(!fails.isEmpty)
-        Some(r)
+      def isFailure(r: Option[(A,Result)]) = r match {
+        case Some((_,res)) => res.failure
+        case _ => false
+      }
+
+      g(prms) match {
+        case None => None
+        case Some(x) =>
+          var shrinks = 0
+          var xr = getResult(List(x), shrinks)
+          if(!isFailure(xr)) xr.map(_._2)
+          else {
+            var r: Option[Result] = None
+            do {
+              shrinks += 1
+              r = xr.map(_._2)
+              xr = getResult(shrink(xr.get._1), shrinks)
+            } while(isFailure(xr))
+            r
+          }
       }
     }
   }
+
 
   class ExtendedBoolean(b: Boolean) {
     /** Implication */
