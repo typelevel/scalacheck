@@ -215,29 +215,24 @@ object Prop extends Testable {
     r <- property(f(a))
   } yield r.addArg(a,0)
 
-  /** Universal quantifier, shrinks failed arguments */
-  def forAllShrink[A](g: Gen[A], shrink: A => Seq[A])(f: A => Prop) = new Prop
+  /** Universal quantifier, shrinks failed arguments with given shrink 
+   *  function */
+  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) = new Prop
   {
-    // Could have been implemented as a for-sequence also, but it was
-    // difficult to avoid stack overflows then
-
     def apply(prms: Gen.Params) = {
 
-      def getResult(xs: List[A], shrinks: Int) = {
-        val results = xs.map { x =>
-          f(x)(prms).map(r => (x, r.addArg(x,shrinks)))
-        }
-        val fails = results.dropWhile(!isFailure(_))
-        if(!fails.isEmpty) fails.head
-        else results.dropWhile(!isSuccess(_)) match {
-          case xr::_ => xr
-          case _ => None
-        }
-      }
+      import Stream._
 
-      def isSuccess(r: Option[(A,Result)]) = r match {
-        case Some((_,res)) => res.success
-        case _ => false
+      def getFirstFail(xs: Stream[A], shrinks: Int) = {
+        val results = xs.map(x =>
+          f(x)(prms).map(r => (x, r.addArg(x,shrinks))))
+        results match {
+          case Stream.empty => None
+          case _ => results.dropWhile(!isFailure(_)) match {
+            case Stream.empty => results.head
+            case failures => failures.head
+          }
+        }
       }
 
       def isFailure(r: Option[(A,Result)]) = r match {
@@ -249,20 +244,25 @@ object Prop extends Testable {
         case None => None
         case Some(x) =>
           var shrinks = 0
-          var xr = getResult(List(x), shrinks)
+          var xr = getFirstFail(cons(x, empty), shrinks)
           if(!isFailure(xr)) xr.map(_._2)
           else {
             var r: Option[Result] = None
             do {
               shrinks += 1
               r = xr.map(_._2)
-              xr = getResult(shrink(xr.get._1).toList, shrinks)
+              xr = getFirstFail(shrink(xr.get._1), shrinks)
             } while(isFailure(xr))
             r
           }
       }
     }
   }
+
+  /** Universal quantifier, shrinks failed arguments with the default
+   *  shrink function for the type */
+  def forAllDefaultShrink[A](g: Gen[A])(f: A => Prop)
+    (implicit a: Arb[A] => Arbitrary[A]) = forAllShrink(g,shrink[A])(f)
 
 
   class ExtendedBoolean(b: Boolean) {

@@ -16,7 +16,7 @@ object Props extends scalacheck.Testable {
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val shrinked = property( (n: Int) => false )
+  val shrinked = property( (t: (Int,Int,Int)) => false )
 
   val propException = property { throw new java.lang.Exception; true }
 
@@ -63,7 +63,8 @@ object Props extends scalacheck.Testable {
 
   specify("propShrinked", (prms: Test.Params) =>
     check(prms, shrinked).result match {
-      case Failed((a:Int,_)::Nil) => a == 0
+      case Failed(((x:Int,y:Int,z:Int),_)::Nil) => 
+        x == 0 && y == 0 && z == 0
       case _ => false
     }
   )

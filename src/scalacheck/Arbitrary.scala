@@ -14,7 +14,7 @@ sealed class Arb[T] {}
  */
 abstract class Arbitrary[T] {
   protected def getArbitrary: Gen[T]
-  protected def getShrink(x: T): Seq[T] = Nil
+  protected def getShrink(x: T): Stream[T] = Stream.empty
 }
 
 
@@ -29,7 +29,7 @@ object Arbitrary {
     a(null).getArbitrary
 
   /** Shrinks a generated value */
-  def shrink[T](x: T)(implicit a: Arb[T] => Arbitrary[T]): Seq[T] =
+  def shrink[T](x: T)(implicit a: Arb[T] => Arbitrary[T]): Stream[T] =
     a(null).getShrink(x)
 
 
@@ -43,13 +43,15 @@ object Arbitrary {
   /** Arbitrary instance of integer */
   implicit def arbitraryInt(x: Arb[Int]) = new Arbitrary[Int] {
     def getArbitrary = sized (s => choose((-s,s)))
-    override def getShrink(n: Int): Seq[Int] = {
+
+    override def getShrink(n: Int) = {
+
       def iterate[T](f: T => T, x: T): Stream[T] = {
         val y = f(x)
         Stream.cons(y, iterate(f,y))
       }
 
-      if(n == 0) Nil
+      if(n == 0) Stream.empty
       else {
         val ns = Stream.cons(0, iterate((_:Int)/2, n).takeWhile(_ != 0).map(n - _))
         if(n < 0) Stream.cons(-n,ns) else ns
@@ -106,6 +108,13 @@ object Arbitrary {
     a: Arb[T] => Arbitrary[T]
   ): Arbitrary[List[T]] = new Arbitrary[List[T]] {
     def getArbitrary = listOf(arbitrary[T]) map (_.toList)
+
+    override def getShrink(xs: List[T]) = xs match {
+      case Nil => Stream.empty
+      case x::xs =>
+        (for(y <- shrink(x)) yield y::xs) append
+        (for(ys <- shrink(xs)) yield x::ys)
+    }
   }
 
   /** Arbitrary instance of 2-tuple */
@@ -119,10 +128,9 @@ object Arbitrary {
       t2 <- arbitrary[T2]
     } yield (t1,t2)
 
-    override def getShrink(t: (T1,T2)) = for {
-      x <- shrink(t._1)
-      y <- shrink(t._2)
-    } yield (x,y)
+    override def getShrink(t: (T1,T2)) = 
+      (for(x1 <- shrink(t._1)) yield (x1, t._2)) append
+      (for(x2 <- shrink(t._2)) yield (t._1, x2))
   }
 
   /** Arbitrary instance of 3-tuple */
@@ -138,11 +146,10 @@ object Arbitrary {
       t3 <- arbitrary[T3]
     } yield (t1,t2,t3)
 
-    override def getShrink(t: (T1,T2,T3)) = for {
-      x <- shrink(t._1)
-      y <- shrink(t._2)
-      z <- shrink(t._3)
-    } yield (x,y,z)
+    override def getShrink(t: (T1,T2,T3)) =
+      (for(x1 <- shrink(t._1)) yield (x1, t._2, t._3)) append
+      (for(x2 <- shrink(t._2)) yield (t._1, x2, t._3)) append
+      (for(x3 <- shrink(t._3)) yield (t._1, t._2, x3))
   }
 
   /** Arbitrary instance of 4-tuple */
@@ -160,12 +167,11 @@ object Arbitrary {
       t4 <- arbitrary[T4]
     } yield (t1,t2,t3,t4)
 
-    override def getShrink(t: (T1,T2,T3,T4)) = for {
-      x <- shrink(t._1)
-      y <- shrink(t._2)
-      z <- shrink(t._3)
-      v <- shrink(t._4)
-    } yield (x,y,z,v)
+    override def getShrink(t: (T1,T2,T3,T4)) =
+      (for(x1 <- shrink(t._1)) yield (x1, t._2, t._3, t._4)) append
+      (for(x2 <- shrink(t._2)) yield (t._1, x2, t._3, t._4)) append
+      (for(x3 <- shrink(t._3)) yield (t._1, t._2, x3, t._4)) append
+      (for(x4 <- shrink(t._4)) yield (t._1, t._2, t._3, x4))
   }
 
 }

@@ -27,7 +27,7 @@ object Test {
 
     def prettyArgs(args: List[(Any,Int)]) = {
       val strs = for((arg,shrinks) <- args) yield
-        arg + (if(shrinks > 0) " (" + shrinks + " shrinks)" else "")
+        "> " + arg + (if(shrinks > 0) " (" + shrinks + " shrinks)" else "")
       strs.mkString("\n")
     }
   }
@@ -116,7 +116,7 @@ object Test {
 
     val testStats = check(defaultParams,p,printPropEval)
     val s = testStats.pretty
-    printf("\r{2} {0}{1}", s, List.make(78 - s.length, " ").mkString(""), 
+    printf("\r{2} {0}{1}\n", s, List.make(70 - s.length, " ").mkString(""), 
       if(testStats.result.passed) "+" else "!")
     testStats
   }

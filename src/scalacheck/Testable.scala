@@ -100,7 +100,7 @@ trait Testable {
 
     def printLabeled(t: String, label: String, str: String) =
       printf("\r{0} {1}: {2}{3}\n", t, label, str,
-        List.make(80 - str.length - label.length, " ").mkString(""))
+        List.make(70 - str.length - label.length, " ").mkString(""))
 
     def printStats(pName: String, stats: Test.Stats) =
       printLabeled(if(stats.result.passed) "+" else "!", pName, stats.pretty)
