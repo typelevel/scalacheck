@@ -1,5 +1,12 @@
 package scalacheck
 
+/** Most of the arbitrary generators and shrinkers defined in this file
+ *  are straightforward adaptations of the ones in Arbitrary.hs, from
+ *  QuickCheck 2.
+ */
+
+
+
 /** Dummy type that helps Scala's type inference a bit. */
 sealed class Arb[T] {}
 
@@ -109,11 +116,40 @@ object Arbitrary {
   ): Arbitrary[List[T]] = new Arbitrary[List[T]] {
     def getArbitrary = listOf(arbitrary[T]) map (_.toList)
 
-    override def getShrink(xs: List[T]) = xs match {
-      case Nil => Stream.empty
-      case x::xs =>
-        (for(y <- shrink(x)) yield y::xs) append
-        (for(ys <- shrink(xs)) yield x::ys)
+    override def getShrink(xs: List[T]) = {
+      import Stream.cons
+
+      def interleave(xs: Stream[List[T]],ys: Stream[List[T]]
+      ): Stream[List[T]] = (xs,ys) match {
+        case (Stream.empty,ys) => ys
+        case (xs,Stream.empty) => xs
+        case (cons(x,xs),cons(y,ys)) => cons(x, cons(y, interleave(xs,ys)))
+      }
+
+      def removeChunks(n: Int, xs: List[T]): Stream[List[T]] = xs match {
+        case Nil => Stream.empty
+        case _::Nil => cons(Nil, Stream.empty)
+        case _ =>
+          val n1 = n / 2
+          val n2 = n - n1
+          lazy val xs1 = xs.take(n1)
+          lazy val xs2 = xs.drop(n1)
+          lazy val xs3 = 
+            for(ys1 <- removeChunks(n1,xs1) if !ys1.isEmpty) yield ys1 ::: xs2 
+          lazy val xs4 = 
+            for(ys2 <- removeChunks(n2,xs2) if !ys2.isEmpty) yield xs1 ::: ys2 
+
+          cons(xs1, cons(xs2, interleave(xs3,xs4)))
+      }
+
+      def shrinkOne = xs match {
+        case Nil => Stream.empty
+        case x::xs =>
+          (for(y <- shrink(x)) yield y::xs) append
+          (for(ys <- shrink(xs)) yield x::ys)
+      }
+
+      removeChunks(xs.length,xs).append(shrinkOne)
     }
   }
 
