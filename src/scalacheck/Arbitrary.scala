@@ -90,7 +90,7 @@ object Arbitrary {
     def getArbitrary = frequency(
       (5, value(Prop.proved)),
       (4, value(Prop.falsified)),
-      (2, value(Prop.rejected)),
+      (2, value(Prop.undecided)),
       (1, value(Prop.exception(null)))
     )
   }
@@ -106,6 +106,14 @@ object Arbitrary {
         maxSize <- choose(minSize, minSize + sizeDiff)
       } yield Test.Params(minSuccessfulTests,maxDiscardedTests,minSize,
                           maxSize,StdRand)
+    }
+
+  /** Arbitrary instance of gen params */
+  implicit def arbitraryGenParams(x: Arb[Gen.Params]) =
+    new Arbitrary[Gen.Params] {
+      def getArbitrary = for {
+        size <- arbitrary[Int]
+      } yield Gen.Params(size, StdRand)
     }
 
   /** Arbitrary instance of List. The maximum length of the list
@@ -134,22 +142,22 @@ object Arbitrary {
           val n2 = n - n1
           lazy val xs1 = xs.take(n1)
           lazy val xs2 = xs.drop(n1)
-          lazy val xs3 = 
-            for(ys1 <- removeChunks(n1,xs1) if !ys1.isEmpty) yield ys1 ::: xs2 
-          lazy val xs4 = 
-            for(ys2 <- removeChunks(n2,xs2) if !ys2.isEmpty) yield xs1 ::: ys2 
+          lazy val xs3 =
+            for(ys1 <- removeChunks(n1,xs1) if !ys1.isEmpty) yield ys1 ::: xs2
+          lazy val xs4 =
+            for(ys2 <- removeChunks(n2,xs2) if !ys2.isEmpty) yield xs1 ::: ys2
 
           cons(xs1, cons(xs2, interleave(xs3,xs4)))
       }
 
-      def shrinkOne = xs match {
+      def shrinkOne(xs: List[T]): Stream[List[T]] = xs match {
         case Nil => Stream.empty
         case x::xs =>
           (for(y <- shrink(x)) yield y::xs) append
-          (for(ys <- shrink(xs)) yield x::ys)
+          (for(ys <- shrinkOne(xs)) yield x::ys)
       }
 
-      removeChunks(xs.length,xs).append(shrinkOne)
+      removeChunks(xs.length,xs).append(shrinkOne(xs))
     }
   }
 
@@ -164,7 +172,7 @@ object Arbitrary {
       t2 <- arbitrary[T2]
     } yield (t1,t2)
 
-    override def getShrink(t: (T1,T2)) = 
+    override def getShrink(t: (T1,T2)) =
       (for(x1 <- shrink(t._1)) yield (x1, t._2)) append
       (for(x2 <- shrink(t._2)) yield (t._1, x2))
   }

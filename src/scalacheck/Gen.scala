@@ -2,22 +2,19 @@ package scalacheck
 
 import scala.collection.mutable.ListBuffer
 
-/** Class that represents a generator. You shouldn't make
- *  instances of this class directly. To create custom
- *  generators, the combinators in the Gen object should be used.
- */
-abstract class Gen[+T] {
+/** Class that represents a generator. */
+class Gen[+T](g: Gen.Params => Option[T]) {
 
-  def apply(prms: Gen.Params): Option[T]
+  def apply(prms: Gen.Params) = g(prms)
 
-  def map[U](f: T => U): Gen[U] = Gen.mkGen(prms => this(prms).map(f))
+  def map[U](f: T => U): Gen[U] = new Gen(prms => this(prms).map(f))
 
-  def flatMap[U](f: T => Gen[U]): Gen[U] = Gen.mkGen(prms => for {
+  def flatMap[U](f: T => Gen[U]): Gen[U] = new Gen(prms => for {
     t <- this(prms)
     u <- f(t)(prms)
   } yield u)
 
-  def filter(p: T => Boolean): Gen[T] = Gen.mkGen(prms => for {
+  def filter(p: T => Boolean): Gen[T] = new Gen(prms => for {
     t <- this(prms)
     u <- if (p(t)) Some(t) else None
   } yield u)
@@ -25,7 +22,7 @@ abstract class Gen[+T] {
   def suchThat(p: T => Boolean): Gen[T] = filter(p)
 
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
-    Gen.mkGen(prms => f(this(prms), g(prms)))
+    new Gen(prms => f(this(prms), g(prms)))
 
 }
 
@@ -43,36 +40,26 @@ object Gen extends Testable {
   }
 
 
-
-  // Internal support functions
-
-  private def mkGen[T](g: Params => Option[T]): Gen[T] = new Gen[T] {
-    def apply(prms: Params) = g(prms)
-  }
-
-
-
-
   // Generator combinators
 
-  specify("Gen.value", (x: Int, sz: Int) =>
-    value(x)(Params(sz,StdRand)).get == x
+  specify("Gen.value", (x: Int, prms: Params) =>
+    value(x)(prms).get == x
   )
 
   /** A generator that always generates a given value */
-  def value[T](x: T) = mkGen(p => Some(x))
+  def value[T](x: T) = new Gen(p => Some(x))
 
 
-  specify("Gen.fail", (x: Int, sz: Int) =>
-    fail(Params(sz,StdRand)) == None
+  specify("Gen.fail", (x: Int, prms: Params) =>
+    fail(prms) == None
   )
 
   /** A generator that never generates a value */
-  def fail[T]: Gen[T] = mkGen(p => None)
+  def fail[T]: Gen[T] = new Gen(p => None)
 
 
-  specify("Gen.choose", (l: Int, h: Int, sz: Int) => {
-    val x = choose(l,h)(Params(sz,StdRand)).get
+  specify("Gen.choose", (l: Int, h: Int, prms: Params) => {
+    val x = choose(l,h)(prms).get
     h >= l ==> (x >= l && x <= h)
   })
 
@@ -86,7 +73,7 @@ object Gen extends Testable {
   /** Creates a generator that can access its generation parameters
    */
   def parameterized[T](f: Params => Gen[T]): Gen[T] =
-    mkGen(prms => f(prms)(prms))
+    new Gen(prms => f(prms)(prms))
 
 
   /** Creates a generator that can access its generation size
@@ -96,7 +83,7 @@ object Gen extends Testable {
 
   /** Creates a resized version of a generator
    */
-  def resize[T](s: Int, g: Gen[T]) = mkGen(prms => g(prms.resize(s)))
+  def resize[T](s: Int, g: Gen[T]) = new Gen(prms => g(prms.resize(s)))
 
 
   /** Chooses one of the given generators, with a weighted random distribution.
@@ -116,8 +103,8 @@ object Gen extends Testable {
   }
 
 
-  specify("Gen.elements", (l: List[Int], sz: Int) =>
-    elements(l: _*)(Params(sz,StdRand)) match {
+  specify("Gen.elements", (l: List[Int], prms: Params) =>
+    elements(l: _*)(prms) match {
       case None => l.isEmpty
       case Some(n) => l.contains(n)
     }
@@ -155,30 +142,30 @@ object Gen extends Testable {
   } yield x::xs
 
 
-  specify("Gen.vectorOf", (len: Int, sz: Int) =>
+  specify("Gen.vectorOf", (len: Int, prms: Params) =>
     () imply {
       case () if len == 0 =>
-        vectorOf(len,fail)(Params(sz,StdRand)).get.length == 0 &&
-        vectorOf(len,value(0))(Params(sz,StdRand)).get.length == 0
+        vectorOf(len,fail)(prms).get.length == 0 &&
+        vectorOf(len,value(0))(prms).get.length == 0
       case () if len > 0 =>
-        vectorOf(len,fail)(Params(sz,StdRand)) == None &&
-        vectorOf(len,value(0))(Params(sz,StdRand)).get.length == len
+        vectorOf(len,fail)(prms) == None &&
+        vectorOf(len,value(0))(prms).get.length == len
     }
   )
 
   /** Generates a list of the given length */
-  def vectorOf[T](n: Int, g: Gen[T]) = new Gen[Seq[T]] {
-    def apply(prms: Params): Option[Seq[T]] = {
-      val l = new ListBuffer[T]
-      var i = 0
-      while(i < n) g(prms) match {
-        case Some(x) => 
-          l += x
-          i += 1
-        case None => return None
-      }
-      Some(l)
+  def vectorOf[T](n: Int, g: Gen[T]): Gen[Seq[T]] = new Gen(prms => {
+    val l = new ListBuffer[T]
+    var i = 0
+    var break = false
+    while(!break && i < n) g(prms) match {
+      case Some(x) =>
+        l += x
+        i += 1
+      case None => break = true
     }
-  }
+    if(break) None
+    else Some(l)
+  })
 
 }

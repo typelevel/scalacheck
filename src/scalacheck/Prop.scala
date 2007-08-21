@@ -3,7 +3,7 @@ package scalacheck
 import scala.collection.mutable.ListBuffer
 
 /** A property is a generator that generates a property result */
-abstract class Prop extends Gen[Prop.Result] {
+class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen(g) {
 
   import Prop.{True,False,Exception}
 
@@ -61,21 +61,20 @@ abstract class Prop extends Gen[Prop.Result] {
   /** Returns a new property that holds if and only if both this
    *  and the given property generates the same result.
    */
-  def ==(p: Prop): Prop = new Prop {
-    def apply(prms: Gen.Params) = (Prop.this(prms), p(prms)) match {
+  def ==(p: Prop) = new Prop(prms =>
+    (this(prms), p(prms)) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
       case _ => Prop.falsified(prms)
     }
-  }
+  )
 
-  def addArg(arg: Any, shrinks: Int) = new Prop {
-    override def toString = Prop.this.toString
-    def apply(prms: Gen.Params) = Prop.this(prms) match {
+  def addArg(arg: Any, shrinks: Int) = new Prop(prms => 
+    this(prms) match {
       case None => None
       case Some(r) => Some(r.addArg(arg,shrinks))
     }
-  }
+  ) { override def toString = Prop.this.toString }
 
 }
 
@@ -117,7 +116,7 @@ object Prop extends Testable {
     (p1 ++ p2) == (p2 ++ p1)
   )
   specify("Prop.Prop.++ Identity", (p: Prop) =>
-    (p ++ rejected) == p
+    (p ++ undecided) == p
   )
   specify("Prop.Prop.++ False", (p: Prop) =>
     (p ++ falsified) == falsified
@@ -172,20 +171,16 @@ object Prop extends Testable {
 
   // Private support functions
 
-  private def constantProp(r: Option[Result], descr: String) = new Prop {
-    override def toString = descr
-    def apply(prms: Gen.Params) = r
-  }
+  private def constantProp(r: Option[Result], descr: String) = 
+    new Prop(prms => r) { override def toString = descr }
 
-  private implicit def genToProp(g: Gen[Result]) = new Prop {
-    def apply(prms: Gen.Params) = g(prms)
-  }
+  private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply)
 
 
   // Property combinators
 
   /** A property that never is proved or falsified */
-  def rejected: Prop = constantProp(None, "Prop.rejected")
+  def undecided: Prop = constantProp(None, "Prop.undecided")
 
   /** A property that always is false */
   def falsified: Prop = constantProp(Some(False(Nil)), "Prop.falsified")
@@ -198,11 +193,11 @@ object Prop extends Testable {
     constantProp(Some(Exception(Nil,e)), "Prop.exception")
 
   /** Implication */
-  def ==>(b: => Boolean, p: => Prop): Prop = property(if (b) p else rejected)
+  def ==>(b: => Boolean, p: => Prop): Prop = property(if (b) p else undecided)
 
   /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
-    property(if(f.isDefinedAt(x)) f(x) else rejected)
+    property(if(f.isDefinedAt(x)) f(x) else undecided)
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true
@@ -217,9 +212,8 @@ object Prop extends Testable {
 
   /** Universal quantifier, shrinks failed arguments with given shrink 
    *  function */
-  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) = new Prop
-  {
-    def apply(prms: Gen.Params) = {
+  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) = 
+    new Prop((prms: Gen.Params) => {
 
       import Stream._
 
@@ -256,8 +250,7 @@ object Prop extends Testable {
             r
           }
       }
-    }
-  }
+    })
 
   /** Universal quantifier, shrinks failed arguments with the default
    *  shrink function for the type */
@@ -289,10 +282,9 @@ object Prop extends Testable {
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
 
-  def property (p: => Prop): Prop = new Prop {
-    def apply(prms: Gen.Params) =
-      (try { p } catch { case e => exception(e) })(prms)
-  }
+  def property (p: => Prop): Prop = new Prop(prms =>
+    (try { p } catch { case e => exception(e) })(prms)
+  )
 
   def property[A1,P] (
     f:  A1 => P)(implicit
