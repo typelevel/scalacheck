@@ -3,7 +3,7 @@ package scalacheck
 import scala.collection.mutable.ListBuffer
 
 /** A property is a generator that generates a property result */
-class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen(g) {
+class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
   import Prop.{True,False,Exception}
 

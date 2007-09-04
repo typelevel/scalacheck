@@ -89,7 +89,8 @@ object Gen extends Testable {
   /** Chooses one of the given generators, with a weighted random distribution.
    */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    val tot = (gs.map(_._1) :\ 0) (_+_)
+    // TODO: Lazy val
+    def tot = (gs.map(_._1) :\ 0) (_+_)
 
     def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
       case Nil => fail
@@ -101,6 +102,11 @@ object Gen extends Testable {
       x <- pick(n,gs.toList)
     } yield x
   }
+
+
+  /** Chooses one of the given values, with a weighted random distribution.  */
+  def elementsFreq[T](vs: (Int, T)*): Gen[T] = 
+    frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
 
 
   specify("Gen.elements", (l: List[Int], prms: Params) =>
@@ -118,7 +124,7 @@ object Gen extends Testable {
 
 
   /** Picks a random generator from a list */
-  def oneOf[T](gs: Seq[Gen[T]]) = if(gs.isEmpty) fail else for {
+  def oneOf[T](gs: Gen[T]*) = if(gs.isEmpty) fail else for {
     i <- choose((0,gs.length-1))
     x <- gs(i)
   } yield x
