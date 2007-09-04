@@ -1,5 +1,44 @@
 RELEASE NOTES
 
+ScalaCheck 1.0-RC1
+
+ScalaCheck is a Scala implementation of the QuickCheck 2 library for Haskell.
+It tries to keep the look and feel of QuickCheck as much as possible, while
+being open for improvements and extensions that can ease the task of
+property-based, randomized testing of Scala programs.
+
+The main feature that release 1.0-RC1 adds is test case minimisation, or
+shrinking, which is a feature also found in QuickCheck 2. Moreover, ScalaCheck
+has been refactored and stabilised, and is soon ready for a 1.0 release.
+Also, a User Guide has been written which can be found on the project site.
+
+For more info, user guide, change history, etc, see the project site at:
+
+  http://code.google.com/p/scalacheck
+
+
+Downloading ScalaCheck:
+
+  * Direct install with sbaz:
+
+    sbaz update
+    sbaz install scalacheck
+
+  * If you already have an earlier version of ScalaCheck installed, you 
+    just need to run:
+
+    sbaz upgrade
+
+  * http://scalacheck.googlecode.com/files/ScalaCheck-1.0-RC1.jar
+
+  * Source repository:
+    http://scalacheck.googlecode.com/svn/
+
+
+
+
+PREVIOUS RELEASES
+
 ScalaCheck 0.2
 
 ScalaCheck is a Scala implementation of the QuickCheck library for Haskell.
@@ -34,9 +73,6 @@ Downloading ScalaCheck:
     http://scalacheck.googlecode.com/svn/
 
 
-
-
-PREVIOUS RELEASES
 
 ScalaCheck 0.1
 
