@@ -99,8 +99,7 @@ object Gen extends Testable {
   /** Chooses one of the given generators, with a weighted random distribution.
    */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    // TODO: Lazy val
-    def tot = (gs.map(_._1) :\ 0) (_+_)
+    lazy val tot = (gs.map(_._1) :\ 0) (_+_)
 
     def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
       case Nil => fail
@@ -183,5 +182,27 @@ object Gen extends Testable {
     if(break) None
     else Some(l)
   })
+
+  /* Generates a numerical character */
+  def numChar: Gen[Char] = choose(48,57) map (_.toChar)
+
+  /* Generates an upper-case alpha character */
+  def alphaUpperChar: Gen[Char] = choose(65,90) map (_.toChar)
+
+  /* Generates a lower-case alpha character */
+  def alphaLowerChar: Gen[Char] = choose(97,122) map (_.toChar)
+
+  /* Generates an alpha character */
+  def alphaChar = frequency((1,alphaUpperChar), (9,alphaLowerChar))
+
+  /* Generates an alphanumerical character */
+  def alphaNumChar = frequency((1,numChar), (9,alphaChar))
+
+  /* Generates a string that starts with a lower-case alpha character, 
+   * and only contains alphanumerical characters */
+  def identifier: Gen[String] = for {
+    c <- alphaLowerChar
+    cs <- listOf(alphaNumChar)
+  } yield List.toString(c::cs)
 
 }
