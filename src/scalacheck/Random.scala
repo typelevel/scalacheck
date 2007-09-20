@@ -1,15 +1,20 @@
 package scalacheck
 
 trait RandomGenerator {
-  def choose(inclusiveRange: (Int,Int)): Int
+  def choose(low: Int, high: Int): Int
+  def choose(low: Double, high: Double): Double
 }
 
 object StdRand extends RandomGenerator {
-  import scala.Math._
+
   private val r = new java.util.Random
-  def choose(range: (Int,Int)) = range match {
-    case (l,h) if(l == h) => l
-    case (l,h) if(h < l)  => h
-    case (l,h)            => l + r.nextInt((h-l)+1)
-  }
+
+  def choose(l: Int, h: Int) =
+    if (h <= l) h
+    else l + r.nextInt((h-l)+1)
+
+  def choose(l: Double, h: Double) =
+    if (h <= l) h
+    else Math.random * (h-l) + l
+
 }

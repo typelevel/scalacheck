@@ -49,7 +49,7 @@ object Arbitrary {
 
   /** Arbitrary instance of integer */
   implicit def arbitraryInt(x: Arb[Int]) = new Arbitrary[Int] {
-    def getArbitrary = sized (s => choose((-s,s)))
+    def getArbitrary = sized (s => choose(-s,s))
 
     override def getShrink(n: Int) = {
 
@@ -64,6 +64,11 @@ object Arbitrary {
         if(n < 0) Stream.cons(-n,ns) else ns
       }
     }
+  }
+
+  /** Arbitrary instance of Double */
+  implicit def arbitraryDouble(x: Arb[Double]) = new Arbitrary[Double] {
+    def getArbitrary = sized (s => choose(-s: Double, s: Double))
   }
 
   /** Arbitrary instance of char */
@@ -109,10 +114,10 @@ object Arbitrary {
     }
 
   /** Arbitrary instance of gen params */
-  implicit def arbitraryGenParams(x: Arb[Gen.Params]) =
+  implicit def arbitraryGenParams(x: Arb[Gen.Params]): Arbitrary[Gen.Params] =
     new Arbitrary[Gen.Params] {
       def getArbitrary = for {
-        size <- arbitrary[Int]
+        size <- arbitrary[Int] suchThat (_ >= 0)
       } yield Gen.Params(size, StdRand)
     }
 

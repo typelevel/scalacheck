@@ -58,16 +58,26 @@ object Gen extends Testable {
   def fail[T]: Gen[T] = new Gen(p => None)
 
 
-  specify("Gen.choose", (l: Int, h: Int, prms: Params) => {
+  specify("Gen.choose-int", (l: Int, h: Int, prms: Params) => {
     val x = choose(l,h)(prms).get
     h >= l ==> (x >= l && x <= h)
   })
 
   /** A generator that generates a random integer in the given (inclusive)
-   *  range.
-   */
-  def choose(inclusiveRange: (Int,Int)) =
-    parameterized(prms => value(prms.rand.choose(inclusiveRange)))
+   *  range.  */
+  def choose(low: Int, high: Int) =
+    parameterized(prms => value(prms.rand.choose(low,high)))
+
+
+  specify("Gen.choose-double", (l: Double, h: Double, prms: Params) => {
+    val x = choose(l,h)(prms).get
+    h >= l ==> (x >= l && x <= h)
+  })
+
+  /** A generator that generates a random integer in the given (inclusive)
+   *  range.  */
+  def choose(low: Double, high: Double) =
+    parameterized(prms => value(prms.rand.choose(low,high)))
 
 
   /** Creates a generator that can access its generation parameters
@@ -119,13 +129,13 @@ object Gen extends Testable {
   /** A generator that returns a random element from a list
    */
   def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
-    i <- choose((0,xs.length-1))
+    i <- choose(0,xs.length-1)
   } yield xs(i)
 
 
   /** Picks a random generator from a list */
   def oneOf[T](gs: Gen[T]*) = if(gs.isEmpty) fail else for {
-    i <- choose((0,gs.length-1))
+    i <- choose(0,gs.length-1)
     x <- gs(i)
   } yield x
 
