@@ -7,23 +7,23 @@ trait Testable {
 
   private var properties = scala.collection.immutable.Map.empty[String, Prop]
 
-  def specify(propName: String, prop: => Prop) =
+  protected def specify(propName: String, prop: => Prop) =
     addProp(propName, Prop.property(prop))
 
-  def specify[A1,P] (
+  protected def specify[A1,P] (
     propName: String, f: A1 => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1]
   ): Unit = addProp(propName,Prop.property(f))
 
-  def specify[A1,A2,P] (
+  protected def specify[A1,A2,P] (
     propName: String, f: (A1,A2) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2]
   ): Unit = addProp(propName,Prop.property(f))
 
-  def specify[A1,A2,A3,P] (
+  protected def specify[A1,A2,A3,P] (
     propName: String, f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -31,7 +31,7 @@ trait Testable {
     a3: Arb[A3] => Arbitrary[A3]
   ): Unit = addProp(propName,Prop.property(f))
 
-  def specify[A1,A2,A3,A4,P] (
+  protected def specify[A1,A2,A3,A4,P] (
     propName: String, f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -40,7 +40,7 @@ trait Testable {
     a4: Arb[A4] => Arbitrary[A4]
   ): Unit = addProp(propName,Prop.property(f))
 
-  def specify[A1,A2,A3,A4,A5,P] (
+  protected def specify[A1,A2,A3,A4,A5,P] (
     propName: String, f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -50,7 +50,7 @@ trait Testable {
     a5: Arb[A4] => Arbitrary[A4]
   ): Unit = addProp(propName,Prop.property(f))
 
-  def specify[A1,A2,A3,A4,A5,A6,P] (
+  protected def specify[A1,A2,A3,A4,A5,A6,P] (
     propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -93,8 +93,8 @@ trait Testable {
   {
     def printPropEval(pn: String,res: Option[Prop.Result],succ: Int,disc: Int) =
     {
-      if(disc == 0) printf("\r{1}: Passed {0} tests",succ,pn)
-      else printf("\r{3}: Passed {0} tests; {1} discarded",succ,disc,pn)
+      if(disc == 0) printf("\r  {1}: Passed {0} tests",succ,pn)
+      else printf("\r  {2}: Passed {0} tests; {1} discarded",succ,disc,pn)
       Console.flush
     }
 

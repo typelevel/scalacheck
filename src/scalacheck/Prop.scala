@@ -7,6 +7,26 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
   import Prop.{True,False,Exception}
 
+/*  Just a thought:
+
+  private var tearDown = () => ()
+  private var setup = () => ()
+  
+  def onTearDown(f: => Unit) = {
+    tearDown = () => f
+    this
+  }
+
+  def onSetup(f: => Unit) = {
+    setup = () => f
+    this
+  }
+
+  def doTearDown() = tearDown()
+  def doSetup() = setup()
+
+*/
+
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate false.
@@ -199,6 +219,9 @@ object Prop extends Testable {
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
     property(if(f.isDefinedAt(x)) f(x) else undecided)
 
+  def iff[T](x: T, f: PartialFunction[T,Prop]): Prop =
+    property(if(f.isDefinedAt(x)) f(x) else falsified)
+
   /** Combines properties into one, which is true if and only if all the
    *  properties are true
    */
@@ -266,6 +289,7 @@ object Prop extends Testable {
   class ExtendedAny[T](x: T) {
     /** Implication with several conditions */
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
+    def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
   }
 
 

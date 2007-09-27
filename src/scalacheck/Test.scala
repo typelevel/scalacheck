@@ -1,5 +1,7 @@
 package scalacheck
 
+import Util._
+
 object Test {
 
   // Types
@@ -76,33 +78,29 @@ object Test {
    *  called each time the property is evaluted. */
   def check(prms: Params, p: Prop, propCallback: PropEvalCallback): Stats =
   {
-    var discarded = 0
-    var successful = 0
-    var testRes: Result = null
-
-    def size = scala.Math.min(prms.maxSize, prms.minSize + discarded/10 +
-      (successful * (prms.maxSize-prms.minSize)) / prms.minSuccessfulTests)
-
-    def genprms = Gen.Params(size, prms.rand)
-
-    while(testRes == null) try {
-      val propRes = p(genprms)
-      propRes match {
-        case None =>
-          discarded += 1
-          if(discarded >= prms.maxDiscardedTests) testRes = Exhausted
-        case Some(_:Prop.True) =>
-          successful += 1
-          if(successful >= prms.minSuccessfulTests) testRes = Passed
-        case Some(Prop.False(as)) => testRes = Failed(as)
-        case Some(Prop.Exception(as,e)) => testRes = PropException(as,e)
+    def stats(s: Int, d: Int): Stats = {
+      def genprms = Gen.Params(size, prms.rand)
+      def size = scala.Math.min(prms.maxSize, prms.minSize + d/10 +
+        (s * (prms.maxSize-prms.minSize)) / prms.minSuccessfulTests)
+ 
+      secure(p(genprms)) match {
+        case Left(propRes) => 
+          propCallback(propRes,s,d)
+          propRes match {
+            case None =>
+              if(d+1 >= prms.maxDiscardedTests) Stats(Exhausted,s,d+1)
+              else stats(s,d+1)
+            case Some(_:Prop.True) =>
+              if(s+1 >= prms.minSuccessfulTests) Stats(Passed,s+1,d)
+              else stats(s+1,d)
+            case Some(Prop.False(as)) => Stats(Failed(as),s,d)
+            case Some(Prop.Exception(as,e)) => Stats(PropException(as,e),s,d)
+          }
+        case Right(e) => Stats(GenException(e),s,d)
       }
-      // Run property evaluation callback
-      propCallback(propRes,successful,discarded)
-    } catch { case e => testRes = GenException(e) }
+    }
 
-    // Return the test statistics
-    Stats(testRes, successful, discarded)
+    stats(0,0)
   }
 
   /** Tests a property and prints results to the console */
