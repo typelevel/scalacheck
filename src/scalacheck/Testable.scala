@@ -86,32 +86,18 @@ trait Testable {
     stats
   }
 
+  import ConsoleReporter._
+
   /** Tests all properties with default testing parameters, and returns
    *  the test results. The results are also printed on the console during
    *  testing. */
   def checkProperties(): Map[String,Test.Stats] =
-  {
-    def printPropEval(pn: String,res: Option[Prop.Result],succ: Int,disc: Int) =
-    {
-      if(disc == 0) printf("\r  {1}: Passed {0} tests",succ,pn)
-      else printf("\r  {2}: Passed {0} tests; {1} discarded",succ,disc,pn)
-      Console.flush
-    }
-
-    def printLabeled(t: String, label: String, str: String) =
-      printf("\r{0} {1}: {2}{3}\n", t, label, str,
-        List.make(70 - str.length - label.length, " ").mkString(""))
-
-    def printStats(pName: String, stats: Test.Stats) =
-      printLabeled(if(stats.result.passed) "+" else "!", pName, stats.pretty)
-
-    checkProperties(Test.defaultParams,printPropEval,printStats)
-  }
+    checkProperties(Test.defaultParams, propReport, testReport)
 
   private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {
     protected def runTest() = {
       val stats = Test.check(Test.defaultParams,p)
-      if(!stats.result.passed) fail(stats.pretty)
+      if(!stats.result.passed) fail(prettyTestStats(stats))
     }
   }
 

@@ -11,38 +11,13 @@ object Test {
     minSize: Int, maxSize: Int, rand: RandomGenerator)
 
   /** Test statistics */
-  case class Stats(result: Result, succeeded: Int, discarded: Int) {
-    def pretty = result match {
-      case Passed() =>
-        "OK, passed " + succeeded + " tests."
-      case Failed(args) =>
-        "Falsified after " + succeeded + " passed tests:\n" + prettyArgs(args)
-      case Exhausted() =>
-        "Gave up after only " + succeeded + " passed tests. " +
-        discarded + " tests were discarded."
-      case PropException(args,e) =>
-        "Exception \"" + e + "\" raised on property evaluation:\n" +
-        prettyArgs(args)
-      case GenException(e) =>
-        "Exception \"" + e + "\" raised on argument generation."
-    }
+  case class Stats(result: Result, succeeded: Int, discarded: Int)
 
-    def prettyArgs(args: List[(Any,Int)]) = {
-      val strs = for((arg,shrinks) <- args) yield
-        "> " + arg + (if(shrinks > 0) " (" + shrinks + " shrinks)" else "")
-      strs.mkString("\n")
-    }
-  }
-
-  abstract sealed class Result {
-    def passed = this match {
-      case Passed() => true
-      case _ => false
-    }
-  }
+  /** Test result */
+  abstract sealed class Result { def passed = false }
 
   /** The property test passed */
-  case class Passed extends Result
+  case class Passed extends Result { override def passed = true }
 
   /** The property was proved wrong with the given concrete arguments.  */
   case class Failed(args: List[(Any,Int)]) extends Result
@@ -103,20 +78,9 @@ object Test {
     stats(0,0)
   }
 
-  /** Tests a property and prints results to the console */
-  def check(p: Prop): Stats =
-  {
-    def printPropEval(res: Option[Prop.Result], succeeded: Int, discarded: Int) = {
-      if(discarded == 0) printf("\rPassed {0} tests",succeeded)
-      else printf("\rPassed {0} tests; {1} discarded",succeeded,discarded)
-      Console.flush
-    }
+  import ConsoleReporter._
 
-    val testStats = check(defaultParams,p,printPropEval)
-    val s = testStats.pretty
-    printf("\r{2} {0}{1}\n", s, List.make(70 - s.length, " ").mkString(""), 
-      if(testStats.result.passed) "+" else "!")
-    testStats
-  }
+  /** Tests a property and prints results to the console */
+  def check(p: Prop): Stats = testReport(check(defaultParams, p, propReport))
 
 }
