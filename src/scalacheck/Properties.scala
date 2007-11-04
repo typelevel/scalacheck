@@ -1,29 +1,36 @@
 package scalacheck
 
-trait Testable {
+/** Represents a collection of properties, with convenient methods
+ *  for checking all properties at once. Properties are added to this
+ *  collection through the <code>specify</code> methods. */
+trait Properties {
 
   import scala.collection.Map
   import scala.testing.SUnit.TestCase
 
   private var properties = scala.collection.immutable.Map.empty[String, Prop]
 
-  protected def specify(propName: String, prop: => Prop) =
+  /** Adds a property to this property collection */
+  def specify(propName: String, prop: => Prop) =
     addProp(propName, Prop.property(prop))
 
-  protected def specify[A1,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,P] (
     propName: String, f: A1 => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1]
   ): Unit = addProp(propName,Prop.property(f))
 
-  protected def specify[A1,A2,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,A2,P] (
     propName: String, f: (A1,A2) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
     a2: Arb[A2] => Arbitrary[A2]
   ): Unit = addProp(propName,Prop.property(f))
 
-  protected def specify[A1,A2,A3,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,A2,A3,P] (
     propName: String, f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -31,7 +38,8 @@ trait Testable {
     a3: Arb[A3] => Arbitrary[A3]
   ): Unit = addProp(propName,Prop.property(f))
 
-  protected def specify[A1,A2,A3,A4,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,A2,A3,A4,P] (
     propName: String, f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -40,7 +48,8 @@ trait Testable {
     a4: Arb[A4] => Arbitrary[A4]
   ): Unit = addProp(propName,Prop.property(f))
 
-  protected def specify[A1,A2,A3,A4,A5,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,A2,A3,A4,A5,P] (
     propName: String, f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],
@@ -50,7 +59,8 @@ trait Testable {
     a5: Arb[A4] => Arbitrary[A4]
   ): Unit = addProp(propName,Prop.property(f))
 
-  protected def specify[A1,A2,A3,A4,A5,A6,P] (
+  /** Adds a property to this property collection */
+  def specify[A1,A2,A3,A4,A5,A6,P] (
     propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1],

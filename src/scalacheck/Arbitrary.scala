@@ -145,12 +145,11 @@ object Arbitrary {
         case _ =>
           val n1 = n / 2
           val n2 = n - n1
-          // TODO: Make all xs vals lazy in Scala 2.6.0
-          val xs1 = xs.take(n1)
-          val xs2 = xs.drop(n1)
-          val xs3 =
+          lazy val xs1 = xs.take(n1)
+          lazy val xs2 = xs.drop(n1)
+          lazy val xs3 =
             for(ys1 <- removeChunks(n1,xs1) if !ys1.isEmpty) yield ys1 ::: xs2
-          val xs4 =
+          lazy val xs4 =
             for(ys2 <- removeChunks(n2,xs2) if !ys2.isEmpty) yield xs1 ::: ys2
 
           cons(xs1, cons(xs2, interleave(xs3,xs4)))

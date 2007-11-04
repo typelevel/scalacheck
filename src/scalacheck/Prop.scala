@@ -212,6 +212,9 @@ object Prop extends Testable {
   def exception(e: Throwable): Prop =
     constantProp(Some(Exception(Nil,e)), "Prop.exception")
 
+  /** A property that depends on the generator size */
+  def sizedProp(f: Int => Prop): Prop = new Prop(prms => f(prms.size)(prms))
+
   /** Implication */
   def ==>(b: => Boolean, p: => Prop): Prop = property(if (b) p else undecided)
 

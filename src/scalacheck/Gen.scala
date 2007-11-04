@@ -39,8 +39,13 @@ object Gen extends Testable {
     def resize(newSize: Int) = Params(newSize,rand)
   }
 
+  val defaultParams = Params(100,StdRand)
+
 
   // Generator combinators
+
+  /** Wraps a generator lazily. Useful when defining recursive generators. */
+  def lzy[T](g: => Gen[T]) = new Gen(p => g(p))
 
   specify("Gen.value", (x: Int, prms: Params) =>
     value(x)(prms).get == x
@@ -142,7 +147,7 @@ object Gen extends Testable {
   /** Generates a list of random length. The maximum length depends on the
    *  size parameter
    */
-  def listOf[T](g: Gen[T]) = sized(size => for {
+  def listOf[T](g: => Gen[T]) = sized(size => for {
     n <- choose(0,size)
     l <- vectorOf(n,g)
   } yield l.toList)
