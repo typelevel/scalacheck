@@ -53,5 +53,18 @@ object ConsoleReporter {
 
     printL(if(stats.result.passed) "+" else "!", pName, prettyTestStats(stats))
   }
+  
+  def testStatsEx(stats: Test.Stats): Unit = testStatsEx("", stats)
+  
+  def testStatsEx(msg: String, stats: Test.Stats) = {
+    lazy val m = if(msg.isEmpty) "" else msg + ": "
+    stats.result match {
+      case Test.Passed() => {}
+      case f @ Test.Failed(_) => error(m + f.toString)
+      case Test.Exhausted() => {}
+      case f @ Test.GenException(_) => error(m + f.toString)
+      case f @ Test.PropException(_, _) => error(m + f.toString)
+    }
+  }
 
 }
