@@ -98,7 +98,7 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
 }
 
-object Prop extends Testable {
+object Prop extends Properties {
 
   import Gen.{value, fail, frequency, elements}
   import Arbitrary._

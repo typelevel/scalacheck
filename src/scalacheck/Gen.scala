@@ -28,7 +28,7 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 
 
 /** Contains combinators for building generators. */
-object Gen extends Testable {
+object Gen extends Properties {
 
   import Prop._
 

@@ -1,6 +1,6 @@
 package test
 
-object Props extends scalacheck.Testable {
+object Props extends scalacheck.Properties {
 
   import scalacheck._
   import scalacheck.Gen._
