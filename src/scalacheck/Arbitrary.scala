@@ -120,6 +120,12 @@ object Arbitrary {
         size <- arbitrary[Int] suchThat (_ >= 0)
       } yield Gen.Params(size, StdRand)
     }
+  
+  implicit def arbitraryOption[A](x: Arb[Option[A]])(implicit aa: Arb[A] => Arbitrary[A]): Arbitrary[Option[A]] = 
+    new Arbitrary[Option[A]] {
+      override def getArbitrary = 
+        Gen.oneOf(value(None), arbitrary[A].map(Some(_)))
+    }
 
   /** Arbitrary instance of List. The maximum length of the list
    *  depends on the size parameter. */
