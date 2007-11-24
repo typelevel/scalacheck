@@ -60,10 +60,10 @@ object ConsoleReporter {
     lazy val m = if(msg.isEmpty) "" else msg + ": "
     stats.result match {
       case Test.Passed() => {}
-      case f @ Test.Failed(_) => error(m + f.toString)
+      case f @ Test.Failed(_) => error(m + f)
       case Test.Exhausted() => {}
-      case f @ Test.GenException(_) => error(m + f.toString)
-      case f @ Test.PropException(_, _) => error(m + f.toString)
+      case f @ Test.GenException(_) => error(m + f)
+      case f @ Test.PropException(_, _) => error(m + f)
     }
   }
 
