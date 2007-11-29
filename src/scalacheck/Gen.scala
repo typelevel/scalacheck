@@ -54,6 +54,8 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def combine6[U, V, W, X, Y, Z](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X], gy: Gen[Y])
       (f: (Option[T], Option[U], Option[V], Option[W], Option[X], Option[Y]) => Option[Z]) =
         new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms), gy(prms)))
+  
+  def ap[U](g: Gen[T => U]) = flatMap(t => g.flatMap(u => new Gen(p => Some(u(t)))))      
 }
 
 
