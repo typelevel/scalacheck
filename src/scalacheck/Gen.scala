@@ -14,6 +14,15 @@ class Gen[+T](g: Gen.Params => Option[T]) {
  
   def map3[U, V, W](gu: Gen[U], gv: Gen[V])(f: (T, U, V) => W) = 
     combine3(gu, gv)((t, u, v) => t.flatMap(t => u.flatMap(u => v.flatMap(v => Some(f(t, u, v))))))
+ 
+  def map4[U, V, W, X](gu: Gen[U], gv: Gen[V], gw: Gen[W])(f: (T, U, V, W) => X) = 
+    combine4(gu, gv, gw)((t, u, v, w) => t.flatMap(t => u.flatMap(u => v.flatMap(v => w.flatMap(w => Some(f(t, u, v, w)))))))
+ 
+  def map5[U, V, W, X, Y](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X])(f: (T, U, V, W, X) => Y) = 
+    combine5(gu, gv, gw, gx)((t, u, v, w, x) => t.flatMap(t => u.flatMap(u => v.flatMap(v => w.flatMap(w => x.flatMap(x => Some(f(t, u, v, w, x))))))))
+ 
+  def map6[U, V, W, X, Y, Z](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X], gy: Gen[Y])(f: (T, U, V, W, X, Y) => Z) = 
+    combine6(gu, gv, gw, gx, gy)((t, u, v, w, x, y) => t.flatMap(t => u.flatMap(u => v.flatMap(v => w.flatMap(w => x.flatMap(x => y.flatMap(y => Some(f(t, u, v, w, x, y)))))))))
   
   def flatMap[U](f: T => Gen[U]): Gen[U] = new Gen(prms => for {
     t <- this(prms)
@@ -30,10 +39,23 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
     new Gen(prms => f(this(prms), g(prms)))
 
-  def combine3[U, V, W](gu: Gen[U], gv: Gen[V])(f: (Option[T], Option[U], Option[V]) => Option[W]): Gen[W] =
+  def combine3[U, V, W](gu: Gen[U], gv: Gen[V])
+      (f: (Option[T], Option[U], Option[V]) => Option[W]) =
     new Gen(prms => f(this(prms), gu(prms), gv(prms)))
 
+  def combine4[U, V, W, X](gu: Gen[U], gv: Gen[V], gw: Gen[W])
+      (f: (Option[T], Option[U], Option[V], Option[W]) => Option[X]) =
+    new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms)))
+
+  def combine5[U, V, W, X, Y](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X])
+      (f: (Option[T], Option[U], Option[V], Option[W], Option[X]) => Option[Y]) =
+    new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms)))
+    
+  def combine6[U, V, W, X, Y, Z](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X], gy: Gen[Y])
+      (f: (Option[T], Option[U], Option[V], Option[W], Option[X], Option[Y]) => Option[Z]) =
+        new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms), gy(prms)))
 }
+
 
 
 /** Contains combinators for building generators. */
