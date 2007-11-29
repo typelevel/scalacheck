@@ -8,7 +8,13 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def apply(prms: Gen.Params) = g(prms)
 
   def map[U](f: T => U): Gen[U] = new Gen(prms => this(prms).map(f))
-
+  
+  def map2[U, V](g: Gen[U])(f: (T, U) => V) = 
+    combine(g)((t, u) => t.flatMap(t => u.flatMap(u => Some(f(t, u)))))
+ 
+  def map3[U, V, W](gu: Gen[U], gv: Gen[V])(f: (T, U, V) => W) = 
+    combine3(gu, gv)((t, u, v) => t.flatMap(t => u.flatMap(u => v.flatMap(v => Some(f(t, u, v))))))
+  
   def flatMap[U](f: T => Gen[U]): Gen[U] = new Gen(prms => for {
     t <- this(prms)
     u <- f(t)(prms)
@@ -23,6 +29,9 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
     new Gen(prms => f(this(prms), g(prms)))
+
+  def combine3[U, V, W](gu: Gen[U], gv: Gen[V])(f: (Option[T], Option[U], Option[V]) => Option[W]): Gen[W] =
+    new Gen(prms => f(this(prms), gu(prms), gv(prms)))
 
 }
 
