@@ -171,6 +171,11 @@ object Arbitrary {
       removeChunks(xs.length,xs).append(shrinkOne(xs))
     }
   }
+  
+  implicit def arbitraryStream[A](x: Arb[Stream[A]])(implicit aa: Arb[A] => Arbitrary[A]): Arbitrary[Stream[A]] = 
+    new Arbitrary[Stream[A]] {
+      override def getArbitrary = arbitrary[List[A]].map(xs => Stream.fromIterator(xs.elements))
+    }
 
   /** Arbitrary instance of 2-tuple */
   implicit def arbitraryTuple2[T1,T2] (
