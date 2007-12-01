@@ -75,6 +75,11 @@ object Arbitrary {
   implicit def arbitraryChar(x: Arb[Char]) = new Arbitrary[Char] {
     def getArbitrary = choose(0,255) map (_.toChar)
   }
+  
+  implicit def arbitraryByte(x: Arb[Byte]): Arbitrary[Byte] = new Arbitrary[Byte] {
+    override def getArbitrary = 
+      arbitrary[Int].map(x => x.toByte)
+  }
 
   /** Arbitrary instance of string */
   implicit def arbitraryString(x: Arb[String]): Arbitrary[String] =
