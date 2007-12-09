@@ -97,7 +97,7 @@ object Prop extends Properties {
   specify("Prop.Prop.&& Right prio", (sz: Int) => {
     val p = proved.addArg(Arg("","RHS",0)) && proved.addArg(Arg("","LHS",0))
     p(Gen.Params(sz,StdRand)) match {
-      case Some(r) if r.args == ("RHS",0)::Nil => true
+      case Some(r) if r.args == Arg("","RHS",0)::Nil => true
       case _ => false
     }
   })
