@@ -17,9 +17,13 @@ object ConsoleReporter {
       "Exception \"" + e + "\" raised on argument generation."
   }
 
-  def prettyArgs(args: List[(Any,Int)]) = {
-    val strs = for((arg,shrinks) <- args) yield
-      "> " + arg + (if(shrinks > 0) " (" + shrinks + " shrinks)" else "")
+  def prettyArgs(args: List[Arg]) = {
+    val strs = for((a,i) <- args.zipWithIndex) yield (
+      "> " +
+      (if(a.label == "") "ARG" + i else a.label) + 
+      " = " + a.arg + 
+      (if(a.shrinks > 0) " (" + a.shrinks + " shrinks)" else "")
+    )
     strs.mkString("\n")
   }
 

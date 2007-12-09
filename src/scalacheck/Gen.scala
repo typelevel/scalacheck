@@ -4,6 +4,13 @@ import scala.collection.mutable.ListBuffer
 
 /** Class that represents a generator. */
 class Gen[+T](g: Gen.Params => Option[T]) {
+ 
+  var label = ""
+
+  def label(l: String): Gen[T] = {
+    label = l
+    this
+  }
 
   def apply(prms: Gen.Params) = g(prms)
 
@@ -86,6 +93,8 @@ object Gen extends Properties {
 
   /** A generator that always generates a given value */
   def value[T](x: T) = new Gen(p => Some(x))
+
+  def value[T](f: () => T) = new Gen(p => Some(f()))
 
 
   specify("Gen.fail", (x: Int, prms: Params) =>

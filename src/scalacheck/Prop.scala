@@ -7,26 +7,6 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
   import Prop.{True,False,Exception}
 
-/*  Just a thought:
-
-  private var tearDown = () => ()
-  private var setup = () => ()
-  
-  def onTearDown(f: => Unit) = {
-    tearDown = () => f
-    this
-  }
-
-  def onSetup(f: => Unit) = {
-    setup = () => f
-    this
-  }
-
-  def doTearDown() = tearDown()
-  def doSetup() = setup()
-
-*/
-
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate false.
@@ -89,10 +69,10 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
     }
   )
 
-  def addArg(arg: Any, shrinks: Int) = new Prop(prms => 
+  def addArg(a: Arg) = new Prop(prms =>
     this(prms) match {
       case None => None
-      case Some(r) => Some(r.addArg(arg,shrinks))
+      case Some(r) => Some(r.addArg(a))
     }
   ) { override def toString = Prop.this.toString }
 
@@ -115,7 +95,7 @@ object Prop extends Properties {
     (p && falsified) == falsified
   )
   specify("Prop.Prop.&& Right prio", (sz: Int) => {
-    val p = proved.addArg("RHS",0) && proved.addArg("LHS",0)
+    val p = proved.addArg(Arg("","RHS",0)) && proved.addArg(Arg("","LHS",0))
     p(Gen.Params(sz,StdRand)) match {
       case Some(r) if r.args == ("RHS",0)::Nil => true
       case _ => false
@@ -151,7 +131,7 @@ object Prop extends Properties {
   // Types
 
   /** The result of evaluating a property */
-  abstract sealed class Result(val args: List[(Any,Int)]) {
+  abstract sealed class Result(val args: List[Arg]) {
     override def equals(x: Any) = (this,x) match {
       case (True(_),True(_))   => true
       case (False(_),False(_)) => true
@@ -170,28 +150,28 @@ object Prop extends Properties {
       case _ => false
     }
 
-    def addArg(a: Any, shrinks: Int) = this match {
-      case True(as) => True((a,shrinks)::as)
-      case False(as) => False((a,shrinks)::as)
-      case Exception(as,e) => Exception((a,shrinks)::as,e)
+    def addArg(a: Arg) = this match {
+      case True(as) => True(a::as)
+      case False(as) => False(a::as)
+      case Exception(as,e) => Exception(a::as,e)
     }
 
   }
 
   /** The property was true with the given arguments */
-  case class True(as: List[(Any,Int)]) extends Result(as)
+  case class True(as: List[Arg]) extends Result(as)
 
   /** The property was false with the given arguments */
-  case class False(as: List[(Any,Int)]) extends Result(as)
+  case class False(as: List[Arg]) extends Result(as)
 
   /** Evaluating the property with the given arguments raised an exception */
-  case class Exception(as: List[(Any,Int)], e: Throwable) extends Result(as)
+  case class Exception(as: List[Arg], e: Throwable) extends Result(as)
 
 
 
   // Private support functions
 
-  private def constantProp(r: Option[Result], descr: String) = 
+  private def constantProp(r: Option[Result], descr: String) =
     new Prop(prms => r) { override def toString = descr }
 
   private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply)
@@ -234,18 +214,18 @@ object Prop extends Properties {
   def forAll[A,P](g: Gen[A])(f: A => Prop): Prop = for {
     a <- g
     r <- property(f(a))
-  } yield r.addArg(a,0)
+  } yield r.addArg(Arg(g.label,a,0))
 
-  /** Universal quantifier, shrinks failed arguments with given shrink 
+  /** Universal quantifier, shrinks failed arguments with given shrink
    *  function */
-  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) = 
+  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) =
     new Prop((prms: Gen.Params) => {
 
       import Stream._
 
       def getFirstFail(xs: Stream[A], shrinks: Int) = {
         val results = xs.map(x =>
-          f(x)(prms).map(r => (x, r.addArg(x,shrinks))))
+          f(x)(prms).map(r => (x, r.addArg(Arg(g.label,x,shrinks)))))
         results match {
           case Stream.empty => None
           case _ => results.dropWhile(!isFailure(_)) match {

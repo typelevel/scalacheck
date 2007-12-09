@@ -20,7 +20,7 @@ object Test {
   case class Passed extends Result { override def passed = true }
 
   /** The property was proved wrong with the given concrete arguments.  */
-  case class Failed(args: List[(Any,Int)]) extends Result
+  case class Failed(args: List[Arg]) extends Result
 
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
@@ -29,7 +29,7 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  case class PropException(args: List[(Any,Int)], e: Throwable) extends Result
+  case class PropException(args: List[Arg], e: Throwable) extends Result
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */

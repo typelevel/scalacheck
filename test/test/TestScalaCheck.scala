@@ -63,7 +63,7 @@ object Props extends scalacheck.Properties {
 
   specify("propShrinked", (prms: Test.Params) =>
     check(prms, shrinked).result match {
-      case Failed(((x:Int,y:Int,z:Int),_)::Nil) => 
+      case Failed(Arg(_,(x:Int,y:Int,z:Int),_)::Nil) => 
         x == 0 && y == 0 && z == 0
       case _ => false
     }
