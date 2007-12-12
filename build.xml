@@ -108,6 +108,8 @@
       srcdir="${src}"
       destdir="${build.doc.api}"
       windowtitle="${name} ${version}"
+      doctitle="${name} ${version}"
+      addparams="-linksource"
       classpathref="run.classpath">
       <include name="**/*.scala"/>
     </scaladoc>
@@ -120,7 +122,7 @@
     <jar destfile="${dist}/${name}-${version}.jar">
       <fileset dir="${build}">
         <include name="${package.root}/**"/>
-        <include name="doc/**"/>
+        <exclude name="doc/**"/>
         <exclude name="test/**"/>
       </fileset>
       <manifest>
