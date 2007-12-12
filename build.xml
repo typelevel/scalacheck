@@ -41,6 +41,8 @@
   <property name="build.doc.api" value="${build.doc}/api"/>
   <property name="build.pkg"     value="${build}/pkg"/>
   <property name="build.pkg.lib" value="${build.pkg}/lib"/>
+  <property name="build.pkg.doc" value="${build.pkg}/doc/${package.root}"/>
+  <property name="build.pkg.src" value="${build.pkg}/src"/>
   <property name="dist"          value="dist"/>
 
 
@@ -73,6 +75,8 @@
     <mkdir dir="${build.doc.api}"/>
     <mkdir dir="${build.pkg}"/>
     <mkdir dir="${build.pkg.lib}"/>
+    <mkdir dir="${build.pkg.doc}"/>
+    <mkdir dir="${build.pkg.src}"/>
   </target>
 
 
@@ -117,7 +121,7 @@
   </target>
 
 
-  <target name="jar" depends="clean,build,doc">
+  <target name="jar" depends="clean,build">
 
     <jar destfile="${dist}/${name}-${version}.jar">
       <fileset dir="${build}">
@@ -142,9 +146,35 @@
   </target>
 
 
-  <target name="dist" depends="jar">
+  <target name="jar-src" depends="clean,build">
 
-    <copy file="${dist}/${name}-${version}.jar" todir="${build.pkg.lib}"/>
+    <jar destfile="${dist}/${name}-${version}-src.jar">
+      <fileset dir="${src}">
+        <include name="${package.root}/**"/>
+      </fileset>
+      <manifest>
+        <attribute name="Built-By" value="${author}"/>
+        <section name="${package.root}">
+          <attribute name="Specification-Title"    value="${name}"/>
+          <attribute name="Specification-Version"  value="${version}"/>
+          <attribute name="Specification-Vendor"   value="${author}"/>
+          <attribute name="Implementation-Title"   value="${package.root}"/>
+          <attribute name="Implementation-Version" value="${version}"/>
+          <attribute name="Implementation-Vendor"  value="${author}"/>
+        </section>
+      </manifest>
+    </jar>
+
+  </target>
+
+
+  <target name="dist" depends="jar,jar-src,doc">
+
+    <copy file="${dist}/${name}-${version}.jar" tofile="${build.pkg.lib}/${package.root}.jar"/>
+    <copy file="${dist}/${name}-${version}-src.jar" tofile="${build.pkg.src}/${package.root}-src.jar"/>
+    <copy todir="${build.pkg.doc}">
+      <fileset dir="${build.doc}"/>
+    </copy>
 
     <exec executable="sbaz" failonerror="true">
       <arg value="pack"/>
