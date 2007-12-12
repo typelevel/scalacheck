@@ -1,12 +1,12 @@
 package test
 
-object Props extends scalacheck.Properties {
+object Props extends org.scalacheck.Properties {
 
-  import scalacheck._
-  import scalacheck.Gen._
-  import scalacheck.Prop._
-  import scalacheck.Test._
-  import scalacheck.Arbitrary._
+  import org.scalacheck._
+  import org.scalacheck.Gen._
+  import org.scalacheck.Prop._
+  import org.scalacheck.Test._
+  import org.scalacheck.Arbitrary._
 
   val passing = property(1 + 1 == 2)
 
@@ -74,7 +74,7 @@ object Props extends scalacheck.Properties {
 object TestScalaCheck extends Application {
 
   Props.checkProperties()
-  scalacheck.Gen.checkProperties()
-  scalacheck.Prop.checkProperties()
+  org.scalacheck.Gen.checkProperties()
+  org.scalacheck.Prop.checkProperties()
 
 }

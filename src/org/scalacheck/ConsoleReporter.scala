@@ -1,4 +1,4 @@
-package scalacheck
+package org.scalacheck
 
 object ConsoleReporter {
 

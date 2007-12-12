@@ -1,6 +1,6 @@
 package test
 
-object MathLib extends scalacheck.Properties {
+object MathLib extends org.scalacheck.Properties {
 
   specify("sqr", (n: Int) => 
     sqr(n) == n*n

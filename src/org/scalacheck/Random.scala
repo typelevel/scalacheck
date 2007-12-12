@@ -1,4 +1,4 @@
-package scalacheck
+package org.scalacheck
 
 trait RandomGenerator {
   def choose(low: Int, high: Int): Int
