@@ -1,4 +1,4 @@
-package scalacheck
+package org.scalacheck
 
 /** Represents a collection of properties, with convenient methods
  *  for checking all properties at once. Properties are added to this

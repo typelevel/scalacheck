@@ -2,6 +2,8 @@ RELEASE NOTES
 
 ScalaCheck 1.1
 
+Author: Rickard Nilsson (rickard.nilsson@telia.com)
+
 ScalaCheck is a Scala implementation of the QuickCheck 2 library for Haskell.
 It tries to keep the look and feel of QuickCheck as much as possible, while
 being open for improvements and extensions that can ease the task of
@@ -19,21 +21,25 @@ The main features of ScalaCheck is:
   * Failing test cases are minimised automatically, which makes pin-pointing
     error causes easier.
 
-  * Support for state machine based testing of command sequences, and
-    minimization of failing command sequences.
+  * Support for stateful testing of command sequences, and minimization of
+    failing command sequences.
 
 
 This release introduces minor functionality improvements, some new helper
 methods and arbitrary generators for some new types. It also has (experimental)
-support for command sequence testing in a state machine fashion (à la Erlang
-QuickCheck), in the new trait scalacheck.Commands. Please see the last section
-of the User Guide for more information on this library. Also remember that the
-library interface probably will change in future releases.
+support for stateful command sequence testing (in a state machine fashion à la
+Erlang QuickCheck), with the new trait scalacheck.Commands. Please see the last
+section of the User Guide for more information on this library. Also remember
+that the library interface probably will change in future releases.
 
 The sbaz package has been improved in this release, with sources and api
 documentation added.
 
-The trait scalacheck.Testable has been renamed to scalacheck.Properties.
+NOTE: The ScalaCheck root package has been CHANGED from just 'scalacheck' to
+'org.scalacheck'. The trait Testable has been renamed to Properties.
+
+From now on, ScalaCheck will also be available in the Maven repository at
+scala-tools.org. See further details below.
 
 
 For more info, user guide, change history, etc, see the project site at:
@@ -41,23 +47,44 @@ For more info, user guide, change history, etc, see the project site at:
   http://code.google.com/p/scalacheck
 
 
-Downloading ScalaCheck:
+ScalaCheck availability:
 
-  * Direct install with sbaz:
+  * Direct installation with sbaz:
 
     sbaz update
     sbaz install scalacheck
 
-  * If you already have an earlier version of ScalaCheck installed, you 
+    If you already have an earlier version of ScalaCheck installed, you
     just need to run:
 
     sbaz upgrade
 
-  * http://scalacheck.googlecode.com/files/ScalaCheck-1.1.jar
+  * Binary JAR:
+    http://scalacheck.googlecode.com/files/ScalaCheck-1.1.jar
+
+  * Source JAR:
+    http://scalacheck.googlecode.com/files/ScalaCheck-1.1-src.jar
 
   * Source repository:
     http://scalacheck.googlecode.com/svn/
 
+  * Maven repository at scala-tools.org:
+
+    Add this to your pom.xml:
+
+    <repositories>
+       <repository>
+         <id>scala-tools.org</id>
+         <name>Scala-Tools Maven2 Repository</name>
+         <url>http://scala-tools.org/repo-releases</url>
+       </repository>
+    </repositories>
+
+    <dependency>
+      <groupId>org.scalacheck</groupId>
+      <artifactId>scalacheck</artifactId>
+      <version>1.1</version>
+    </dependency>
 
 
 
@@ -83,7 +110,7 @@ The main features of ScalaCheck is:
     error causes easier.
 
 
-This release does not add any major new functionality since the 1.0-RC1 release, 
+This release does not add any major new functionality since the 1.0-RC1 release,
 but some bugs have been fixed and the code has been cleaned up a bit. Also,
 this release depends on Scala 2.6.0, since it uses some of its new features.
 
@@ -100,7 +127,7 @@ Downloading ScalaCheck:
     sbaz update
     sbaz install scalacheck
 
-  * If you already have an earlier version of ScalaCheck installed, you 
+  * If you already have an earlier version of ScalaCheck installed, you
     just need to run:
 
     sbaz upgrade
@@ -136,7 +163,7 @@ Downloading ScalaCheck:
     sbaz update
     sbaz install scalacheck
 
-  * If you already have an earlier version of ScalaCheck installed, you 
+  * If you already have an earlier version of ScalaCheck installed, you
     just need to run:
 
     sbaz upgrade
@@ -171,7 +198,7 @@ Downloading ScalaCheck:
     sbaz update
     sbaz install scalacheck
 
-  * If you already have an earlier version of ScalaCheck installed, you 
+  * If you already have an earlier version of ScalaCheck installed, you
     just need to run:
 
     sbaz upgrade

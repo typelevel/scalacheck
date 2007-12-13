@@ -33,7 +33,6 @@
   <property name="version.nr"    value="1.1"/>
   <property name="version"       value="${version.nr}dev-r${revision.max-with-flags}"/>
   <property name="author"        value="Rickard Nilsson"/>
-  <property name="package.root"  value="scalacheck"/>
   <property name="src"           value="src"/>
   <property name="test"          value="test"/>
   <property name="build"         value="build"/>
@@ -41,7 +40,7 @@
   <property name="build.doc.api" value="${build.doc}/api"/>
   <property name="build.pkg"     value="${build}/pkg"/>
   <property name="build.pkg.lib" value="${build.pkg}/lib"/>
-  <property name="build.pkg.doc" value="${build.pkg}/doc/${package.root}"/>
+  <property name="build.pkg.doc" value="${build.pkg}/doc/scalacheck"/>
   <property name="build.pkg.src" value="${build.pkg}/src"/>
   <property name="dist"          value="dist"/>
 
@@ -125,18 +124,18 @@
 
     <jar destfile="${dist}/${name}-${version}.jar">
       <fileset dir="${build}">
-        <include name="${package.root}/**"/>
+        <include name="org/**"/>
         <exclude name="doc/**"/>
         <exclude name="test/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
-        <attribute name="Export-Package" value='${package.root};version="${version}"'/>
-        <section name="${package.root}">
+        <attribute name="Export-Package" value='org.scalacheck;version="${version}"'/>
+        <section name="org.scalacheck">
           <attribute name="Specification-Title"    value="${name}"/>
           <attribute name="Specification-Version"  value="${version}"/>
           <attribute name="Specification-Vendor"   value="${author}"/>
-          <attribute name="Implementation-Title"   value="${package.root}"/>
+          <attribute name="Implementation-Title"   value="scalacheck"/>
           <attribute name="Implementation-Version" value="${version}"/>
           <attribute name="Implementation-Vendor"  value="${author}"/>
         </section>
@@ -150,15 +149,15 @@
 
     <jar destfile="${dist}/${name}-${version}-src.jar">
       <fileset dir="${src}">
-        <include name="${package.root}/**"/>
+        <include name="org/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
-        <section name="${package.root}">
+        <section name="org.scalacheck">
           <attribute name="Specification-Title"    value="${name}"/>
           <attribute name="Specification-Version"  value="${version}"/>
           <attribute name="Specification-Vendor"   value="${author}"/>
-          <attribute name="Implementation-Title"   value="${package.root}"/>
+          <attribute name="Implementation-Title"   value="scalacheck"/>
           <attribute name="Implementation-Version" value="${version}"/>
           <attribute name="Implementation-Vendor"  value="${author}"/>
         </section>
@@ -170,8 +169,8 @@
 
   <target name="dist" depends="jar,jar-src,doc">
 
-    <copy file="${dist}/${name}-${version}.jar" tofile="${build.pkg.lib}/${package.root}.jar"/>
-    <copy file="${dist}/${name}-${version}-src.jar" tofile="${build.pkg.src}/${package.root}-src.jar"/>
+    <copy file="${dist}/${name}-${version}.jar" tofile="${build.pkg.lib}/scalacheck.jar"/>
+    <copy file="${dist}/${name}-${version}-src.jar" tofile="${build.pkg.src}/scalacheck-src.jar"/>
     <copy todir="${build.pkg.doc}">
       <fileset dir="${build.doc}"/>
     </copy>

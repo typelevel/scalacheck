@@ -1,4 +1,4 @@
-package scalacheck
+package org.scalacheck
 
 /** Most of the arbitrary generators and shrinkers defined in this file
  *  are straightforward adaptations of the ones in Arbitrary.hs, from
