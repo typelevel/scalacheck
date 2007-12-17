@@ -59,7 +59,8 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
   }
 
   /** Returns a new property that holds if and only if both this
-   *  and the given property generates the same result.
+   *  and the given property generates the same result, or both
+   *  properties generate no result.
    */
   def ==(p: Prop) = new Prop(prms =>
     (this(prms), p(prms)) match {
@@ -74,7 +75,10 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
       case None => None
       case Some(r) => Some(r.addArg(a))
     }
-  ) { override def toString = Prop.this.toString }
+  ).label(label)
+
+  override def toString = 
+    if(label.isEmpty) "Prop()" else "Prop(\"" + label + "\")"
 
 }
 
@@ -172,21 +176,21 @@ object Prop extends Properties {
   // Private support functions
 
   private def constantProp(r: Option[Result], descr: String) =
-    new Prop(prms => r) { override def toString = descr }
+    new Prop(prms => r).label(descr)
 
-  private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply)
+  private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply).label(g.label)
 
 
   // Property combinators
 
   /** A property that never is proved or falsified */
-  def undecided: Prop = constantProp(None, "Prop.undecided")
+  lazy val undecided: Prop = constantProp(None, "undecided")
 
   /** A property that always is false */
-  def falsified: Prop = constantProp(Some(False(Nil)), "Prop.falsified")
+  lazy val falsified: Prop = constantProp(Some(False(Nil)), "falsified")
 
   /** A property that always is true */
-  def proved: Prop = constantProp(Some(True(Nil)), "Prop.proved");
+  lazy val proved: Prop = constantProp(Some(True(Nil)), "proved");
 
   /** A property that denotes an exception */
   def exception(e: Throwable): Prop =

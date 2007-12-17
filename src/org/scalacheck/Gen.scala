@@ -7,7 +7,7 @@ class Gen[+T](g: Gen.Params => Option[T]) {
  
   var label = ""
 
-  def label(l: String): Gen[T] = {
+  def label(l: String): this.type = {
     label = l
     this
   }
@@ -63,6 +63,8 @@ class Gen[+T](g: Gen.Params => Option[T]) {
         new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms), gy(prms)))
   
   def ap[U](g: Gen[T => U]) = flatMap(t => g.flatMap(u => new Gen(p => Some(u(t)))))      
+
+  override def toString = "Gen(\"" + label + "\")"
 }
 
 
