@@ -7,8 +7,18 @@ import Arbitrary._
 /** See User Guide for usage examples */
 trait Commands {
 
-  /** The abstract state data type */
+  /** The abstract state data type. This type must be immutable. */
   type S
+
+  private val bindings = scala.collection.mutable.Map.empty[S,Any]
+
+  protected class Binding(private[Commands] val key: S)
+
+  protected implicit def getBound[T](b: Binding): T = bindings.get(b.key) match {
+    case None => error("No value bound")
+    case Some(x: T) => x
+    case _ => error("Bound to other type")
+  }
 
   /** An abstract command */
   trait Command {
@@ -20,18 +30,16 @@ trait Commands {
   }
 
   /** A command that binds its result for later use */
-  abstract class SetCommand(sym: Symbol) extends Command {
+  abstract class SetCommand extends Command {
     protected[Commands] override def run(s: S) = {
       val r = apply(s)
-      bindings += ((sym,r))
+      bindings += ((s,r))
       r
     }
+
+    final override def nextState(s: S): S = nextState(s, new Binding(s))
+    def nextState(s: S, b: Binding): S
   }
-
-  private val bindings = scala.collection.mutable.Map.empty[Symbol,Any]
-
-  /** Retrieves a bound symbol */
-  protected def get(s: Symbol) = bindings.get(s)
 
   /** Resets the system under test and returns its abstract state */
   protected def initialState(): S
@@ -44,59 +52,52 @@ trait Commands {
   /** Generates a command */
   protected def genCommand(s: S): Gen[Command]
 
-  /** Generates a sequence of commands */
-  private def genCommands(s: S) = {
-
-    def sizedCmds(s: S)(sz: Int): Gen[List[Command]] =
-      if(sz <= 0) value(Nil) else for {
-        c  <- genCommand(s) suchThat (_.preCondition(s))
-        cs <- sizedCmds(c.nextState(s))(sz-1)
-      } yield c::cs
-
-    sized(sizedCmds(s))
-
+  private case class Cmds(cs: List[Command], ss: List[S]) {
+    override def toString = cs.map(_.toString).mkString(", ")
   }
 
-  /** Verifies that a command sequence is valid */
-  private def validCommands(s: S, cmds: List[Command]): Boolean = cmds match {
-    case Nil   => true
-    case c::cs => c.preCondition(s) && validCommands(c.nextState(s),cs)
+  private def genCmds: Gen[Cmds] = { 
+    def sizedCmds(s: S)(sz: Int): Gen[Cmds] = 
+      if(sz <= 0) value(Cmds(Nil, Nil)) else for {
+        c <- genCommand(s) suchThat (_.preCondition(s))
+        Cmds(cs,ss) <- sizedCmds(c.nextState(s))(sz-1)
+      } yield Cmds(c::cs, s::ss)
+
+    for {
+      s0 <- value(() => initialState())
+      cmds <- sized(sizedCmds(s0))
+    } yield cmds
   }
 
-  /** Executes a command sequence and returns true iff all postconditions
-   *  are fulfilled */
-  def runCmds(s: S, cmds: List[Command]): Boolean = cmds match {
-    case Nil   => true
-    case c::cs => c.postCondition(s,c.run(s)) && runCmds(c.nextState(s),cs)
-  }
-
-  /** A property that holds iff all valid command sequences fulfills
-   *  the postconditions. */
-  def commandsProp: Prop = {
-
-    case class Cmds(cmds: List[Command], sf: () => S) {
-      override def toString = cmds.map(_.toString).mkString(", ")
+  private def validCmds(s: S, cs: List[Command]): Option[Cmds] =
+    cs match {
+      case Nil => Some(Cmds(Nil, s::Nil))
+      case c::_ if !c.preCondition(s) => None
+      case c::cmds => for {
+        Cmds(_, ss) <- validCmds(c.nextState(s), cmds)
+      } yield Cmds(cs, s::ss)
     }
 
+  private def runCommands(cmds: Cmds): Boolean = cmds match {
+    case Cmds(Nil, _) => true
+    case Cmds(c::cs, s::ss) => 
+      c.postCondition(s,c.run(s)) && runCommands(Cmds(cs,ss))
+    case _ => error("Should not be here")
+  }
+
+  def commandsProp: Prop = {
+
     /* TODO Hack to be able to shrink command sequences. Maybe we should
-     * split the Arbitrary type into Arbitrary and Shrink? */
+     * split the Arbitrary type into Arbitrary and Shrink?*/
     implicit def arbCommand(x: Arb[Command]) = new Arbitrary[Command] {
       def getArbitrary = value(null)
     }
 
-    def genCmds = for {
-      s <- value(() => initState())
-      cmds <- genCommands(s)
-    } yield Cmds(cmds, () => s)
-
-    def shrinkCmds(cmds: Cmds) = cmds match {
-      case Cmds(cs,_) => shrink(cs).map(cs => Cmds(cs, () => initState()))
+    def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) => 
+      shrink(cs).flatMap(cs => validCmds(initialState(), cs).toList) 
     }
 
-    forAllShrink(genCmds label "COMMANDS", shrinkCmds) { case Cmds(cs, sf) =>
-      val s = sf()
-      validCommands(s,cs) ==> runCmds(s,cs).addArg(Arg("INISTATE",s,0))
-    }
+    forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
   }
 
 }
