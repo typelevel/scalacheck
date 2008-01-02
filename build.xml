@@ -175,6 +175,14 @@
       <fileset dir="${build.doc}"/>
     </copy>
 
+    <!--
+    <sbaz file="${build.pkg}"
+          name="scalacheck"
+          version="${version}"
+          description="ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library"
+          link="http://scalacheck.googlecode.com/files/"/>
+    -->
+
     <exec executable="sbaz" failonerror="true">
       <arg value="pack"/>
       <arg value="scalacheck"/>

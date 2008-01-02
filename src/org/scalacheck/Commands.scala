@@ -12,12 +12,11 @@ trait Commands {
 
   private val bindings = scala.collection.mutable.Map.empty[S,Any]
 
-  protected class Binding(private[Commands] val key: S)
-
-  protected implicit def getBound[T](b: Binding): T = bindings.get(b.key) match {
-    case None => error("No value bound")
-    case Some(x: T) => x
-    case _ => error("Bound to other type")
+  protected class Binding(private val key: S) {
+    def get: Any = bindings.get(key) match {
+      case None => error("No value bound")
+      case Some(x) => x
+    }
   }
 
   /** An abstract command */
