@@ -78,7 +78,7 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
   ).label(label)
 
   override def toString = 
-    if(label.isEmpty) "Prop()" else "Prop(\"" + label + "\")"
+    if(label.length == 0) "Prop()" else "Prop(\"" + label + "\")"
 
 }
 
