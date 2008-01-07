@@ -1,6 +1,8 @@
 package org.scalacheck
 
 import scala.collection.mutable.ListBuffer
+import Prop._
+import Arbitrary._
 
 /** Class that represents a generator. */
 class Gen[+T](g: Gen.Params => Option[T]) {
@@ -65,6 +67,32 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def ap[U](g: Gen[T => U]) = flatMap(t => g.flatMap(u => new Gen(p => Some(u(t)))))      
 
   override def toString = "Gen(\"" + label + "\")"
+
+  /** Returns a new property that holds if and only if both this
+   *  and the given generator generates the same result. */
+  def ==[U](g: Gen[U]) = forAll(this)(r => forAll(g)(_ == r))
+
+  /** Returns a new property that holds if and only if both this
+   *  and the given generator generates the same result, or both
+   *  generators generate no result.  */
+  def ===[U](g: Gen[U]) = new Prop(prms =>
+    (this(prms), g(prms)) match {
+      case (None,None) => proved(prms)
+      case (Some(r1),Some(r2)) if r1 == r2 => proved(prms)
+      case _ => falsified(prms)
+    }
+  )
+
+  def !=[U](g: Gen[U]) = forAll(this)(r => forAll(g)(_ != r))
+
+  def !==[U](g: Gen[U]) = new Prop(prms =>
+    (this(prms), g(prms)) match {
+      case (None,None) => falsified(prms)
+      case (Some(r1),Some(r2)) if r1 == r2 => falsified(prms)
+      case _ => proved(prms)
+    }
+  )
+
 }
 
 
@@ -72,7 +100,6 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 /** Contains combinators for building generators. */
 object Gen extends Properties {
 
-  import Prop._
 
   // Types
 
@@ -86,12 +113,38 @@ object Gen extends Properties {
 
   // Generator combinators
 
+
+
+  private def oneFailing[T](gs: Iterable[Gen[T]]) = exists(gs.map(_ === fail))
+
+  private def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
+
+  specify("Gen.sequence", 
+    forAllDefaultShrink(listOf(elementsFreq((10,arbitrary[Int]),(1,fail))))(l =>
+      (oneFailing(l) && (sequence(l) === fail)) ||
+      (noneFailing(l) && forAll(sequence(l)) { _.length == l.length })
+    )
+  )
+
+  def sequence[T](gs: Iterable[Gen[T]]): Gen[Seq[T]] = new Gen(prms => {
+    val buf = new ListBuffer[T]
+    var none = false
+    val xs = gs.map(g => g(prms)).elements
+    while(xs.hasNext && !none) xs.next match {
+      case None => none = true
+      case Some(x) => buf += x
+    }
+    if(none) None else Some(buf)
+  })
+
+
+  specify("Gen.lzy", { g: Gen[Int] => lzy(g) === g })
+
   /** Wraps a generator lazily. Useful when defining recursive generators. */
   def lzy[T](g: => Gen[T]) = new Gen(p => g(p))
 
-  specify("Gen.value", (x: Int, prms: Params) =>
-    value(x)(prms).get == x
-  )
+
+  specify("Gen.value", { x: Int => forAll(value(x)) { _ == x } })
 
   /** A generator that always generates a given value */
   def value[T](x: T) = new Gen(p => Some(x))
@@ -99,33 +152,31 @@ object Gen extends Properties {
   def value[T](f: () => T) = new Gen(p => Some(f()))
 
 
-  specify("Gen.fail", (x: Int, prms: Params) =>
-    fail(prms) == None
-  )
+  specify("Gen.fail", { prms: Params => fail(prms) == None })
 
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = new Gen(p => None)
 
 
-  specify("Gen.choose-int", (l: Int, h: Int, prms: Params) => {
-    val x = choose(l,h)(prms).get
-    h >= l ==> (x >= l && x <= h)
+  specify("Gen.choose-int", { (l: Int, h: Int) => 
+    if(l > h) choose(l,h) === fail
+    else forAll(choose(l,h)) { x => x >= l && x <= h }
   })
 
   /** A generator that generates a random integer in the given (inclusive)
    *  range.  */
-  def choose(low: Int, high: Int) =
+  def choose(low: Int, high: Int) = if(low > high) fail else
     parameterized(prms => value(prms.rand.choose(low,high)))
 
 
-  specify("Gen.choose-double", (l: Double, h: Double, prms: Params) => {
-    val x = choose(l,h)(prms).get
-    h >= l ==> (x >= l && x <= h)
+  specify("Gen.choose-double", { (l: Double, h: Double) => 
+    if(l > h) choose(l,h) === fail
+    else forAll(choose(l,h)) { x => x >= l && x <= h }
   })
 
   /** A generator that generates a random integer in the given (inclusive)
    *  range.  */
-  def choose(low: Double, high: Double) =
+  def choose(low: Double, high: Double) = if(low > high) fail else
     parameterized(prms => value(prms.rand.choose(low,high)))
 
 
@@ -167,12 +218,10 @@ object Gen extends Properties {
     frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
 
 
-  specify("Gen.elements", (l: List[Int], prms: Params) =>
-    elements(l: _*)(prms) match {
-      case None => l.isEmpty
-      case Some(n) => l.contains(n)
-    }
-  )
+  specify("Gen.elements", { l: List[Int] =>
+    if(l.isEmpty) elements(l: _*) == fail
+    else forAll(elements(l: _*))(l.contains)
+  })
 
   /** A generator that returns a random element from a list
    */
@@ -200,37 +249,41 @@ object Gen extends Properties {
   /** Generates a non-empty list of random length. The maximum length depends
    *  on the size parameter
    */
-  def listOf1[T](g: Gen[T]) = for {
+  def listOf1[T](g: => Gen[T]) = for {
     x  <- g
     xs <- listOf(g)
   } yield x::xs
 
 
-  specify("Gen.vectorOf", (len: Int, prms: Params) =>
-    () imply {
-      case () if len == 0 =>
-        vectorOf(len,fail)(prms).get.length == 0 &&
-        vectorOf(len,value(0))(prms).get.length == 0
-      case () if len > 0 =>
-        vectorOf(len,fail)(prms) == None &&
-        vectorOf(len,value(0))(prms).get.length == len
-    }
-  )
-
   /** Generates a list of the given length */
-  def vectorOf[T](n: Int, g: Gen[T]): Gen[Seq[T]] = new Gen(prms => {
-    val l = new ListBuffer[T]
-    var i = 0
-    var break = false
-    while(!break && i < n) g(prms) match {
-      case Some(x) =>
-        l += x
-        i += 1
-      case None => break = true
-    }
-    if(break) None
-    else Some(l)
+  def vectorOf[T](n: Int, g: Gen[T]) = sequence(List.make(n,g))
+  
+
+  specify("Gen.someOf", { l: List[Int] =>
+    forAllDefaultShrink(someOf(l).map(_.toList)) { _.forall(l.contains) }
   })
+
+  /** Picks some elements from a list */
+  def someOf[T](l: Collection[T]) = choose(0,l.size) flatMap (pick(_,l))
+
+
+  specify("Gen.pick", { l: List[Int] =>
+    forAll(choose(-1,2*l.length)) { n => 
+      if(n < 0 || n > l.length) pick(n,l) === fail
+      else forAll(pick(n,l)) { m => m.length == n && m.forall(l.contains) }
+    }
+  })
+
+  /** Picks a given number of elements from a list */
+  def pick[T](n: Int, l: Collection[T]): Gen[Seq[T]] = 
+    if(n > l.size || n < 0) fail
+    else new Gen(prms => {
+      val buf = new ListBuffer[T]
+      buf ++= l
+      while(buf.length > n) buf.remove(choose(0,buf.length-1)(prms).get)
+      Some(buf)
+    })
+
 
   /* Generates a numerical character */
   def numChar: Gen[Char] = choose(48,57) map (_.toChar)

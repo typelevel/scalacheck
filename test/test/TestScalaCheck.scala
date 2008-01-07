@@ -73,8 +73,13 @@ object Props extends org.scalacheck.Properties {
 
 object TestScalaCheck extends Application {
 
-  Props.checkProperties()
-  org.scalacheck.Gen.checkProperties()
-  org.scalacheck.Prop.checkProperties()
+  import org.scalacheck._
+  import ConsoleReporter._
+
+  val prms = Test.Params(100, 500, 0, 10000, StdRand)
+
+  Props.checkProperties(prms, propReport, testReport)
+  org.scalacheck.Gen.checkProperties(prms, propReport, testReport)
+  org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
 
 }

@@ -12,32 +12,32 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
    *  generate a result, the new property will generate false.
    */
   def &&(p: Prop): Prop = combine(p) {
-    case (x, Some(True(_))) => x
-    case (Some(True(_)), x) => x
+    case (x@Some(_: Exception), _) => x
+    case (_, x@Some(_: Exception)) => x
 
-    case (x@Some(False(_)), _) => x
-    case (_, x@Some(False(_))) => x
+    case (x, Some(_: True)) => x
+    case (Some(_: True), x) => x
 
-    case (None, x) => x
-    case (x, None) => x
+    case (x@Some(_: False), _) => x
+    case (_, x@Some(_: False)) => x
 
-    case (x, _) => x
+    case _ => None
   }
 
   /** Returns a new property that holds if either this
    *  or the given property (or both) hold.
    */
   def ||(p: Prop): Prop = combine(p) {
-    case (x@Some(True(_)), _) => x
-    case (_, x@Some(True(_))) => x
+    case (x@Some(_: Exception), _) => x
+    case (_, x@Some(_: Exception)) => x
 
-    case (Some(False(_)), x) => x
-    case (x, Some(False(_))) => x
+    case (x@Some(_: True), _) => x
+    case (_, x@Some(_: True)) => x
 
-    case (None, x) => x
-    case (x, None) => x
+    case (Some(_: False), x) => x
+    case (x, Some(_: False)) => x
 
-    case (x, _) => x
+    case _ => None
   }
 
   /** Returns a new property that holds if and only if both this
@@ -46,16 +46,17 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
    *  as the other property.
    */
   def ++(p: Prop): Prop = combine(p) {
+    case (x@Some(_: Exception), _) => x
+    case (_, x@Some(_: Exception)) => x
+
     case (None, x) => x
     case (x, None) => x
 
-    case (x, Some(True(_))) => x
-    case (Some(True(_)), x) => x
+    case (x, Some(_: True)) => x
+    case (Some(_: True), x) => x
 
-    case (x@Some(False(_)), _) => x
-    case (_, x@Some(False(_))) => x
-
-    case (x, _) => x
+    case (x@Some(_: False), _) => x
+    case (_, x@Some(_: False)) => x
   }
 
   /** Returns a new property that holds if and only if both this
@@ -90,14 +91,22 @@ object Prop extends Properties {
   // Properties for the Prop class
 
   specify("Prop.Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
-    (p1 && p2) == (p2 && p1)
+    (p1 && p2) === (p2 && p1)
+  )
+  specify("Prop.Prop.&& Exception", (p: Prop) =>
+    (p && exception(null)) == exception(null)
   )
   specify("Prop.Prop.&& Identity", (p: Prop) =>
-    (p && proved) == p
+    (p && proved) === p
   )
-  specify("Prop.Prop.&& False", (p: Prop) =>
-    (p && falsified) == falsified
-  )
+  specify("Prop.Prop.&& False", {
+    val g = elements(proved,falsified,undecided)
+    forAll(g)(p => (p && falsified) == falsified)
+  })
+  specify("Prop.Prop.&& Undecided", {
+    val g = elements(proved,undecided)
+    forAll(g)(p => (p && undecided) === undecided)
+  })
   specify("Prop.Prop.&& Right prio", (sz: Int) => {
     val p = proved.addArg(Arg("","RHS",0)) && proved.addArg(Arg("","LHS",0))
     p(Gen.Params(sz,StdRand)) match {
@@ -107,27 +116,39 @@ object Prop extends Properties {
   })
 
   specify("Prop.Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
-    (p1 || p2) == (p2 || p1)
+    (p1 || p2) === (p2 || p1)
+  )
+  specify("Prop.Prop.|| Exception", (p: Prop) =>
+    (p || exception(null)) == exception(null)
   )
   specify("Prop.Prop.|| Identity", (p: Prop) =>
-    (p || falsified) == p
+    (p || falsified) === p
   )
-  specify("Prop.Prop.|| True", (p: Prop) =>
-    (p || proved) == proved
-  )
+  specify("Prop.Prop.|| True", {
+    val g = elements(proved,falsified,undecided)
+    forAll(g)(p => (p || proved) == proved)
+  })
+  specify("Prop.Prop.|| Undecided", {
+    val g = elements(falsified,undecided)
+    forAll(g)(p => (p || undecided) === undecided)
+  })
 
   specify("Prop.Prop.++ Commutativity", (p1: Prop, p2: Prop) =>
-    (p1 ++ p2) == (p2 ++ p1)
+    (p1 ++ p2) === (p2 ++ p1)
   )
-  specify("Prop.Prop.++ Identity", (p: Prop) =>
-    (p ++ undecided) == p
+  specify("Prop.Prop.++ Exception", (p: Prop) =>
+    (p ++ exception(null)) == exception(null)
   )
-  specify("Prop.Prop.++ False", (p: Prop) =>
-    (p ++ falsified) == falsified
+  specify("Prop.Prop.++ Identity 1", {
+    val g = elements(falsified,proved,exception(null))
+    forAll(g)(p => (p ++ proved) === p)
+  })
+  specify("Prop.Prop.++ Identity 2", (p: Prop) =>
+    (p ++ undecided) === p
   )
-  specify("Prop.Prop.++ True", {
-    val g = elements(proved,falsified,exception(null))
-    forAll(g)(p => (p ++ proved) == p)
+  specify("Prop.Prop.++ False", {
+    val g = elements(falsified,proved,undecided)
+    forAll(g)(p => (p ++ falsified) === falsified)
   })
 
 
@@ -137,9 +158,9 @@ object Prop extends Properties {
   /** The result of evaluating a property */
   abstract sealed class Result(val args: List[Arg]) {
     override def equals(x: Any) = (this,x) match {
-      case (True(_),True(_))   => true
-      case (False(_),False(_)) => true
-      case (Exception(_,_),Exception(_,_)) => true
+      case (_: True, _: True)   => true
+      case (_: False, _: False) => true
+      case (_: Exception, _: Exception) => true
       case _ => false
     }
 
@@ -194,7 +215,7 @@ object Prop extends Properties {
 
   /** A property that denotes an exception */
   def exception(e: Throwable): Prop =
-    constantProp(Some(Exception(Nil,e)), "Prop.exception")
+    constantProp(Some(Exception(Nil,e)), "exception")
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = new Prop(prms => f(prms.size)(prms))
@@ -209,10 +230,25 @@ object Prop extends Properties {
   def iff[T](x: T, f: PartialFunction[T,Prop]): Prop =
     property(if(f.isDefinedAt(x)) f(x) else falsified)
 
+
+  specify("Prop.all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
+
   /** Combines properties into one, which is true if and only if all the
-   *  properties are true
-   */
-  def all(ps: Seq[Prop]) = (proved /: ps) (_ && _)
+   *  properties are true */
+  def all(ps: Iterable[Prop]) = new Prop(prms => 
+    if(ps.forall(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
+    else falsified(prms)
+  )
+
+
+  specify("Prop.exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
+
+  /** Combines properties into one, which is true if at least one of the
+   *  properties is true */
+  def exists(ps: Iterable[Prop]) = new Prop(prms => 
+    if(ps.exists(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
+    else falsified(prms)
+  )
 
   /** Universal quantifier */
   def forAll[A,P](g: Gen[A])(f: A => Prop): Prop = for {

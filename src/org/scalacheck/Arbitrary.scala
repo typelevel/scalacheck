@@ -29,7 +29,7 @@ abstract class Arbitrary[T] {
 object Arbitrary {
 
   import Gen.{value, choose, sized, elements, listOf, listOf1,
-    frequency}
+    frequency, elementsFreq}
 
   /** Arbitrary instance of value of type T. */
   def arbitrary[T](implicit a: Arb[T] => Arbitrary[T]): Gen[T] =
@@ -92,16 +92,19 @@ object Arbitrary {
     x: Arb[Gen[T]])(implicit
     a: Arb[T] => Arbitrary[T]
   ): Arbitrary[Gen[T]] = new Arbitrary[Gen[T]] {
-    def getArbitrary = arbitrary[T] map (value(_))
+    def getArbitrary = frequency(
+      (5, arbitrary[T] map (value(_))),
+      (1, Gen.fail)
+    )
   }
 
   /** Generates an arbitrary property */
   implicit def arbitraryProp(x: Arb[Prop]) = new Arbitrary[Prop] {
-    def getArbitrary = frequency(
-      (5, value(Prop.proved)),
-      (4, value(Prop.falsified)),
-      (2, value(Prop.undecided)),
-      (1, value(Prop.exception(null)))
+    def getArbitrary = elementsFreq(
+      (5, Prop.proved),
+      (4, Prop.falsified),
+      (2, Prop.undecided),
+      (1, Prop.exception(null))
     )
   }
 
