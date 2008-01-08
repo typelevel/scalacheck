@@ -251,14 +251,14 @@ object Prop extends Properties {
   )
 
   /** Universal quantifier */
-  def forAll[A,P](g: Gen[A])(f: A => Prop): Prop = for {
+  def forAll[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
     a <- g
     r <- property(f(a))
   } yield r.addArg(Arg(g.label,a,0))
 
   /** Universal quantifier, shrinks failed arguments with given shrink
    *  function */
-  def forAllShrink[A](g: Gen[A],shrink: A => Stream[A])(f: A => Prop) =
+  def forAllShrink[A, P <% Prop](g: Gen[A],shrink: A => Stream[A])(f: A => P) =
     new Prop((prms: Gen.Params) => {
 
       import Stream._
@@ -300,8 +300,8 @@ object Prop extends Properties {
 
   /** Universal quantifier, shrinks failed arguments with the default
    *  shrink function for the type */
-  def forAllDefaultShrink[A](g: Gen[A])(f: A => Prop)
-    (implicit a: Arb[A] => Arbitrary[A]) = forAllShrink(g,shrink[A])(f)
+  def forAllDefaultShrink[A,P](g: Gen[A])(f: A => P)
+    (implicit p: P => Prop, a: Arb[A] => Arbitrary[A]) = forAllShrink(g,shrink[A])(f)
 
 
   class ExtendedBoolean(b: Boolean) {
@@ -329,8 +329,8 @@ object Prop extends Properties {
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
 
-  def property (p: => Prop): Prop = new Prop(prms =>
-    (try { p } catch { case e => exception(e) })(prms)
+  def property[P <% Prop](p: => P): Prop = new Prop(prms =>
+    (try { p: Prop } catch { case e => exception(e) })(prms)
   )
 
   def property[A1,P] (
