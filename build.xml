@@ -4,10 +4,16 @@
 
   <property environment="env"/>
   <property name="scala.home" value="${env.SCALA_HOME}"/>
+  <property name="scala.lib" value="${scala.home}/lib/scala-library.jar"/>
 
   <path id="scala.classpath">
     <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
-    <pathelement location="${scala.home}/lib/scala-library.jar"/>
+    <pathelement location="${scala.lib}"/>
+  </path>
+
+  <path id="scalacheck.classpath">
+    <pathelement location="${scala.lib}"/>
+    <pathelement location="build"/>
   </path>
 
   <path id="svnant.classpath">
@@ -21,10 +27,7 @@
   <taskdef resource="scala/tools/ant/antlib.xml"
            classpathref="scala.classpath"/>
 
-  <svn>
-    <wcVersion path="."/>
-  </svn>
-
+  <svn><wcVersion path="."/></svn>
 
 
   <!-- Project properties -->
@@ -33,109 +36,61 @@
   <property name="version.nr"    value="1.1.1"/>
   <property name="version"       value="${version.nr}dev-r${revision.max-with-flags}"/>
   <property name="author"        value="Rickard Nilsson"/>
-  <property name="src"           value="src"/>
-  <property name="test"          value="test"/>
-  <property name="build"         value="build"/>
-  <property name="build.doc"     value="${build}/doc"/>
-  <property name="build.doc.api" value="${build.doc}/api"/>
-  <property name="build.pkg"     value="${build}/pkg"/>
-  <property name="build.pkg.lib" value="${build.pkg}/lib"/>
-  <property name="build.pkg.doc" value="${build.pkg}/doc/scalacheck"/>
-  <property name="build.pkg.src" value="${build.pkg}/src"/>
-  <property name="dist"          value="dist"/>
-
-
-
-  <!-- External libs -->
-
-  <property name="scala-library.jar" value="${scala.home}/lib/scala-library.jar" />
-
-
-
-  <!-- Classpaths -->
-
-  <path id="build.classpath">
-    <pathelement location="${scala-library.jar}"/>
-  </path>
-
-  <path id="run.classpath">
-    <path refid="build.classpath"/>
-    <pathelement location="${build}"/>
-  </path>
-
 
 
   <!-- Targets -->
 
   <target name="prepare">
-    <mkdir dir="${build}"/>
-    <mkdir dir="${dist}"/>
-    <mkdir dir="${build.doc}"/>
-    <mkdir dir="${build.doc.api}"/>
-    <mkdir dir="${build.pkg}"/>
-    <mkdir dir="${build.pkg.lib}"/>
-    <mkdir dir="${build.pkg.doc}"/>
-    <mkdir dir="${build.pkg.src}"/>
+    <mkdir dir="build"/>
+    <mkdir dir="dist"/>
+    <mkdir dir="build/doc"/>
+    <mkdir dir="build/doc/api"/>
+    <mkdir dir="build/pkg"/>
+    <mkdir dir="build/pkg/lib"/>
+    <mkdir dir="build/pkg/doc"/>
+    <mkdir dir="build/pkg/src"/>
   </target>
-
 
   <target name="clean">
-    <delete dir="${build}"/>
-    <delete dir="${dist}"/>
+    <delete dir="build"/>
+    <delete dir="dist"/>
   </target>
-
 
   <target name="build" depends="prepare">
-
-    <scalac srcdir="${src}"
-            destdir="${build}"
-            classpathref="build.classpath"/>
-
-    <scalac srcdir="${test}"
-            destdir="${build}"
-            classpathref="build.classpath"/>
-
+    <scalac srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
   </target>
-
 
   <target name="test" depends="build">
     <exec executable="scala" failonerror="true">
       <arg value="-classpath"/>
-      <arg value="${build}"/>
+      <arg value="build"/>
       <arg value="test.scala"/>
     </exec>
   </target>
 
-
   <target name="doc" depends="prepare">
-
-    <copy todir="${build.doc}">
+    <copy todir="build/doc">
       <fileset dir=".">
         <include name="LICENSE"/>
         <include name="RELEASE"/>
       </fileset>
     </copy>
-
     <scaladoc
-      srcdir="${src}"
-      destdir="${build.doc.api}"
+      srcdir="src"
+      destdir="build/doc/api"
       windowtitle="${name} ${version}"
       doctitle="${name} ${version}"
       addparams="-linksource"
-      classpathref="run.classpath">
+      classpathref="scalacheck.classpath">
       <include name="**/*.scala"/>
     </scaladoc>
-
   </target>
 
-
   <target name="jar" depends="clean,build">
-
-    <jar destfile="${dist}/${name}-${version}.jar">
-      <fileset dir="${build}">
+    <jar destfile="dist/${name}-${version}.jar">
+      <fileset dir="build">
         <include name="org/**"/>
         <exclude name="doc/**"/>
-        <exclude name="test/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
@@ -150,14 +105,11 @@
         </section>
       </manifest>
     </jar>
-
   </target>
 
-
   <target name="jar-src" depends="clean,build">
-
-    <jar destfile="${dist}/${name}-${version}-src.jar">
-      <fileset dir="${src}">
+    <jar destfile="dist/${name}-${version}-src.jar">
+      <fileset dir="src">
         <include name="org/**"/>
       </fileset>
       <manifest>
@@ -172,62 +124,42 @@
         </section>
       </manifest>
     </jar>
-
   </target>
 
-
   <target name="dist" depends="jar,jar-src,doc">
-
-    <copy file="${dist}/${name}-${version}.jar" tofile="${build.pkg.lib}/scalacheck.jar"/>
-    <copy file="${dist}/${name}-${version}-src.jar" tofile="${build.pkg.src}/scalacheck-src.jar"/>
-    <copy todir="${build.pkg.doc}">
-      <fileset dir="${build.doc}"/>
+    <copy file="dist/${name}-${version}.jar" tofile="build/pkg/lib/scalacheck.jar"/>
+    <copy file="dist/${name}-${version}-src.jar" tofile="build/pkg/src/scalacheck-src.jar"/>
+    <copy todir="build/pkg/doc">
+      <fileset dir="build/doc"/>
     </copy>
-
-    <!--
-    <sbaz file="${build.pkg}"
-          name="scalacheck"
-          version="${version}"
-          description="ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library"
-          link="http://scalacheck.googlecode.com/files/"/>
-    -->
-
     <exec executable="sbaz" failonerror="true">
       <arg value="pack"/>
       <arg value="scalacheck"/>
-      <arg value="${build.pkg}"/>
+      <arg value="build/pkg"/>
       <arg value="--version"/>
       <arg value="${version}"/>
       <arg value="--outdir"/>
-      <arg value="${dist}"/>
+      <arg value="dist"/>
       <arg value="--linkbase"/>
       <arg value="http://scalacheck.googlecode.com/files/"/>
       <arg value="--description"/>
       <arg value='ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library'/>
     </exec>
-
-    <move file="scalacheck-${version}.advert" todir="${dist}"/>
-
+    <move file="scalacheck-${version}.advert" todir="dist"/>
   </target>
 
-
   <target name="dist-release">
-
     <antcall target="dist">
       <param name="version" value="${version.nr}"/>
     </antcall>
-
   </target>
 
-
   <target name="install" depends="dist">
-
     <exec executable="sbaz" failonerror="true">
       <arg value="install"/>
       <arg value="-f"/>
-      <arg value="${dist}/scalacheck-${version}.sbp"/>
+      <arg value="dist/scalacheck-${version}.sbp"/>
     </exec>
-
   </target>
 
 </project>
