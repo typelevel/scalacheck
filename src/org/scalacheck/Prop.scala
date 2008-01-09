@@ -88,26 +88,28 @@ object Prop extends Properties {
   import Gen.{value, fail, frequency, elements}
   import Arbitrary._
 
+  val name = "Prop"
+
   // Properties for the Prop class
 
-  specify("Prop.Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
+  specify("Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
     (p1 && p2) === (p2 && p1)
   )
-  specify("Prop.Prop.&& Exception", (p: Prop) =>
+  specify("Prop.&& Exception", (p: Prop) =>
     (p && exception(null)) == exception(null)
   )
-  specify("Prop.Prop.&& Identity", (p: Prop) =>
+  specify("Prop.&& Identity", (p: Prop) =>
     (p && proved) === p
   )
-  specify("Prop.Prop.&& False", {
+  specify("Prop.&& False", {
     val g = elements(proved,falsified,undecided)
     forAll(g)(p => (p && falsified) == falsified)
   })
-  specify("Prop.Prop.&& Undecided", {
+  specify("Prop.&& Undecided", {
     val g = elements(proved,undecided)
     forAll(g)(p => (p && undecided) === undecided)
   })
-  specify("Prop.Prop.&& Right prio", (sz: Int) => {
+  specify("Prop.&& Right prio", (sz: Int) => {
     val p = proved.addArg(Arg("","RHS",0)) && proved.addArg(Arg("","LHS",0))
     p(Gen.Params(sz,StdRand)) match {
       case Some(r) if r.args == Arg("","RHS",0)::Nil => true
@@ -115,38 +117,38 @@ object Prop extends Properties {
     }
   })
 
-  specify("Prop.Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
+  specify("Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
     (p1 || p2) === (p2 || p1)
   )
-  specify("Prop.Prop.|| Exception", (p: Prop) =>
+  specify("Prop.|| Exception", (p: Prop) =>
     (p || exception(null)) == exception(null)
   )
-  specify("Prop.Prop.|| Identity", (p: Prop) =>
+  specify("Prop.|| Identity", (p: Prop) =>
     (p || falsified) === p
   )
-  specify("Prop.Prop.|| True", {
+  specify("Prop.|| True", {
     val g = elements(proved,falsified,undecided)
     forAll(g)(p => (p || proved) == proved)
   })
-  specify("Prop.Prop.|| Undecided", {
+  specify("Prop.|| Undecided", {
     val g = elements(falsified,undecided)
     forAll(g)(p => (p || undecided) === undecided)
   })
 
-  specify("Prop.Prop.++ Commutativity", (p1: Prop, p2: Prop) =>
+  specify("Prop.++ Commutativity", (p1: Prop, p2: Prop) =>
     (p1 ++ p2) === (p2 ++ p1)
   )
-  specify("Prop.Prop.++ Exception", (p: Prop) =>
+  specify("Prop.++ Exception", (p: Prop) =>
     (p ++ exception(null)) == exception(null)
   )
-  specify("Prop.Prop.++ Identity 1", {
+  specify("Prop.++ Identity 1", {
     val g = elements(falsified,proved,exception(null))
     forAll(g)(p => (p ++ proved) === p)
   })
-  specify("Prop.Prop.++ Identity 2", (p: Prop) =>
+  specify("Prop.++ Identity 2", (p: Prop) =>
     (p ++ undecided) === p
   )
-  specify("Prop.Prop.++ False", {
+  specify("Prop.++ False", {
     val g = elements(falsified,proved,undecided)
     forAll(g)(p => (p ++ falsified) === falsified)
   })
@@ -231,7 +233,7 @@ object Prop extends Properties {
     property(if(f.isDefinedAt(x)) f(x) else falsified)
 
 
-  specify("Prop.all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
+  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
@@ -241,7 +243,7 @@ object Prop extends Properties {
   )
 
 
-  specify("Prop.exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
+  specify("exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */

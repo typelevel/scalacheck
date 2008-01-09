@@ -5,10 +5,12 @@ package org.scalacheck
  *  collection through the <code>specify</code> methods. */
 trait Properties {
 
-  import scala.collection.Map
+  import scala.collection._
   import scala.testing.SUnit.TestCase
 
-  private var properties = scala.collection.immutable.Map.empty[String, Prop]
+  val name: String
+
+  private val properties = mutable.Map.empty[String,Prop]
 
   /** Adds a property to this property collection */
   def specify(propName: String, prop: => Prop) =
@@ -72,7 +74,7 @@ trait Properties {
   ): Unit = addProp(propName,Prop.property(f))
 
   private def addProp(propName: String, prop: Prop) =
-    properties = properties.update(propName, prop)
+    properties += ((name + "." + propName, prop))
 
   type NamedPropEvalCallback = (String,Option[Prop.Result],Int,Int) => Unit
   type TestStatsCallback = (String,Test.Stats) => Unit
@@ -80,7 +82,7 @@ trait Properties {
   /** Tests all properties with the given testing parameters, and returns
    *  the test results.
    */
-  def checkProperties(prms: Test.Params): Map[String,Test.Stats] =
+  def checkProperties(prms: Test.Params): immutable.Map[String,Test.Stats] =
     checkProperties(prms, (n,r,s,d) => (), (n,s) => ())
 
   /** Tests all properties with the given testing parameters, and returns
@@ -89,19 +91,20 @@ trait Properties {
    *  time a property has been fully tested.
    */
   def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback
-  ): Map[String,Test.Stats] = properties transform { case (pName,p) =>
-    val stats = Test.check(prms,p,propCallback(pName,_,_,_))
-    testCallback(pName,stats)
-    stats
-  }
+    testCallback: TestStatsCallback): immutable.Map[String,Test.Stats] = 
+    immutable.Map(properties.toStream: _*).transform { 
+      case (pName,p) =>
+       val stats = Test.check(prms,p,propCallback(pName,_,_,_))
+       testCallback(pName,stats)
+       stats
+    }
 
   import ConsoleReporter._
 
   /** Tests all properties with default testing parameters, and returns
    *  the test results. The results are also printed on the console during
    *  testing. */
-  def checkProperties(): Map[String,Test.Stats] =
+  def checkProperties(): immutable.Map[String,Test.Stats] =
     checkProperties(Test.defaultParams, propReport, testReport)
 
   private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {

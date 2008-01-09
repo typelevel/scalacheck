@@ -6,6 +6,8 @@ object Props extends org.scalacheck.Properties {
   import org.scalacheck.Test._
   import org.scalacheck.Arbitrary._
 
+  val name = "Props"
+
   val passing = property(1 + 1 == 2)
 
   val failing = property( (n: Int) => false )
@@ -89,6 +91,17 @@ val testReport: (String,Test.Stats) => Unit =
     case _ => ConsoleReporter.testReport(n,s)
   }
 
-Props.checkProperties(prms, propReport, testReport)
-org.scalacheck.Gen.checkProperties(prms, propReport, testReport)
-org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
+val res =
+  Props.checkProperties(prms, propReport, testReport) ++
+  org.scalacheck.Gen.checkProperties(prms, propReport, testReport) ++
+  org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
+
+val passed = res.values.filter(_.result.passed).toList.size
+val failed = res.values.filter(!_.result.passed).toList.size
+
+if(verbose || failed > 0) println
+
+printf("{0} test{1} PASSED\n", passed, if(passed != 1) "s" else "")
+printf("{0} test{1} FAILED\n", failed, if(failed != 1) "s" else "")
+
+exit(failed)
