@@ -315,6 +315,14 @@ object Prop extends Properties {
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
   }
 
+  /** A property that holds if at least one of the given generators
+   *  fails generating a value */
+  def someFailing[T](gs: Iterable[Gen[T]]) = exists(gs.map(_ === fail))
+
+  /** A property that holds iff none of the given generators
+   *  fails generating a value */
+  def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
+
 
 
   // Implicit defs
