@@ -17,9 +17,7 @@
   </path>
 
   <path id="svnant.classpath">
-    <pathelement location="support/svnant/svnant.jar"/>
-    <pathelement location="support/svnant/svnClientAdapter.jar"/>
-    <pathelement location="support/svnant/svnjavahl.jar"/>
+    <fileset dir="support/svnant" includes="**/*.jar"/>
   </path>
 
   <typedef resource="org/tigris/subversion/svnant/svnantlib.xml"
@@ -57,7 +55,7 @@
   </target>
 
   <target name="build" depends="prepare">
-    <scalac srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
+    <scalac addParams="-g" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
   </target>
 
   <target name="test" depends="build">
@@ -90,7 +88,6 @@
     <jar destfile="dist/${name}-${version}.jar">
       <fileset dir="build">
         <include name="org/**"/>
-        <exclude name="doc/**"/>
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${author}"/>
@@ -161,5 +158,5 @@
       <arg value="dist/scalacheck-${version}.sbp"/>
     </exec>
   </target>
-
+  
 </project>

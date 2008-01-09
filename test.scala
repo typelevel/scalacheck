@@ -91,10 +91,22 @@ val testReport: (String,Test.Stats) => Unit =
     case _ => ConsoleReporter.testReport(n,s)
   }
 
-val res =
+
+def measure[T](t: => T): (T,Long,Long) = {
+  val start = System.currentTimeMillis
+  val x = t
+  val stop = System.currentTimeMillis
+  (x,start,stop)
+}
+
+val (res,start,stop) = measure {
   Props.checkProperties(prms, propReport, testReport) ++
   org.scalacheck.Gen.checkProperties(prms, propReport, testReport) ++
   org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
+}
+
+val min = (stop-start)/(60*1000)
+val sec = ((stop-start)-(60*1000*min)) / 1000d
 
 val passed = res.values.filter(_.result.passed).toList.size
 val failed = res.values.filter(!_.result.passed).toList.size
@@ -103,5 +115,6 @@ if(verbose || failed > 0) println
 
 printf("{0} test{1} PASSED\n", passed, if(passed != 1) "s" else "")
 printf("{0} test{1} FAILED\n", failed, if(failed != 1) "s" else "")
+printf("Elapsed time: {0} min {1} sec\n", min, sec)
 
 exit(failed)
