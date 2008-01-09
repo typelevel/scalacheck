@@ -98,6 +98,15 @@
   </target>
 
 
+  <target name="test" depends="build">
+    <exec executable="scala" failonerror="true">
+      <arg value="-classpath"/>
+      <arg value="${build}"/>
+      <arg value="test.scala"/>
+    </exec>
+  </target>
+
+
   <target name="doc" depends="prepare">
 
     <copy todir="${build.doc}">

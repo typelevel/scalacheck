@@ -1,5 +1,3 @@
-package test
-
 object Props extends org.scalacheck.Properties {
 
   import org.scalacheck._
@@ -71,15 +69,26 @@ object Props extends org.scalacheck.Properties {
 
 }
 
-object TestScalaCheck extends Application {
+import org.scalacheck._
 
-  import org.scalacheck._
-  import ConsoleReporter._
+val verbose = args.contains("-v")
+val large = args.contains("-l")
 
-  val prms = Test.Params(100, 500, 0, 10000, StdRand)
+val prms = 
+  if(large) Test.Params(1000, 5000, 0, 10000, StdRand)
+  else Test.defaultParams
 
-  Props.checkProperties(prms, propReport, testReport)
-  org.scalacheck.Gen.checkProperties(prms, propReport, testReport)
-  org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
+val propReport: (String,Option[Prop.Result],Int,Int) => Unit = 
+  if(verbose) ConsoleReporter.propReport 
+  else (n, r, i, j) => () 
 
-}
+val testReport: (String,Test.Stats) => Unit = 
+  if(verbose) ConsoleReporter.testReport
+  else (n, s) => s match {
+    case Test.Stats(Test.Passed(), _, _) => {}
+    case _ => ConsoleReporter.testReport(n,s)
+  }
+
+Props.checkProperties(prms, propReport, testReport)
+org.scalacheck.Gen.checkProperties(prms, propReport, testReport)
+org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
