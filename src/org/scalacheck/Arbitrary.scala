@@ -75,6 +75,11 @@ object Arbitrary {
     }
   }
 
+  /** Arbitrary instance of Throwable */
+  implicit def arbitraryThrowable(x: Arb[Throwable]) = new Arbitrary[Throwable] {
+    def getArbitrary = value(new Exception)
+  }
+
   /** Arbitrary instance of Double */
   implicit def arbitraryDouble(x: Arb[Double]) = new Arbitrary[Double] {
     def getArbitrary = sized (s => choose(-s: Double, s: Double))

@@ -99,7 +99,8 @@ object Prop extends Properties {
 
   val name = "Prop"
 
-  // Properties for the Prop class
+
+  // Specifications for the Prop class
 
   specify("Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
     (p1 && p2) === (p2 && p1)
@@ -163,7 +164,6 @@ object Prop extends Properties {
   })
 
 
-
   // Types
 
   /** The result of evaluating a property */
@@ -203,6 +203,27 @@ object Prop extends Properties {
   /** Evaluating the property with the given arguments raised an exception */
   case class Exception(as: List[Arg], e: Throwable) extends Result(as)
 
+  /** Boolean with support for implication */
+  class ExtendedBoolean(b: Boolean) {
+    /** Implication */
+    def ==>(p: => Prop) = Prop.==>(b,p)
+  }
+
+  /** Any with support for implication and iff */
+  class ExtendedAny[T](x: T) {
+    /** Implication with several conditions */
+    def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
+    def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
+  }
+
+
+  // Implicit defs
+
+  implicit def extendedBoolean(b: Boolean) = new ExtendedBoolean(b)
+
+  implicit def extendedAny[T](x: T) = new ExtendedAny(x)
+
+  implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
 
   // Private support functions
@@ -217,16 +238,25 @@ object Prop extends Properties {
 
   /** A property that never is proved or falsified */
   lazy val undecided: Prop = constantProp(None, "undecided")
+  specify("undecided", (prms: Gen.Params) => undecided(prms) == None)
 
   /** A property that always is false */
   lazy val falsified: Prop = constantProp(Some(False(Nil)), "falsified")
+  specify("falsified", (prms: Gen.Params) => falsified(prms) iff {
+    case Some(_: False) => true
+  })
 
   /** A property that always is true */
   lazy val proved: Prop = constantProp(Some(True(Nil)), "proved");
+  specify("proved", (prms: Gen.Params) => proved(prms) iff {
+    case Some(_: True) => true
+  })
 
   /** A property that denotes an exception */
-  def exception(e: Throwable): Prop =
-    constantProp(Some(Exception(Nil,e)), "exception")
+  def exception(e: Throwable) = constantProp(Some(Exception(Nil,e)),"exception")
+  specify("exception",(prms:Gen.Params, e:Throwable) => exception(e)(prms) iff {
+    case Some(Exception(_,f)) if f == e => true
+  })
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = new Prop(prms => f(prms.size)(prms))
@@ -238,11 +268,10 @@ object Prop extends Properties {
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
     property(if(f.isDefinedAt(x)) f(x) else undecided)
 
+  /** Property holds only if the given partial function is defined at
+   *  <code>x</code>, and returns a property that holds */
   def iff[T](x: T, f: PartialFunction[T,Prop]): Prop =
     property(if(f.isDefinedAt(x)) f(x) else falsified)
-
-
-  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
@@ -250,9 +279,7 @@ object Prop extends Properties {
     if(ps.forall(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
     else falsified(prms)
   )
-
-
-  specify("exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
+  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
@@ -260,6 +287,7 @@ object Prop extends Properties {
     if(ps.exists(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
     else falsified(prms)
   )
+  specify("exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
 
   /** Universal quantifier */
   def forAll[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
@@ -314,18 +342,6 @@ object Prop extends Properties {
   def forAllDefaultShrink[A,P](g: Gen[A])(f: A => P)
     (implicit p: P => Prop, a: Arb[A] => Arbitrary[A]) = forAllShrink(g,shrink[A])(f)
 
-
-  class ExtendedBoolean(b: Boolean) {
-    /** Implication */
-    def ==>(p: => Prop) = Prop.==>(b,p)
-  }
-
-  class ExtendedAny[T](x: T) {
-    /** Implication with several conditions */
-    def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
-    def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
-  }
-
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
   def someFailing[T](gs: Iterable[Gen[T]]) = exists(gs.map(_ === fail))
@@ -334,30 +350,19 @@ object Prop extends Properties {
    *  fails generating a value */
   def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
 
-
-
-  // Implicit defs
-
-  implicit def extendedBoolean(b: Boolean) = new ExtendedBoolean(b)
-  implicit def extendedAny[T](x: T) = new ExtendedAny(x)
-
-
-
-  // Implicit properties for common types
-
-  implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
-
-
+  /** Wraps and protects a property */
   def property[P <% Prop](p: => P): Prop = new Prop(prms =>
     (try { p: Prop } catch { case e => exception(e) })(prms)
   )
 
+  /** Converts a function into a property */
   def property[A1,P] (
     f:  A1 => P)(implicit
     p: P => Prop,
     a1: Arb[A1] => Arbitrary[A1]
   ) = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
 
+  /** Converts a function into a property */
   def property[A1,A2,P] (
     f:  (A1,A2) => P)(implicit
     p: P => Prop,
@@ -365,6 +370,7 @@ object Prop extends Properties {
     a2: Arb[A2] => Arbitrary[A2]
   ): Prop = property((a: A1) => property(f(a, _:A2)))
 
+  /** Converts a function into a property */
   def property[A1,A2,A3,P] (
     f:  (A1,A2,A3) => P)(implicit
     p: P => Prop,
@@ -373,6 +379,7 @@ object Prop extends Properties {
     a3: Arb[A3] => Arbitrary[A3]
   ): Prop = property((a: A1) => property(f(a, _:A2, _:A3)))
 
+  /** Converts a function into a property */
   def property[A1,A2,A3,A4,P] (
     f:  (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
@@ -382,6 +389,7 @@ object Prop extends Properties {
     a4: Arb[A4] => Arbitrary[A4]
   ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4)))
 
+  /** Converts a function into a property */
   def property[A1,A2,A3,A4,A5,P] (
     f:  (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
@@ -392,6 +400,7 @@ object Prop extends Properties {
     a5: Arb[A5] => Arbitrary[A5]
   ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5)))
 
+  /** Converts a function into a property */
   def property[A1,A2,A3,A4,A5,A6,P] (
     f:  (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
