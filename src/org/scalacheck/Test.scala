@@ -9,9 +9,10 @@
 
 package org.scalacheck
 
-import Util._
-
 object Test {
+
+  import Util._
+  import ConsoleReporter.{testReport, propReport}
 
   // Types
 
@@ -48,11 +49,11 @@ object Test {
    *  discarded tests, respectively */
   type PropEvalCallback = (Int,Int) => Unit
 
+  /** Default testing parameters */
+  val defaultParams = Params(100,500,0,100,StdRand)
 
 
   // Testing functions
-
-  val defaultParams = Params(100,500,0,100,StdRand)
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results. */
@@ -68,9 +69,7 @@ object Test {
       val size: Float = if(s == 0 && d == 0) prms.minSize else
         sz + ((prms.maxSize-sz)/(prms.minSuccessfulTests-s))
 
-      def genprms = Gen.Params(size.round, prms.rand)
-
-      secure(p(genprms)) match {
+      secure(p(Gen.Params(size.round, prms.rand))) match {
         case Left(propRes) =>
           propRes match {
             case None =>
@@ -91,12 +90,16 @@ object Test {
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results. <code>propCallback</code> is a function which is
-   *  called each time the property is evaluted. Uses actors for execution, 
-   *  unless <code>workers</code> is zero. */
-  def check(prms: Params, p: Prop, propCallback: PropEvalCallback, workers: Int, wrkSize: Int): Stats =
+   *  called each time the property is evaluted. Uses actors for parallel
+   *  test execution, unless <code>workers</code> is zero.
+   *  <code>worker</code> specifies how many working actors should be used.
+   *  <code>wrkSize</code> specifies how many tests each worker should
+   *  be scheduled with. */
+  def check(prms: Params, p: Prop, propCallback: PropEvalCallback,
+    workers: Int, wrkSize: Int
+  ): Stats =
     if(workers <= 0) check(prms,p,propCallback)
-    else 
-    {
+    else {
       import scala.actors._
       import Actor._
       import Prop.{True,False,Exception}
@@ -109,41 +112,38 @@ object Test {
         var size: Float = prms.minSize
         var w = workers
         var stats: Stats = null
-        loop {
-          react {
-            case 'wrkstop => w -= 1
-            case 'get if w == 0 =>
-              reply(stats)
-              exit()
-            case 'params => if(stats != null) reply() else {
-              reply((s,d,size))
-              size += wrkSize*((prms.maxSize-size)/(prms.minSuccessfulTests-s))
-            }
-            case S(res, sDelta, dDelta) if stats == null => 
-              s += sDelta
-              d += dDelta
-              if(res != null) stats = Stats(res,s,d)
-              else {
-                if(s >= prms.minSuccessfulTests) stats = Stats(Passed,s,d)
-                else if(d >= prms.maxDiscardedTests) stats = Stats(Exhausted,s,d)
-                else propCallback(s,d)
-              }
+        loop { react {
+          case 'wrkstop => w -= 1
+          case 'get if w == 0 =>
+            reply(stats)
+            exit()
+          case 'params => if(stats != null) reply() else {
+            reply((s,d,size))
+            size += wrkSize*((prms.maxSize-size)/(prms.minSuccessfulTests-s))
           }
-        }
+          case S(res, sDelta, dDelta) if stats == null =>
+            s += sDelta
+            d += dDelta
+            if(res != null) stats = Stats(res,s,d)
+            else {
+              if(s >= prms.minSuccessfulTests) stats = Stats(Passed,s,d)
+              else if(d >= prms.maxDiscardedTests) stats = Stats(Exhausted,s,d)
+              else propCallback(s,d)
+            }
+        }}
       }
 
       def worker = actor {
         var stop = false
         while(!stop) (server !? 'params) match {
-          case (s: Int, d: Int, sz: Float) => 
+          case (s: Int, d: Int, sz: Float) =>
             var s2 = s
             var d2 = d
             var size = sz
             var i = 0
             var res: Result = null
-            def genprms = Gen.Params(size.round, prms.rand)
             while(res == null && i < wrkSize) {
-              secure(p(genprms)) match {
+              secure(p(Gen.Params(size.round, prms.rand))) match {
                 case Left(propRes) => propRes match {
                   case None =>
                     d2 += 1
@@ -168,8 +168,6 @@ object Test {
       for(_ <- 1 to workers) worker
       (server !? 'get).asInstanceOf[Stats]
     }
-
-  import ConsoleReporter._
 
   /** Tests a property and prints results to the console */
   def check(p: Prop): Stats = testReport(check(defaultParams, p, propReport))
