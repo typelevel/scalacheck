@@ -85,14 +85,14 @@ trait Properties {
   private def addProp(propName: String, prop: Prop) =
     properties += ((name + "." + propName, prop))
 
-  type NamedPropEvalCallback = (String,Option[Prop.Result],Int,Int) => Unit
+  type NamedPropEvalCallback = (String,Int,Int) => Unit
   type TestStatsCallback = (String,Test.Stats) => Unit
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results.
    */
   def checkProperties(prms: Test.Params): immutable.Map[String,Test.Stats] =
-    checkProperties(prms, (n,r,s,d) => (), (n,s) => ())
+    checkProperties(prms, (n,s,d) => (), (n,s) => ())
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
@@ -103,7 +103,21 @@ trait Properties {
     testCallback: TestStatsCallback): immutable.Map[String,Test.Stats] = 
     immutable.Map(properties.toStream: _*).transform { 
       case (pName,p) =>
-       val stats = Test.check(prms,p,propCallback(pName,_,_,_))
+       val stats = Test.check(prms,p,propCallback(pName,_,_))
+       testCallback(pName,stats)
+       stats
+    }
+
+  /** Tests all properties with the given testing parameters, and returns
+   *  the test results. <code>f</code> is a function which is called each
+   *  time a property is evaluted. <code>g</code> is a function called each
+   *  time a property has been fully testedi. Uses actors for execution.
+   */
+  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
+    testCallback: TestStatsCallback, workers: Int, wrkSize: Int): immutable.Map[String,Test.Stats] = 
+    immutable.Map(properties.toStream: _*).transform { 
+      case (pName,p) =>
+       val stats = Test.check(prms,p,propCallback(pName,_,_),workers,wrkSize)
        testCallback(pName,stats)
        stats
     }

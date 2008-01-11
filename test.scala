@@ -75,14 +75,20 @@ import org.scalacheck._
 
 val verbose = args.contains("-v")
 val large = args.contains("-l")
+val wrkSize = if(large) 200 else 20
+val workers = 
+  if(args.contains("-4")) 4 
+  else if(args.contains("-2")) 2 
+  else if(args.contains("-1")) 1 
+  else 0
 
 val prms = 
   if(large) Test.Params(1000, 5000, 0, 10000, StdRand)
   else Test.defaultParams
 
-val propReport: (String,Option[Prop.Result],Int,Int) => Unit = 
+val propReport: (String,Int,Int) => Unit = 
   if(verbose) ConsoleReporter.propReport 
-  else (n, r, i, j) => () 
+  else (n, i, j) => () 
 
 val testReport: (String,Test.Stats) => Unit = 
   if(verbose) ConsoleReporter.testReport
@@ -100,9 +106,9 @@ def measure[T](t: => T): (T,Long,Long) = {
 }
 
 val (res,start,stop) = measure {
-  Props.checkProperties(prms, propReport, testReport) ++
-  org.scalacheck.Gen.checkProperties(prms, propReport, testReport) ++
-  org.scalacheck.Prop.checkProperties(prms, propReport, testReport)
+  Props.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
+  org.scalacheck.Gen.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
+  org.scalacheck.Prop.checkProperties(prms, propReport, testReport, workers, wrkSize)
 }
 
 val min = (stop-start)/(60*1000)

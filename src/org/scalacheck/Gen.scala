@@ -205,15 +205,15 @@ object Gen extends Properties {
   /** Chooses one of the given values, with a weighted random distribution. */
   def elementsFreq[T](vs: (Int, T)*): Gen[T] =
     frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
-  specify("elements", { l: List[Int] =>
-    if(l.isEmpty) elements(l: _*) == fail
-    else forAll(elements(l: _*))(l.contains)
-  })
 
   /** A generator that returns a random element from a list */
   def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
     i <- choose(0,xs.length-1)
   } yield xs(i)
+  specify("elements", { l: List[Int] =>
+    if(l.isEmpty) elements(l: _*) === fail
+    else forAll(elements(l: _*))(l.contains)
+  })
 
   /** Picks a random generator from a list */
   def oneOf[T](gs: Gen[T]*) = if(gs.isEmpty) fail else for {

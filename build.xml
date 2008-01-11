@@ -55,7 +55,7 @@
   </target>
 
   <target name="build" depends="prepare">
-    <scalac addParams="-g" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
+    <scalac addParams="-unchecked" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
   </target>
 
   <target name="test" depends="build">

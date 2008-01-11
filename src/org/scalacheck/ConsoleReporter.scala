@@ -36,14 +36,14 @@ object ConsoleReporter {
     strs.mkString("\n")
   }
 
-  def propReport(res: Option[Prop.Result], s: Int, d: Int) =
+  def propReport(s: Int, d: Int) =
   {
     if(d == 0) printf("\rPassed {0} tests\r", s)
     else printf("\rPassed {0} tests; {1} discarded\r", s, d)
     Console.flush
   }
 
-  def propReport(pName: String, res: Option[Prop.Result], s: Int, d: Int) =
+  def propReport(pName: String, s: Int, d: Int) =
   {
     if(d == 0) printf("\r  {1}: Passed {0} tests\r", s, pName)
     else printf("\r  {2}: Passed {0} tests; {1} discarded\r", s, d, pName)
