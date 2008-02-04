@@ -297,14 +297,16 @@ object Prop extends Properties {
 
   /** Universal quantifier, shrinks failed arguments with given shrink
    *  function */
-  def forAllShrink[A, P <% Prop](g: Gen[A],shrink: A => Stream[A])(f: A => P) =
+  def forAllShrink[A, P <% Prop](g: Gen[A],shrink: A => Stream[A])(f: A => P): Prop =
     new Prop((prms: Gen.Params) => {
 
       import Stream._
 
       def getFirstFail(xs: Stream[A], shrinks: Int) = {
-        val results = xs.map(x =>
-          f(x)(prms).map(r => (x, r.addArg(Arg(g.label,x,shrinks)))))
+        val results = xs.map { x =>
+          val p = property(f(x))
+          p(prms).map(r => (x, r.addArg(Arg(g.label,x,shrinks))))
+        }
         results match {
           case Stream.empty => None
           case _ => results.dropWhile(!isFailure(_)) match {
