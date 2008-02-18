@@ -103,6 +103,9 @@ class Gen[+T](g: Gen.Params => Option[T]) {
     }
   )
 
+  /** Generates a sample value by using default parameters */
+  def sample: Option[T] = apply(Gen.defaultParams)
+
 }
 
 
