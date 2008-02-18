@@ -199,6 +199,11 @@ object Arbitrary {
       override def getArbitrary = arbitrary[List[A]].map(xs => Stream.fromIterator(xs.elements))
     }
 
+  implicit def arbitraryArray[A](x: Arb[Array[A]])(implicit aa: Arb[A] => Arbitrary[A]): Arbitrary[Array[A]] = 
+    new Arbitrary[Array[A]] {
+      override def getArbitrary = arbitrary[List[A]].map(_.toArray)
+    }
+
   /** Arbitrary instance of 2-tuple */
   implicit def arbitraryTuple2[T1,T2] (
     x: Arb[Tuple2[T1,T2]])(implicit
