@@ -27,7 +27,7 @@ object Test {
   abstract sealed class Result { def passed = false }
 
   /** The property test passed */
-  case class Passed extends Result { override def passed = true }
+  case object Passed extends Result { override def passed = true }
 
   /** The property was proved wrong with the given concrete arguments.  */
   case class Failed(args: List[Arg]) extends Result
@@ -35,7 +35,7 @@ object Test {
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
    *  property evaluations. */
-  case class Exhausted extends Result
+  case object Exhausted extends Result
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */

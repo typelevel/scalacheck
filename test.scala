@@ -35,14 +35,14 @@ object Props extends org.scalacheck.Properties {
 
   specify("propPassing", (prms: Test.Params) =>
     check(prms, passing).result match {
-      case _:Passed => true
+      case Passed => true
       case _ => false
     }
   )
 
   specify("propExhausted", (prms: Test.Params) =>
     check(prms, exhausted).result match {
-      case _:Exhausted => true
+      case Exhausted => true
       case _ => false
     }
   )
@@ -93,7 +93,7 @@ val propReport: (String,Int,Int) => Unit =
 val testReport: (String,Test.Stats) => Unit = 
   if(verbose) ConsoleReporter.testReport
   else (n, s) => s match {
-    case Test.Stats(Test.Passed(), _, _) => {}
+    case Test.Stats(Test.Passed, _, _) => {}
     case _ => ConsoleReporter.testReport(n,s)
   }
 

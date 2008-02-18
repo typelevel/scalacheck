@@ -12,11 +12,11 @@ package org.scalacheck
 object ConsoleReporter {
 
   def prettyTestStats(stats: Test.Stats) = stats.result match {
-    case Test.Passed() =>
+    case Test.Passed =>
       "OK, passed " + stats.succeeded + " tests."
     case Test.Failed(args) =>
       "Falsified after "+stats.succeeded+" passed tests:\n"+prettyArgs(args)
-    case Test.Exhausted() =>
+    case Test.Exhausted =>
       "Gave up after only " + stats.succeeded + " passed tests. " +
       stats.discarded + " tests were discarded."
     case Test.PropException(args,e) =>
@@ -72,9 +72,9 @@ object ConsoleReporter {
   def testStatsEx(msg: String, stats: Test.Stats) = {
     lazy val m = if(msg.isEmpty) "" else msg + ": "
     stats.result match {
-      case Test.Passed() => {}
+      case Test.Passed => {}
       case f @ Test.Failed(_) => error(m + f)
-      case Test.Exhausted() => {}
+      case Test.Exhausted => {}
       case f @ Test.GenException(_) => error(m + f)
       case f @ Test.PropException(_, _) => error(m + f)
     }

@@ -31,7 +31,7 @@
   <!-- Project properties -->
 
   <property name="name"          value="${ant.project.name}"/>
-  <property name="version.nr"    value="1.1.1"/>
+  <property name="version.nr"    value="1.2"/>
   <property name="version"       value="${version.nr}dev-r${revision.max-with-flags}"/>
   <property name="author"        value="Rickard Nilsson"/>
 
