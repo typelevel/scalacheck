@@ -26,11 +26,28 @@ The main features of ScalaCheck is:
 
 
 This release of ScalaCheck is compatible with (and requires) Scala 2.7. It
-introduces some minor additions and fixes since ScalaCheck 1.1.1. The most
-notable feature addition is support for parallel test execution on systems with
-multiple processor cores, by utilization of the Scala Actors library. Please
-see the change history on ScalaCheck's project site for more details on the 
-changes and additions in this release.
+introduces some additions, improvements and fixes since ScalaCheck 1.1.1. The
+most notable feature addition is support for parallel test execution on systems
+with multiple processor cores, by utilization of the Scala Actors library. 
+
+Due to improvements in Scala's type inferencer the Arbitrary mechanism has been
+improved, and a Shrink trait has been added. In short, to define custom
+Arbitrary and Shrink instances in ScalaCheck 1.2, use the following style:
+
+  implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
+    Arbitrary(Gen.oneOf(Gen.value(None), arbitrary[T].map(Some(_))))
+
+  implicit def shrinkOption[T](implicit s: Shrink[T]): Shrink[Option[T]] =
+    Shrink {
+      case None => Stream.empty
+      case Some(x) => shrink(x).map(Some(_))
+    } 
+
+See the user guide for detailed examples of implicit Arbitrary and Shrink
+instances.
+
+Please see the change history on ScalaCheck's project site for more details on
+the changes and additions in this release.
 
 
 ScalaCheck availability:
