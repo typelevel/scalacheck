@@ -223,9 +223,9 @@ object Arbitrary {
       t5 <- arbitrary[T5]
       t6 <- arbitrary[T6]
     } yield (t1,t2,t3,t4,t5,t6))
-
+  
   /** Arbitrary instance of 7-tuple */
-  implicit def arbTuple6[T1,T2,T3,T4,T5,T6,T7](implicit
+  implicit def arbTuple7[T1,T2,T3,T4,T5,T6,T7](implicit
     a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
     a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7]
   ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7)] =
@@ -240,7 +240,7 @@ object Arbitrary {
     } yield (t1,t2,t3,t4,t5,t6,t7))
 
   /** Arbitrary instance of 8-tuple */
-  implicit def arbTuple6[T1,T2,T3,T4,T5,T6,T7,T8](implicit
+  implicit def arbTuple8[T1,T2,T3,T4,T5,T6,T7,T8](implicit
     a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
     a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8]
   ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8)] =
@@ -255,8 +255,8 @@ object Arbitrary {
       t8 <- arbitrary[T8]
     } yield (t1,t2,t3,t4,t5,t6,t7,t8))
 
-  /** Arbitrary instance of 9-tuple */
-  implicit def arbTuple6[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
+  /** Arbitrary instance of 9-tuple */    
+  implicit def arbTuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
     a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
     a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8],
     a9: Arbitrary[T9]
@@ -272,5 +272,4 @@ object Arbitrary {
       t8 <- arbitrary[T8]
       t9 <- arbitrary[T9]
     } yield (t1,t2,t3,t4,t5,t6,t7,t8,t9))
-
 }
