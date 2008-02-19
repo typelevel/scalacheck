@@ -16,6 +16,8 @@ trait Properties {
 
   import scala.collection._
   import scala.testing.SUnit.TestCase
+  import Arbitrary._
+  import Shrink._
 
   val name: String
 
@@ -29,57 +31,57 @@ trait Properties {
   def specify[A1,P] (
     propName: String, f: A1 => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1]
+    a1: Arbitrary[A1], s1: Shrink[A1]
   ): Unit = addProp(propName,Prop.property(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,P] (
     propName: String, f: (A1,A2) => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1],
-    a2: Arb[A2] => Arbitrary[A2]
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2]
   ): Unit = addProp(propName,Prop.property(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,P] (
     propName: String, f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1],
-    a2: Arb[A2] => Arbitrary[A2],
-    a3: Arb[A3] => Arbitrary[A3]
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],
+    a3: Arbitrary[A3], s3: Shrink[A3]
   ): Unit = addProp(propName,Prop.property(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,P] (
     propName: String, f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1],
-    a2: Arb[A2] => Arbitrary[A2],
-    a3: Arb[A3] => Arbitrary[A3],
-    a4: Arb[A4] => Arbitrary[A4]
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],
+    a3: Arbitrary[A3], s3: Shrink[A3],
+    a4: Arbitrary[A4], s4: Shrink[A4]
   ): Unit = addProp(propName,Prop.property(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,A5,P] (
     propName: String, f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1],
-    a2: Arb[A2] => Arbitrary[A2],
-    a3: Arb[A3] => Arbitrary[A3],
-    a4: Arb[A5] => Arbitrary[A5],
-    a5: Arb[A4] => Arbitrary[A4]
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],
+    a3: Arbitrary[A3], s3: Shrink[A3],
+    a4: Arbitrary[A4], s4: Shrink[A4],
+    a5: Arbitrary[A5], s5: Shrink[A5]
   ): Unit = addProp(propName,Prop.property(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,A5,A6,P] (
     propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
-    a1: Arb[A1] => Arbitrary[A1],
-    a2: Arb[A2] => Arbitrary[A2],
-    a3: Arb[A3] => Arbitrary[A3],
-    a4: Arb[A4] => Arbitrary[A4],
-    a5: Arb[A5] => Arbitrary[A5],
-    a6: Arb[A6] => Arbitrary[A6]
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],
+    a3: Arbitrary[A3], s3: Shrink[A3],
+    a4: Arbitrary[A4], s4: Shrink[A4],
+    a5: Arbitrary[A5], s5: Shrink[A5],
+    a6: Arbitrary[A6], s6: Shrink[A6]
   ): Unit = addProp(propName,Prop.property(f))
 
   private def addProp(propName: String, prop: Prop) =

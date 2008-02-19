@@ -65,7 +65,7 @@ object Props extends org.scalacheck.Properties {
     check(prms, shrinked).result match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_)::Nil) => 
         x == 0 && y == 0 && z == 0
-      case _ => false
+      case x => false
     }
   )
 
