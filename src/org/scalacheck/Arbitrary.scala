@@ -25,9 +25,9 @@ sealed trait Arbitrary[T] {
  *
  *  <p>
  *  <code>
- *    val myProp = Prop.property { myClass: MyClass =&gt;
- *      ...
- *    }
+ *    val myProp = Prop.property { myClass: MyClass =&gt;<br />
+ *      ...<br />
+ *    }<br />
  *
  *    val myGen = Arbitrary.arbitrary[MyClass]
  *  </code>
@@ -39,8 +39,7 @@ sealed trait Arbitrary[T] {
  *
  *  <p>
  *  <code>
- *    implicit val arbMyClass: Arbitrary[MyClass] =
- *      Arbitrary(...)
+ *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary(...)
  *  </code>
  *  </p>
  *
