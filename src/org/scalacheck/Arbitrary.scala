@@ -160,6 +160,10 @@ object Arbitrary {
   implicit def arbArray[T](implicit a: Arbitrary[T]): Arbitrary[Array[T]] =
     Arbitrary(containerOf[Array,T](arbitrary[T]))
 
+  import scala.collection.Set
+  implicit def arbSet[T](implicit a: Arbitrary[T]): Arbitrary[Set[T]] =
+    Arbitrary(containerOf[Set,T](arbitrary[T]))
+
   import java.util.ArrayList
   implicit def arbArrayList[T](implicit a: Arbitrary[T]): Arbitrary[ArrayList[T]] =
     Arbitrary(containerOf[ArrayList,T](arbitrary[T]))
