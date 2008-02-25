@@ -70,7 +70,7 @@ object ConsoleReporter {
   def testStatsEx(stats: Test.Stats): Unit = testStatsEx("", stats)
   
   def testStatsEx(msg: String, stats: Test.Stats) = {
-    lazy val m = if(msg.isEmpty) "" else msg + ": "
+    lazy val m = if(msg.length == 0) "" else msg + ": "
     stats.result match {
       case Test.Passed => {}
       case f @ Test.Failed(_) => error(m + f)
