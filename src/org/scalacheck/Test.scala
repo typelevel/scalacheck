@@ -181,4 +181,14 @@ object Test {
   /** Tests a property and prints results to the console */
   def check(p: Prop): Stats = testReport(check(defaultParams, p, propReport))
 
+  /** Tests a property and prints results to the console. The 
+   *  <code>maxDiscarded</code> parameter specifies how many 
+   *  discarded tests that should be allowed before ScalaCheck
+   *  gives up. */
+  def check(p: Prop, maxDiscarded: Int): Stats = {
+    val Params(minSuccessfulTests, _, minSize, maxSize, rand) = defaultParams
+    val params = Params(minSuccessfulTests,maxDiscarded,minSize,maxSize,rand)
+    testReport(check(params, p, propReport))
+  }
+
 }
