@@ -8,7 +8,9 @@ object Props extends org.scalacheck.Properties {
 
   val name = "Props"
 
-  val passing = property(1 + 1 == 2)
+  val proved = property(1 + 1 == 2)
+
+  val passing = property( (n: Int) => n == n )
 
   val failing = property( (n: Int) => false )
 
@@ -36,6 +38,13 @@ object Props extends org.scalacheck.Properties {
   specify("propPassing", (prms: Test.Params) =>
     check(prms, passing).result match {
       case Passed => true
+      case _ => false
+    }
+  )
+
+  specify("propProved", (prms: Test.Params) =>
+    check(prms, proved).result match {
+      case _:Test.Proved => true
       case _ => false
     }
   )

@@ -26,11 +26,17 @@ object Test {
   /** Test result */
   abstract sealed class Result { def passed = false }
 
-  /** The property test passed */
+  /** ScalaCheck found enough cases for which the property holds, so the
+   *  property is considered correct. (It is not proved correct, though). */
   case object Passed extends Result { override def passed = true }
 
+  /** ScalaCheck managed to prove the property correct */
+  sealed case class Proved(args: List[Arg]) extends Result { 
+    override def passed = true 
+  }
+
   /** The property was proved wrong with the given concrete arguments.  */
-  case class Failed(args: List[Arg]) extends Result
+  sealed case class Failed(args: List[Arg]) extends Result
 
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
@@ -39,11 +45,11 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  case class PropException(args: List[Arg], e: Throwable) extends Result
+  sealed case class PropException(args: List[Arg], e: Throwable) extends Result
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */
-  case class GenException(e: Throwable) extends Result
+  sealed case class GenException(e: Throwable) extends Result
 
   /** Property evaluation callback. Takes number of passed and
    *  discarded tests, respectively */
@@ -75,7 +81,8 @@ object Test {
             case None =>
               if(d+1 >= prms.maxDiscardedTests) Stats(Exhausted,s,d+1)
               else { propCallback(s,d+1); stats(s,d+1,size) }
-            case Some(_:Prop.True) =>
+            case Some(Prop.Proof(as)) => Stats(Proved(as),s+1,d)
+            case Some(_: Prop.True) =>
               if(s+1 >= prms.minSuccessfulTests) Stats(Passed,s+1,d)
               else { propCallback(s+1,d); stats(s+1,d,size) }
             case Some(Prop.False(as)) => Stats(Failed(as),s,d)
@@ -102,7 +109,6 @@ object Test {
     else {
       import scala.actors._
       import Actor._
-      import Prop.{True,False,Exception}
 
       case class S(res: Result, s: Int, d: Int)
 
@@ -148,11 +154,14 @@ object Test {
                   case None =>
                     d2 += 1
                     if(d2 >= prms.maxDiscardedTests) res = Exhausted
-                  case Some(_:True) =>
+                  case Some(Prop.Proof(as)) =>
+                    s2 += 1
+                    res = Proved(as)
+                  case Some(_: Prop.True) =>
                     s2 += 1
                     if(s2 >= prms.minSuccessfulTests) res = Passed
-                  case Some(False(as)) => res = Failed(as)
-                  case Some(Exception(as,e)) => res = PropException(as,e)
+                  case Some(Prop.False(as)) => res = Failed(as)
+                  case Some(Prop.Exception(as,e)) => res = PropException(as,e)
                 }
                 case Right(e) => res = GenException(e)
               }

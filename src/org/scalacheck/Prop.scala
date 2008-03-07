@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 /** A property is a generator that generates a property result */
 class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
-  import Prop.{True,False,Exception}
+  import Prop.{Proof,True,False,Exception}
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
@@ -23,6 +23,9 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
   def &&(p: Prop): Prop = combine(p) {
     case (x@Some(_: Exception), _) => x
     case (_, x@Some(_: Exception)) => x
+
+    case (x, Some(_: Proof)) => x
+    case (Some(_: Proof), x) => x
 
     case (x, Some(_: True)) => x
     case (Some(_: True), x) => x
@@ -39,6 +42,9 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
   def ||(p: Prop): Prop = combine(p) {
     case (x@Some(_: Exception), _) => x
     case (_, x@Some(_: Exception)) => x
+
+    case (x@Some(_: Proof), _) => x
+    case (_, x@Some(_: Proof)) => x
 
     case (x@Some(_: True), _) => x
     case (_, x@Some(_: True)) => x
@@ -60,6 +66,9 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
     case (None, x) => x
     case (x, None) => x
+
+    case (x, Some(_: Proof)) => x
+    case (Some(_: Proof), x) => x
 
     case (x, Some(_: True)) => x
     case (Some(_: True), x) => x
@@ -171,6 +180,7 @@ object Prop extends Properties {
   abstract sealed class Result(val args: List[Arg]) {
     override def equals(x: Any) = (this,x) match {
       case (_: True, _: True)   => true
+      case (_: Proof, _: Proof)   => true
       case (_: False, _: False) => true
       case (_: Exception, _: Exception) => true
       case _ => false
@@ -178,6 +188,7 @@ object Prop extends Properties {
 
     def success = this match {
       case _:True => true
+      case _:Proof => true
       case _ => false
     }
 
@@ -188,6 +199,7 @@ object Prop extends Properties {
     }
 
     def addArg(a: Arg) = this match {
+      case Proof(as) => Proof(a::as)
       case True(as) => True(a::as)
       case False(as) => False(a::as)
       case Exception(as,e) => Exception(a::as,e)
@@ -195,14 +207,17 @@ object Prop extends Properties {
 
   }
 
+  /** The property was proved with the given arguments */
+  sealed case class Proof(as: List[Arg]) extends Result(as)
+
   /** The property was true with the given arguments */
-  case class True(as: List[Arg]) extends Result(as)
+  sealed case class True(as: List[Arg]) extends Result(as)
 
   /** The property was false with the given arguments */
-  case class False(as: List[Arg]) extends Result(as)
+  sealed case class False(as: List[Arg]) extends Result(as)
 
   /** Evaluating the property with the given arguments raised an exception */
-  case class Exception(as: List[Arg], e: Throwable) extends Result(as)
+  sealed case class Exception(as: List[Arg], e: Throwable) extends Result(as)
 
   /** Boolean with support for implication */
   class ExtendedBoolean(b: Boolean) {
@@ -234,6 +249,11 @@ object Prop extends Properties {
 
   private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply).label(g.label)
 
+  private def provedToTrue(r: Result) = r match {
+    case Proof(as) => True(as)
+    case _ => r
+  }
+
 
   // Property combinators
 
@@ -247,10 +267,10 @@ object Prop extends Properties {
     case Some(_: False) => true
   })
 
-  /** A property that always is true */
-  lazy val proved: Prop = constantProp(Some(True(Nil)), "proved");
+  /** A property that always is proved */
+  lazy val proved: Prop = constantProp(Some(Proof(Nil)), "proved");
   specify("proved", (prms: Gen.Params) => proved(prms) iff {
-    case Some(_: True) => true
+    case Some(_: Proof) => true
   })
 
   /** A property that denotes an exception */
@@ -284,17 +304,29 @@ object Prop extends Properties {
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def exists(ps: Iterable[Prop]) = new Prop(prms => 
+  def atLeastOne(ps: Iterable[Prop]) = new Prop(prms => 
     if(ps.exists(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
     else falsified(prms)
   )
-  specify("exists", forAll(Gen.listOf1(value(proved)))(l => exists(l))) 
+  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l))) 
+
+  /** Existential quantifier */
+  def exists[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
+    a <- g
+    r <- property(f(a))
+    s <- r match {
+           case _: True => proved
+           case _: Proof => proved
+           case _: False => undecided
+           case Exception(_, e) => exception(e)
+         }
+  } yield s.addArg(Arg(g.label,a,0))
 
   /** Universal quantifier */
   def forAll[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
     a <- g
     r <- property(f(a))
-  } yield r.addArg(Arg(g.label,a,0))
+  } yield provedToTrue(r).addArg(Arg(g.label,a,0))
 
   /** Universal quantifier, shrinks failed arguments with given shrink
    *  function */
@@ -306,7 +338,7 @@ object Prop extends Properties {
       def getFirstFail(xs: Stream[A], shrinks: Int) = {
         val results = xs.map { x =>
           val p = property(f(x))
-          p(prms).map(r => (x, r.addArg(Arg(g.label,x,shrinks))))
+          p(prms).map(r => (x, provedToTrue(r).addArg(Arg(g.label,x,shrinks))))
         }
         results match {
           case Stream.empty => None
@@ -347,7 +379,7 @@ object Prop extends Properties {
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Iterable[Gen[T]]) = exists(gs.map(_ === fail))
+  def someFailing[T](gs: Iterable[Gen[T]]) = atLeastOne(gs.map(_ === fail))
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */

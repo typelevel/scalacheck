@@ -12,6 +12,8 @@ package org.scalacheck
 object ConsoleReporter {
 
   def prettyTestStats(stats: Test.Stats) = stats.result match {
+    case Test.Proved(args) =>
+      "OK, proved property:                   \n" + prettyArgs(args)
     case Test.Passed =>
       "OK, passed " + stats.succeeded + " tests."
     case Test.Failed(args) =>
@@ -72,6 +74,7 @@ object ConsoleReporter {
   def testStatsEx(msg: String, stats: Test.Stats) = {
     lazy val m = if(msg.length == 0) "" else msg + ": "
     stats.result match {
+      case Test.Proved(_) => {}
       case Test.Passed => {}
       case f @ Test.Failed(_) => error(m + f)
       case Test.Exhausted => {}
