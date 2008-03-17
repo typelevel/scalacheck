@@ -16,23 +16,15 @@
     <pathelement location="build"/>
   </path>
 
-  <path id="svnant.classpath">
-    <fileset dir="support/svnant" includes="**/*.jar"/>
-  </path>
-
-  <typedef resource="org/tigris/subversion/svnant/svnantlib.xml"
-           classpathref="svnant.classpath"/>
   <taskdef resource="scala/tools/ant/antlib.xml"
            classpathref="scala.classpath"/>
-
-  <svn><wcVersion path="."/></svn>
 
 
   <!-- Project properties -->
 
   <property name="name"          value="${ant.project.name}"/>
   <property name="version.nr"    value="1.3"/>
-  <property name="version"       value="${version.nr}dev-r${revision.max-with-flags}"/>
+  <property name="version"       value="${version.nr}dev"/>
   <property name="author"        value="Rickard Nilsson"/>
 
 
