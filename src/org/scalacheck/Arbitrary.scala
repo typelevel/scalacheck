@@ -9,8 +9,8 @@
 
 package org.scalacheck
 
-sealed trait Arbitrary[T] {
-  def arbitrary: Gen[T]
+sealed abstract class Arbitrary[T] {
+  val arbitrary: Gen[T]
 }
 
 /** Defines implicit <code>Arbitrary</code> instances for common types.
@@ -61,7 +61,7 @@ object Arbitrary {
 
   /** Creates an Arbitrary instance */
   def apply[T](g: => Gen[T]): Arbitrary[T] = new Arbitrary[T] {
-    override def arbitrary = g
+    lazy val arbitrary = g
   }
 
   /** Returns an arbitrary generator for the type T. */
