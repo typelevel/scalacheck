@@ -57,7 +57,7 @@ sealed abstract class Arbitrary[T] {
 object Arbitrary {
 
   import Gen.{value, choose, sized, elements, listOf, listOf1,
-    frequency, oneOf, elementsFreq, containerOf}
+    frequency, oneOf, elementsFreq, containerOf, resize}
 
   /** Creates an Arbitrary instance */
   def apply[T](g: => Gen[T]): Arbitrary[T] = new Arbitrary[T] {
@@ -138,7 +138,8 @@ object Arbitrary {
 
   /** Arbitrary instance of option type */
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
-    Arbitrary(oneOf(value(None), arbitrary[T].map(Some(_))))
+    //     Arbitrary(sized(n => if(n == 0) value(none[A]) else resize(n - 1, arbitrary[A]).map(some(_))))
+    Arbitrary(sized(n => if(n == 0) value(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
 
   /** Arbitrary instance of any buildable container (such as lists, arrays, 
    *  streams, etc). The maximum size of the container depends on the size 
