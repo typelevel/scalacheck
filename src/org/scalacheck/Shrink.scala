@@ -115,7 +115,7 @@ object Shrink {
     }
 
   /** Shrink instance of 5-tuple */
-  implicit def shrinkTuple4[T1,T2,T3,T4,T5](implicit
+  implicit def shrinkTuple5[T1,T2,T3,T4,T5](implicit
     s1: Shrink[T1], s2: Shrink[T2], s3: Shrink[T3], s4: Shrink[T4], 
     s5: Shrink[T5]
   ): Shrink[(T1,T2,T3,T4,T5)] = 
@@ -128,7 +128,7 @@ object Shrink {
     }
 
   /** Shrink instance of 6-tuple */
-  implicit def shrinkTuple4[T1,T2,T3,T4,T5,T6](implicit
+  implicit def shrinkTuple6[T1,T2,T3,T4,T5,T6](implicit
     s1: Shrink[T1], s2: Shrink[T2], s3: Shrink[T3], s4: Shrink[T4], 
     s5: Shrink[T5], s6: Shrink[T6]
   ): Shrink[(T1,T2,T3,T4,T5,T6)] = 
@@ -142,7 +142,7 @@ object Shrink {
     }
 
   /** Shrink instance of 7-tuple */
-  implicit def shrinkTuple4[T1,T2,T3,T4,T5,T6,T7](implicit
+  implicit def shrinkTuple7[T1,T2,T3,T4,T5,T6,T7](implicit
     s1: Shrink[T1], s2: Shrink[T2], s3: Shrink[T3], s4: Shrink[T4], 
     s5: Shrink[T5], s6: Shrink[T6], s7: Shrink[T7]
   ): Shrink[(T1,T2,T3,T4,T5,T6,T7)] = 
@@ -157,7 +157,7 @@ object Shrink {
     }
 
   /** Shrink instance of 8-tuple */
-  implicit def shrinkTuple4[T1,T2,T3,T4,T5,T6,T7,T8](implicit
+  implicit def shrinkTuple8[T1,T2,T3,T4,T5,T6,T7,T8](implicit
     s1: Shrink[T1], s2: Shrink[T2], s3: Shrink[T3], s4: Shrink[T4], 
     s5: Shrink[T5], s6: Shrink[T6], s7: Shrink[T7], s8: Shrink[T8]
   ): Shrink[(T1,T2,T3,T4,T5,T6,T7,T8)] = 
@@ -173,7 +173,7 @@ object Shrink {
     }
 
   /** Shrink instance of 9-tuple */
-  implicit def shrinkTuple4[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
+  implicit def shrinkTuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
     s1: Shrink[T1], s2: Shrink[T2], s3: Shrink[T3], s4: Shrink[T4], 
     s5: Shrink[T5], s6: Shrink[T6], s7: Shrink[T7], s8: Shrink[T8],
     s9: Shrink[T9]
