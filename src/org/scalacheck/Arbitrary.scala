@@ -76,7 +76,7 @@ object Arbitrary {
   /** Arbitrary instance of bool */
   implicit lazy val arbBool: Arbitrary[Boolean] =
     Arbitrary(elements(true,false))
-
+  
   /** Arbitrary instance of integer */
   implicit lazy val arbInt: Arbitrary[Int] =
     Arbitrary(sized(s => choose(-s,s)))
@@ -140,6 +140,9 @@ object Arbitrary {
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
     //     Arbitrary(sized(n => if(n == 0) value(none[A]) else resize(n - 1, arbitrary[A]).map(some(_))))
     Arbitrary(sized(n => if(n == 0) value(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
+
+  implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
+    Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
   /** Arbitrary instance of any buildable container (such as lists, arrays, 
    *  streams, etc). The maximum size of the container depends on the size 
