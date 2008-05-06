@@ -110,12 +110,15 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 
 
 /** Contains combinators for building generators. */
-object Gen extends Properties {
+object Gen {
 
+  /** Specifications for the methods in <code>Gen</code> */
+  val spec = new Properties { val name = "Gen" }
+
+  import spec.specify
   import Arbitrary._
   import Shrink._
 
-  val name = "Gen"
 
   /** Record that encapsulates all parameters required for data generation */
   case class Params(size: Int, rand: RandomGenerator) {

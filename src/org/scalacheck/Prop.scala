@@ -101,13 +101,15 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
 
 }
 
-object Prop extends Properties {
+object Prop {
 
+  /** Specifications for the methods in <code>Prop</code> */
+  val spec = new Properties { val name = "Prop" }
+
+  import spec.specify
   import Gen.{value, fail, frequency, elements}
   import Arbitrary._
   import Shrink._
-
-  val name = "Prop"
 
 
   // Specifications for the Prop class

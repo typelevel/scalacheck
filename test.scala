@@ -116,8 +116,8 @@ def measure[T](t: => T): (T,Long,Long) = {
 
 val (res,start,stop) = measure {
   Props.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
-  org.scalacheck.Gen.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
-  org.scalacheck.Prop.checkProperties(prms, propReport, testReport, workers, wrkSize)
+  Gen.spec.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
+  Prop.spec.checkProperties(prms, propReport, testReport, workers, wrkSize)
 }
 
 val min = (stop-start)/(60*1000)
