@@ -11,8 +11,10 @@ package org.scalacheck
 
 object Test {
 
-  import Util._
   import ConsoleReporter.{testReport, propReport}
+
+  def secure[T](x: => T): Either[T,Throwable] =
+    try { Left(x) } catch { case e => Right(e) }
 
   // Types
 
