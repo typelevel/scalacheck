@@ -19,9 +19,9 @@ trait Commands {
   /** The abstract state data type. This type must be immutable. */
   type S
 
-  private val bindings = scala.collection.mutable.Map.empty[S,Any]
+  private val bindings = scala.collection.mutable.Map.empty[Int,Any]
 
-  protected class Binding(private val key: S) {
+  protected class Binding(private val key: Int) {
     def get: Any = bindings.get(key) match {
       case None => error("No value bound")
       case Some(x) => x
@@ -30,22 +30,27 @@ trait Commands {
 
   /** An abstract command */
   trait Command {
-    protected[Commands] def run(s: S) = apply(s)
-    protected def apply(s: S): Any
+    final override def hashCode = super.hashCode
+
+    /** Used internally. */
+    protected[Commands] def run_(s: S) = run(s)
+
+    def run(s: S): Any
     def nextState(s: S): S
-    def preCondition(s: S): Boolean = true
-    def postCondition(s: S, r: Any): Boolean = true
+    protected[Commands] var preCondition: S => Boolean = s => true
+    protected[Commands] var postCondition: (S,Any) => Prop = (s,r) => proved
   }
 
   /** A command that binds its result for later use */
-  abstract class SetCommand extends Command {
-    protected[Commands] override def run(s: S) = {
-      val r = apply(s)
-      bindings += ((s,r))
+  trait SetCommand extends Command {
+    /** Used internally. */
+    protected[Commands] final override def run_(s: S) = {
+      val r = run(s)
+      bindings += ((s.hashCode,r))
       r
     }
 
-    final override def nextState(s: S): S = nextState(s, new Binding(s))
+    final def nextState(s: S) = nextState(s, new Binding(s.hashCode))
     def nextState(s: S, b: Binding): S
   }
 
@@ -64,8 +69,8 @@ trait Commands {
     override def toString = cs.map(_.toString).mkString(", ")
   }
 
-  private def genCmds: Gen[Cmds] = { 
-    def sizedCmds(s: S)(sz: Int): Gen[Cmds] = 
+  private def genCmds: Gen[Cmds] = {
+    def sizedCmds(s: S)(sz: Int): Gen[Cmds] =
       if(sz <= 0) value(Cmds(Nil, Nil)) else for {
         c <- genCommand(s) suchThat (_.preCondition(s))
         Cmds(cs,ss) <- sizedCmds(c.nextState(s))(sz-1)
@@ -86,17 +91,17 @@ trait Commands {
       } yield Cmds(cs, s::ss)
     }
 
-  private def runCommands(cmds: Cmds): Boolean = cmds match {
-    case Cmds(Nil, _) => true
-    case Cmds(c::cs, s::ss) => 
+  private def runCommands(cmds: Cmds): Prop = cmds match {
+    case Cmds(Nil, _) => proved
+    case Cmds(c::cs, s::ss) =>
       c.postCondition(s,c.run(s)) && runCommands(Cmds(cs,ss))
     case _ => error("Should not be here")
   }
 
   def commandsProp: Prop = {
 
-    def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) => 
-      shrink(cs).flatMap(cs => validCmds(initialState(), cs).toList) 
+    def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) =>
+      shrink(cs).flatMap(cs => validCmds(initialState(), cs).toList)
     }
 
     forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
