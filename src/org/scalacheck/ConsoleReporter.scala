@@ -40,30 +40,30 @@ object ConsoleReporter {
 
   def propReport(s: Int, d: Int) =
   {
-    if(d == 0) printf("\rPassed {0} tests\r", s)
-    else printf("\rPassed {0} tests; {1} discarded\r", s, d)
+    if(d == 0) printf("\rPassed %s tests\r", s)
+    else printf("\rPassed %s tests; %s discarded\r", s, d)
     Console.flush
   }
 
   def propReport(pName: String, s: Int, d: Int) =
   {
-    if(d == 0) printf("\r  {1}: Passed {0} tests\r", s, pName)
-    else printf("\r  {2}: Passed {0} tests; {1} discarded\r", s, d, pName)
+    if(d == 0) printf("\r  %s: Passed %s tests\r", s, pName)
+    else printf("\r  %s: Passed %s tests; %s discarded\r", pName, s, d)
     Console.flush
   }
 
   def testReport(testStats: Test.Stats) =
   {
     val s = prettyTestStats(testStats)
-    printf("{2} {0}{1}\n", s, List.make(70 - s.length, " ").mkString(""),
-      if(testStats.result.passed) "+" else "!")
+    printf("%s %s%s\n", if(testStats.result.passed) "+" else "!", s, 
+      List.make(70 - s.length, " ").mkString(""))
     testStats
   }
 
   def testReport(pName: String, stats: Test.Stats) =
   {
     def printL(t: String, label: String, str: String) =
-      printf("{0} {1}: {2}{3}\n", t, label, str,
+      printf("%s %s: %s%s\n", t, label, str,
         List.make(70 - str.length - label.length, " ").mkString(""))
 
     printL(if(stats.result.passed) "+" else "!", pName, prettyTestStats(stats))

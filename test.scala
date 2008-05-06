@@ -128,8 +128,8 @@ val failed = res.values.filter(!_.result.passed).toList.size
 
 if(verbose || failed > 0) println
 
-if(passed > 0) printf("{0} test{1} PASSED\n", passed, if(passed != 1) "s" else "")
-if(failed > 0) printf("{0} test{1} FAILED\n", failed, if(failed != 1) "s" else "")
-printf("Elapsed time: {0} min {1} sec\n", min, sec)
+if(passed > 0) printf("%s test%s PASSED\n", passed, if(passed != 1) "s" else "")
+if(failed > 0) printf("%s test%s FAILED\n", failed, if(failed != 1) "s" else "")
+printf("Elapsed time: %s min %s sec\n", min, sec)
 
 exit(failed)
