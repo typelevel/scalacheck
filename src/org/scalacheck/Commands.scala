@@ -14,7 +14,7 @@ import Prop._
 import Shrink._
 
 /** See User Guide for usage examples */
-trait Commands {
+trait Commands extends Prop {
 
   /** The abstract state data type. This type must be immutable. */
   type S
@@ -28,6 +28,8 @@ trait Commands {
     }
   }
 
+  def apply(p: Gen.Params) = commandsProp(p)
+
   /** An abstract command */
   trait Command {
     final override def hashCode = super.hashCode
@@ -37,8 +39,8 @@ trait Commands {
 
     def run(s: S): Any
     def nextState(s: S): S
-    protected[Commands] var preCondition: S => Boolean = s => true
-    protected[Commands] var postCondition: (S,Any) => Prop = (s,r) => proved
+    var preCondition: S => Boolean = s => true
+    var postCondition: (S,Any) => Prop = (s,r) => proved
   }
 
   /** A command that binds its result for later use */

@@ -14,7 +14,7 @@ import Prop._
 import Arbitrary._
 
 /** Class that represents a generator. */
-class Gen[+T](g: Gen.Params => Option[T]) {
+trait Gen[+T] {
 
   var label = ""
 
@@ -23,9 +23,9 @@ class Gen[+T](g: Gen.Params => Option[T]) {
     this
   }
 
-  def apply(prms: Gen.Params) = g(prms)
+  def apply(prms: Gen.Params): Option[T]
 
-  def map[U](f: T => U): Gen[U] = new Gen(prms => this(prms).map(f)).label(label)
+  def map[U](f: T => U): Gen[U] = Gen(prms => this(prms).map(f)).label(label)
 
   def map2[U, V](g: Gen[U])(f: (T, U) => V) =
     combine(g)((t, u) => t.flatMap(t => u.flatMap(u => Some(f(t, u)))))
@@ -42,12 +42,12 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def map6[U, V, W, X, Y, Z](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X], gy: Gen[Y])(f: (T, U, V, W, X, Y) => Z) =
     combine6(gu, gv, gw, gx, gy)((t, u, v, w, x, y) => t.flatMap(t => u.flatMap(u => v.flatMap(v => w.flatMap(w => x.flatMap(x => y.flatMap(y => Some(f(t, u, v, w, x, y)))))))))
 
-  def flatMap[U](f: T => Gen[U]): Gen[U] = new Gen(prms => for {
+  def flatMap[U](f: T => Gen[U]): Gen[U] = Gen(prms => for {
     t <- this(prms)
     u <- f(t)(prms)
   } yield u)
 
-  def filter(p: T => Boolean): Gen[T] = new Gen(prms => for {
+  def filter(p: T => Boolean): Gen[T] = Gen(prms => for {
     t <- this(prms)
     u <- if (p(t)) Some(t) else None
   } yield u).label(label)
@@ -55,25 +55,25 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   def suchThat(p: T => Boolean): Gen[T] = filter(p)
 
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
-    new Gen(prms => f(this(prms), g(prms)))
+    Gen(prms => f(this(prms), g(prms)))
 
   def combine3[U, V, W](gu: Gen[U], gv: Gen[V])
       (f: (Option[T], Option[U], Option[V]) => Option[W]) =
-    new Gen(prms => f(this(prms), gu(prms), gv(prms)))
+    Gen(prms => f(this(prms), gu(prms), gv(prms)))
 
   def combine4[U, V, W, X](gu: Gen[U], gv: Gen[V], gw: Gen[W])
       (f: (Option[T], Option[U], Option[V], Option[W]) => Option[X]) =
-    new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms)))
+    Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms)))
 
   def combine5[U, V, W, X, Y](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X])
       (f: (Option[T], Option[U], Option[V], Option[W], Option[X]) => Option[Y]) =
-    new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms)))
+    Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms)))
 
   def combine6[U, V, W, X, Y, Z](gu: Gen[U], gv: Gen[V], gw: Gen[W], gx: Gen[X], gy: Gen[Y])
       (f: (Option[T], Option[U], Option[V], Option[W], Option[X], Option[Y]) => Option[Z]) =
-        new Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms), gy(prms)))
+        Gen(prms => f(this(prms), gu(prms), gv(prms), gw(prms), gx(prms), gy(prms)))
 
-  def ap[U](g: Gen[T => U]) = flatMap(t => g.flatMap(u => new Gen(p => Some(u(t)))))
+  def ap[U](g: Gen[T => U]) = flatMap(t => g.flatMap(u => Gen(p => Some(u(t)))))
 
   override def toString =
     if(label.length == 0) "Gen()" else "Gen(\"" + label + "\")"
@@ -85,7 +85,7 @@ class Gen[+T](g: Gen.Params => Option[T]) {
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
-  def ===[U](g: Gen[U]) = new Prop(prms =>
+  def ===[U](g: Gen[U]) = Prop(prms =>
     (this(prms), g(prms)) match {
       case (None,None) => proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => proved(prms)
@@ -95,7 +95,7 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 
   def !=[U](g: Gen[U]) = forAll(this)(r => forAll(g)(_ != r))
 
-  def !==[U](g: Gen[U]) = new Prop(prms =>
+  def !==[U](g: Gen[U]) = Prop(prms =>
     (this(prms), g(prms)) match {
       case (None,None) => falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => falsified(prms)
@@ -113,7 +113,7 @@ class Gen[+T](g: Gen.Params => Option[T]) {
 object Gen {
 
   /** Specifications for the methods in <code>Gen</code> */
-  val spec = new Properties { val name = "Gen" }
+  val spec = new Properties("Gen")
 
   import spec.specify
   import Arbitrary._
@@ -128,12 +128,15 @@ object Gen {
   /* Default generator parameters */
   val defaultParams = Params(100,StdRand)
 
+  def apply[T](g: Gen.Params => Option[T]) = new Gen[T] { 
+    def apply(p: Gen.Params) = g(p) 
+  }
 
   // Generator combinators
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[C]): Gen[C[T]] = new Gen(prms => {
+  def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[C]): Gen[C[T]] = Gen(prms => {
     val builder = b.builder[T]
     var none = false
     val xs = gs.elements
@@ -178,19 +181,19 @@ object Gen {
     sized(size => for(n <- choose(1,size); c <- containerOfN[C,T](n,g)) yield c)
 
   /** Wraps a generator lazily. Useful when defining recursive generators. */
-  def lzy[T](g: => Gen[T]) = new Gen(p => g(p))
+  def lzy[T](g: => Gen[T]) = Gen(p => g(p))
   specify("lzy", { g: Gen[Int] => lzy(g) === g })
 
   /** A generator that always generates the given value */
-  def value[T](x: T) = new Gen(p => Some(x))
+  def value[T](x: T) = Gen(p => Some(x))
   specify("value", (x: Int, prms: Params) => value(x)(prms) == Some(x))
 
   /** A generator that always generates the given value */
-  def value[T](f: () => T) = new Gen(p => Some(f()))
+  def value[T](f: () => T) = Gen(p => Some(f()))
   specify("value", (x: Int) => value(() => x) === value(x))
 
   /** A generator that never generates a value */
-  def fail[T]: Gen[T] = new Gen(p => None)
+  def fail[T]: Gen[T] = Gen(p => None)
   specify("fail", (prms: Params) => fail(prms) == None)
 
   /** A generator that generates a random integer in the given (inclusive)
@@ -213,7 +216,7 @@ object Gen {
 
   /** Creates a generator that can access its generation parameters */
   def parameterized[T](f: Params => Gen[T]): Gen[T] =
-    new Gen(prms => f(prms)(prms))
+    Gen(prms => f(prms)(prms))
   specify("parameterized", (g: Gen[Int]) => parameterized(p => g) === g)
 
   /** Creates a generator that can access its generation size */
@@ -221,7 +224,7 @@ object Gen {
   specify("sized", (g: Gen[Int]) => sized(i => g) === g)
 
   /** Creates a resized version of a generator */
-  def resize[T](s: Int, g: Gen[T]) = new Gen(prms => g(prms.resize(s)))
+  def resize[T](s: Int, g: Gen[T]) = Gen(prms => g(prms.resize(s)))
 
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
@@ -280,7 +283,7 @@ object Gen {
   /** Picks a given number of elements from a list */
   def pick[T](n: Int, l: Collection[T]): Gen[Seq[T]] =
     if(n > l.size || n < 0) fail
-    else new Gen(prms => {
+    else Gen(prms => {
       val buf = new ListBuffer[T]
       buf ++= l
       while(buf.length > n) buf.remove(choose(0,buf.length-1)(prms).get)

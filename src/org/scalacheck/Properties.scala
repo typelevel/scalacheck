@@ -11,17 +11,37 @@ package org.scalacheck
 
 /** Represents a collection of properties, with convenient methods
  *  for checking all properties at once. Properties are added to this
- *  collection through the <code>specify</code> methods. */
-trait Properties {
+ *  collection through the <code>specify</code> methods. This class
+ *  is itself a property, that holds if and only if all of the
+ *  contained properties hold. */
+class Properties(val name: String) extends Prop {
 
   import scala.collection._
   import scala.testing.SUnit.TestCase
   import Arbitrary._
   import Shrink._
 
-  val name: String
+  type NamedPropEvalCallback = (String,Int,Int) => Unit
+  type TestStatsCallback = (String,Test.Stats) => Unit
 
   private val properties = mutable.Map.empty[String,Prop]
+
+  private def addProp(propName: String, prop: Prop) =
+    properties += ((name + "." + propName, prop))
+
+  private def allProperties: Prop = Prop.all((properties map (_._2)).toList)
+
+  def apply(p: Gen.Params) = allProperties(p)
+
+  /** Adds all properties from another property collection to this one. */
+  def include(props: Properties) = properties ++ props.properties
+
+  /** Convenience method that makes it possible to use a this property
+   *  collection as an application that checks all properties on
+   *  execution */
+  override def main(args: Array[String]) {
+    checkProperties()
+  }
 
   /** Adds a property to this property collection */
   def specify(propName: String, prop: => Prop) =
@@ -84,26 +104,18 @@ trait Properties {
     a6: Arbitrary[A6], s6: Shrink[A6]
   ): Unit = addProp(propName,Prop.property(f))
 
-  private def addProp(propName: String, prop: Prop) =
-    properties += ((name + "." + propName, prop))
-
-  type NamedPropEvalCallback = (String,Int,Int) => Unit
-  type TestStatsCallback = (String,Test.Stats) => Unit
-
   /** Tests all properties with the given testing parameters, and returns
-   *  the test results.
-   */
+   *  the test results. */
   def checkProperties(prms: Test.Params): immutable.Map[String,Test.Stats] =
     checkProperties(prms, (n,s,d) => (), (n,s) => ())
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
-   *  time a property has been fully tested.
-   */
+   *  time a property has been fully tested. */
   def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback): immutable.Map[String,Test.Stats] = 
-    immutable.Map(properties.toStream: _*).transform { 
+    testCallback: TestStatsCallback): immutable.Map[String,Test.Stats] =
+    immutable.Map(properties.toStream: _*).transform {
       case (pName,p) =>
        val stats = Test.check(prms,p,propCallback(pName,_,_))
        testCallback(pName,stats)
@@ -113,11 +125,10 @@ trait Properties {
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
-   *  time a property has been fully testedi. Uses actors for execution.
-   */
+   *  time a property has been fully testedi. Uses actors for execution. */
   def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback, workers: Int, wrkSize: Int): immutable.Map[String,Test.Stats] = 
-    immutable.Map(properties.toStream: _*).transform { 
+    testCallback: TestStatsCallback, workers: Int, wrkSize: Int): immutable.Map[String,Test.Stats] =
+    immutable.Map(properties.toStream: _*).transform {
       case (pName,p) =>
        val stats = Test.check(prms,p,propCallback(pName,_,_),workers,wrkSize)
        testCallback(pName,stats)
@@ -140,14 +151,8 @@ trait Properties {
   }
 
   /** Returns all properties as SUnit.TestCase instances, which can added to
-   *  a SUnit.TestSuite.
-   */
+   *  a SUnit.TestSuite. */
   def testCases: List[TestCase] =
     (properties map {case (pn,p) => propToTestCase(pn,p)}).toList
-
-  /** Returns all properties combined into a single property, that holds
-   *  when all properties hold
-   */
-  def allProperties: Prop = Prop.all((properties map (_._2)).toList)
 
 }

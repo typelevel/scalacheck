@@ -12,9 +12,15 @@ package org.scalacheck
 import scala.collection.mutable.ListBuffer
 
 /** A property is a generator that generates a property result */
-class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
+trait Prop extends Gen[Prop.Result] {
 
   import Prop.{Proof,True,False,Exception}
+
+  /** Convenience method that makes it possible to use a this property 
+   *  as an application that checks itself on execution */
+  def main(args: Array[String]) { 
+    Test.check(this) 
+  }
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
@@ -81,7 +87,7 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
    *  and the given property generates the same result, or both
    *  properties generate no result.
    */
-  def ==(p: Prop) = new Prop(prms =>
+  def ==(p: Prop) = Prop(prms =>
     (this(prms), p(prms)) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
@@ -89,7 +95,7 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
     }
   )
 
-  def addArg(a: Arg) = new Prop(prms =>
+  def addArg(a: Arg) = Prop(prms =>
     this(prms) match {
       case None => None
       case Some(r) => Some(r.addArg(a))
@@ -99,12 +105,18 @@ class Prop(g: Gen.Params => Option[Prop.Result]) extends Gen[Prop.Result](g) {
   override def toString = 
     if(label.length == 0) "Prop()" else "Prop(\"" + label + "\")"
 
+  /** Convenience method that checks this property and reports the
+   *  result on the console. Calling <code>p.check</code> is equal
+   *  to calling <code>Test.check(p)</code>. If you want more control
+   *  over test parameters. use the check methods in <code>Test</code> */
+  def check = Test.check(this)
+
 }
 
 object Prop {
 
   /** Specifications for the methods in <code>Prop</code> */
-  val spec = new Properties { val name = "Prop" }
+  val spec = new Properties("Prop")
 
   import spec.specify
   import Gen.{value, fail, frequency, elements}
@@ -233,6 +245,10 @@ object Prop {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
   }
+  
+  def apply(g: Gen.Params => Option[Prop.Result]) = new Prop {
+    def apply(p: Gen.Params) = g(p)
+  }
 
 
   // Implicit defs
@@ -247,9 +263,9 @@ object Prop {
   // Private support functions
 
   private def constantProp(r: Option[Result], descr: String) =
-    new Prop(prms => r).label(descr)
+    Prop(prms => r).label(descr)
 
-  private implicit def genToProp(g: Gen[Result]) = new Prop(g.apply).label(g.label)
+  private implicit def genToProp(g: Gen[Result]) = Prop(g.apply).label(g.label)
 
   private def provedToTrue(r: Result) = r match {
     case Proof(as) => True(as)
@@ -282,7 +298,7 @@ object Prop {
   })
 
   /** A property that depends on the generator size */
-  def sizedProp(f: Int => Prop): Prop = new Prop(prms => f(prms.size)(prms))
+  def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.size)(prms))
 
   /** Implication */
   def ==>(b: => Boolean, p: => Prop): Prop = property(if (b) p else undecided)
@@ -298,7 +314,7 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Iterable[Prop]) = new Prop(prms => 
+  def all(ps: Iterable[Prop]) = Prop(prms => 
     if(ps.forall(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
     else falsified(prms)
   )
@@ -306,7 +322,7 @@ object Prop {
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Iterable[Prop]) = new Prop(prms => 
+  def atLeastOne(ps: Iterable[Prop]) = Prop(prms => 
     if(ps.exists(p => p(prms).getOrElse(False(Nil)).success)) proved(prms) 
     else falsified(prms)
   )
@@ -333,7 +349,7 @@ object Prop {
   /** Universal quantifier, shrinks failed arguments with given shrink
    *  function */
   def forAllShrink[A, P <% Prop](g: Gen[A],shrink: A => Stream[A])(f: A => P): Prop =
-    new Prop((prms: Gen.Params) => {
+    Prop((prms: Gen.Params) => {
 
       import Stream.{cons, empty}
 
@@ -388,7 +404,7 @@ object Prop {
   def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
 
   /** Wraps and protects a property */
-  def property[P <% Prop](p: => P): Prop = new Prop(prms =>
+  def property[P <% Prop](p: => P): Prop = Prop(prms =>
     (try { p: Prop } catch { case e => exception(e) })(prms)
   )
 
