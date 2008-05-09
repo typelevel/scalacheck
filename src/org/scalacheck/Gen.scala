@@ -113,9 +113,9 @@ trait Gen[+T] {
 object Gen {
 
   /** Specifications for the methods in <code>Gen</code> */
-  val spec = new Properties("Gen")
+  val specification = new Properties("Gen")
 
-  import spec.specify
+  import specification.specify
   import Arbitrary._
   import Shrink._
 

@@ -116,9 +116,9 @@ trait Prop extends Gen[Prop.Result] {
 object Prop {
 
   /** Specifications for the methods in <code>Prop</code> */
-  val spec = new Properties("Prop")
+  val specification = new Properties("Prop")
 
-  import spec.specify
+  import specification.specify
   import Gen.{value, fail, frequency, elements}
   import Arbitrary._
   import Shrink._

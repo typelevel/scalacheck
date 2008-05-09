@@ -1,12 +1,10 @@
-object Props extends org.scalacheck.Properties {
+import org.scalacheck._
+import org.scalacheck.Gen._
+import org.scalacheck.Prop._
+import org.scalacheck.Test._
+import org.scalacheck.Arbitrary._
 
-  import org.scalacheck._
-  import org.scalacheck.Gen._
-  import org.scalacheck.Prop._
-  import org.scalacheck.Test._
-  import org.scalacheck.Arbitrary._
-
-  val name = "Props"
+object ScalaCheckSpecification extends Properties("ScalaCheck") {
 
   val proved = property(1 + 1 == 2)
 
@@ -28,50 +26,53 @@ object Props extends org.scalacheck.Properties {
 
   val genException = forAll(undefinedInt)((n: Int) => true)
 
+  include(Prop.specification)
+  include(Gen.specification)
+
   specify("propFailing", (prms: Test.Params) =>
-    check(prms, failing).result match {
+    Test.check(prms, failing).result match {
       case _:Failed => true
       case _ => false
     }
   )
 
   specify("propPassing", (prms: Test.Params) =>
-    check(prms, passing).result match {
+    Test.check(prms, passing).result match {
       case Passed => true
       case _ => false
     }
   )
 
   specify("propProved", (prms: Test.Params) =>
-    check(prms, proved).result match {
+    Test.check(prms, proved).result match {
       case _:Test.Proved => true
       case _ => false
     }
   )
 
   specify("propExhausted", (prms: Test.Params) =>
-    check(prms, exhausted).result match {
+    Test.check(prms, exhausted).result match {
       case Exhausted => true
       case _ => false
     }
   )
 
   specify("propPropException", (prms: Test.Params) =>
-    check(prms, propException).result match {
+    Test.check(prms, propException).result match {
       case _:PropException => true
       case _ => false
     }
   )
 
   specify("propGenException", (prms: Test.Params) =>
-    check(prms, genException).result match {
+    Test.check(prms, genException).result match {
       case _:GenException => true
       case _ => false
     }
   )
 
   specify("propShrinked", (prms: Test.Params) =>
-    check(prms, shrinked).result match {
+    Test.check(prms, shrinked).result match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_)::Nil) => 
         x == 0 && y == 0 && z == 0
       case x => false
@@ -79,8 +80,6 @@ object Props extends org.scalacheck.Properties {
   )
 
 }
-
-import org.scalacheck._
 
 val verbose = args.contains("-v")
 val large = args.contains("-l")
@@ -114,17 +113,15 @@ def measure[T](t: => T): (T,Long,Long) = {
   (x,start,stop)
 }
 
-val (res,start,stop) = measure {
-  Props.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
-  Gen.spec.checkProperties(prms, propReport, testReport, workers, wrkSize) ++
-  Prop.spec.checkProperties(prms, propReport, testReport, workers, wrkSize)
-}
+val (res,start,stop) = measure(
+  ScalaCheckSpecification.checkProperties(prms, propReport, testReport, workers, wrkSize)
+)
 
 val min = (stop-start)/(60*1000)
 val sec = ((stop-start)-(60*1000*min)) / 1000d
 
-val passed = res.values.filter(_.result.passed).toList.size
-val failed = res.values.filter(!_.result.passed).toList.size
+val passed = res.filter(_._2.result.passed).size
+val failed = res.filter(!_._2.result.passed).size
 
 if(verbose || failed > 0) println
 

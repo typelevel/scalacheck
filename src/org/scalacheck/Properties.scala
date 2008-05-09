@@ -24,17 +24,14 @@ class Properties(val name: String) extends Prop {
   type NamedPropEvalCallback = (String,Int,Int) => Unit
   type TestStatsCallback = (String,Test.Stats) => Unit
 
-  private val properties = mutable.Map.empty[String,Prop]
+  private val properties = new mutable.ListBuffer[(String,Prop)]
 
   private def addProp(propName: String, prop: Prop) =
-    properties += ((name + "." + propName, prop))
+    properties += ((name+"."+propName, prop))
 
   private def allProperties: Prop = Prop.all((properties map (_._2)).toList)
 
   def apply(p: Gen.Params) = allProperties(p)
-
-  /** Adds all properties from another property collection to this one. */
-  def include(props: Properties) = properties ++ props.properties
 
   /** Convenience method that makes it possible to use a this property
    *  collection as an application that checks all properties on
@@ -42,6 +39,10 @@ class Properties(val name: String) extends Prop {
   override def main(args: Array[String]) {
     checkProperties()
   }
+
+  /** Adds all properties from another property collection to this one. */
+  def include(props: Properties) = 
+    props.properties.map { case (n,p) => addProp(n,p) }
 
   /** Adds a property to this property collection */
   def specify(propName: String, prop: => Prop) =
@@ -106,7 +107,7 @@ class Properties(val name: String) extends Prop {
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. */
-  def checkProperties(prms: Test.Params): immutable.Map[String,Test.Stats] =
+  def checkProperties(prms: Test.Params): Seq[(String,Test.Stats)] =
     checkProperties(prms, (n,s,d) => (), (n,s) => ())
 
   /** Tests all properties with the given testing parameters, and returns
@@ -114,45 +115,32 @@ class Properties(val name: String) extends Prop {
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested. */
   def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback): immutable.Map[String,Test.Stats] =
-    immutable.Map(properties.toStream: _*).transform {
-      case (pName,p) =>
-       val stats = Test.check(prms,p,propCallback(pName,_,_))
-       testCallback(pName,stats)
-       stats
-    }
+    testCallback: TestStatsCallback
+  ): Seq[(String,Test.Stats)] = properties.map { case (pName,p) =>
+    val stats = Test.check(prms,p,propCallback(pName,_,_))
+    testCallback(pName,stats)
+    (pName,stats)
+  }
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully testedi. Uses actors for execution. */
   def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback, workers: Int, wrkSize: Int): immutable.Map[String,Test.Stats] =
-    immutable.Map(properties.toStream: _*).transform {
-      case (pName,p) =>
-       val stats = Test.check(prms,p,propCallback(pName,_,_),workers,wrkSize)
-       testCallback(pName,stats)
-       stats
-    }
-
-  import ConsoleReporter._
+    testCallback: TestStatsCallback, workers: Int, wrkSize: Int
+  ): Seq[(String,Test.Stats)] = properties.map { case (pName,p) =>
+    val stats = Test.check(prms,p,propCallback(pName,_,_),workers,wrkSize)
+    testCallback(pName,stats)
+    (pName,stats)
+  }
 
   /** Tests all properties with default testing parameters, and returns
    *  the test results. The results are also printed on the console during
    *  testing. */
-  def checkProperties(): immutable.Map[String,Test.Stats] =
-    checkProperties(Test.defaultParams, propReport, testReport)
-
-  private def propToTestCase(pn: String, p: Prop): TestCase = new TestCase(pn) {
-    protected def runTest() = {
-      val stats = Test.check(Test.defaultParams,p)
-      if(!stats.result.passed) fail(prettyTestStats(stats))
-    }
-  }
-
-  /** Returns all properties as SUnit.TestCase instances, which can added to
-   *  a SUnit.TestSuite. */
-  def testCases: List[TestCase] =
-    (properties map {case (pn,p) => propToTestCase(pn,p)}).toList
+  def checkProperties(): Seq[(String,Test.Stats)] = checkProperties(
+    Test.defaultParams, 
+    ConsoleReporter.propReport, 
+    ConsoleReporter.testReport
+  )
 
 }
