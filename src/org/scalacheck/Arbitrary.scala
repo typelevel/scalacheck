@@ -172,6 +172,39 @@ object Arbitrary {
     Arbitrary(containerOf[ArrayList,T](arbitrary[T]))
 
 
+  // Functions //
+
+  /** Arbitrary instance of Function1 */
+  implicit def arbFunction1[T1,R](implicit a: Arbitrary[R]
+  ): Arbitrary[T1 => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1) => r
+  )
+
+  /** Arbitrary instance of Function2 */
+  implicit def arbFunction2[T1,T2,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2) => r
+  )
+
+  /** Arbitrary instance of Function3 */
+  implicit def arbFunction3[T1,T2,T3,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3) => r
+  )
+
+  /** Arbitrary instance of Function4 */
+  implicit def arbFunction4[T1,T2,T3,T4,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4) => r
+  )
+
+  /** Arbitrary instance of Function5 */
+  implicit def arbFunction5[T1,T2,T3,T4,T5,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4,T5) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5) => r
+  )
+
+
   // Tuples //
 
   /** Arbitrary instance of 2-tuple */
