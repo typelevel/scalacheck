@@ -114,7 +114,7 @@ def measure[T](t: => T): (T,Long,Long) = {
 }
 
 val (res,start,stop) = measure(
-  ScalaCheckSpecification.checkProperties(prms, propReport, testReport, workers, wrkSize)
+  Test.checkProperties(ScalaCheckSpecification, prms, propReport, testReport, workers, wrkSize)
 )
 
 val min = (stop-start)/(60*1000)

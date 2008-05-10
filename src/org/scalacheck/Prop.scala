@@ -18,9 +18,15 @@ trait Prop extends Gen[Prop.Result] {
 
   /** Convenience method that makes it possible to use a this property 
    *  as an application that checks itself on execution */
-  def main(args: Array[String]) { 
-    Test.check(this) 
-  }
+  def main(args: Array[String]) { check }
+
+  /** Convenience method that checks this property and reports the
+   *  result on the console. Calling <code>p.check</code> is equal
+   *  to calling <code>Test.check(p)</code>, but this method does
+   *  not return the test statistics. If you need to get the results
+   *  from the test, or if you want more control over the test parameters, 
+   *  use the <code>check</code> methods in <code>Test</code> instead. */
+  def check: Unit = Test.check(this)
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
@@ -104,12 +110,6 @@ trait Prop extends Gen[Prop.Result] {
 
   override def toString = 
     if(label.length == 0) "Prop()" else "Prop(\"" + label + "\")"
-
-  /** Convenience method that checks this property and reports the
-   *  result on the console. Calling <code>p.check</code> is equal
-   *  to calling <code>Test.check(p)</code>. If you want more control
-   *  over test parameters. use the check methods in <code>Test</code> */
-  def check = Test.check(this)
 
 }
 

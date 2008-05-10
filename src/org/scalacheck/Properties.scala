@@ -16,29 +16,27 @@ package org.scalacheck
  *  contained properties hold. */
 class Properties(val name: String) extends Prop {
 
-  import scala.collection._
-  import scala.testing.SUnit.TestCase
-  import Arbitrary._
-  import Shrink._
-
-  type NamedPropEvalCallback = (String,Int,Int) => Unit
-  type TestStatsCallback = (String,Test.Stats) => Unit
-
-  private val properties = new mutable.ListBuffer[(String,Prop)]
+  private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
   private def addProp(propName: String, prop: Prop) =
-    properties += ((name+"."+propName, prop))
+    props += ((name+"."+propName, prop))
 
-  private def allProperties: Prop = Prop.all((properties map (_._2)).toList)
+  private def toProperty: Prop = Prop.all((properties map (_._2)).toList)
 
-  def apply(p: Gen.Params) = allProperties(p)
+  /** Returns all properties of this collection in a list of name/property
+   *  pairs.  */
+  def properties: Seq[(String,Prop)] = props
 
-  /** Convenience method that makes it possible to use a this property
-   *  collection as an application that checks all properties on
-   *  execution */
-  override def main(args: Array[String]) {
-    checkProperties()
-  }
+  def apply(p: Gen.Params) = toProperty(p)
+
+  /** Convenience method that checks all properties and reports the
+   *  result on the console. Calling <code>ps.check</code> is equal
+   *  to calling <code>Test.checkProperties(ps)</code>, but this method does
+   *  not return the test statistics. If you need to get the results
+   *  from the tests, or if you want more control over the test parameters, 
+   *  use the <code>checkProperties</code> methods in <code>Test</code> 
+   *  instead. */
+  override def check: Unit = Test.checkProperties(this)
 
   /** Adds all properties from another property collection to this one. */
   def include(props: Properties) = 
@@ -104,43 +102,5 @@ class Properties(val name: String) extends Prop {
     a5: Arbitrary[A5], s5: Shrink[A5],
     a6: Arbitrary[A6], s6: Shrink[A6]
   ): Unit = addProp(propName,Prop.property(f))
-
-  /** Tests all properties with the given testing parameters, and returns
-   *  the test results. */
-  def checkProperties(prms: Test.Params): Seq[(String,Test.Stats)] =
-    checkProperties(prms, (n,s,d) => (), (n,s) => ())
-
-  /** Tests all properties with the given testing parameters, and returns
-   *  the test results. <code>f</code> is a function which is called each
-   *  time a property is evaluted. <code>g</code> is a function called each
-   *  time a property has been fully tested. */
-  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback
-  ): Seq[(String,Test.Stats)] = properties.map { case (pName,p) =>
-    val stats = Test.check(prms,p,propCallback(pName,_,_))
-    testCallback(pName,stats)
-    (pName,stats)
-  }
-
-  /** Tests all properties with the given testing parameters, and returns
-   *  the test results. <code>f</code> is a function which is called each
-   *  time a property is evaluted. <code>g</code> is a function called each
-   *  time a property has been fully testedi. Uses actors for execution. */
-  def checkProperties(prms: Test.Params, propCallback: NamedPropEvalCallback,
-    testCallback: TestStatsCallback, workers: Int, wrkSize: Int
-  ): Seq[(String,Test.Stats)] = properties.map { case (pName,p) =>
-    val stats = Test.check(prms,p,propCallback(pName,_,_),workers,wrkSize)
-    testCallback(pName,stats)
-    (pName,stats)
-  }
-
-  /** Tests all properties with default testing parameters, and returns
-   *  the test results. The results are also printed on the console during
-   *  testing. */
-  def checkProperties(): Seq[(String,Test.Stats)] = checkProperties(
-    Test.defaultParams, 
-    ConsoleReporter.propReport, 
-    ConsoleReporter.testReport
-  )
 
 }

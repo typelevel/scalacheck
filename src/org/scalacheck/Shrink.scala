@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-sealed trait Shrink[T] {
+sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
 }
 

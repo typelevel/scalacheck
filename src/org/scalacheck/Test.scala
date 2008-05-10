@@ -57,6 +57,13 @@ object Test {
    *  discarded tests, respectively */
   type PropEvalCallback = (Int,Int) => Unit
 
+  /** Property evaluation callback. Takes property name, and number of passed
+   *  and discarded tests, respectively */
+  type NamedPropEvalCallback = (String,Int,Int) => Unit
+
+  /** Test callback. Takes property name, and test results. */
+  type TestStatsCallback = (String,Stats) => Unit
+
   /** Default testing parameters */
   val defaultParams = Params(100,500,0,100,StdRand)
 
@@ -180,9 +187,6 @@ object Test {
       (server !? 'get).asInstanceOf[Stats]
     }
 
-  /** Tests a property and prints results to the console */
-  def check(p: Prop): Stats = testReport(check(defaultParams, p, propReport))
-
   /** Tests a property and prints results to the console. The 
    *  <code>maxDiscarded</code> parameter specifies how many 
    *  discarded tests that should be allowed before ScalaCheck
@@ -192,5 +196,44 @@ object Test {
     val params = Params(minSuccessfulTests,maxDiscarded,minSize,maxSize,rand)
     testReport(check(params, p, propReport))
   }
+
+  /** Tests a property and prints results to the console */
+  def check(p: Prop): Stats = testReport(check(defaultParams, p, propReport))
+
+  /** Tests all properties with the given testing parameters, and returns
+   *  the test results. */
+  def checkProperties(ps: Properties, prms: Params): Seq[(String,Stats)] =
+    checkProperties(ps, prms, (n,s,d) => (), (n,s) => ())
+
+  /** Tests all properties with the given testing parameters, and returns
+   *  the test results. <code>f</code> is a function which is called each
+   *  time a property is evaluted. <code>g</code> is a function called each
+   *  time a property has been fully tested. */
+  def checkProperties(ps: Properties, prms: Params, 
+    propCallback: NamedPropEvalCallback, testCallback: TestStatsCallback
+  ): Seq[(String,Stats)] = ps.properties.map { case (pName,p) =>
+    val stats = check(prms,p,propCallback(pName,_,_))
+    testCallback(pName,stats)
+    (pName,stats)
+  }
+
+  /** Tests all properties with the given testing parameters, and returns
+   *  the test results. <code>f</code> is a function which is called each
+   *  time a property is evaluted. <code>g</code> is a function called each
+   *  time a property has been fully testedi. Uses actors for execution. */
+  def checkProperties(ps: Properties, prms: Params, 
+    propCallback: NamedPropEvalCallback, testCallback: TestStatsCallback, 
+    workers: Int, wrkSize: Int
+  ): Seq[(String,Stats)] = ps.properties.map { case (pName,p) =>
+    val stats = check(prms,p,propCallback(pName,_,_),workers,wrkSize)
+    testCallback(pName,stats)
+    (pName,stats)
+  }
+
+  /** Tests all properties with default testing parameters, and returns
+   *  the test results. The results are also printed on the console during
+   *  testing. */
+  def checkProperties(ps: Properties): Seq[(String,Stats)] = 
+    checkProperties(ps, defaultParams, propReport, testReport)
 
 }
