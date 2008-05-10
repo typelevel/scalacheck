@@ -48,6 +48,12 @@ object Shrink {
       case Some(x) => cons(None, for(y <- shrink(x)) yield Some(y))
     }
 
+  // workaround for Scala bug #298. Will obviously only work for Lists, not
+  // other higher-order types.
+  implicit lazy val shrinkIntList: Shrink[List[Int]] = shrinkList[Int] 
+  implicit lazy val shrinkBooleanList: Shrink[List[Boolean]] = shrinkList[Boolean] 
+  implicit lazy val shrinkStringList: Shrink[List[String]] = shrinkList[String] 
+
   /** Shrink instance of list */
   implicit def shrinkList[T](implicit s: Shrink[T]): Shrink[List[T]] = 
     Shrink { xs =>

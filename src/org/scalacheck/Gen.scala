@@ -147,7 +147,7 @@ object Gen {
     if(none) None else Some(builder.finalise)
   })
   specify("sequence",
-    forAllDefaultShrink(listOf(elementsFreq((10,arbitrary[Int]),(1,fail))))(l =>
+    forAll(listOf(elementsFreq((10,arbitrary[Int]),(1,fail))))(l =>
       (someFailing(l) && (sequence[List,Int](l) === fail)) ||
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
@@ -277,7 +277,7 @@ object Gen {
   /** Picks some elements from a list */
   def someOf[T](l: Collection[T]) = choose(0,l.size) flatMap (pick(_,l))
   specify("someOf", { l: List[Int] =>
-    forAllDefaultShrink(someOf(l).map(_.toList)) { _.forall(l.contains) }
+    forAll(someOf(l).map(_.toList)) { _.forall(l.contains) }
   })
 
   /** Picks a given number of elements from a list */

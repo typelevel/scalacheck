@@ -340,8 +340,8 @@ object Prop {
          }
   } yield s.addArg(Arg(g.label,a,0))
 
-  /** Universal quantifier */
-  def forAll[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
+  /** Universal quantifier, does not shrink failed test cases. */
+  def forAllNoShrink[A,P <% Prop](g: Gen[A])(f: A => P): Prop = for {
     a <- g
     r <- property(f(a))
   } yield provedToTrue(r).addArg(Arg(g.label,a,0))
@@ -392,7 +392,7 @@ object Prop {
 
   /** Universal quantifier, shrinks failed arguments with the default
    *  shrink function for the type */
-  def forAllDefaultShrink[T,P](g: Gen[T])(f: T => P)
+  def forAll[T,P](g: Gen[T])(f: T => P)
     (implicit s: Shrink[T], p: P => Prop) = forAllShrink(g, shrink[T])(f)
 
   /** A property that holds if at least one of the given generators
