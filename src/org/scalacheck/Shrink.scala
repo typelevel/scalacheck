@@ -48,12 +48,6 @@ object Shrink {
       case Some(x) => cons(None, for(y <- shrink(x)) yield Some(y))
     }
 
-  // workaround for Scala bug #298. Will obviously only work for Lists, not
-  // other higher-order types.
-  implicit lazy val shrinkIntList: Shrink[List[Int]] = shrinkList[Int] 
-  implicit lazy val shrinkBooleanList: Shrink[List[Boolean]] = shrinkList[Boolean] 
-  implicit lazy val shrinkStringList: Shrink[List[String]] = shrinkList[String] 
-
   /** Shrink instance of list */
   implicit def shrinkList[T](implicit s: Shrink[T]): Shrink[List[T]] = 
     Shrink { xs =>
@@ -195,4 +189,15 @@ object Shrink {
       (for(x8 <- shrink(t8)) yield (t1, t2, t3, t4, t5, t6, t7, x8, t9)) append
       (for(x9 <- shrink(t9)) yield (t1, t2, t3, t4, t5, t6, t7, t8, x9))
     }
+
+  // workarounds for Scala bug #298.
+  implicit lazy val shrinkIntList: Shrink[List[Int]] = shrinkList[Int] 
+  implicit lazy val shrinkBooleanList: Shrink[List[Boolean]] = shrinkList[Boolean] 
+  implicit lazy val shrinkStringList: Shrink[List[String]] = shrinkList[String] 
+  implicit lazy val shrinkDoubleList: Shrink[List[Double]] = shrinkList[Double] 
+  implicit lazy val shrinkIntOption: Shrink[Option[Int]] = shrinkOption[Int] 
+  implicit lazy val shrinkBooleanOption: Shrink[Option[Boolean]] = shrinkOption[Boolean] 
+  implicit lazy val shrinkStringOption: Shrink[Option[String]] = shrinkOption[String] 
+  implicit lazy val shrinkDoubleOption: Shrink[Option[Double]] = shrinkOption[Double] 
+
 }

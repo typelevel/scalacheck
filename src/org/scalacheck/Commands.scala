@@ -16,7 +16,14 @@ import Shrink._
 /** See User Guide for usage examples */
 trait Commands extends Prop {
 
-  /** The abstract state data type. This type must be immutable. */
+  import Prop.extendedBoolean
+
+  /** The abstract state data type. This type must be immutable.
+   *  The state type that encodes the abstract state. The abstract state
+   *  should model all the features we need from the real state, the system
+   *  under test. We should leave out all details that aren't needed for
+   *  specifying our pre- and postconditions. The state type must be called
+   *  State and be immutable. */
   type State <: AnyRef
 
   private val bindings = new scala.collection.mutable.ListBuffer[(State,Any)]
@@ -30,7 +37,13 @@ trait Commands extends Prop {
 
   def apply(p: Gen.Params) = commandsProp(p)
 
-  /** An abstract command */
+  /** Abstract commands are defined as subtypes of the traits Command or SetCommand.
+   *  Each command must have a run method and a method that returns the new abstract
+   *  state, as it should look after the command has been run.
+   *  A command can also define a precondition that states how the current
+   *  abstract state must look if the command should be allowed to run.
+   *  Finally, we can also define a postcondition which verifies that the
+   *  system under test is in a correct state after the command exectution. */
   trait Command {
 
     /** Used internally. */
@@ -38,7 +51,17 @@ trait Commands extends Prop {
 
     def run(s: State): Any
     def nextState(s: State): State
+
+    /** A precondition is a function that
+     *  takes the current abstract state as parameter and returns a boolean
+     *  that says if the precondition is fulfilled or not. */
     var preCondition: State => Boolean = s => true
+
+    /** A postcondition is a function that
+     *  takes two parameters, s and r. s is the abstract state before
+     *  the command was run, and r is the result from the command's run
+     *  method. The postcondition function should return a Boolean (or
+     *  a Prop instance) that says if the condition holds or not. */
     var postCondition: (State,Any) => Prop = (s,r) => proved
   }
 
@@ -55,7 +78,8 @@ trait Commands extends Prop {
     def nextState(s: State, b: Binding): State
   }
 
-  /** Resets the system under test and returns its abstract state */
+  /** initialState should reset the system under test to a well defined
+   *  initial state, and return the abstract version of that state. */
   protected def initialState(): State
 
   private def initState() = {
@@ -63,7 +87,14 @@ trait Commands extends Prop {
     initialState()
   }
 
-  /** Generates a command */
+  /** The command generator. Given an abstract state, the generator
+   *  should return a command that is allowed to run in that state. Note that
+   *  it is still neccessary to define preconditions on the commands if there
+   *  are any. The generator is just giving a hint of which commands that are
+   *  suitable for a given state, the preconditions will still be checked before
+   *  a command runs. Sometimes you maybe want to adjust the distribution of
+   *  your command generator according to the state, or do other calculations
+   *  based on the state. */
   protected def genCommand(s: State): Gen[Command]
 
   private case class Cmds(cs: List[Command], ss: List[State]) {
@@ -109,71 +140,4 @@ trait Commands extends Prop {
 
   }
 
-}
-
-class Counter {
-  private var n = 0
-  def inc = n += 1
-  def dec = if(n > 10) n -= 2 else n -= 1
-  def get = n
-  def reset = n = 0
-}
-
-object CommandsTester extends Commands {
-
-  // This is our system under test. All commands run against this instance,
-  // all postconditions are checked on it.
-  val counter = new Counter
-
-  // This is our state type that encodes the abstract state. The abstract state
-  // should model all the features we need from the real state, the system
-  // under test. We should leave out all details that aren't needed for 
-  // specifying our pre- and postconditions. The state type must be called
-  // State and be immutable.
-  case class State(n: Int)
-
-  // initialState should reset the system under test to a well defined
-  // initial state, and return the abstract version of that state.
-  def initialState() = {
-    counter.reset
-    State(counter.get)
-  }
-
-  // We define our commands as subtypes of the traits Command or SetCommand.
-  // Each command must a run method and a method that returns the new abstract
-  // state, as it should look after the command has been run.
-  // A command can also define a precondition that states how the current
-  // abstract state must look if the command should be allowed to run.
-  // Finally, we can also define a postcondition which verifies that the
-  // system under test is in a correct state after the command exectution.
-
-  case object Inc extends Command {
-    def run(s: State) = counter.inc
-    def nextState(s: State) = State(s.n + 1)
-
-    // when we define a postcondition, we assign a function that
-    // takes two parameters, s and r. s is the abstract state before
-    // the command was run, and r is the result from the command's run
-    // method. The postcondition function should return a Boolean (or
-    // a Prop instance) that says if the condition holds or not.
-    postCondition = (s,r) => counter.get == s.n + 1
-  }
-
-  case object Dec extends Command {
-    def run(s: State) = counter.dec
-    def nextState(s: State) = State(s.n - 1)
-    postCondition = (s,r) => counter.get == s.n - 1
-  }
-
-
-  // This is our command generator. Given an abstract state, the generator
-  // should return a command that is allowed to run in that state. Note that
-  // it is still neccessary to define preconditions on the commands if there
-  // are any. The generator is just giving a hint of which commands that are
-  // suitable for a given state, the preconditions will still be checked before
-  // a command runs. Sometimes you maybe want to adjust the distribution of
-  // your command generator according to the state, or do other calculations
-  // based on the state.
-  def genCommand(s: State): Gen[Command] = Gen.elements(Inc, Dec)
-  
 }
