@@ -87,7 +87,6 @@ val wrkSize = if(large) 200 else 20
 val workers = 
   if(args.contains("-4")) 4 
   else if(args.contains("-2")) 2 
-  else if(args.contains("-1")) 1 
   else 0
 
 val prms = 

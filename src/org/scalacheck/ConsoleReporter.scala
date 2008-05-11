@@ -47,7 +47,7 @@ object ConsoleReporter {
 
   def propReport(pName: String, s: Int, d: Int) =
   {
-    if(d == 0) printf("\r  %s: Passed %s tests\r", s, pName)
+    if(d == 0) printf("\r  %s: Passed %s tests\r", pName, s)
     else printf("\r  %s: Passed %s tests; %s discarded\r", pName, s, d)
     Console.flush
   }

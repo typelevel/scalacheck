@@ -26,16 +26,12 @@ trait Commands extends Prop {
    *  State and be immutable. */
   type State <: AnyRef
 
-  private val bindings = new scala.collection.mutable.ListBuffer[(State,Any)]
-
-  protected class Binding(private val key: State) {
+  class Binding(private val key: State) {
     def get: Any = bindings.find(_._1 eq key) match {
       case None => error("No value bound")
       case Some(x) => x
     }
   }
-
-  def apply(p: Gen.Params) = commandsProp(p)
 
   /** Abstract commands are defined as subtypes of the traits Command or SetCommand.
    *  Each command must have a run method and a method that returns the new abstract
@@ -78,27 +74,15 @@ trait Commands extends Prop {
     def nextState(s: State, b: Binding): State
   }
 
-  /** initialState should reset the system under test to a well defined
-   *  initial state, and return the abstract version of that state. */
-  protected def initialState(): State
+  private case class Cmds(cs: List[Command], ss: List[State]) {
+    override def toString = cs.map(_.toString).mkString(", ")
+  }
+
+  private val bindings = new scala.collection.mutable.ListBuffer[(State,Any)]
 
   private def initState() = {
     bindings.clear()
     initialState()
-  }
-
-  /** The command generator. Given an abstract state, the generator
-   *  should return a command that is allowed to run in that state. Note that
-   *  it is still neccessary to define preconditions on the commands if there
-   *  are any. The generator is just giving a hint of which commands that are
-   *  suitable for a given state, the preconditions will still be checked before
-   *  a command runs. Sometimes you maybe want to adjust the distribution of
-   *  your command generator according to the state, or do other calculations
-   *  based on the state. */
-  protected def genCommand(s: State): Gen[Command]
-
-  private case class Cmds(cs: List[Command], ss: List[State]) {
-    override def toString = cs.map(_.toString).mkString(", ")
   }
 
   private def genCmds: Gen[Cmds] = {
@@ -130,7 +114,7 @@ trait Commands extends Prop {
     case _ => error("Should not be here")
   }
 
-  def commandsProp: Prop = {
+  private def commandsProp: Prop = {
 
     def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) =>
       shrink(cs)(shrinkList).flatMap(cs => validCmds(initialState(), cs).toList)
@@ -139,5 +123,21 @@ trait Commands extends Prop {
     forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
 
   }
+
+  def apply(p: Gen.Params) = commandsProp(p)
+
+  /** initialState should reset the system under test to a well defined
+   *  initial state, and return the abstract version of that state. */
+  def initialState(): State
+
+  /** The command generator. Given an abstract state, the generator
+   *  should return a command that is allowed to run in that state. Note that
+   *  it is still neccessary to define preconditions on the commands if there
+   *  are any. The generator is just giving a hint of which commands that are
+   *  suitable for a given state, the preconditions will still be checked before
+   *  a command runs. Sometimes you maybe want to adjust the distribution of
+   *  your command generator according to the state, or do other calculations
+   *  based on the state. */
+  def genCommand(s: State): Gen[Command]
 
 }

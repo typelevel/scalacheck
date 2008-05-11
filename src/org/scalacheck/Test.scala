@@ -13,7 +13,7 @@ object Test {
 
   import ConsoleReporter.{testReport, propReport}
 
-  def secure[T](x: => T): Either[T,Throwable] =
+  private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
 
   // Types
@@ -107,15 +107,16 @@ object Test {
   /** Tests a property with the given testing parameters, and returns
    *  the test results. <code>propCallback</code> is a function which is
    *  called each time the property is evaluted. Uses actors for parallel
-   *  test execution, unless <code>workers</code> is zero.
+   *  test execution, unless <code>workers</code> is less than or equal to 1.
    *  <code>worker</code> specifies how many working actors should be used.
    *  <code>wrkSize</code> specifies how many tests each worker should
    *  be scheduled with. */
   def check(prms: Params, p: Prop, propCallback: PropEvalCallback,
     workers: Int, wrkSize: Int
   ): Stats =
-    if(workers <= 0) check(prms,p,propCallback)
+    if(workers <= 1) check(prms,p,propCallback)
     else {
+      assert(!p.isInstanceOf[Commands], "Commands cannot be checked multi-threaded")
       import scala.actors._
       import Actor._
 

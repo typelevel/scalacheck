@@ -190,14 +190,31 @@ object Shrink {
       (for(x9 <- shrink(t9)) yield (t1, t2, t3, t4, t5, t6, t7, t8, x9))
     }
 
-  // workarounds for Scala bug #298.
+
+  //// workarounds for Scala bug #298. ////
+
   implicit lazy val shrinkIntList: Shrink[List[Int]] = shrinkList[Int] 
   implicit lazy val shrinkBooleanList: Shrink[List[Boolean]] = shrinkList[Boolean] 
   implicit lazy val shrinkStringList: Shrink[List[String]] = shrinkList[String] 
   implicit lazy val shrinkDoubleList: Shrink[List[Double]] = shrinkList[Double] 
+
   implicit lazy val shrinkIntOption: Shrink[Option[Int]] = shrinkOption[Int] 
   implicit lazy val shrinkBooleanOption: Shrink[Option[Boolean]] = shrinkOption[Boolean] 
   implicit lazy val shrinkStringOption: Shrink[Option[String]] = shrinkOption[String] 
   implicit lazy val shrinkDoubleOption: Shrink[Option[Double]] = shrinkOption[Double] 
 
+  implicit lazy val shrinkIntTuple2: Shrink[Tuple2[Int,Int]] = shrinkTuple2[Int,Int] 
+  implicit lazy val shrinkBooleanTuple2: Shrink[Tuple2[Boolean,Boolean]] = shrinkTuple2[Boolean,Boolean] 
+  implicit lazy val shrinkStringTuple2: Shrink[Tuple2[String,String]] = shrinkTuple2[String,String] 
+  implicit lazy val shrinkDoubleTuple2: Shrink[Tuple2[Double,Double]] = shrinkTuple2[Double,Double] 
+
+  implicit lazy val shrinkIntTuple3: Shrink[Tuple3[Int,Int,Int]] = shrinkTuple3[Int,Int,Int] 
+  implicit lazy val shrinkBooleanTuple3: Shrink[Tuple3[Boolean,Boolean,Boolean]] = shrinkTuple3[Boolean,Boolean,Boolean] 
+  implicit lazy val shrinkStringTuple3: Shrink[Tuple3[String,String,String]] = shrinkTuple3[String,String,String] 
+  implicit lazy val shrinkDoubleTuple3: Shrink[Tuple3[Double,Double,Double]] = shrinkTuple3[Double,Double,Double] 
+
+  implicit lazy val shrinkIntTuple4: Shrink[Tuple4[Int,Int,Int,Int]] = shrinkTuple4[Int,Int,Int,Int] 
+  implicit lazy val shrinkBooleanTuple4: Shrink[Tuple4[Boolean,Boolean,Boolean,Boolean]] = shrinkTuple4[Boolean,Boolean,Boolean,Boolean] 
+  implicit lazy val shrinkStringTuple4: Shrink[Tuple4[String,String,String,String]] = shrinkTuple4[String,String,String,String] 
+  implicit lazy val shrinkDoubleTuple4: Shrink[Tuple4[Double,Double,Double,Double]] = shrinkTuple4[Double,Double,Double,Double] 
 }
