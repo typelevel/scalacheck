@@ -16,6 +16,12 @@ trait Builder[C[_], T] {
 
 trait Buildable[C[_]] {
   def builder[T]: Builder[C,T]
+  def fromIterable[T](it: Iterable[T]): C[T] = {
+    val b = builder[T]
+    val elems = it.elements
+    while(elems.hasNext) b += elems.next
+    b.finalise
+  }
 }
 
 object Buildable {
