@@ -205,6 +205,15 @@ object Gen {
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   })
 
+  /** A generator that generates a random integer in the given (inclusive)
+   *  range. */
+  def choose(low: Long, high: Long) = if(low > high) fail else
+    parameterized(prms => value(prms.rand.choose(low,high)))
+  specify("choose-long", { (l: Long, h: Long) =>
+    if(l > h) choose(l,h) === fail
+    else forAll(choose(l,h)) { x => x >= l && x <= h }
+  })
+
   /** A generator that generates a random double in the given (inclusive)
    *  range. */
   def choose(low: Double, high: Double) = if(low > high) fail else

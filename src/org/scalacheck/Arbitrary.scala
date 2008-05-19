@@ -58,6 +58,7 @@ object Arbitrary {
 
   import Gen.{value, choose, sized, elements, listOf, listOf1,
     frequency, oneOf, elementsFreq, containerOf, resize}
+  import java.util.Date
 
   /** Creates an Arbitrary instance */
   def apply[T](g: => Gen[T]): Arbitrary[T] = new Arbitrary[T] {
@@ -73,13 +74,26 @@ object Arbitrary {
 
   // Primitive types //
 
-  /** Arbitrary instance of bool */
+  /** Arbitrary instance of Boolean */
   implicit lazy val arbBool: Arbitrary[Boolean] =
     Arbitrary(elements(true,false))
-  
-  /** Arbitrary instance of integer */
+
+  /** Arbitrary instance of Int */
   implicit lazy val arbInt: Arbitrary[Int] =
     Arbitrary(sized(s => choose(-s,s)))
+
+  /** Arbitrary instance of Long */
+  implicit lazy val arbLong: Arbitrary[Long] =
+    Arbitrary(sized { s: Int =>
+      val l = s * 10000L
+      choose(-l,l)
+    })
+
+  /** Arbitrary instance of Date */
+  implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(for {
+    l <- arbitrary[Long]
+    d = new Date
+  } yield new Date(d.getTime + l))
 
   /** Arbitrary instance of Throwable */
   implicit lazy val arbThrowable: Arbitrary[Throwable] =
@@ -144,8 +158,8 @@ object Arbitrary {
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
-  /** Arbitrary instance of any buildable container (such as lists, arrays, 
-   *  streams, etc). The maximum size of the container depends on the size 
+  /** Arbitrary instance of any buildable container (such as lists, arrays,
+   *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
   //implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[C]
   //): Arbitrary[C[T]] =
@@ -263,7 +277,7 @@ object Arbitrary {
       t5 <- arbitrary[T5]
       t6 <- arbitrary[T6]
     } yield (t1,t2,t3,t4,t5,t6))
-  
+
   /** Arbitrary instance of 7-tuple */
   implicit def arbTuple7[T1,T2,T3,T4,T5,T6,T7](implicit
     a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
@@ -295,7 +309,7 @@ object Arbitrary {
       t8 <- arbitrary[T8]
     } yield (t1,t2,t3,t4,t5,t6,t7,t8))
 
-  /** Arbitrary instance of 9-tuple */    
+  /** Arbitrary instance of 9-tuple */
   implicit def arbTuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
     a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
     a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8],
