@@ -58,6 +58,7 @@ object Arbitrary {
 
   import Gen.{value, choose, sized, elements, listOf, listOf1,
     frequency, oneOf, elementsFreq, containerOf, resize}
+  import scala.collection.{immutable, mutable}
   import java.util.Date
 
   /** Creates an Arbitrary instance */
@@ -157,6 +158,18 @@ object Arbitrary {
 
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
+
+  /** Arbitrary instance of immutable map */
+  implicit def arbImmutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
+  ): Arbitrary[immutable.Map[T,U]] = Arbitrary(
+    for(seq <- arbitrary[Stream[(T,U)]]) yield immutable.Map(seq: _*)
+  )
+  
+  /** Arbitrary instance of mutable map */
+  implicit def arbMutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
+  ): Arbitrary[mutable.Map[T,U]] = Arbitrary(
+    for(seq <- arbitrary[Stream[(T,U)]]) yield mutable.Map(seq: _*)
+  )
 
   /** Arbitrary instance of any buildable container (such as lists, arrays,
    *  streams, etc). The maximum size of the container depends on the size
