@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import util.{FreqMap,Buildable,Builder}
+
 sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
 }

@@ -9,6 +9,7 @@
 
 package org.scalacheck
 
+import util.{FreqMap,Buildable}
 import scala.collection._
 
 /** A property is a generator that generates a property result */

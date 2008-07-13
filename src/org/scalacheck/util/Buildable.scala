@@ -7,7 +7,7 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*-------------------------------------------------------------------------*/
 
-package org.scalacheck
+package org.scalacheck.util
 
 trait Builder[C[_], T] {
   def +=(x: T)

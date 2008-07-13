@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import util.Buildable
+
 sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
 }

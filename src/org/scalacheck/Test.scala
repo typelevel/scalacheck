@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import util.FreqMap
+
 object Test {
 
   import ConsoleReporter.{testReport, propReport}

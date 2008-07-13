@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import scala.collection.mutable.ListBuffer
+import util.Buildable
 import Prop._
 import Arbitrary._
 

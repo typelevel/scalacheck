@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import util.FreqMap
+
 object ConsoleReporter {
 
   def prettyTestRes(res: Test.Result) = (res.status match {
