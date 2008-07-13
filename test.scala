@@ -30,49 +30,49 @@ object ScalaCheckSpecification extends Properties("ScalaCheck") {
   include(Gen.specification)
 
   specify("propFailing", (prms: Test.Params) =>
-    Test.check(prms, failing).result match {
+    Test.check(prms, failing).status match {
       case _:Failed => true
       case _ => false
     }
   )
 
   specify("propPassing", (prms: Test.Params) =>
-    Test.check(prms, passing).result match {
+    Test.check(prms, passing).status match {
       case Passed => true
       case _ => false
     }
   )
 
   specify("propProved", (prms: Test.Params) =>
-    Test.check(prms, proved).result match {
+    Test.check(prms, proved).status match {
       case _:Test.Proved => true
       case _ => false
     }
   )
 
   specify("propExhausted", (prms: Test.Params) =>
-    Test.check(prms, exhausted).result match {
+    Test.check(prms, exhausted).status match {
       case Exhausted => true
       case _ => false
     }
   )
 
   specify("propPropException", (prms: Test.Params) =>
-    Test.check(prms, propException).result match {
+    Test.check(prms, propException).status match {
       case _:PropException => true
       case _ => false
     }
   )
 
   specify("propGenException", (prms: Test.Params) =>
-    Test.check(prms, genException).result match {
+    Test.check(prms, genException).status match {
       case _:GenException => true
       case _ => false
     }
   )
 
   specify("propShrinked", (prms: Test.Params) =>
-    Test.check(prms, shrinked).result match {
+    Test.check(prms, shrinked).status match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_)::Nil) => 
         x == 0 && y == 0 && z == 0
       case x => false
@@ -97,10 +97,10 @@ val propReport: (String,Int,Int) => Unit =
   if(verbose) ConsoleReporter.propReport 
   else (n, i, j) => () 
 
-val testReport: (String,Test.Stats) => Unit = 
+val testReport: (String,Test.Result) => Unit = 
   if(verbose) ConsoleReporter.testReport
   else (n, s) => s match {
-    case Test.Stats(Test.Passed, _, _) => {}
+    case Test.Result(Test.Passed, _, _, _) => {}
     case _ => ConsoleReporter.testReport(n,s)
   }
 
@@ -119,8 +119,8 @@ val (res,start,stop) = measure(
 val min = (stop-start)/(60*1000)
 val sec = ((stop-start)-(60*1000*min)) / 1000d
 
-val passed = res.filter(_._2.result.passed).size
-val failed = res.filter(!_._2.result.passed).size
+val passed = res.filter(_._2.passed).size
+val failed = res.filter(!_._2.passed).size
 
 if(verbose || failed > 0) println
 

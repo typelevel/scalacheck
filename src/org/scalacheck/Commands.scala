@@ -124,7 +124,7 @@ trait Commands extends Prop {
 
   }
 
-  def apply(p: Gen.Params) = commandsProp(p)
+  def apply(p: Prop.Params) = commandsProp(p)
 
   /** initialState should reset the system under test to a well defined
    *  initial state, and return the abstract version of that state. */

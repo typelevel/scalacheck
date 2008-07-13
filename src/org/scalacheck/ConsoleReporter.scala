@@ -11,22 +11,24 @@ package org.scalacheck
 
 object ConsoleReporter {
 
-  def prettyTestStats(stats: Test.Stats) = stats.result match {
+  def prettyTestRes(res: Test.Result) = (res.status match {
     case Test.Proved(args) =>
-      "OK, proved property:                   \n" + prettyArgs(args)
+      "OK, proved property" +
+      (if(args.isEmpty) "\n" else ":                   \n" + prettyArgs(args))
     case Test.Passed =>
-      "OK, passed " + stats.succeeded + " tests."
+      "OK, passed " + res.succeeded + " tests."
     case Test.Failed(args) =>
-      "Falsified after "+stats.succeeded+" passed tests:\n"+prettyArgs(args)
+      "Falsified after "+res.succeeded+" passed tests" +
+      (if(args.isEmpty) "\n" else ":      \n" + prettyArgs(args))
     case Test.Exhausted =>
-      "Gave up after only " + stats.succeeded + " passed tests. " +
-      stats.discarded + " tests were discarded."
+      "Gave up after only " + res.succeeded + " passed tests. " +
+      res.discarded + " tests were discarded."
     case Test.PropException(args,e) =>
-      "Exception \"" + e + "\" raised on property evaluation:\n" +
-      prettyArgs(args)
+      "Exception \"" + e + "\" raised on property evaluation" +
+      (if(args.isEmpty) "\n" else ":\n" + prettyArgs(args))
     case Test.GenException(e) =>
       "Exception \"" + e + "\" raised on argument generation."
-  }
+  }) + prettyFreqMap(res.freqMap)
 
   def prettyArgs(args: List[Arg]) = {
     val strs = for((a,i) <- args.zipWithIndex) yield (
@@ -36,6 +38,11 @@ object ConsoleReporter {
       (if(a.shrinks > 0) "\" (" + a.shrinks + " shrinks)" else "\"")
     )
     strs.mkString("\n")
+  }
+
+  def prettyFreqMap(fm: FreqMap[Any]) = if(fm.total == 0) "" else {
+    val rs = fm.getRatios.map { case (x,r) => x.toString + ":\t" + (r*100).toString + " %" }
+    rs.mkString("\n","\n","\n")
   }
 
   def propReport(s: Int, d: Int) =
@@ -52,28 +59,28 @@ object ConsoleReporter {
     Console.flush
   }
 
-  def testReport(testStats: Test.Stats) =
+  def testReport(testRes: Test.Result) =
   {
-    val s = prettyTestStats(testStats)
-    printf("%s %s%s\n", if(testStats.result.passed) "+" else "!", s, 
+    val s = prettyTestRes(testRes)
+    printf("%s %s%s\n", if(testRes.passed) "+" else "!", s, 
       List.make(70 - s.length, " ").mkString(""))
-    testStats
+    testRes
   }
 
-  def testReport(pName: String, stats: Test.Stats) =
+  def testReport(pName: String, res: Test.Result) =
   {
     def printL(t: String, label: String, str: String) =
       printf("%s %s: %s%s\n", t, label, str,
         List.make(70 - str.length - label.length, " ").mkString(""))
 
-    printL(if(stats.result.passed) "+" else "!", pName, prettyTestStats(stats))
+    printL(if(res.passed) "+" else "!", pName, prettyTestRes(res))
   }
   
-  def testStatsEx(stats: Test.Stats): Unit = testStatsEx("", stats)
+  def testStatsEx(res: Test.Result): Unit = testStatsEx("", res)
   
-  def testStatsEx(msg: String, stats: Test.Stats) = {
+  def testStatsEx(msg: String, res: Test.Result) = {
     lazy val m = if(msg.length == 0) "" else msg + ": "
-    stats.result match {
+    res.status match {
       case Test.Proved(_) => {}
       case Test.Passed => {}
       case f @ Test.Failed(_) => error(m + f)

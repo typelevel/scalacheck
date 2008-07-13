@@ -27,7 +27,7 @@ class Properties(val name: String) extends Prop {
    *  pairs.  */
   def properties: Seq[(String,Prop)] = props
 
-  def apply(p: Gen.Params) = toProperty(p)
+  def apply(p: Prop.Params) = toProperty(p)
 
   /** Convenience method that checks all properties and reports the
    *  result on the console. Calling <code>ps.check</code> is equal

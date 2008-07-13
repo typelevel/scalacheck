@@ -86,7 +86,7 @@ trait Gen[+T] {
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
   def ===[U](g: Gen[U]) = Prop(prms =>
-    (this(prms), g(prms)) match {
+    (this(prms.genPrms), g(prms.genPrms)) match {
       case (None,None) => proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => proved(prms)
       case _ => falsified(prms)
@@ -96,7 +96,7 @@ trait Gen[+T] {
   def !=[U](g: Gen[U]) = forAll(this)(r => forAll(g)(_ != r))
 
   def !==[U](g: Gen[U]) = Prop(prms =>
-    (this(prms), g(prms)) match {
+    (this(prms.genPrms), g(prms.genPrms)) match {
       case (None,None) => falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => falsified(prms)
       case _ => proved(prms)
