@@ -13,6 +13,15 @@ import util.FreqMap
 
 object ConsoleReporter {
 
+  private def getStackTrace(e: Throwable) = {
+    e.getClass.getName + "\n" +
+    e.getStackTrace.map { st =>
+      import st._
+      "  "+getClassName+"."+getMethodName +
+      "("+getFileName+":"+getLineNumber+")"
+    }.mkString("\n")
+  }
+
   def prettyTestRes(res: Test.Result) = (res.status match {
     case Test.Proved(args) =>
       "OK, proved property" +
@@ -27,9 +36,11 @@ object ConsoleReporter {
       res.discarded + " tests were discarded."
     case Test.PropException(args,e) =>
       "Exception \"" + e + "\" raised on property evaluation" +
-      (if(args.isEmpty) "\n" else ":\n" + prettyArgs(args))
+      (if(args.isEmpty) "\n" else ":\n" + prettyArgs(args)) + "\n\n" +
+      "Stack trace:\n" + getStackTrace(e)
     case Test.GenException(e) =>
-      "Exception \"" + e + "\" raised on argument generation."
+      "Exception \"" + e + "\" raised on argument generation." + "\n\n" +
+      "Stack trace:\n" + getStackTrace(e)
   }) + prettyFreqMap(res.freqMap)
 
   def prettyArgs(args: List[Arg]) = {
