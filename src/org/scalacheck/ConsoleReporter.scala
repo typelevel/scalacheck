@@ -45,10 +45,10 @@ object ConsoleReporter {
 
   def prettyArgs(args: List[Arg]) = {
     val strs = for((a,i) <- args.zipWithIndex) yield (
-      "> " +
-      (if(a.label == "") "ARG_" + i else a.label) + 
-      " = \"" + a.arg + 
-      (if(a.shrinks > 0) "\" (" + a.shrinks + " shrinks)" else "\"")
+      "> "+(if(a.label == "") "ARG_" + i else a.label) + 
+      " = \"" + a.arg + "\"" +
+      (if(a.shrinks > 0) 
+         " ("+a.shrinks+" shrinks, original = \""+a.origArg+"\")" else "")
     )
     strs.mkString("\n")
   }

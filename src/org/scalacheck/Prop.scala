@@ -341,7 +341,7 @@ object Prop {
       case None => undecided(prms)
       case Some(x) => 
         val p = property(f(x))
-        val r = p(prms).addArg(Arg(g.label,x,0))
+        val r = p(prms).addArg(Arg(g.label,x,0,x))
         r.status match {
           case True => new Result(Proof, r.args, r.freqMap, r.label)
           case False => new Result(Undecided, r.args, r.freqMap, r.label)
@@ -356,7 +356,7 @@ object Prop {
       case None => undecided(prms)
       case Some(x) => 
         val p = property(f(x))
-        provedToTrue(p(prms)).addArg(Arg(g.label,x,0))
+        provedToTrue(p(prms)).addArg(Arg(g.label,x,0,x))
     }
   }
 
@@ -378,20 +378,20 @@ object Prop {
         }
       }
 
-      def shrinker(x: A, r: Result, shrinks: Int): Result = {
+      def shrinker(x: A, r: Result, shrinks: Int, orig: A): Result = {
         val xs = shrink(x)
-        val res = r.addArg(Arg(g.label,x,shrinks))
+        val res = r.addArg(Arg(g.label,x,shrinks,orig))
         if(xs.isEmpty) res else getFirstFailure(xs) match {
           case Right(_) => res
-          case Left((x2,r2)) => shrinker(x2, r2, shrinks+1)
+          case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
         }
       }
 
       g(prms.genPrms) match {
         case None => undecided(prms)
         case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
-          case Right((x,r)) => r.addArg(Arg(g.label,x,0))
-          case Left((x,r)) => shrinker(x,r,0) 
+          case Right((x,r)) => r.addArg(Arg(g.label,x,0,x))
+          case Left((x,r)) => shrinker(x,r,0,x) 
         }
       }
    }
