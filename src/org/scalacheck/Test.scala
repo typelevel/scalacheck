@@ -44,7 +44,7 @@ object Test {
   sealed case class Proved(args: List[Arg]) extends Status 
 
   /** The property was proved wrong with the given concrete arguments.  */
-  sealed case class Failed(args: List[Arg]) extends Status
+  sealed case class Failed(args: List[Arg], label: String) extends Status
 
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
@@ -53,7 +53,7 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  sealed case class PropException(args: List[Arg], e: Throwable) extends Status
+  sealed case class PropException(args: List[Arg], e: Throwable, label: String) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */
@@ -101,9 +101,12 @@ object Test {
           case Prop.True =>
             if(s+1 >= prms.minSuccessfulTests) Result(Passed, s+1, d, propRes.freqMap)
             else { propCallback(s+1, d); result(s+1, d,size, propRes.freqMap) }
-          case Prop.Proof => Result(Proved(propRes.args), s+1, d, propRes.freqMap)
-          case Prop.False => Result(Failed(propRes.args), s, d, propRes.freqMap)
-          case Prop.Exception(e) => Result(PropException(propRes.args, e), s, d, propRes.freqMap)
+          case Prop.Proof => 
+            Result(Proved(propRes.args), s+1, d, propRes.freqMap)
+          case Prop.False => 
+            Result(Failed(propRes.args, propRes.label), s, d, propRes.freqMap)
+          case Prop.Exception(e) => 
+            Result(PropException(propRes.args, e, propRes.label), s, d, propRes.freqMap)
         }
       }
     }
@@ -182,8 +185,10 @@ object Test {
                   case Prop.Proof =>
                     s2 += 1
                     status = Proved(propRes.args)
-                  case Prop.False => status = Failed(propRes.args)
-                  case Prop.Exception(e) => status = PropException(propRes.args, e)
+                  case Prop.False => 
+                    status = Failed(propRes.args, propRes.label)
+                  case Prop.Exception(e) => 
+                    status = PropException(propRes.args, e, propRes.label)
                 }
               }
               size += ((prms.maxSize-size)/(prms.minSuccessfulTests-s2))

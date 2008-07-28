@@ -284,23 +284,23 @@ object Prop {
   // Property combinators
 
   /** A property that never is proved or falsified */
-  lazy val undecided = Prop(Result(Undecided) label "undecided")
+  lazy val undecided = Prop(Result(Undecided))
   specify("undecided", (prms: Params) => undecided(prms).status == Undecided)
 
   /** A property that always is false */
-  lazy val falsified = Prop(Result(False) label "falsified")
+  lazy val falsified = Prop(Result(False))
   specify("falsified", (prms: Params) => falsified(prms).status == False)
 
   /** A property that always is proved */
-  lazy val proved = Prop(Result(Proof) label "proved")
+  lazy val proved = Prop(Result(Proof))
   specify("proved", (prms: Params) => proved(prms).status == Proof)
 
   /** A property that always is passed */
-  lazy val passed = Prop(Result(True) label "passed")
+  lazy val passed = Prop(Result(True))
   specify("passed", (prms: Params) => passed(prms).status == True)
 
   /** A property that denotes an exception */
-  def exception(e: Throwable) = Prop(Result(Exception(e)) label "exception")
+  def exception(e: Throwable) = Prop(Result(Exception(e)))
   specify("exception", (prms: Params, e: Throwable) => 
     exception(e)(prms).status == Exception(e))
 
