@@ -33,7 +33,7 @@ object Test {
     }
   }
 
-  /** Test result */
+  /** Test status */
   sealed trait Status
 
   /** ScalaCheck found enough cases for which the property holds, so the
