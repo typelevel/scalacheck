@@ -14,35 +14,29 @@ import util.FreqMap
 
 object ConsoleReporter {
 
-  def propReport(s: Int, d: Int) =
-  {
+  def propReport(s: Int, d: Int) = {
     if(d == 0) printf("\rPassed %s tests\r", s)
     else printf("\rPassed %s tests; %s discarded\r", s, d)
     Console.flush
   }
 
-  def propReport(pName: String, s: Int, d: Int) =
-  {
+  def propReport(pName: String, s: Int, d: Int) = {
     if(d == 0) printf("\r  %s: Passed %s tests\r", pName, s)
     else printf("\r  %s: Passed %s tests; %s discarded\r", pName, s, d)
     Console.flush
   }
 
-  def testReport(testRes: Test.Result) =
-  {
-    val s = pretty(testRes)
-    printf("%s %s%s\n", if(testRes.passed) "+" else "!", s,
-      List.make(70 - s.length, " ").mkString(""))
-    testRes
+  def testReport(res: Test.Result) = {
+    print(List.make(78,' ').mkString)
+    val s = (if(res.passed) "+ " else "! ") + pretty(res)
+    printf("\r%s\n", format(s, "", "", 75))
+    res
   }
 
-  def testReport(pName: String, res: Test.Result) =
-  {
-    def printL(t: String, label: String, str: String) =
-      printf("%s %s: %s%s\n", t, label, str,
-        List.make(70 - str.length - label.length, " ").mkString(""))
-
-    printL(if(res.passed) "+" else "!", pName, pretty(res))
+  def testReport(pName: String, res: Test.Result) = {
+    print(List.make(78,' ').mkString)
+    val s = (if(res.passed) "+ " else "! ") + pName + ": " + pretty(res)
+    printf("\r%s\n", format(s, "", "", 75))
   }
 
   def testStatsEx(res: Test.Result): Unit = testStatsEx("", res)

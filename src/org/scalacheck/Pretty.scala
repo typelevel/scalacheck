@@ -23,11 +23,21 @@ object Pretty {
 
   def pretty[T](t: T)(implicit p: Pretty[T]): String = p.pretty(t)
 
+  def pad(s: String, c: Char, length: Int) = 
+    if(s.length >= length) s
+    else s + List.make(length-s.length, c).mkString
+
+  def break(s: String, lead: String, length: Int): String =
+    if(s.length <= length) s
+    else s.substring(0, length) / break(lead+s.substring(length), lead, length)
+
+  def format(s: String, lead: String, trail: String, width: Int) =
+    s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
+
   implicit lazy val prettyThrowable: Pretty[Throwable] = Pretty { e =>
     e.getClass.getName / e.getStackTrace.map { st =>
       import st._
-      "  "+getClassName+"."+getMethodName +
-      "("+getFileName+":"+getLineNumber+")"
+      getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
     }.mkString("\n")
   }
 
