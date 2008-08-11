@@ -121,6 +121,15 @@ trait Prop {
   )
 
   override def toString = "Prop"
+  
+  /** Put a label on the property to make test reports clearer */
+  def label(l: String) = map(_.label(l))
+
+  /** Put a label on the property to make test reports clearer */
+  def :|(l: String) = label(l)
+
+  /** Put a label on the property to make test reports clearer */
+  def |:(l: String) = label(l)
 
 }
 
