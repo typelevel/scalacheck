@@ -25,7 +25,7 @@ trait Prop {
     Prop(prms => f(this(prms), p(prms)))
 
 
-  /** Convenience method that makes it possible to use a this property 
+  /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
   def main(args: Array[String]) { check }
 
@@ -33,7 +33,7 @@ trait Prop {
    *  result on the console. Calling <code>p.check</code> is equal
    *  to calling <code>Test.check(p)</code>, but this method does
    *  not return the test statistics. If you need to get the results
-   *  from the test, or if you want more control over the test parameters, 
+   *  from the test, or if you want more control over the test parameters,
    *  use the <code>check</code> methods in <code>Test</code> instead. */
   def check: Unit = Test.check(this)
 
@@ -104,7 +104,7 @@ trait Prop {
    */
   def ==(p: Prop) = Prop(prms =>
     (this(prms), p(prms)) match {
-      case (r1,r2) if r1.status != Undecided && r1.status == r2.status => 
+      case (r1,r2) if r1.status != Undecided && r1.status == r2.status =>
         Prop.proved(prms)
       case _ => Prop.falsified(prms)
     }
@@ -121,7 +121,7 @@ trait Prop {
   )
 
   override def toString = "Prop"
-  
+
   /** Put a label on the property to make test reports clearer */
   def label(l: String) = map(_.label(l))
 
@@ -309,7 +309,7 @@ object Prop {
 
   /** A property that denotes an exception */
   def exception(e: Throwable) = Prop(Result(Exception(e)))
-  specify("exception", (prms: Params, e: Throwable) => 
+  specify("exception", (prms: Params, e: Throwable) =>
     exception(e)(prms).status == Exception(e))
 
   /** A property that depends on the generator size */
@@ -329,25 +329,25 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Iterable[Prop]) = Prop(prms => 
-    if(ps.forall(p => p(prms).success)) proved(prms) 
+  def all(ps: Iterable[Prop]) = Prop(prms =>
+    if(ps.forall(p => p(prms).success)) proved(prms)
     else falsified(prms)
   )
-  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l))) 
+  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l)))
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Iterable[Prop]) = Prop(prms => 
-    if(ps.exists(p => p(prms).success)) proved(prms) 
+  def atLeastOne(ps: Iterable[Prop]) = Prop(prms =>
+    if(ps.exists(p => p(prms).success)) proved(prms)
     else falsified(prms)
   )
-  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l))) 
+  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l)))
 
   /** Existential quantifier */
   def exists[A,P <% Prop](g: Gen[A])(f: A => P): Prop = Prop { prms =>
     g(prms.genPrms) match {
       case None => undecided(prms)
-      case Some(x) => 
+      case Some(x) =>
         val p = property(f(x))
         val r = p(prms).addArg(Arg(g.label,x,0,x))
         r.status match {
@@ -362,7 +362,7 @@ object Prop {
   def forAllNoShrink[A,P <% Prop](g: Gen[A])(f: A => P) = Prop { prms =>
     g(prms.genPrms) match {
       case None => undecided(prms)
-      case Some(x) => 
+      case Some(x) =>
         val p = property(f(x))
         provedToTrue(p(prms)).addArg(Arg(g.label,x,0,x))
     }
@@ -376,7 +376,7 @@ object Prop {
       /** Returns the first failed result in Left or success in Right */
       def getFirstFailure(xs: Stream[A]): Either[(A,Result),(A,Result)] = {
         assert(!xs.isEmpty, "Stream cannot be empty")
-        val results = xs.map { x => 
+        val results = xs.map { x =>
           val p = property(f(x))
           (x, provedToTrue(p(prms)))
         }
@@ -399,7 +399,7 @@ object Prop {
         case None => undecided(prms)
         case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
           case Right((x,r)) => r.addArg(Arg(g.label,x,0,x))
-          case Left((x,r)) => shrinker(x,r,0,x) 
+          case Left((x,r)) => shrinker(x,r,0,x)
         }
       }
    }
@@ -417,7 +417,7 @@ object Prop {
    *  fails generating a value */
   def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
 
-  def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms => 
+  def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>
     val prop = f(t)
     prop(prms).collect(t)
   }
@@ -425,6 +425,12 @@ object Prop {
   def collect[T](t: T)(prop: Prop) = Prop { prms =>
     prop(prms).collect(t)
   }
+
+  def classify(c: => Boolean, ifTrue: Any)(prop: Prop): Prop =
+    if(c) collect(ifTrue)(prop) else prop
+
+  def classify(c: => Boolean, ifTrue: Any, ifFalse: Any)(prop: Prop): Prop =
+    if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
   /** Wraps and protects a property */
   def property[P <% Prop](p: => P): Prop = Prop(prms =>
