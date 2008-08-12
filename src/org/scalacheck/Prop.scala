@@ -24,7 +24,6 @@ trait Prop {
   def combine(p: Prop)(f: (Result, Result) => Result) =
     Prop(prms => f(this(prms), p(prms)))
 
-
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
   def main(args: Array[String]) { check }
@@ -427,7 +426,7 @@ object Prop {
   }
 
   def classify(c: => Boolean, ifTrue: Any)(prop: Prop): Prop =
-    if(c) collect(ifTrue)(prop) else prop
+    if(c) collect(ifTrue)(prop) else collect(())(prop)
 
   def classify(c: => Boolean, ifTrue: Any, ifFalse: Any)(prop: Prop): Prop =
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)

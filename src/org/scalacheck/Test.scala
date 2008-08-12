@@ -89,8 +89,9 @@ object Test {
   {
     def result(s: Int, d: Int, sz: Float, freqMap: FM): Result = {
 
-      val size: Float = if(s == 0 && d == 0) prms.minSize else
-        sz + ((prms.maxSize-sz)/(prms.minSuccessfulTests-s))
+      val size: Float = 
+        if(s == 0 && d == 0) prms.minSize 
+        else sz + ((prms.maxSize-sz)/(prms.minSuccessfulTests-s))
 
       val propPrms = Prop.Params(Gen.Params(size.round, prms.rand), freqMap)
 

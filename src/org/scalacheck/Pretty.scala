@@ -60,7 +60,11 @@ object Pretty {
     if(fm.total == 0) "" 
     else {
       "> Collected test data: " / {
-        for((xs,r) <- fm.getRatios) yield round(r*100)+"% " + xs.mkString(", ")
+        for {
+          (xs,r) <- fm.getRatios
+          ys = xs - ()
+          if !ys.isEmpty
+        } yield round(r*100)+"% " + ys.mkString(", ")
       }.mkString("\n")
     }
   }
@@ -70,12 +74,12 @@ object Pretty {
       if(l == "") "" else "> Label of failing property: \""+l+"\""
     val s = res.status match {
       case Test.Proved(args) => "OK, proved property."/pretty(args)
-      case Test.Passed => "OK, passed "+res.succeeded+" evaluations."
+      case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
-        "Falsified after "+res.succeeded+" passed evaluations."/label(l)/pretty(args)
+        "Falsified after "+res.succeeded+" passed tests."/label(l)/pretty(args)
       case Test.Exhausted =>
-        "Gave up after only "+res.succeeded+" passed evaluations. " +
-        res.discarded+" evaluations were discarded."
+        "Gave up after only "+res.succeeded+" passed tests. " +
+        res.discarded+" tests were discarded."
       case Test.PropException(args,e,l) =>
         "Exception raised on property evaluation."/label(l)/pretty(args)/
         "> Stack trace: "+pretty(e)
