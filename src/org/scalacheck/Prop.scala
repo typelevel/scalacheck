@@ -416,18 +416,22 @@ object Prop {
    *  fails generating a value */
   def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
 
+  /** Collect data for presentation in test report */
   def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>
     val prop = f(t)
     prop(prms).collect(t)
   }
 
+  /** Collect data for presentation in test report */
   def collect[T](t: T)(prop: Prop) = Prop { prms =>
     prop(prms).collect(t)
   }
 
+  /** Collect data for presentation in test report */
   def classify(c: => Boolean, ifTrue: Any)(prop: Prop): Prop =
     if(c) collect(ifTrue)(prop) else collect(())(prop)
 
+  /** Collect data for presentation in test report */
   def classify(c: => Boolean, ifTrue: Any, ifFalse: Any)(prop: Prop): Prop =
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
