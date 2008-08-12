@@ -15,14 +15,14 @@ import util.FreqMap
 object ConsoleReporter {
 
   def propReport(s: Int, d: Int) = {
-    if(d == 0) printf("\rPassed %s tests\r", s)
-    else printf("\rPassed %s tests; %s discarded\r", s, d)
+    if(d == 0) printf("\rPassed %s evaluations\r", s)
+    else printf("\rPassed %s evaluations; %s discarded\r", s, d)
     Console.flush
   }
 
   def propReport(pName: String, s: Int, d: Int) = {
-    if(d == 0) printf("\r  %s: Passed %s tests\r", pName, s)
-    else printf("\r  %s: Passed %s tests; %s discarded\r", pName, s, d)
+    if(d == 0) printf("\r  %s: Passed %s evaluations\r", pName, s)
+    else printf("\r  %s: Passed %s evaluations; %s discarded\r", pName, s, d)
     Console.flush
   }
 

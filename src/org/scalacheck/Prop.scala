@@ -208,16 +208,17 @@ object Prop {
   // Types
 
   type Args = List[Arg]
+  type FM = FreqMap[immutable.Set[Any]]
 
   /** Property parameters */
-  case class Params(val genPrms: Gen.Params, val freqMap: FreqMap[Any])
+  case class Params(val genPrms: Gen.Params, val freqMap: FM)
 
   object Result {
-    def apply(st: Status) = new Result(st, Nil, FreqMap.empty[Any], "")
+    def apply(st: Status) = new Result(st, Nil, immutable.Set.empty[Any], "")
   }
 
   /** The result of evaluating a property */
-  class Result(val status: Status, val args: Args, val freqMap: FreqMap[Any], val label: String) {
+  class Result(val status: Status, val args: Args, val collected: immutable.Set[Any], val label: String) {
     def success = status match {
       case True => true
       case Proof => true
@@ -230,13 +231,11 @@ object Prop {
       case _ => false
     }
 
-    def setFreqMap(fm: FreqMap[Any]) = new Result(status, args, fm, label)
+    def addArg(a: Arg) = new Result(status, a::args, collected, label)
 
-    def addArg(a: Arg) = new Result(status, a::args, freqMap, label)
+    def collect(x: Any) = new Result(status, args, collected + x, label)
 
-    def collect(x: Any) = setFreqMap(freqMap + x)
-
-    def label(l: String) = new Result(status, args, freqMap, l)
+    def label(l: String) = new Result(status, args, collected, l)
   }
 
   sealed trait Status
@@ -285,7 +284,7 @@ object Prop {
   // Private support functions
 
   private def provedToTrue(r: Result) = r.status match {
-    case Proof => new Result(True, r.args, r.freqMap, r.label)
+    case Proof => new Result(True, r.args, r.collected, r.label)
     case _ => r
   }
 
@@ -352,8 +351,8 @@ object Prop {
         val p = property(f(x))
         val r = p(prms).addArg(Arg(g.label,x,0,x))
         r.status match {
-          case True => new Result(Proof, r.args, r.freqMap, r.label)
-          case False => new Result(Undecided, r.args, r.freqMap, r.label)
+          case True => new Result(Proof, r.args, r.collected, r.label)
+          case False => new Result(Undecided, r.args, r.collected, r.label)
           case _ => r
         }
     }
@@ -419,12 +418,12 @@ object Prop {
   def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
 
   def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms => 
-    val p = f(t)
-    p(prms).setFreqMap(prms.freqMap).collect(t)
+    val prop = f(t)
+    prop(prms).collect(t)
   }
 
-  def collect[T](t: T)(p: Prop) = Prop { prms =>
-    p(prms).setFreqMap(prms.freqMap).collect(t)
+  def collect[T](t: T)(prop: Prop) = Prop { prms =>
+    prop(prms).collect(t)
   }
 
   /** Wraps and protects a property */

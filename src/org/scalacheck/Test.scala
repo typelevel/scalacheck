@@ -9,11 +9,13 @@
 
 package org.scalacheck
 
-import util.FreqMap
 
 object Test {
 
+  import util.FreqMap
   import ConsoleReporter.{testReport, propReport}
+  import scala.collection.immutable
+  import Prop.FM
 
   private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
@@ -25,7 +27,7 @@ object Test {
     minSize: Int, maxSize: Int, rand: RandomGenerator)
 
   /** Test statistics */
-  case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FreqMap[Any]) {
+  case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FM) {
     def passed = status match {
       case Passed => true
       case Proved(_) => true
@@ -41,7 +43,7 @@ object Test {
   case object Passed extends Status
 
   /** ScalaCheck managed to prove the property correct */
-  sealed case class Proved(args: List[Arg]) extends Status 
+  sealed case class Proved(args: List[Arg]) extends Status
 
   /** The property was proved wrong with the given concrete arguments.  */
   sealed case class Failed(args: List[Arg], label: String) extends Status
@@ -85,7 +87,7 @@ object Test {
    *  called each time the property is evaluted. */
   def check(prms: Params, p: Prop, propCallback: PropEvalCallback): Result =
   {
-    def result(s: Int, d: Int, sz: Float, freqMap: FreqMap[Any]): Result = {
+    def result(s: Int, d: Int, sz: Float, freqMap: FM): Result = {
 
       val size: Float = if(s == 0 && d == 0) prms.minSize else
         sz + ((prms.maxSize-sz)/(prms.minSuccessfulTests-s))
@@ -93,25 +95,29 @@ object Test {
       val propPrms = Prop.Params(Gen.Params(size.round, prms.rand), freqMap)
 
       secure(p(propPrms)) match {
-        case Right(e) => Result(GenException(e), s, d, FreqMap.empty[Any])
-        case Left(propRes) => propRes.status match {
-          case Prop.Undecided =>
-            if(d+1 >= prms.maxDiscardedTests) Result(Exhausted, s, d+1, propRes.freqMap)
-            else { propCallback(s, d+1); result(s, d+1, size, propRes.freqMap) }
-          case Prop.True =>
-            if(s+1 >= prms.minSuccessfulTests) Result(Passed, s+1, d, propRes.freqMap)
-            else { propCallback(s+1, d); result(s+1, d,size, propRes.freqMap) }
-          case Prop.Proof => 
-            Result(Proved(propRes.args), s+1, d, propRes.freqMap)
-          case Prop.False => 
-            Result(Failed(propRes.args, propRes.label), s, d, propRes.freqMap)
-          case Prop.Exception(e) => 
-            Result(PropException(propRes.args, e, propRes.label), s, d, propRes.freqMap)
-        }
+        case Right(e) => Result(GenException(e), s, d, FreqMap.empty[immutable.Set[Any]])
+        case Left(propRes) =>
+          val fm =
+            if(propRes.collected.isEmpty) freqMap
+            else freqMap + propRes.collected
+          propRes.status match {
+            case Prop.Undecided =>
+              if(d+1 >= prms.maxDiscardedTests) Result(Exhausted, s, d+1, fm)
+              else { propCallback(s, d+1); result(s, d+1, size, fm) }
+            case Prop.True =>
+              if(s+1 >= prms.minSuccessfulTests) Result(Passed, s+1, d, fm)
+              else { propCallback(s+1, d); result(s+1, d,size, fm) }
+            case Prop.Proof =>
+              Result(Proved(propRes.args), s+1, d, fm)
+            case Prop.False =>
+              Result(Failed(propRes.args, propRes.label), s, d, fm)
+            case Prop.Exception(e) =>
+              Result(PropException(propRes.args, e, propRes.label), s, d, fm)
+          }
       }
     }
 
-    result(0, 0, prms.minSize, FreqMap.empty[Any])
+    result(0, 0, prms.minSize, FreqMap.empty[immutable.Set[Any]])
   }
 
   /** Tests a property with the given testing parameters, and returns
@@ -130,7 +136,7 @@ object Test {
       import scala.actors._
       import Actor._
 
-      case class S(status: Status, freqMap: FreqMap[Any], s: Int, d: Int)
+      case class S(status: Status, freqMap: FM, s: Int, d: Int)
 
       val server = actor {
         var s = 0
@@ -138,7 +144,7 @@ object Test {
         var size: Float = prms.minSize
         var w = workers
         var res: Result = null
-        var fm = FreqMap.empty[Any]
+        var fm = FreqMap.empty[immutable.Set[Any]]
         loop { react {
           case 'wrkstop => w -= 1
           case 'get if w == 0 =>
@@ -151,7 +157,7 @@ object Test {
           case S(status, freqMap, sDelta, dDelta) if res == null =>
             s += sDelta
             d += dDelta
-            fm += freqMap
+            fm ++= freqMap
             if(res != null) res = Result(status, s, d, fm)
             else {
               if(s >= prms.minSuccessfulTests) res = Result(Passed,s,d,fm)
@@ -164,7 +170,7 @@ object Test {
       def worker = actor {
         var stop = false
         while(!stop) (server !? 'params) match {
-          case (s: Int, d: Int, sz: Float, freqMap: FreqMap[Any]) =>
+          case (s: Int, d: Int, sz: Float, freqMap: FM) =>
             var s2 = s
             var d2 = d
             var size = sz
@@ -175,26 +181,28 @@ object Test {
               val propPrms = Prop.Params(Gen.Params(size.round, prms.rand), fm)
               secure(p(propPrms)) match {
                 case Right(e) => status =  GenException(e)
-                case Left(propRes) => propRes.status match {
-                  case Prop.Undecided =>
-                    d2 += 1
-                    if(d2 >= prms.maxDiscardedTests) status = Exhausted
-                  case Prop.True =>
-                    s2 += 1
-                    if(s2 >= prms.minSuccessfulTests) status = Passed
-                  case Prop.Proof =>
-                    s2 += 1
-                    status = Proved(propRes.args)
-                  case Prop.False => 
-                    status = Failed(propRes.args, propRes.label)
-                  case Prop.Exception(e) => 
-                    status = PropException(propRes.args, e, propRes.label)
-                }
+                case Left(propRes) =>
+                  if(!propRes.collected.isEmpty) fm += propRes.collected
+                  propRes.status match {
+                    case Prop.Undecided =>
+                      d2 += 1
+                      if(d2 >= prms.maxDiscardedTests) status = Exhausted
+                    case Prop.True =>
+                      s2 += 1
+                      if(s2 >= prms.minSuccessfulTests) status = Passed
+                    case Prop.Proof =>
+                      s2 += 1
+                      status = Proved(propRes.args)
+                    case Prop.False =>
+                      status = Failed(propRes.args, propRes.label)
+                    case Prop.Exception(e) =>
+                      status = PropException(propRes.args, e, propRes.label)
+                  }
               }
               size += ((prms.maxSize-size)/(prms.minSuccessfulTests-s2))
               i += 1
             }
-            server ! S(status, fm-freqMap, s2-s, d2-d)
+            server ! S(status, fm--freqMap, s2-s, d2-d)
           case _ => stop = true
         }
         server ! 'wrkstop
@@ -204,8 +212,8 @@ object Test {
       (server !? 'get).asInstanceOf[Result]
     }
 
-  /** Tests a property and prints results to the console. The 
-   *  <code>maxDiscarded</code> parameter specifies how many 
+  /** Tests a property and prints results to the console. The
+   *  <code>maxDiscarded</code> parameter specifies how many
    *  discarded tests that should be allowed before ScalaCheck
    *  gives up. */
   def check(p: Prop, maxDiscarded: Int): Result = {
@@ -226,7 +234,7 @@ object Test {
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested. */
-  def checkProperties(ps: Properties, prms: Params, 
+  def checkProperties(ps: Properties, prms: Params,
     propCallback: NamedPropEvalCallback, testCallback: TestResCallback
   ): Seq[(String,Result)] = ps.properties.map { case (pName,p) =>
     val stats = check(prms,p,propCallback(pName,_,_))
@@ -238,8 +246,8 @@ object Test {
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully testedi. Uses actors for execution. */
-  def checkProperties(ps: Properties, prms: Params, 
-    propCallback: NamedPropEvalCallback, testCallback: TestResCallback, 
+  def checkProperties(ps: Properties, prms: Params,
+    propCallback: NamedPropEvalCallback, testCallback: TestResCallback,
     workers: Int, wrkSize: Int
   ): Seq[(String,Result)] = ps.properties.map { case (pName,p) =>
     val res = check(prms,p,propCallback(pName,_,_),workers,wrkSize)
@@ -250,7 +258,7 @@ object Test {
   /** Tests all properties with default testing parameters, and returns
    *  the test results. The results are also printed on the console during
    *  testing. */
-  def checkProperties(ps: Properties): Seq[(String,Result)] = 
+  def checkProperties(ps: Properties): Seq[(String,Result)] =
     checkProperties(ps, defaultParams, propReport, testReport)
 
 }
