@@ -26,14 +26,16 @@ The main features of ScalaCheck is:
     failing command sequences.
 
 This release of ScalaCheck introduces a number of minor fixes and improvements
-since last release. Most work has been done on trying to improve the test
+since the last release. Most work has been done on trying to improve the test
 reports for properties that fail. ScalaCheck now presents complete stack traces
 if exceptions are thrown during property evaluation. It is now also possible to
 collect statistics on generated test data which is presented in the test report
 so you can inspect the distribution of test cases. This feature is similar to
 the functionality found in Haskell QuickCheck. Furthermore, you can now label
 individual parts of a property, to make it easier to find out exactly what part
-of the property failed during evaluation.
+of the property failed during evaluation. For more information, see the updated
+User Guide, in the last paragraphs of the Properties section and the Generators
+section.
 
 There is now a mailing list available for all ScalaCheck users at
 scalacheck@googlegroups.com. Here you can ask any question regarding
@@ -47,6 +49,9 @@ ScalaCheck availability:
 
   * Project site:
     http://www.scalacheck.org
+
+  * User Guide
+    http://code.google.com/p/scalacheck/wiki/UserGuide
 
   * Mailing list:
     scalacheck@googlegroups.com
