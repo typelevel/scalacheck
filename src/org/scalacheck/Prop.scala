@@ -24,9 +24,17 @@ trait Prop {
   def combine(p: Prop)(f: (Result, Result) => Result) =
     Prop(prms => f(this(prms), p(prms)))
 
+  protected def check(prms: Test.Params): Unit = {
+    import ConsoleReporter.{testReport, propReport}
+    testReport(Test.check(prms, this, propReport))
+  }
+
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
-  def main(args: Array[String]) { check }
+  def main(args: Array[String]): Unit = { 
+    //check(parseArgs(args))
+    check(Test.defaultParams)
+  }
 
   /** Convenience method that checks this property and reports the
    *  result on the console. Calling <code>p.check</code> is equal
@@ -164,7 +172,7 @@ object Prop {
   })
   specify("Prop.&& Right prio", (sz: Int, prms: Params) => {
     val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
-    p(prms).label == "RHS"
+    p(prms).labels.contains("RHS")
   })
 
   specify("Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
@@ -213,11 +221,21 @@ object Prop {
   case class Params(val genPrms: Gen.Params, val freqMap: FM)
 
   object Result {
-    def apply(st: Status) = new Result(st, Nil, immutable.Set.empty[Any], "")
+    def apply(st: Status) = new Result(
+      st, 
+      Nil, 
+      immutable.Set.empty[Any], 
+      immutable.Set.empty[String]
+    )
   }
 
   /** The result of evaluating a property */
-  class Result(val status: Status, val args: Args, val collected: immutable.Set[Any], val label: String) {
+  class Result(
+    val status: Status, 
+    val args: Args, 
+    val collected: immutable.Set[Any], 
+    val labels: immutable.Set[String]
+  ) {
     def success = status match {
       case True => true
       case Proof => true
@@ -230,11 +248,11 @@ object Prop {
       case _ => false
     }
 
-    def addArg(a: Arg) = new Result(status, a::args, collected, label)
+    def addArg(a: Arg) = new Result(status, a::args, collected, labels)
 
-    def collect(x: Any) = new Result(status, args, collected + x, label)
+    def collect(x: Any) = new Result(status, args, collected + x, labels)
 
-    def label(l: String) = new Result(status, args, collected, l)
+    def label(l: String) = new Result(status, args, collected, labels + l)
   }
 
   sealed trait Status
@@ -283,7 +301,7 @@ object Prop {
   // Private support functions
 
   private def provedToTrue(r: Result) = r.status match {
-    case Proof => new Result(True, r.args, r.collected, r.label)
+    case Proof => new Result(True, r.args, r.collected, r.labels)
     case _ => r
   }
 
@@ -350,8 +368,8 @@ object Prop {
         val p = property(f(x))
         val r = p(prms).addArg(Arg(g.label,x,0,x))
         r.status match {
-          case True => new Result(Proof, r.args, r.collected, r.label)
-          case False => new Result(Undecided, r.args, r.collected, r.label)
+          case True => new Result(Proof, r.args, r.collected, r.labels)
+          case False => new Result(Undecided, r.args, r.collected, r.labels)
           case _ => r
         }
     }

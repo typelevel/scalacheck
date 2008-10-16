@@ -135,7 +135,7 @@ object Arbitrary {
       minSize <- choose(0,500)
       sizeDiff <- choose(0,500)
       maxSize <- choose(minSize, minSize + sizeDiff)
-    } yield Test.Params(minSuccTests,maxDiscTests,minSize,maxSize,StdRand))
+    } yield Test.Params(minSuccTests,maxDiscTests,minSize,maxSize,StdRand,1,0))
 
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Params] =

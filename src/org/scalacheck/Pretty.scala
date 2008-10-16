@@ -70,18 +70,20 @@ object Pretty {
   }
 
   implicit lazy val prettyTestRes: Pretty[Test.Result] = Pretty { res =>
-    def label(l: String) = 
-      if(l == "") "" else "> Label of failing property: \""+l+"\""
+    def labels(ls: collection.immutable.Set[String]) = 
+      if(ls.isEmpty) "" else "> Labels of failing property: " / {
+        ls.map("\"" + _ + "\"")
+      }.mkString("\n")
     val s = res.status match {
       case Test.Proved(args) => "OK, proved property."/pretty(args)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
-        "Falsified after "+res.succeeded+" passed tests."/label(l)/pretty(args)
+        "Falsified after "+res.succeeded+" passed tests."/labels(l)/pretty(args)
       case Test.Exhausted =>
         "Gave up after only "+res.succeeded+" passed tests. " +
         res.discarded+" tests were discarded."
       case Test.PropException(args,e,l) =>
-        "Exception raised on property evaluation."/label(l)/pretty(args)/
+        "Exception raised on property evaluation."/labels(l)/pretty(args)/
         "> Stack trace: "+pretty(e)
       case Test.GenException(e) =>
         "Exception raised on argument generation."/"> Stack trace: "/pretty(e)

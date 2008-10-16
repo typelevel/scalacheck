@@ -29,6 +29,11 @@ class Properties(val name: String) extends Prop {
 
   def apply(p: Prop.Params) = toProperty(p)
 
+  override protected def check(prms: Test.Params): Unit = {
+    import ConsoleReporter.{testReport, propReport}
+    Test.checkProperties(this, prms, propReport, testReport)
+  }
+
   /** Convenience method that checks all properties and reports the
    *  result on the console. Calling <code>ps.check</code> is equal
    *  to calling <code>Test.checkProperties(ps)</code>, but this method does
