@@ -515,4 +515,30 @@ object Prop {
     a6: Arbitrary[A6], s6: Shrink[A6]
   ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5, _:A6)))
 
+  /** Converts a function into a property */
+  def property[A1,A2,A3,A4,A5,A6,A7,P] (
+    f:  (A1,A2,A3,A4,A5,A6,A7) => P)(implicit
+    p: P => Prop,
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],
+    a3: Arbitrary[A3], s3: Shrink[A3],
+    a4: Arbitrary[A4], s4: Shrink[A4],
+    a5: Arbitrary[A5], s5: Shrink[A5],
+    a6: Arbitrary[A6], s6: Shrink[A6],
+    a7: Arbitrary[A7], s7: Shrink[A7]
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7)))
+
+  /** Converts a function into a property */
+  def property[A1,A2,A3,A4,A5,A6,A7,A8,P] (
+    f:  (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
+    p: P => Prop,
+    a1: Arbitrary[A1], s1: Shrink[A1],
+    a2: Arbitrary[A2], s2: Shrink[A2],  
+    a3: Arbitrary[A3], s3: Shrink[A3],
+    a4: Arbitrary[A4], s4: Shrink[A4],
+    a5: Arbitrary[A5], s5: Shrink[A5],
+    a6: Arbitrary[A6], s6: Shrink[A6],
+    a7: Arbitrary[A7], s7: Shrink[A7],
+    a8: Arbitrary[A8], s8: Shrink[A8]                                        
+  ): Prop = property((a: A1) => property(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 }
