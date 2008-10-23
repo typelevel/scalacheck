@@ -46,64 +46,18 @@ trait Prop {
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
-   *  generate a result, the new property will generate false.
-   */
-  def &&(p: Prop) = combine(p)((r1,r2) => (r1.status,r2.status) match {
-    case (Exception(_),_) => r1
-    case (_,Exception(_)) => r2
-
-    case (False,_) => r1
-    case (_,False) => r2
-
-    case (_,Proof) => r1
-    case (Proof,_) => r2
-
-    case (_,True) => r1
-    case (True,_) => r2
-
-    case (Undecided,Undecided) => r1
-  })
+   *  generate a result, the new property will generate false.  */
+  def &&(p: Prop) = combine(p)(_ && _)
 
   /** Returns a new property that holds if either this
-   *  or the given property (or both) hold.
-   */
-  def ||(p: Prop) = combine(p)((r1,r2) => (r1.status,r2.status) match {
-    case (Exception(_),_) => r1
-    case (_,Exception(_)) => r2
-
-    case (_,False) => r1
-    case (False,_) => r2
-
-    case (Proof,_) => r1
-    case (_,Proof) => r2
-
-    case (True,_) => r1
-    case (_,True) => r2
-
-    case (Undecided,Undecided) => r1
-  })
+   *  or the given property (or both) hold.  */
+  def ||(p: Prop) = combine(p)(_ || _)
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate the same result
-   *  as the other property.
-   */
-  def ++(p: Prop): Prop = combine(p)((r1,r2) => (r1.status,r2.status) match {
-    case (Exception(_),_) => r1
-    case (_,Exception(_)) => r2
-
-    case (_, Undecided) => r1
-    case (Undecided, _) => r2
-
-    case (_, Proof) => r1
-    case (Proof, _) => r2
-
-    case (_, True) => r1
-    case (True, _) => r2
-
-    case (False, _) => r1
-    case (_, False) => r2
-  })
+   *  as the other property.  */
+  def ++(p: Prop): Prop = combine(p)(_ ++ _)
 
   /** Returns a new property that holds if and only if both this
    *  and the given property generates a result with the same status,
@@ -253,6 +207,56 @@ object Prop {
     def collect(x: Any) = new Result(status, args, collected + x, labels)
 
     def label(l: String) = new Result(status, args, collected, labels + l)
+
+    def &&(r: Result) = (this.status,r.status) match {
+      case (Exception(_),_) => this
+      case (_,Exception(_)) => r
+
+      case (False,_) => this
+      case (_,False) => r
+
+      case (_,Proof) => this
+      case (Proof,_) => r
+
+      case (_,True) => this
+      case (True,_) => r
+
+      case (Undecided,Undecided) => this
+    }
+
+    def ||(r: Result) = (this.status,r.status) match {
+      case (Exception(_),_) => this
+      case (_,Exception(_)) => r
+
+      case (_,False) => this
+      case (False,_) => r
+
+      case (Proof,_) => this
+      case (_,Proof) => r
+
+      case (True,_) => this
+      case (_,True) => r
+
+      case (Undecided,Undecided) => this
+    }
+
+    def ++(r: Result) = (this.status,r.status) match {
+      case (Exception(_),_) => this
+      case (_,Exception(_)) => r
+
+      case (_, Undecided) => this
+      case (Undecided, _) => r
+
+      case (_, Proof) => this
+      case (Proof, _) => r
+
+      case (_, True) => this
+      case (True, _) => r
+
+      case (False, _) => this
+      case (_, False) => r
+    }
+
   }
 
   sealed trait Status
@@ -346,18 +350,15 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  //def all(ps: Prop*) = Prop(prms =>
-  //  if(ps.forall(p => p(prms).success)) proved(prms)
-  //  else falsified(prms)
-  //)
-  def all(ps: Prop*) = ps.reduceLeft(_ && _)
+  def all(ps: Prop*) = if(ps.isEmpty) proved else Prop(prms =>
+    ps.map(p => p(prms)).reduceLeft(_ && _)
+  )
   specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l:_*)))
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Prop*) = Prop(prms =>
-    if(ps.exists(p => p(prms).success)) proved(prms)
-    else falsified(prms)
+  def atLeastOne(ps: Prop*) = if(ps.isEmpty) falsified else Prop(prms =>
+    ps.map(p => p(prms)).reduceLeft(_ || _)
   )
   specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l:_*)))
 
