@@ -21,8 +21,10 @@ trait Prop {
 
   def map(f: Result => Result) = Prop(prms => f(this(prms)))
 
+  def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
+
   def combine(p: Prop)(f: (Result, Result) => Result) =
-    Prop(prms => f(this(prms), p(prms)))
+    for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   protected def check(prms: Test.Params): Unit = {
     import ConsoleReporter.{testReport, propReport}
@@ -61,25 +63,19 @@ trait Prop {
 
   /** Returns a new property that holds if and only if both this
    *  and the given property generates a result with the same status,
-   *  if the status isn't Undecided.
-   */
-  def ==(p: Prop) = Prop(prms =>
-    (this(prms), p(prms)) match {
-      case (r1,r2) if r1.status != Undecided && r1.status == r2.status =>
-        Prop.proved(prms)
-      case _ => Prop.falsified(prms)
-    }
-  )
+   *  if the status isn't Undecided.  */
+  def ==(p: Prop) = this.flatMap(r1 => p.flatMap(r2 =>
+    if(r1.status == Undecided || r2.status == Undecided) Prop.undecided
+    else if(r1.status == r2.status) Prop.proved
+    else Prop.falsified
+  ))
 
   /** Returns a new property that holds if and only if both this
    *  and the given property generates a result with the same status.
    */
-  def ===(p: Prop) = Prop(prms =>
-    (this(prms), p(prms)) match {
-      case (r1,r2) if r1.status == r2.status => Prop.proved(prms)
-      case _ => Prop.falsified(prms)
-    }
-  )
+  def ===(p: Prop) = this.flatMap(r1 => p.flatMap(r2 =>
+    if(r1.status == r2.status) Prop.proved else Prop.falsified
+  ))
 
   override def toString = "Prop"
 
@@ -456,9 +452,8 @@ object Prop {
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
   /** Wraps and protects a property */
-  def property[P <% Prop](p: => P): Prop = Prop(prms =>
-    (try { p: Prop } catch { case e => exception(e) })(prms)
-  )
+  def property[P <% Prop](p: => P): Prop = 
+    try { p: Prop } catch { case e => exception(e) }
 
   /** Converts a function into a property */
   def property[A1,P] (
