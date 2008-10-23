@@ -21,7 +21,7 @@ class Properties(val name: String) extends Prop {
   private def addProp(propName: String, prop: Prop) =
     props += ((name+"."+propName, prop))
 
-  private def toProperty: Prop = Prop.all((properties map (_._2)).toList)
+  private def toProperty: Prop = Prop.all((properties map (_._2)):_*)
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */

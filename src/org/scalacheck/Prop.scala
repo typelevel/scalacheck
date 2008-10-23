@@ -346,19 +346,20 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Iterable[Prop]) = Prop(prms =>
-    if(ps.forall(p => p(prms).success)) proved(prms)
-    else falsified(prms)
-  )
-  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l)))
+  //def all(ps: Prop*) = Prop(prms =>
+  //  if(ps.forall(p => p(prms).success)) proved(prms)
+  //  else falsified(prms)
+  //)
+  def all(ps: Prop*) = ps.reduceLeft(_ && _)
+  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l:_*)))
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Iterable[Prop]) = Prop(prms =>
+  def atLeastOne(ps: Prop*) = Prop(prms =>
     if(ps.exists(p => p(prms).success)) proved(prms)
     else falsified(prms)
   )
-  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l)))
+  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l:_*)))
 
   /** Existential quantifier */
   def exists[A,P <% Prop](g: Gen[A])(f: A => P): Prop = Prop { prms =>
@@ -428,11 +429,11 @@ object Prop {
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Iterable[Gen[T]]) = atLeastOne(gs.map(_ === fail))
+  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ === fail):_*)
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */
-  def noneFailing[T](gs: Iterable[Gen[T]]) = all(gs.map(_ !== fail))
+  def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== fail):_*)
 
   /** Collect data for presentation in test report */
   def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>
