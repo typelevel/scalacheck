@@ -122,12 +122,39 @@ object Gen {
 
 
   /** Record that encapsulates all parameters required for data generation */
-  case class Params(size: Int, rand: RandomGenerator) {
-    def resize(newSize: Int) = Params(newSize,rand)
+  case class Params(size: Int, rng: java.util.Random) {
+    def resize(newSize: Int) = Params(newSize,rng)
+
+    /** @throws IllegalArgumentException if l is greater than h. */
+    def choose(l: Int, h: Int): Int = choose(l:Long, h:Long).toInt
+
+    /** @throws IllegalArgumentException if l is greater than h, or if
+    *  the range between l and h doesn't fit in a Long. */
+    def choose(l: Long, h: Long): Long = {
+      val d = h-l+1
+      if(d <= 0) throw new IllegalArgumentException
+      else {
+        def rnd: Long = {
+          val bits = rng.nextLong
+          val n = bits % d
+          if(bits - n + (d-1) >= 0) n else rnd
+        }
+        rnd + l
+      }
+    }
+
+    def choose(l: Double, h: Double) = {
+      if (h <= l) h
+      else rng.nextDouble * (h-l) + l
+    }
+
   }
 
+  /* Default random generator */
+  object StdRand extends java.util.Random
+
   /* Default generator parameters */
-  val defaultParams = Params(100,StdRand)
+  val defaultParams = Params(100, StdRand)
 
   def apply[T](g: Gen.Params => Option[T]) = new Gen[T] { 
     def apply(p: Gen.Params) = g(p) 
@@ -200,7 +227,7 @@ object Gen {
   /** A generator that generates a random integer in the given (inclusive)
    *  range. */
   def choose(low: Int, high: Int) = if(low > high) fail else
-    parameterized(prms => value(prms.rand.choose(low,high)))
+    parameterized(prms => value(prms.choose(low,high)))
   specify("choose-int", { (l: Int, h: Int) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
@@ -209,7 +236,7 @@ object Gen {
   /** A generator that generates a random integer in the given (inclusive)
    *  range. */
   def choose(low: Long, high: Long) = if(low > high) fail else
-    parameterized(prms => value(prms.rand.choose(low,high)))
+    parameterized(prms => value(prms.choose(low,high)))
   specify("choose-long", { (l: Long, h: Long) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
@@ -218,7 +245,7 @@ object Gen {
   /** A generator that generates a random double in the given (inclusive)
    *  range. */
   def choose(low: Double, high: Double) = if(low > high) fail else
-    parameterized(prms => value(prms.rand.choose(low,high)))
+    parameterized(prms => value(prms.choose(low,high)))
   specify("choose-double", { (l: Double, h: Double) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }

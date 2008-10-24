@@ -16,6 +16,7 @@ object Test {
   import ConsoleReporter.{testReport, propReport}
   import scala.collection.immutable
   import Prop.FM
+  import Gen.StdRand
 
   private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
@@ -28,7 +29,7 @@ object Test {
     maxDiscardedTests: Int,
     minSize: Int, 
     maxSize: Int, 
-    rand: RandomGenerator, 
+    rng: java.util.Random, 
     workers: Int, 
     wrkSize: Int
   )
@@ -96,7 +97,7 @@ object Test {
         if(s == 0 && d == 0) prms.minSize 
         else sz + ((prms.maxSize-sz)/(prms.minSuccessfulTests-s))
 
-      val propPrms = Prop.Params(Gen.Params(size.round, prms.rand), freqMap)
+      val propPrms = Prop.Params(Gen.Params(size.round, prms.rng), freqMap)
 
       secure(p(propPrms)) match {
         case Right(e) => Result(GenException(e), s, d, FreqMap.empty[immutable.Set[Any]])
@@ -181,7 +182,7 @@ object Test {
             var fm = freqMap
             var status: Status = null
             while(status == null && i < wrkSize) {
-              val propPrms = Prop.Params(Gen.Params(size.round, rand), fm)
+              val propPrms = Prop.Params(Gen.Params(size.round, rng), fm)
               secure(p(propPrms)) match {
                 case Right(e) => status =  GenException(e)
                 case Left(propRes) =>
@@ -224,8 +225,8 @@ object Test {
    *  discarded tests that should be allowed before ScalaCheck
    *  gives up. */
   def check(p: Prop, maxDiscarded: Int): Result = {
-    val Params(minSuccessfulTests, _, minSize, maxSize, rand, workers, wrkSize) = defaultParams
-    val params = Params(minSuccessfulTests,maxDiscarded,minSize,maxSize,rand,workers,wrkSize)
+    val Params(minSuccessfulTests, _, minSize, maxSize, rng, workers, wrkSize) = defaultParams
+    val params = Params(minSuccessfulTests,maxDiscarded,minSize,maxSize,rng,workers,wrkSize)
     testReport(check(params, p, propReport))
   }
 
