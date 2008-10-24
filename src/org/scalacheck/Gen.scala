@@ -150,11 +150,8 @@ object Gen {
 
   }
 
-  /* Default random generator */
-  object StdRand extends java.util.Random
-
   /* Default generator parameters */
-  val defaultParams = Params(100, StdRand)
+  val defaultParams = Params(100, util.StdRand)
 
   def apply[T](g: Gen.Params => Option[T]) = new Gen[T] { 
     def apply(p: Gen.Params) = g(p) 

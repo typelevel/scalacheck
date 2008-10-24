@@ -16,7 +16,6 @@ object Test {
   import ConsoleReporter.{testReport, propReport}
   import scala.collection.immutable
   import Prop.FM
-  import Gen.StdRand
 
   private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
@@ -81,7 +80,7 @@ object Test {
   type TestResCallback = (String,Result) => Unit
 
   /** Default testing parameters */
-  val defaultParams = Params(100,500,0,100,StdRand,1,0)
+  val defaultParams = Params(100,500,0,100,util.StdRand,1,0)
 
 
   // Testing functions
