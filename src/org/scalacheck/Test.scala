@@ -13,12 +13,15 @@ package org.scalacheck
 object Test {
 
   import util.FreqMap
+  import util.IntOpt
+  import util.Opt
   import ConsoleReporter.{testReport, propReport}
   import scala.collection.immutable
   import Prop.FM
 
   private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
+
 
   // Types
 
@@ -81,6 +84,39 @@ object Test {
 
   /** Default testing parameters */
   val defaultParams = Params(100,500,0,100,util.StdRand,1,0)
+  
+  private object OptMinSuccess extends 
+    IntOpt(defaultParams.minSuccessfulTests, "minSuccessfulTests", "s")
+  private object OptMaxDiscarded extends
+    IntOpt(defaultParams.maxDiscardedTests, "maxDiscardedTests", "d")
+  private object OptMinSize extends
+    IntOpt(defaultParams.minSize, "minSize", "n")
+  private object OptMaxSize extends
+    IntOpt(defaultParams.maxSize, "maxSize", "x")
+  private object OptWorkers extends
+    IntOpt(defaultParams.workers, "workers", "w")
+  private object OptWorkSize extends 
+    IntOpt(defaultParams.wrkSize, "wrkSize", "z")
+    
+  private val opts = Set[Opt[_]](
+    OptMinSuccess, OptMaxDiscarded, OptMinSize, 
+    OptMaxSize, OptWorkers, OptWorkSize
+  )
+
+  val cmdLineParser = new util.CmdLineParser(opts)
+  
+  /** Parses command line arguments into test parameters. */
+  def parseCmdLine(args: Array[String]) = cmdLineParser.parseArgs(args).map { 
+    optMap => Params(
+      optMap(OptMinSuccess),
+      optMap(OptMaxDiscarded),
+      optMap(OptMinSize),
+      optMap(OptMaxSize),
+      defaultParams.rng,
+      optMap(OptWorkers),
+      optMap(OptWorkSize)
+    )
+  }
 
 
   // Testing functions

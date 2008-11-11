@@ -33,9 +33,8 @@ trait Prop {
 
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = { 
-    //check(parseArgs(args))
-    check(Test.defaultParams)
+  def main(args: Array[String]): Unit = Test.parseCmdLine(args) match {
+    case Test.cmdLineParser.Success(params, _) => check(params)
   }
 
   /** Convenience method that checks this property and reports the
