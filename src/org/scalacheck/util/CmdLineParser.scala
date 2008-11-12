@@ -14,11 +14,15 @@ import scala.util.parsing.input.Reader
 import scala.util.parsing.input.Position
 import scala.collection.Set
 
-abstract sealed class Opt[+T](val default: T, val names: String*)
-abstract class Flag(ns: String*) extends Opt[Unit]((), ns: _*)
-abstract class IntOpt(d: Int, ns: String*) extends Opt[Int](d, ns: _*)
-abstract class StrOpt(d: String, ns: String*) extends Opt[String](d, ns: _*)
- 
+trait Opt[+T] {
+  val default: T
+  val names: Set[String]
+  val help: String
+}
+trait Flag extends Opt[Unit]
+trait IntOpt extends Opt[Int]
+trait StrOpt extends Opt[String]
+
 class OptMap {
   private val opts = new collection.mutable.HashMap[Opt[_], Any]
   def apply(flag: Flag): Boolean = opts.contains(flag)
@@ -35,37 +39,41 @@ class CmdLineParser(opts: Set[Opt[_]]) extends Parsers {
 
   private class ArgsReader(args: Array[String], i: Int) extends Reader[String] {
     val pos = new Position {
-      val column = args.subArray(0,i).foldLeft(0)(_ + _.length)
+      val column = args.subArray(0,i).foldLeft(1)(_ + _.length + 1)
       val line = 1
       val lineContents = args.mkString(" ")
     }
     val atEnd = i >= args.length
-    def first = if(atEnd) "" else args(i)
+    def first = if(atEnd) null else args(i)
     def rest = if(atEnd) this else new ArgsReader(args, i+1)
   }
 
-  private val optName: Parser[String] = accept("option name", {
-    case s if s.length > 0 && s.charAt(0) == '-' => s.drop(1)
+  private def getOpt(s: String) = {
+    if(s == null || s.length == 0 || s.charAt(0) != '-') None
+    else opts.find(_.names.contains(s.drop(1)))
+  }
+  
+  private val opt: Parser[Opt[Any]] = accept("option name", {
+    case s if getOpt(s).isDefined => getOpt(s).get
   })
 
-  private val strVal: Parser[String] = accept("string", {case s => s})
+  private val strVal: Parser[String] = accept("string", {
+    case s if s != null => s
+  })
 
   private val intVal: Parser[Int] = accept("integer", {
-    case s if s.forall(_.isDigit) => s.toInt
+    case s if s != null && s.length > 0 && s.forall(_.isDigit) => s.toInt
   })
 
   private case class OptVal[T](o: Opt[T], v: T)
 
-  private val opt: Parser[OptVal[_]] = optName into { n =>
-    opts.find(_.names.contains(n)) match {
-      case None => failure("There is no option named " + n)
-      case Some(o: Flag) => success(OptVal(o, ()))
-      case Some(o: IntOpt) => intVal ^^ (v => OptVal(o, v))
-      case Some(o: StrOpt) => strVal ^^ (v => OptVal(o, v))
-    }
+  private val optVal: Parser[OptVal[Any]] = opt into {
+    case o: Flag => success(OptVal(o, ()))
+    case o: IntOpt => intVal ^^ (v => OptVal(o, v))
+    case o: StrOpt => strVal ^^ (v => OptVal(o, v))
   }
 
-  private val options: Parser[OptMap] = rep(opt) ^^ { xs =>
+  private val options: Parser[OptMap] = rep(optVal) ^^ { xs =>
     val map = new OptMap
     xs.foreach { case OptVal(o,v) => map(o) = v }
     map
