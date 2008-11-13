@@ -83,7 +83,18 @@ object Test {
   /** Default testing parameters */
   val defaultParams = Params(100,500,0,100,util.StdRand,1,20)
   
-
+  private def assertParams(prms: Params) = {
+    import prms._
+    if(
+      minSuccessfulTests <= 0 || 
+      maxDiscardedTests < 0 || 
+      minSize < 0 || 
+      maxSize < minSize || 
+      workers < 1 || wrkSize <= 0
+    ) throw new IllegalArgumentException("Invalid test parameters")
+  }
+    
+  
   // Testing functions
 
   /** Tests a property with the given testing parameters, and returns
@@ -91,6 +102,8 @@ object Test {
    *  called each time the property is evaluted. */
   private def checkSingleThread(prms: Params, p: Prop, propCallback: PropEvalCallback): Result =
   {
+    assertParams(prms)
+
     def result(s: Int, d: Int, sz: Float, freqMap: FM): Result = {
 
       val size: Float = 
@@ -136,6 +149,7 @@ object Test {
     if(prms.workers <= 1) checkSingleThread(prms, p, propCallback)
     else {
       assert(!p.isInstanceOf[Commands], "Commands cannot be checked multi-threaded")
+      assertParams(prms)
       import scala.actors._
       import Actor._
       import prms._

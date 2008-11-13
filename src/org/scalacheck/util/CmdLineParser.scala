@@ -68,7 +68,7 @@ object CmdLineParser extends Parsers {
   private object OptWorkSize extends IntOpt {
     val default = Test.defaultParams.wrkSize
     val names = Set("wrkSize", "z")
-    val help = "Amount of work each thread should do"
+    val help = "Amount of work each thread should do at a time"
   }
     
   private val opts = Set[Opt[_]](
