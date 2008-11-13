@@ -81,7 +81,7 @@ object Test {
   type TestResCallback = (String,Result) => Unit
 
   /** Default testing parameters */
-  val defaultParams = Params(100,500,0,100,util.StdRand,1,0)
+  val defaultParams = Params(100,500,0,100,util.StdRand,1,20)
   
 
   // Testing functions

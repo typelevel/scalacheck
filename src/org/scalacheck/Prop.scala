@@ -16,6 +16,8 @@ import scala.collection._
 trait Prop {
 
   import Prop.{Result,Params,Proof,True,False,Exception,Undecided}
+  import util.CmdLineParser
+  import CmdLineParser.{Success, NoSuccess}
 
   def apply(prms: Params): Result
 
@@ -31,66 +33,13 @@ trait Prop {
     testReport(Test.check(prms, this, propReport))
   }
 
-  private object OptMinSuccess extends IntOpt {
-    val default = Test.defaultParams.minSuccessfulTests
-    val names = Set("minSuccessfulTests", "s")
-    val help = "Number of tests that must succeed in order to pass a property"
-  }
-  private object OptMaxDiscarded extends IntOpt {
-    val default = Test.defaultParams.maxDiscardedTests
-    val names = Set("maxDiscardedTests", "d")
-    val help = 
-      "Number of tests that can be discarded before ScalaCheck stops " +
-      "testing a property"
-  }
-  private object OptMinSize extends IntOpt {
-    val default = Test.defaultParams.minSize
-    val names = Set("minSize", "n")
-    val help = "Minimum data generation size"
-  }
-  private object OptMaxSize extends IntOpt {
-    val default = Test.defaultParams.maxSize
-    val names = Set("maxSize", "x")
-    val help = "Maximum data generation size"
-  }
-  private object OptWorkers extends IntOpt {
-    val default = Test.defaultParams.workers
-    val names = Set("workers", "w")
-    val help = "Number of threads to execute in parallel for testing"
-  }
-  private object OptWorkSize extends IntOpt {
-    val default = Test.defaultParams.wrkSize
-    val names = Set("wrkSize", "z")
-    val help = "Amount of work each thread should do"
-  }
-    
-  private val opts = Set[Opt[_]](
-    OptMinSuccess, OptMaxDiscarded, OptMinSize, 
-    OptMaxSize, OptWorkers, OptWorkSize
-  )
-
-  private val cmdLineParser = new util.CmdLineParser(opts)
-  
-  /** Parses command line arguments into test parameters. */
-  private def parseCmdLine(args: Array[String]) = cmdLineParser.parseArgs(args).map { 
-    optMap => Test.Params(
-      optMap(OptMinSuccess),
-      optMap(OptMaxDiscarded),
-      optMap(OptMinSize),
-      optMap(OptMaxSize),
-      Test.defaultParams.rng,
-      optMap(OptWorkers),
-      optMap(OptWorkSize)
-    )
-  }
-
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = parseCmdLine(args) match {
-    case cmdLineParser.Success(params, _) => check(params)
-    case e:cmdLineParser.NoSuccess => 
-      println("Incorrect options:")
-      println(e)
+  def main(args: Array[String]): Unit = CmdLineParser.parseArgs(args) match {
+    case Success(params, _) => check(params)
+    case e: NoSuccess => 
+      println("Incorrect options:"+"\n"+e+"\n")
+      CmdLineParser.printHelp
   }
 
   /** Convenience method that checks this property and reports the

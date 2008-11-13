@@ -13,6 +13,7 @@ import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.Reader
 import scala.util.parsing.input.Position
 import scala.collection.Set
+import org.scalacheck.Test
 
 trait Opt[+T] {
   val default: T
@@ -33,9 +34,47 @@ class OptMap {
   def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
 }
 
-class CmdLineParser(opts: Set[Opt[_]]) extends Parsers {
+object CmdLineParser extends Parsers {
 
   type Elem = String
+
+  private object OptMinSuccess extends IntOpt {
+    val default = Test.defaultParams.minSuccessfulTests
+    val names = Set("minSuccessfulTests", "s")
+    val help = "Number of tests that must succeed in order to pass a property"
+  }
+  private object OptMaxDiscarded extends IntOpt {
+    val default = Test.defaultParams.maxDiscardedTests
+    val names = Set("maxDiscardedTests", "d")
+    val help = 
+      "Number of tests that can be discarded before ScalaCheck stops " +
+      "testing a property"
+  }
+  private object OptMinSize extends IntOpt {
+    val default = Test.defaultParams.minSize
+    val names = Set("minSize", "n")
+    val help = "Minimum data generation size"
+  }
+  private object OptMaxSize extends IntOpt {
+    val default = Test.defaultParams.maxSize
+    val names = Set("maxSize", "x")
+    val help = "Maximum data generation size"
+  }
+  private object OptWorkers extends IntOpt {
+    val default = Test.defaultParams.workers
+    val names = Set("workers", "w")
+    val help = "Number of threads to execute in parallel for testing"
+  }
+  private object OptWorkSize extends IntOpt {
+    val default = Test.defaultParams.wrkSize
+    val names = Set("wrkSize", "z")
+    val help = "Amount of work each thread should do"
+  }
+    
+  private val opts = Set[Opt[_]](
+    OptMinSuccess, OptMaxDiscarded, OptMinSize, 
+    OptMaxSize, OptWorkers, OptWorkSize
+  )
 
   private class ArgsReader(args: Array[String], i: Int) extends Reader[String] {
     val pos = new Position {
@@ -79,6 +118,25 @@ class CmdLineParser(opts: Set[Opt[_]]) extends Parsers {
     map
   }
 
-  def parseArgs(args: Array[String]) = phrase(options)(new ArgsReader(args, 0))
+  private val params = options map {
+    optMap => Test.Params(
+      optMap(OptMinSuccess),
+      optMap(OptMaxDiscarded),
+      optMap(OptMinSize),
+      optMap(OptMaxSize),
+      Test.defaultParams.rng,
+      optMap(OptWorkers),
+      optMap(OptWorkSize)
+    )
+  }
+
+  def parseArgs(args: Array[String]) = phrase(params)(new ArgsReader(args, 0))
+
+  def printHelp = {
+    println("Available options:")
+    opts.foreach { opt =>
+      println("  " + opt.names.map("-"+_).mkString(", ") + ": " + opt.help)
+    }
+  }
 
 }
