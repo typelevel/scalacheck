@@ -294,9 +294,10 @@ object Prop {
     def ==>(p: => Prop) = Prop.==>(b,p)
   }
 
-  implicit def extendedAny[T](x: T) = new {
+  implicit def extendedAny[T](x: => T) = new {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
+    def throws[T <: Throwable](c: Class[T]) = Prop.throws(x, c)
   }
 
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
@@ -435,6 +436,12 @@ object Prop {
   /** A property that holds iff none of the given generators
    *  fails generating a value */
   def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== fail):_*)
+
+  /** A property that holds if the given statement throws an exception
+   *  of the specified type */
+  def throws[T <: Throwable](x: => Any, c: Class[T]) =
+    try { x; falsified } catch { case e if c.isInstance(e) => proved }
+  specify("throws", (1/0) throws classOf[ArithmeticException])
 
   /** Collect data for presentation in test report */
   def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>

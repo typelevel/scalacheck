@@ -162,7 +162,6 @@ object Arbitrary {
 
   /** Arbitrary instance of option type */
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
-    //     Arbitrary(sized(n => if(n == 0) value(none[A]) else resize(n - 1, arbitrary[A]).map(some(_))))
     Arbitrary(sized(n => if(n == 0) value(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
 
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =

@@ -90,7 +90,8 @@ object Test {
       maxDiscardedTests < 0 || 
       minSize < 0 || 
       maxSize < minSize || 
-      workers < 1 || wrkSize <= 0
+      workers < 1 || 
+      (workers > 1 && wrkSize <= 0)
     ) throw new IllegalArgumentException("Invalid test parameters")
   }
     

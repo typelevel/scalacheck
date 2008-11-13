@@ -87,7 +87,7 @@ val wrkSize = if(large) 200 else 20
 val workers = 
   if(args.contains("-4")) 4 
   else if(args.contains("-2")) 2 
-  else 0
+  else 1
 
 val prms = 
   if(large) Test.Params(1000, 5000, 0, 10000, util.StdRand, workers, wrkSize)
