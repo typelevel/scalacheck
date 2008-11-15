@@ -270,5 +270,4 @@ object Test {
    *  testing. */
   def checkProperties(ps: Properties): Seq[(String,Result)] =
     checkProperties(ps, defaultParams, propReport, testReport)
-
 }

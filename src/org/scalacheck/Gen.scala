@@ -362,5 +362,4 @@ object Gen {
     s.length > 0 && s(0).isLetter && s(0).isLowerCase &&
     s.forall(_.isLetterOrDigit)
   ))
-
 }

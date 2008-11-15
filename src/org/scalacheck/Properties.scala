@@ -49,14 +49,14 @@ class Properties(val name: String) extends Prop {
 
   /** Adds a property to this property collection */
   def specify(propName: String, prop: => Prop) =
-    addProp(propName, Prop.property(prop))
+    addProp(propName, Prop.secure(prop))
 
   /** Adds a property to this property collection */
   def specify[A1,P] (
     propName: String, f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,P] (
@@ -64,7 +64,7 @@ class Properties(val name: String) extends Prop {
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
     a2: Arbitrary[A2], s2: Shrink[A2]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,P] (
@@ -73,7 +73,7 @@ class Properties(val name: String) extends Prop {
     a1: Arbitrary[A1], s1: Shrink[A1],
     a2: Arbitrary[A2], s2: Shrink[A2],
     a3: Arbitrary[A3], s3: Shrink[A3]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,P] (
@@ -83,7 +83,7 @@ class Properties(val name: String) extends Prop {
     a2: Arbitrary[A2], s2: Shrink[A2],
     a3: Arbitrary[A3], s3: Shrink[A3],
     a4: Arbitrary[A4], s4: Shrink[A4]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,A5,P] (
@@ -94,7 +94,7 @@ class Properties(val name: String) extends Prop {
     a3: Arbitrary[A3], s3: Shrink[A3],
     a4: Arbitrary[A4], s4: Shrink[A4],
     a5: Arbitrary[A5], s5: Shrink[A5]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
   /** Adds a property to this property collection */
   def specify[A1,A2,A3,A4,A5,A6,P] (
@@ -106,6 +106,6 @@ class Properties(val name: String) extends Prop {
     a4: Arbitrary[A4], s4: Shrink[A4],
     a5: Arbitrary[A5], s5: Shrink[A5],
     a6: Arbitrary[A6], s6: Shrink[A6]
-  ): Unit = addProp(propName,Prop.property(f))
+  ): Unit = addProp(propName,Prop.forAll(f))
 
 }

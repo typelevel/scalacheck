@@ -47,7 +47,7 @@
   </target>
 
   <target name="build" depends="prepare">
-    <scalac addParams="-unchecked" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
+    <scalac addParams="-unchecked -deprecation" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
   </target>
 
   <target name="test" depends="build">

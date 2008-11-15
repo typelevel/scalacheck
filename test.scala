@@ -6,19 +6,19 @@ import org.scalacheck.Arbitrary._
 
 object ScalaCheckSpecification extends Properties("ScalaCheck") {
 
-  val proved = property(1 + 1 == 2)
+  val proved: Prop = 1 + 1 == 2
 
-  val passing = property( (n: Int) => n == n )
+  val passing = forAll( (n: Int) => n == n )
 
-  val failing = property( (n: Int) => false )
+  val failing = forAll( (n: Int) => false )
 
-  val exhausted = property( (n: Int) =>
+  val exhausted = forAll( (n: Int) =>
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val shrinked = property( (t: (Int,Int,Int)) => false )
+  val shrinked = forAll( (t: (Int,Int,Int)) => false )
 
-  val propException = property { throw new java.lang.Exception; true }
+  val propException = forAll { n:Int => throw new java.lang.Exception; true }
 
   val undefinedInt = for{
     n <- arbitrary[Int]
