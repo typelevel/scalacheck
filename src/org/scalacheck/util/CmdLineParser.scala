@@ -15,28 +15,28 @@ import scala.util.parsing.input.Position
 import scala.collection.Set
 import org.scalacheck.Test
 
-trait Opt[+T] {
-  val default: T
-  val names: Set[String]
-  val help: String
-}
-trait Flag extends Opt[Unit]
-trait IntOpt extends Opt[Int]
-trait StrOpt extends Opt[String]
-
-class OptMap {
-  private val opts = new collection.mutable.HashMap[Opt[_], Any]
-  def apply(flag: Flag): Boolean = opts.contains(flag)
-  def apply[T](opt: Opt[T]): T = opts.get(opt) match {
-    case None => opt.default
-    case Some(v: T) => v
-  }
-  def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
-}
-
 object CmdLineParser extends Parsers {
 
   type Elem = String
+
+  private trait Opt[+T] {
+    val default: T
+    val names: Set[String]
+    val help: String
+  }
+  private trait Flag extends Opt[Unit]
+  private trait IntOpt extends Opt[Int]
+  private trait StrOpt extends Opt[String]
+
+  private class OptMap {
+    private val opts = new collection.mutable.HashMap[Opt[_], Any]
+    def apply(flag: Flag): Boolean = opts.contains(flag)
+    def apply[T](opt: Opt[T]): T = opts.get(opt) match {
+      case None => opt.default
+      case Some(v: T) => v
+    }
+    def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
+  }
 
   private object OptMinSuccess extends IntOpt {
     val default = Test.defaultParams.minSuccessfulTests
