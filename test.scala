@@ -103,7 +103,7 @@ val propReport: (String,Int,Int) => Unit =
 val testReport: (String,Test.Result) => Unit = 
   if(verbose) ConsoleReporter.testReport
   else (n, s) => s match {
-    case Test.Result(Test.Passed, _, _, _) => {}
+    case r if r.passed => {}
     case _ => ConsoleReporter.testReport(n,s)
   }
 
