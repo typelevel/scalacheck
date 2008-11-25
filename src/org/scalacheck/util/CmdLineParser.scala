@@ -15,20 +15,20 @@ import scala.util.parsing.input.Position
 import scala.collection.Set
 import org.scalacheck.Test
 
-object CmdLineParser extends Parsers {
+trait CmdLineParser extends Parsers {
 
   type Elem = String
 
-  private trait Opt[+T] {
+  trait Opt[+T] {
     val default: T
     val names: Set[String]
     val help: String
   }
-  private trait Flag extends Opt[Unit]
-  private trait IntOpt extends Opt[Int]
-  private trait StrOpt extends Opt[String]
+  trait Flag extends Opt[Unit]
+  trait IntOpt extends Opt[Int]
+  trait StrOpt extends Opt[String]
 
-  private class OptMap {
+  class OptMap {
     private val opts = new collection.mutable.HashMap[Opt[_], Any]
     def apply(flag: Flag): Boolean = opts.contains(flag)
     def apply[T](opt: Opt[T]): T = opts.get(opt) match {
@@ -38,43 +38,7 @@ object CmdLineParser extends Parsers {
     def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
   }
 
-  private object OptMinSuccess extends IntOpt {
-    val default = Test.defaultParams.minSuccessfulTests
-    val names = Set("minSuccessfulTests", "s")
-    val help = "Number of tests that must succeed in order to pass a property"
-  }
-  private object OptMaxDiscarded extends IntOpt {
-    val default = Test.defaultParams.maxDiscardedTests
-    val names = Set("maxDiscardedTests", "d")
-    val help = 
-      "Number of tests that can be discarded before ScalaCheck stops " +
-      "testing a property"
-  }
-  private object OptMinSize extends IntOpt {
-    val default = Test.defaultParams.minSize
-    val names = Set("minSize", "n")
-    val help = "Minimum data generation size"
-  }
-  private object OptMaxSize extends IntOpt {
-    val default = Test.defaultParams.maxSize
-    val names = Set("maxSize", "x")
-    val help = "Maximum data generation size"
-  }
-  private object OptWorkers extends IntOpt {
-    val default = Test.defaultParams.workers
-    val names = Set("workers", "w")
-    val help = "Number of threads to execute in parallel for testing"
-  }
-  private object OptWorkSize extends IntOpt {
-    val default = Test.defaultParams.wrkSize
-    val names = Set("wrkSize", "z")
-    val help = "Amount of work each thread should do at a time"
-  }
-    
-  private val opts = Set[Opt[_]](
-    OptMinSuccess, OptMaxDiscarded, OptMinSize, 
-    OptMaxSize, OptWorkers, OptWorkSize
-  )
+  val opts: Set[Opt[_]]
 
   private class ArgsReader(args: Array[String], i: Int) extends Reader[String] {
     val pos = new Position {
@@ -91,7 +55,7 @@ object CmdLineParser extends Parsers {
     if(s == null || s.length == 0 || s.charAt(0) != '-') None
     else opts.find(_.names.contains(s.drop(1)))
   }
-  
+
   private val opt: Parser[Opt[Any]] = accept("option name", {
     case s if getOpt(s).isDefined => getOpt(s).get
   })
@@ -112,25 +76,11 @@ object CmdLineParser extends Parsers {
     case o: StrOpt => strVal ^^ (v => OptVal(o, v))
   }
 
-  private val options: Parser[OptMap] = rep(optVal) ^^ { xs =>
+  val options: Parser[OptMap] = rep(optVal) ^^ { xs =>
     val map = new OptMap
     xs.foreach { case OptVal(o,v) => map(o) = v }
     map
   }
-
-  private val params = options map {
-    optMap => Test.Params(
-      optMap(OptMinSuccess),
-      optMap(OptMaxDiscarded),
-      optMap(OptMinSize),
-      optMap(OptMaxSize),
-      Test.defaultParams.rng,
-      optMap(OptWorkers),
-      optMap(OptWorkSize)
-    )
-  }
-
-  def parseArgs(args: Array[String]) = phrase(params)(new ArgsReader(args, 0))
 
   def printHelp = {
     println("Available options:")
@@ -139,4 +89,6 @@ object CmdLineParser extends Parsers {
     }
   }
 
+  def parseArgs[T](args: Array[String])(f: OptMap => T) = 
+    phrase(options map f)(new ArgsReader(args,0))
 }

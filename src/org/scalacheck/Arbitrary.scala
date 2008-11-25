@@ -183,8 +183,7 @@ object Arbitrary {
    *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
   //implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[C]
-  //): Arbitrary[C[T]] =
-  //  Arbitrary(containerOf[C,T](arbitrary[T]))
+  //): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
   // The above code crashes in Scala 2.7, therefore we must explicitly define
   // the arbitrary containers for each supported type below.

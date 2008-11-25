@@ -17,7 +17,6 @@ trait Prop {
 
   import Prop.{Result,Params,Proof,True,False,Exception,Undecided}
   import util.CmdLineParser
-  import CmdLineParser.{Success, NoSuccess}
 
   def apply(prms: Params): Result
 
@@ -33,13 +32,67 @@ trait Prop {
     testReport(Test.check(prms, this, propReport))
   }
 
+  private lazy val cmdLineParser = new CmdLineParser {
+    object OptMinSuccess extends IntOpt {
+      val default = Test.defaultParams.minSuccessfulTests
+      val names = Set("minSuccessfulTests", "s")
+      val help = "Number of tests that must succeed in order to pass a property"
+    }
+    object OptMaxDiscarded extends IntOpt {
+      val default = Test.defaultParams.maxDiscardedTests
+      val names = Set("maxDiscardedTests", "d")
+      val help =
+        "Number of tests that can be discarded before ScalaCheck stops " +
+        "testing a property"
+    }
+    object OptMinSize extends IntOpt {
+      val default = Test.defaultParams.minSize
+      val names = Set("minSize", "n")
+      val help = "Minimum data generation size"
+    }
+    object OptMaxSize extends IntOpt {
+      val default = Test.defaultParams.maxSize
+      val names = Set("maxSize", "x")
+      val help = "Maximum data generation size"
+    }
+    object OptWorkers extends IntOpt {
+      val default = Test.defaultParams.workers
+      val names = Set("workers", "w")
+      val help = "Number of threads to execute in parallel for testing"
+    }
+    object OptWorkSize extends IntOpt {
+      val default = Test.defaultParams.wrkSize
+      val names = Set("wrkSize", "z")
+      val help = "Amount of work each thread should do at a time"
+    }
+
+    val opts = Set[Opt[_]](
+      OptMinSuccess, OptMaxDiscarded, OptMinSize,
+      OptMaxSize, OptWorkers, OptWorkSize
+    )
+
+    def parseParams(args: Array[String]) = parseArgs(args) {
+      optMap => Test.Params(
+        optMap(OptMinSuccess),
+        optMap(OptMaxDiscarded),
+        optMap(OptMinSize),
+        optMap(OptMaxSize),
+        Test.defaultParams.rng,
+        optMap(OptWorkers),
+        optMap(OptWorkSize)
+      )
+    }
+  }
+
+  import cmdLineParser.{Success, NoSuccess}
+
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = CmdLineParser.parseArgs(args) match {
+  def main(args: Array[String]): Unit = cmdLineParser.parseParams(args) match {
     case Success(params, _) => check(params)
-    case e: NoSuccess => 
+    case e: NoSuccess =>
       println("Incorrect options:"+"\n"+e+"\n")
-      CmdLineParser.printHelp
+      cmdLineParser.printHelp
   }
 
   /** Convenience method that checks this property and reports the
@@ -176,18 +229,18 @@ object Prop {
 
   object Result {
     def apply(st: Status) = new Result(
-      st, 
-      Nil, 
-      immutable.Set.empty[Any], 
+      st,
+      Nil,
+      immutable.Set.empty[Any],
       immutable.Set.empty[String]
     )
   }
 
   /** The result of evaluating a property */
   class Result(
-    val status: Status, 
-    val args: Args, 
-    val collected: immutable.Set[Any], 
+    val status: Status,
+    val args: Args,
+    val collected: immutable.Set[Any],
     val labels: immutable.Set[String]
   ) {
     def success = status match {
@@ -463,7 +516,7 @@ object Prop {
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
   /** Wraps and protects a property */
-  def secure[P <% Prop](p: => P): Prop = 
+  def secure[P <% Prop](p: => P): Prop =
     try { p: Prop } catch { case e => exception(e) }
 
   /** Converts a function into a universally quantified property */
@@ -541,13 +594,13 @@ object Prop {
     f:  (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],  
+    a2: Arbitrary[A2], s2: Shrink[A2],
     a3: Arbitrary[A3], s3: Shrink[A3],
     a4: Arbitrary[A4], s4: Shrink[A4],
     a5: Arbitrary[A5], s5: Shrink[A5],
     a6: Arbitrary[A6], s6: Shrink[A6],
     a7: Arbitrary[A7], s7: Shrink[A7],
-    a8: Arbitrary[A8], s8: Shrink[A8]                                        
+    a8: Arbitrary[A8], s8: Shrink[A8]
   ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 
   /** Converts a function into a universally quantified property.
@@ -633,12 +686,12 @@ object Prop {
     f:  (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],  
+    a2: Arbitrary[A2], s2: Shrink[A2],
     a3: Arbitrary[A3], s3: Shrink[A3],
     a4: Arbitrary[A4], s4: Shrink[A4],
     a5: Arbitrary[A5], s5: Shrink[A5],
     a6: Arbitrary[A6], s6: Shrink[A6],
     a7: Arbitrary[A7], s7: Shrink[A7],
-    a8: Arbitrary[A8], s8: Shrink[A8]                                        
+    a8: Arbitrary[A8], s8: Shrink[A8]
   ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 }
