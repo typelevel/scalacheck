@@ -58,8 +58,8 @@ sealed abstract class Arbitrary[T] {
  */
 object Arbitrary {
 
-  import Gen.{value, choose, sized, elements, listOf, listOf1,
-    frequency, oneOf, elementsFreq, containerOf, resize}
+  import Gen.{value, choose, sized, listOf, listOf1,
+    frequency, oneOf, containerOf, resize}
   import util.StdRand
   import scala.collection.{immutable, mutable}
   import java.util.Date
@@ -80,7 +80,7 @@ object Arbitrary {
 
   /** Arbitrary instance of Boolean */
   implicit lazy val arbBool: Arbitrary[Boolean] =
-    Arbitrary(elements(true,false))
+    Arbitrary(oneOf(true,false))
 
   /** Arbitrary instance of Int */
   implicit lazy val arbInt: Arbitrary[Int] =
@@ -121,7 +121,7 @@ object Arbitrary {
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] =
-    Arbitrary(elementsFreq(
+    Arbitrary(frequency(
       (5, Prop.proved),
       (4, Prop.falsified),
       (2, Prop.undecided),

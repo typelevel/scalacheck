@@ -153,7 +153,7 @@ object Prop {
   val specification = new Properties("Prop")
 
   import specification.specify
-  import Gen.{value, fail, frequency, elements}
+  import Gen.{value, fail, frequency, oneOf}
   import Arbitrary._
   import Shrink._
 
@@ -170,11 +170,11 @@ object Prop {
     (p && proved) === p
   )
   specify("Prop.&& False", {
-    val g = elements(proved,falsified,undecided)
+    val g = oneOf(proved,falsified,undecided)
     forAll(g)(p => (p && falsified) == falsified)
   })
   specify("Prop.&& Undecided", {
-    val g = elements(proved,undecided)
+    val g = oneOf(proved,undecided)
     forAll(g)(p => (p && undecided) === undecided)
   })
   specify("Prop.&& Right prio", (sz: Int, prms: Params) => {
@@ -192,11 +192,11 @@ object Prop {
     (p || falsified) === p
   )
   specify("Prop.|| True", {
-    val g = elements(proved,falsified,undecided)
+    val g = oneOf(proved,falsified,undecided)
     forAll(g)(p => (p || proved) == proved)
   })
   specify("Prop.|| Undecided", {
-    val g = elements(falsified,undecided)
+    val g = oneOf(falsified,undecided)
     forAll(g)(p => (p || undecided) === undecided)
   })
 
@@ -207,14 +207,14 @@ object Prop {
     (p ++ exception(null)) == exception(null)
   )
   specify("Prop.++ Identity 1", {
-    val g = elements(falsified,proved,exception(null))
+    val g = oneOf(falsified,proved,exception(null))
     forAll(g)(p => (p ++ proved) === p)
   })
   specify("Prop.++ Identity 2", (p: Prop) =>
     (p ++ undecided) === p
   )
   specify("Prop.++ False", {
-    val g = elements(falsified,proved,undecided)
+    val g = oneOf(falsified,proved,undecided)
     forAll(g)(p => (p ++ falsified) === falsified)
   })
 
@@ -603,95 +603,4 @@ object Prop {
     a8: Arbitrary[A8], s8: Shrink[A8]
   ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,P] (
-    f:  A1 => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1]
-  ) = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,P] (
-    f:  (A1,A2) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,P] (
-    f:  (A1,A2,A3) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,A4,P] (
-    f:  (A1,A2,A3,A4) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,A4,A5,P] (
-    f:  (A1,A2,A3,A4,A5) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,A4,A5,A6,P] (
-    f:  (A1,A2,A3,A4,A5,A6) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5],
-    a6: Arbitrary[A6], s6: Shrink[A6]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,A4,A5,A6,A7,P] (
-    f:  (A1,A2,A3,A4,A5,A6,A7) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5],
-    a6: Arbitrary[A6], s6: Shrink[A6],
-    a7: Arbitrary[A7], s7: Shrink[A7]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7)))
-
-  /** Converts a function into a universally quantified property.
-   *  @deprecated Use <code>forAll</code> instead. */
-  @deprecated def property[A1,A2,A3,A4,A5,A6,A7,A8,P] (
-    f:  (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5],
-    a6: Arbitrary[A6], s6: Shrink[A6],
-    a7: Arbitrary[A7], s7: Shrink[A7],
-    a8: Arbitrary[A8], s8: Shrink[A8]
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 }
