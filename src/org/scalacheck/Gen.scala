@@ -17,6 +17,8 @@ import Arbitrary._
 /** Class that represents a generator. */
 trait Gen[+T] {
 
+  import Gen.choose
+
   var label = ""
 
   def label(l: String): this.type = {
@@ -103,6 +105,9 @@ trait Gen[+T] {
       case _ => proved(prms)
     }
   )
+
+  def |[U >: T](g: Gen[U]): Gen[U] = 
+    choose(0,1).flatMap(n => if(n == 0) g else this)
 
   /** Generates a sample value by using default parameters */
   def sample: Option[T] = apply(Gen.defaultParams)
@@ -210,7 +215,7 @@ object Gen {
   specify("lzy", { g: Gen[Int] => lzy(g) === g })
 
   /** A generator that always generates the given value */
-  def value[T](x: T) = Gen(p => Some(x))
+  implicit def value[T](x: T) = Gen(p => Some(x))
   specify("value", (x: Int, prms: Params) => value(x)(prms) == Some(x))
 
   /** A generator that always generates the given value */
