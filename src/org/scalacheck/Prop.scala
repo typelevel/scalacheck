@@ -152,71 +152,71 @@ object Prop {
   /** Specifications for the methods in <code>Prop</code> */
   val specification = new Properties("Prop")
 
-  import specification.specify
+  import specification.property
   import Gen.{value, fail, frequency, oneOf}
   import Arbitrary._
   import Shrink._
 
 
-  // Specifications for the Prop class
+  //// Specifications for the Prop class ////
 
-  specify("Prop.&& Commutativity", (p1: Prop, p2: Prop) =>
+  property("Prop.&& Commutativity") = forAll { (p1: Prop, p2: Prop) =>
     (p1 && p2) === (p2 && p1)
-  )
-  specify("Prop.&& Exception", (p: Prop) =>
+  }
+  property("Prop.&& Exception") = forAll { p: Prop =>
     (p && exception(null)) == exception(null)
-  )
-  specify("Prop.&& Identity", (p: Prop) =>
+  }
+  property("Prop.&& Identity") = forAll { p: Prop =>
     (p && proved) === p
-  )
-  specify("Prop.&& False", {
+  }
+  property("Prop.&& False") = {
     val g = oneOf(proved,falsified,undecided)
     forAll(g)(p => (p && falsified) == falsified)
-  })
-  specify("Prop.&& Undecided", {
+  }
+  property("Prop.&& Undecided") = {
     val g = oneOf(proved,undecided)
     forAll(g)(p => (p && undecided) === undecided)
-  })
-  specify("Prop.&& Right prio", (sz: Int, prms: Params) => {
+  }
+  property("Prop.&& Right prio") = forAll { (sz: Int, prms: Params) =>
     val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
     p(prms).labels.contains("RHS")
-  })
+  }
 
-  specify("Prop.|| Commutativity", (p1: Prop, p2: Prop) =>
+  property("Prop.|| Commutativity") = forAll { (p1: Prop, p2: Prop) =>
     (p1 || p2) === (p2 || p1)
-  )
-  specify("Prop.|| Exception", (p: Prop) =>
+  }
+  property("Prop.|| Exception") = forAll { p: Prop =>
     (p || exception(null)) == exception(null)
-  )
-  specify("Prop.|| Identity", (p: Prop) =>
+  }
+  property("Prop.|| Identity") = forAll { p: Prop =>
     (p || falsified) === p
-  )
-  specify("Prop.|| True", {
+  }
+  property("Prop.|| True") = {
     val g = oneOf(proved,falsified,undecided)
     forAll(g)(p => (p || proved) == proved)
-  })
-  specify("Prop.|| Undecided", {
+  }
+  property("Prop.|| Undecided") = {
     val g = oneOf(falsified,undecided)
     forAll(g)(p => (p || undecided) === undecided)
-  })
+  }
 
-  specify("Prop.++ Commutativity", (p1: Prop, p2: Prop) =>
+  property("Prop.++ Commutativity") = forAll { (p1: Prop, p2: Prop) =>
     (p1 ++ p2) === (p2 ++ p1)
-  )
-  specify("Prop.++ Exception", (p: Prop) =>
+  }
+  property("Prop.++ Exception") = forAll { p: Prop =>
     (p ++ exception(null)) == exception(null)
-  )
-  specify("Prop.++ Identity 1", {
+  }
+  property("Prop.++ Identity 1") = {
     val g = oneOf(falsified,proved,exception(null))
     forAll(g)(p => (p ++ proved) === p)
-  })
-  specify("Prop.++ Identity 2", (p: Prop) =>
+  }
+  property("Prop.++ Identity 2") = forAll { p: Prop =>
     (p ++ undecided) === p
-  )
-  specify("Prop.++ False", {
+  }
+  property("Prop.++ False") = {
     val g = oneOf(falsified,proved,undecided)
     forAll(g)(p => (p ++ falsified) === falsified)
-  })
+  }
 
 
   // Types
@@ -368,24 +368,29 @@ object Prop {
 
   /** A property that never is proved or falsified */
   lazy val undecided = Prop(Result(Undecided))
-  specify("undecided", (prms: Params) => undecided(prms).status == Undecided)
+  property("undecided") = forAll { prms: Params => 
+    undecided(prms).status == Undecided
+  }
 
   /** A property that always is false */
   lazy val falsified = Prop(Result(False))
-  specify("falsified", (prms: Params) => falsified(prms).status == False)
+  property("falsified") = forAll { prms: Params => 
+    falsified(prms).status == False
+  }
 
   /** A property that always is proved */
   lazy val proved = Prop(Result(Proof))
-  specify("proved", (prms: Params) => proved(prms).status == Proof)
+  property("proved") = forAll((prms: Params) => proved(prms).status == Proof)
 
   /** A property that always is passed */
   lazy val passed = Prop(Result(True))
-  specify("passed", (prms: Params) => passed(prms).status == True)
+  property("passed") = forAll((prms: Params) => passed(prms).status == True)
 
   /** A property that denotes an exception */
   def exception(e: Throwable) = Prop(Result(Exception(e)))
-  specify("exception", (prms: Params, e: Throwable) =>
-    exception(e)(prms).status == Exception(e))
+  property("exception") = forAll { (prms: Params, e: Throwable) =>
+    exception(e)(prms).status == Exception(e)
+  }
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.genPrms.size)(prms))
@@ -407,14 +412,16 @@ object Prop {
   def all(ps: Prop*) = if(ps.isEmpty) proved else Prop(prms =>
     ps.map(p => p(prms)).reduceLeft(_ && _)
   )
-  specify("all", forAll(Gen.listOf1(value(proved)))(l => all(l:_*)))
+  property("all") = forAll(Gen.listOf1(value(proved)))(l => all(l:_*))
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
   def atLeastOne(ps: Prop*) = if(ps.isEmpty) falsified else Prop(prms =>
     ps.map(p => p(prms)).reduceLeft(_ || _)
   )
-  specify("atLeastOne", forAll(Gen.listOf1(value(proved)))(l => atLeastOne(l:_*)))
+  property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l => 
+    atLeastOne(l:_*)
+  }
 
   /** Existential quantifier */
   def exists[A,P <% Prop](g: Gen[A])(f: A => P): Prop = Prop { prms =>
@@ -494,7 +501,7 @@ object Prop {
    *  of the specified type */
   def throws[T <: Throwable](x: => Any, c: Class[T]) =
     try { x; falsified } catch { case e if c.isInstance(e) => proved }
-  specify("throws", (1/0) throws classOf[ArithmeticException])
+  property("throws") = ((1/0) throws classOf[ArithmeticException])
 
   /** Collect data for presentation in test report */
   def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>

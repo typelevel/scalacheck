@@ -121,7 +121,7 @@ object Gen {
   /** Specifications for the methods in <code>Gen</code> */
   val specification = new Properties("Gen")
 
-  import specification.specify
+  import specification.property
   import Arbitrary._
   import Shrink._
 
@@ -181,64 +181,62 @@ object Gen {
     }
     if(none) None else Some(builder.finalise)
   })
-  specify("sequence",
+  property("sequence") =
     forAll(listOf(frequency((10,value(arbitrary[Int])),(1,value(fail)))))(l =>
       (someFailing(l) && (sequence[List,Int](l) === fail)) ||
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
-  )
 
   /** Wraps a generator lazily. Useful when defining recursive generators. */
   def lzy[T](g: => Gen[T]) = Gen(p => g(p))
-  specify("lzy", { g: Gen[Int] => lzy(g) === g })
+  property("lzy") = forAll((g: Gen[Int]) => lzy(g) === g)
 
   /** A generator that always generates the given value */
   implicit def value[T](x: T) = Gen(p => Some(x))
-  specify("value", (x: Int, prms: Params) => value(x)(prms) == Some(x))
+  property("value") = forAll((x:Int, prms:Params) => value(x)(prms) == Some(x))
 
   /** A generator that always generates the given value */
   def value[T](f: () => T) = Gen(p => Some(f()))
-  specify("value", (x: Int) => value(() => x) === value(x))
+  property("value") = forAll((x: Int) => value(() => x) === value(x))
 
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = Gen(p => None)
-  specify("fail", (prms: Params) => fail(prms) == None)
+  property("fail") = forAll((prms: Params) => fail(prms) == None)
 
   /** A generator that generates a random integer in the given (inclusive)
    *  range. */
   def choose(low: Int, high: Int) = if(low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
-  specify("choose-int", { (l: Int, h: Int) =>
+  property("choose-int") = forAll { (l: Int, h: Int) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
-  })
+  }
 
   /** A generator that generates a random integer in the given (inclusive)
    *  range. */
   def choose(low: Long, high: Long) = if(low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
-  specify("choose-long", { (l: Long, h: Long) =>
+  property("choose-long") = forAll { (l: Long, h: Long) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
-  })
+  }
 
   /** A generator that generates a random double in the given (inclusive)
    *  range. */
   def choose(low: Double, high: Double) = if(low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
-  specify("choose-double", { (l: Double, h: Double) =>
+  property("choose-double") = forAll { (l: Double, h: Double) =>
     if(l > h) choose(l,h) === fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
-  })
+  }
 
   /** Creates a generator that can access its generation parameters */
-  def parameterized[T](f: Params => Gen[T]): Gen[T] =
-    Gen(prms => f(prms)(prms))
-  specify("parameterized", (g: Gen[Int]) => parameterized(p => g) === g)
+  def parameterized[T](f: Params => Gen[T]): Gen[T] = Gen(prms => f(prms)(prms))
+  property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) === g)
 
   /** Creates a generator that can access its generation size */
   def sized[T](f: Int => Gen[T]) = parameterized(prms => f(prms.size))
-  specify("sized", (g: Gen[Int]) => sized(i => g) === g)
+  property("sized") = forAll((g: Gen[Int]) => sized(i => g) === g)
 
   /** Creates a resized version of a generator */
   def resize[T](s: Int, g: Gen[T]) = Gen(prms => g(prms.resize(s)))
@@ -263,11 +261,11 @@ object Gen {
     i <- choose(0,gs.length-1)
     x <- gs(i)
   } yield x
-  specify("oneOf", { l: List[Int] =>
+  property("oneOf") = forAll { l: List[Int] =>
     val gs = l.map(value(_))
     if(l.isEmpty) oneOf(gs: _*) === fail
     else forAll(oneOf(gs: _*))(l.contains)
-  })
+  }
 
   /** Chooses one of the given values, with a weighted random distribution. 
    *  @deprecated Use <code>frequency</code> with constant generators 
@@ -320,10 +318,14 @@ object Gen {
    *  on the size parameter. This method is equal to calling 
    *  <code>containerOf1[List,T](g)</code>. */
   def listOf1[T](g: => Gen[T]) = containerOf1[List,T](g)
+  property("listOf1") = forAll(listOf1(arbitrary[Int]))(_.length > 0)
 
   /** Generates a list of the given length. This method is equal to calling 
    *  <code>containerOfN[List,T](n,g)</code>. */
   def listOfN[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
+  property("listOfN") = forAll { n:Int => (n >= 0) ==>
+    forAll(listOfN(n, arbitrary[Int])) { l => l.length == n }
+  }
 
   /** Generates a list of the given length. This method is equal to calling 
    *  <code>containerOfN[List,T](n,g)</code>. 
@@ -332,9 +334,9 @@ object Gen {
 
   /** A generator that picks a random number of elements from a list */
   def someOf[T](l: Collection[T]) = choose(0,l.size) flatMap (pick(_,l))
-  specify("someOf", { l: List[Int] =>
-    forAll(someOf(l).map(_.toList)) { _.forall(l.contains) }
-  })
+  property("someOf") = forAll { l: List[Int] =>
+    forAll(someOf(l))(_.toList.forall(l.contains))
+  }
 
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Collection[T]): Gen[Seq[T]] =
@@ -345,37 +347,39 @@ object Gen {
       while(buf.length > n) buf.remove(choose(0,buf.length-1)(prms).get)
       Some(buf)
     })
-  specify("pick", { l: List[Int] =>
-    forAll(choose(-1,2*l.length)) { n =>
+  property("pick") = forAll { l: List[Int] =>
+    forAll(choose(-1, 2*l.length)) { n =>
       if(n < 0 || n > l.length) pick(n,l) === fail
       else forAll(pick(n,l)) { m => m.length == n && m.forall(l.contains) }
     }
-  })
+  }
 
 
   //// Character Generators ////
 
   /* Generates a numerical character */
   def numChar: Gen[Char] = choose(48,57) map (_.toChar)
-  specify("numChar", forAll(numChar)(_.isDigit))
+  property("numChar") = forAll(numChar)(_.isDigit)
 
   /* Generates an upper-case alpha character */
   def alphaUpperChar: Gen[Char] = choose(65,90) map (_.toChar)
-  specify("alphaUpperChar",
-    forAll(alphaUpperChar)(c => c.isLetter && c.isUpperCase))
+  property("alphaUpperChar") = forAll(alphaUpperChar) { c => 
+    c.isLetter && c.isUpperCase
+  }
 
   /* Generates a lower-case alpha character */
   def alphaLowerChar: Gen[Char] = choose(97,122) map (_.toChar)
-  specify("alphaLowerChar",
-    forAll(alphaLowerChar)(c => c.isLetter && c.isLowerCase))
+  property("alphaLowerChar") = forAll(alphaLowerChar) { c => 
+    c.isLetter && c.isLowerCase
+  }
 
   /* Generates an alpha character */
   def alphaChar = frequency((1,alphaUpperChar), (9,alphaLowerChar))
-  specify("alphaChar", forAll(alphaChar)(_.isLetter))
+  property("alphaChar") = forAll(alphaChar)(_.isLetter)
 
   /* Generates an alphanumerical character */
   def alphaNumChar = frequency((1,numChar), (9,alphaChar))
-  specify("alphaNumChar", forAll(alphaNumChar)(_.isLetterOrDigit))
+  property("alphaNumChar") = forAll(alphaNumChar)(_.isLetterOrDigit)
 
 
   //// String Generators ////
@@ -386,8 +390,8 @@ object Gen {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
   } yield List.toString(c::cs)
-  specify("identifier", forAll(identifier)( s =>
+  property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLowerCase &&
     s.forall(_.isLetterOrDigit)
-  ))
+  }
 }

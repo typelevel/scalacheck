@@ -156,6 +156,7 @@ object Test {
       import prms._
 
       case class S(status: Status, freqMap: FM, s: Int, d: Int)
+      case class P(s: Int, d: Int, sz: Float, freqMap: FM)
 
       val server = actor {
         var s = 0
@@ -170,7 +171,7 @@ object Test {
             reply(res)
             exit()
           case 'params => if(res != null) reply() else {
-            reply((s,d,size,fm))
+            reply(P(s,d,size,fm))
             size += wrkSize*((maxSize-size)/(minSuccessfulTests-s))
           }
           case S(status, freqMap, sDelta, dDelta) if res == null =>
@@ -189,7 +190,7 @@ object Test {
       def worker = actor {
         var stop = false
         while(!stop) (server !? 'params) match {
-          case (s: Int, d: Int, sz: Float, freqMap: FM) =>
+          case P(s, d, sz, freqMap) =>
             var s2 = s
             var d2 = d
             var size = sz

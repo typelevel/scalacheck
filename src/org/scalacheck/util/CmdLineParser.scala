@@ -33,7 +33,7 @@ trait CmdLineParser extends Parsers {
     def apply(flag: Flag): Boolean = opts.contains(flag)
     def apply[T](opt: Opt[T]): T = opts.get(opt) match {
       case None => opt.default
-      case Some(v: T) => v
+      case Some(v) => v.asInstanceOf[T]
     }
     def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
   }

@@ -29,55 +29,55 @@ object ScalaCheckSpecification extends Properties("ScalaCheck") {
   include(Prop.specification)
   include(Gen.specification)
 
-  specify("propFailing", (prms: Test.Params) =>
+  property("propFailing") = forAll { prms: Test.Params =>
     Test.check(prms, failing).status match {
       case _:Failed => true
       case _ => false
     }
-  )
+  }
 
-  specify("propPassing", (prms: Test.Params) =>
+  property("propPassing") = forAll { prms: Test.Params =>
     Test.check(prms, passing).status match {
       case Passed => true
       case _ => false
     }
-  )
+  }
 
-  specify("propProved", (prms: Test.Params) =>
+  property("propProved") = forAll { prms: Test.Params =>
     Test.check(prms, proved).status match {
       case _:Test.Proved => true
       case _ => false
     }
-  )
+  }
 
-  specify("propExhausted", (prms: Test.Params) =>
+  property("propExhausted") = forAll { prms: Test.Params =>
     Test.check(prms, exhausted).status match {
       case Exhausted => true
       case _ => false
     }
-  )
+  }
 
-  specify("propPropException", (prms: Test.Params) =>
+  property("propPropException") = forAll { prms: Test.Params =>
     Test.check(prms, propException).status match {
       case _:PropException => true
       case _ => false
     }
-  )
+  }
 
-  specify("propGenException", (prms: Test.Params) =>
+  property("propGenException") = forAll { prms: Test.Params =>
     Test.check(prms, genException).status match {
       case _:GenException => true
       case _ => false
     }
-  )
+  }
 
-  specify("propShrinked", (prms: Test.Params) =>
+  property("propShrinked") = forAll { prms: Test.Params =>
     Test.check(prms, shrinked).status match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_)::Nil,_) => 
         x == 0 && y == 0 && z == 0
       case x => false
     }
-  )
+  }
 
 }
 

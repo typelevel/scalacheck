@@ -27,7 +27,7 @@ sealed abstract class Arbitrary[T] {
  *
  *  <p>
  *  <code>
- *    val myProp = Prop.property { myClass: MyClass =&gt;<br />
+ *    val myProp = Prop.forAll { myClass: MyClass =&gt;<br />
  *      ...<br />
  *    }<br />
  *
