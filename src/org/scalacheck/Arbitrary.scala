@@ -172,7 +172,7 @@ object Arbitrary {
   ): Arbitrary[immutable.Map[T,U]] = Arbitrary(
     for(seq <- arbitrary[Stream[(T,U)]]) yield immutable.Map(seq: _*)
   )
-  
+
   /** Arbitrary instance of mutable map */
   implicit def arbMutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
   ): Arbitrary[mutable.Map[T,U]] = Arbitrary(
@@ -346,4 +346,39 @@ object Arbitrary {
       t8 <- arbitrary[T8]
       t9 <- arbitrary[T9]
     } yield (t1,t2,t3,t4,t5,t6,t7,t8,t9))
+
+
+  // Constraints //
+
+  import Constraint._
+
+  implicit lazy val arbPosInt: Arbitrary[Pos[Int]] = Arbitrary {
+    sized(max => for(n <- choose(0, max)) yield Pos(n))
+  }
+
+  implicit lazy val arbNegInt: Arbitrary[Neg[Int]] = Arbitrary {
+    sized(max => for(n <- choose(-max, 0)) yield Neg(n-1))
+  }
+
+  implicit lazy val arbAlphaString: Arbitrary[Alpha[String]] = Arbitrary {
+    for(cs <- listOf(Gen.alphaChar)) yield Alpha(cs.mkString)
+  }
+
+  implicit lazy val arbNumString: Arbitrary[Numeric[String]] = Arbitrary {
+    for(cs <- listOf(Gen.numChar)) yield Numeric(cs.mkString)
+  }
+
+  implicit lazy val arbAlphaChar: Arbitrary[Alpha[Char]] = Arbitrary {
+    for(c <- Gen.alphaChar) yield Alpha(c)
+  }
+
+  implicit lazy val arbNumChar: Arbitrary[Numeric[Char]] = Arbitrary {
+    for(c <- Gen.numChar) yield Numeric(c)
+  }
+
+  //implicit def arbSmallString[S](implicit fs: S => String, a: Arbitrary[S]
+  //): Arbitrary[Small[String]] = Arbitrary {
+  //  for(s <- arbitrary[S]) yield Small(fs(s))
+  //}
+
 }
