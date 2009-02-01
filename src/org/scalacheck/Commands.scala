@@ -93,7 +93,7 @@ trait Commands extends Prop {
       } yield Cmds(c::cs, s::ss)
 
     for {
-      s0 <- value(() => initialState())
+      s0 <- wrap(value(initialState()))
       cmds <- sized(sizedCmds(s0))
     } yield cmds
   }

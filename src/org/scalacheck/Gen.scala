@@ -187,17 +187,22 @@ object Gen {
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
 
-  /** Wraps a generator lazily. Useful when defining recursive generators. */
-  def lzy[T](g: => Gen[T]) = Gen(p => g(p))
+  /** Wraps a generator lazily. The given parameter is only evalutated once,
+   *  and not until the wrapper generator is evaluated. */
+  def lzy[T](g: => Gen[T]) = new Gen[T] {
+    lazy val h = g
+    def apply(prms: Params) = h(prms)
+  }
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) === g)
+
+  /** Wraps a generator for later evaluation. The given parameter is
+   *  evaluated each time the wrapper generator is evaluated. */
+  def wrap[T](g: => Gen[T]) = Gen(p => g(p))
+  property("wrap") = forAll((g: Gen[Int]) => wrap(g) === g)
 
   /** A generator that always generates the given value */
   implicit def value[T](x: T) = Gen(p => Some(x))
   property("value") = forAll((x:Int, prms:Params) => value(x)(prms) == Some(x))
-
-  /** A generator that always generates the given value */
-  def value[T](f: () => T) = Gen(p => Some(f()))
-  property("value") = forAll((x: Int) => value(() => x) === value(x))
 
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = Gen(p => None)
