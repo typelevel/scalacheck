@@ -9,21 +9,28 @@
 
 package org.scalacheck
 
-sealed trait Pretty[T] {
-  def pretty(t: T): String
+import Math.round
+
+
+sealed trait Pretty {
+  def apply(prms: Pretty.Params): String
+
+  def map(f: String => String) = Pretty(prms => f(Pretty.this(prms)))
+
+  def flatMap(f: String => Pretty) = Pretty(prms => f(Pretty.this(prms))(prms))
 }
 
 object Pretty {
 
-  import Math.round
+  case class Params(verbosity: Int)
+
+  def apply(f: Params => String) = new Pretty { def apply(p: Params) = f(p) }
+
+  def pretty[T <% Pretty](t: T, prms: Params): String = t(prms)
 
   implicit def strBreak(s1: String) = new {
     def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2
   }
-
-  def apply[T](f: T => String) = new Pretty[T] { def pretty(t: T) = f(t) }
-
-  def pretty[T](t: T)(implicit p: Pretty[T]): String = p.pretty(t)
 
   def pad(s: String, c: Char, length: Int) = 
     if(s.length >= length) s
@@ -36,27 +43,33 @@ object Pretty {
   def format(s: String, lead: String, trail: String, width: Int) =
     s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
 
-  implicit lazy val prettyThrowable: Pretty[Throwable] = Pretty { e =>
-    e.getClass.getName / e.getStackTrace.map { st =>
+  implicit def prettyAny[T](t: T) = Pretty { p => t.toString }
+
+  implicit def prettyThrowable(e: Throwable) = Pretty { prms =>
+    val strs = e.getStackTrace.map { st =>
       import st._
       getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
-    }.mkString("\n")
+    }
+    
+    val strs2 = if(prms.verbosity > 0) strs else strs.take(5)
+    
+    e.getClass.getName / strs2.mkString("\n")
   }
 
-  implicit lazy val prettyArgs = Pretty { args: List[Arg] =>
+  implicit def prettyArgs(args: List[Arg[_]]) = Pretty { prms =>
     if(args.isEmpty) "" else {
       for((a,i) <- args.zipWithIndex) yield {
         val l = if(a.label == "") "ARG_"+i else a.label
         val s = 
           if(a.shrinks == 0) "" 
-          else " ("+a.shrinks+" shrinks, original arg: \""+a.origArg+"\")"
+          else " (orig arg: \""+pretty(a.origArg, prms)(a.prettyPrinter)+"\")"
 
-        "> "+l+": \""+a.arg+"\""+s
+        "> "+l+": \""+pretty(a.arg, prms)(a.prettyPrinter)+"\""+s
       }
     }.mkString("\n")
   }
 
-  implicit lazy val prettyFreqMap: Pretty[Prop.FM] = Pretty { fm =>
+  implicit def prettyFreqMap(fm: Prop.FM) = Pretty { prms =>
     if(fm.total == 0) "" 
     else {
       "> Collected test data: " / {
@@ -69,26 +82,26 @@ object Pretty {
     }
   }
 
-  implicit lazy val prettyTestRes: Pretty[Test.Result] = Pretty { res =>
+  implicit def prettyTestRes(res: Test.Result) = Pretty { prms =>
     def labels(ls: collection.immutable.Set[String]) = 
       if(ls.isEmpty) "" else "> Labels of failing property: " / {
         ls.map("\"" + _ + "\"")
       }.mkString("\n")
     val s = res.status match {
-      case Test.Proved(args) => "OK, proved property."/pretty(args)
+      case Test.Proved(args) => "OK, proved property."/pretty(args,prms)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
-        "Falsified after "+res.succeeded+" passed tests."/labels(l)/pretty(args)
+        "Falsified after "+res.succeeded+" passed tests."/labels(l)/pretty(args,prms)
       case Test.Exhausted =>
         "Gave up after only "+res.succeeded+" passed tests. " +
         res.discarded+" tests were discarded."
       case Test.PropException(args,e,l) =>
-        "Exception raised on property evaluation."/labels(l)/pretty(args)/
-        "> Stack trace: "+pretty(e)
+        "Exception raised on property evaluation."/labels(l)/pretty(args,prms)/
+        "> Stack trace: "+pretty(e,prms)
       case Test.GenException(e) =>
-        "Exception raised on argument generation."/"> Stack trace: "/pretty(e)
+        "Exception raised on argument generation."/"> Stack trace: "/pretty(e,prms)
     }
-    s/pretty(res.freqMap)
+    s/pretty(res.freqMap,prms)
   }
 
 }

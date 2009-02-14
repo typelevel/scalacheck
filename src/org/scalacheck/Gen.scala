@@ -15,7 +15,7 @@ import Prop._
 import Arbitrary._
 
 /** Class that represents a generator. */
-trait Gen[+T] {
+sealed trait Gen[+T] {
 
   import Gen.choose
 
@@ -158,6 +158,7 @@ object Gen {
   /* Default generator parameters */
   val defaultParams = Params(100, util.StdRand)
 
+  /* Generator factory method */
   def apply[T](g: Gen.Params => Option[T]) = new Gen[T] { 
     def apply(p: Gen.Params) = g(p) 
   }

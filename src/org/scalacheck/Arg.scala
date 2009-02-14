@@ -9,4 +9,10 @@
 
 package org.scalacheck
 
-case class Arg(label: String, arg: Any, shrinks: Int, origArg: Any)
+case class Arg[T](
+  label: String, 
+  arg: T, 
+  shrinks: Int, 
+  origArg: T,
+  prettyPrinter: T => Pretty
+)

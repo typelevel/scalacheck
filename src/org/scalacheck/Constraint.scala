@@ -1,3 +1,12 @@
+/*-------------------------------------------------------------------------*\
+**  ScalaCheck                                                             **
+**  Copyright (c) 2007-2008 Rickard Nilsson. All rights reserved.          **
+**  http://www.scalacheck.org                                              **
+**                                                                         **
+**  This software is released under the terms of the Revised BSD License.  **
+**  There is NO WARRANTY. See the file LICENSE for the full text.          **
+\*-------------------------------------------------------------------------*/
+
 package org.scalacheck
 
 /** Contains predefined Constraint types */
@@ -33,5 +42,7 @@ trait Constraint[+T] {
   def wrapped: T
 
   override def toString = wrapped.toString
+
+  override def equals(x: Any) = wrapped.equals(x)
 
 }

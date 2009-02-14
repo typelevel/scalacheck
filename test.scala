@@ -73,7 +73,7 @@ object ScalaCheckSpecification extends Properties("ScalaCheck") {
 
   property("propShrinked") = forAll { prms: Test.Params =>
     Test.check(prms, shrinked).status match {
-      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_)::Nil,_) => 
+      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_,_)::Nil,_) => 
         x == 0 && y == 0 && z == 0
       case x => false
     }

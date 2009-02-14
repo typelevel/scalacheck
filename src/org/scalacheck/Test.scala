@@ -51,10 +51,10 @@ object Test {
   case object Passed extends Status
 
   /** ScalaCheck managed to prove the property correct */
-  sealed case class Proved(args: List[Arg]) extends Status
+  sealed case class Proved(args: List[Arg[_]]) extends Status
 
   /** The property was proved wrong with the given concrete arguments.  */
-  sealed case class Failed(args: List[Arg], labels: Set[String]) extends Status
+  sealed case class Failed(args: List[Arg[_]], labels: Set[String]) extends Status
 
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
@@ -63,7 +63,7 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  sealed case class PropException(args: List[Arg], e: Throwable, labels: Set[String]) extends Status
+  sealed case class PropException(args: List[Arg[_]], e: Throwable, labels: Set[String]) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */
