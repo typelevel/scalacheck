@@ -12,21 +12,21 @@ package org.scalacheck
 /** Contains predefined Constraint types */
 object Constraint {
 
-  implicit def unwrap[T](ct: Constraint[T]): T = ct.wrapped
+  implicit def unbox[T](ct: Constraint[T]): T = ct.unbox
 
-  case class Pos[+T](val wrapped: T) extends Constraint[T]
+  case class Pos[+T](val unbox: T) extends Constraint[T]
 
-  case class Neg[+T](val wrapped: T) extends Constraint[T]
+  case class Neg[+T](val unbox: T) extends Constraint[T]
 
-  case class Alpha[+T](val wrapped: T) extends Constraint[T]
+  case class Alpha[+T](val unbox: T) extends Constraint[T]
 
-  case class Numeric[+T](val wrapped: T) extends Constraint[T]
+  case class Numeric[+T](val unbox: T) extends Constraint[T]
 
-  case class AlphaNum[+T](val wrapped: T) extends Constraint[T]
+  case class AlphaNum[+T](val unbox: T) extends Constraint[T]
 
-  case class Small[+T](val wrapped: T) extends Constraint[T]
+  case class Small[+T](val unbox: T) extends Constraint[T]
 
-  case class Large[+T](val wrapped: T) extends Constraint[T]
+  case class Large[+T](val unbox: T) extends Constraint[T]
 
 }
 
@@ -39,10 +39,10 @@ object Constraint {
  */
 trait Constraint[+T] {
   
-  def wrapped: T
+  def unbox: T
 
-  override def toString = wrapped.toString
+  override def toString = unbox.toString
 
-  override def equals(x: Any) = wrapped.equals(x)
+  override def equals(x: Any) = unbox.equals(x)
 
 }

@@ -350,7 +350,9 @@ object Prop {
   implicit def extendedAny[T](x: => T) = new {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
-    def throws[T <: Throwable](c: Class[T]) = Prop.throws(x, c)
+    def throws[U <: Throwable](c: Class[U]) = Prop.throws(x, c)
+    def ?=(y: Any) = Prop.?=(x, y)
+    def =?(y: Any) = Prop.=?(x, y)
   }
 
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
@@ -391,6 +393,14 @@ object Prop {
   property("exception") = forAll { (prms: Params, e: Throwable) =>
     exception(e)(prms).status == Exception(e)
   }
+
+  def ?=(x: Any, y: Any): Prop = if(x == y) proved else falsified :| {
+    val exp = Pretty.pretty(y, Pretty.Params(0))
+    val act = Pretty.pretty(x, Pretty.Params(0))
+    "Expected "+exp+" but got "+act
+  }
+
+  def =?(x: Any, y: Any): Prop = ?=(y, x)
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.genPrms.size)(prms))
