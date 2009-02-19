@@ -45,6 +45,10 @@ object Pretty {
 
   implicit def prettyAny[T](t: T) = Pretty { p => t.toString }
 
+  implicit def prettyList(l: List[_]) = Pretty { p => 
+    l.map("\""+_+"\"").mkString("List(", ", ", ")") 
+  }
+
   implicit def prettyThrowable(e: Throwable) = Pretty { prms =>
     val strs = e.getStackTrace.map { st =>
       import st._
@@ -62,9 +66,9 @@ object Pretty {
         val l = if(a.label == "") "ARG_"+i else a.label
         val s = 
           if(a.shrinks == 0) "" 
-          else " (orig arg: \""+pretty(a.origArg, prms)(a.prettyPrinter)+"\")"
+          else " (orig arg: "+pretty(a.origArg, prms)(a.prettyPrinter)+")"
 
-        "> "+l+": \""+pretty(a.arg, prms)(a.prettyPrinter)+"\""+s
+        "> "+l+": "+pretty(a.arg, prms)(a.prettyPrinter)+""+s
       }
     }.mkString("\n")
   }
@@ -84,9 +88,8 @@ object Pretty {
 
   implicit def prettyTestRes(res: Test.Result) = Pretty { prms =>
     def labels(ls: collection.immutable.Set[String]) = 
-      if(ls.isEmpty) "" else "> Labels of failing property: " / {
-        ls.map("\"" + _ + "\"")
-      }.mkString("\n")
+      if(ls.isEmpty) "" 
+      else "> Labels of failing property: " / ls.mkString("\n")
     val s = res.status match {
       case Test.Proved(args) => "OK, proved property."/pretty(args,prms)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."

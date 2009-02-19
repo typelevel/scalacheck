@@ -347,13 +347,15 @@ object Prop {
     def ==>(p: => Prop) = Prop.==>(b,p)
   }
 
-  implicit def extendedAny[T](x: => T) = new {
+  class ExtendedAny[T <% Pretty](x: => T) {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
     def throws[U <: Throwable](c: Class[U]) = Prop.throws(x, c)
-    def ?=(y: Any) = Prop.?=(x, y)
-    def =?(y: Any) = Prop.=?(x, y)
+    def ?=(y: T) = Prop.?=(x, y)
+    def =?(y: T) = Prop.=?(x, y)
   }
+
+  implicit def extendedAny[T <% Pretty](x: => T) = new ExtendedAny[T](x)
 
   implicit def propBoolean(b: Boolean): Prop = if(b) proved else falsified
 
@@ -394,13 +396,14 @@ object Prop {
     exception(e)(prms).status == Exception(e)
   }
 
-  def ?=(x: Any, y: Any): Prop = if(x == y) proved else falsified :| {
-    val exp = Pretty.pretty(y, Pretty.Params(0))
-    val act = Pretty.pretty(x, Pretty.Params(0))
-    "Expected "+exp+" but got "+act
-  }
+  def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop = 
+    if(x == y) proved else falsified :| {
+      val exp = Pretty.pretty[T](y, Pretty.Params(0))
+      val act = Pretty.pretty[T](x, Pretty.Params(0))
+      "Expected "+exp+" but got "+act
+    }
 
-  def =?(x: Any, y: Any): Prop = ?=(y, x)
+  def =?[T](x: T, y: T)(implicit pp: T => Pretty): Prop = ?=(y, x)
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.genPrms.size)(prms))
