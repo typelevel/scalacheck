@@ -20,7 +20,7 @@ trait Prop {
 
   def apply(prms: Params): Result
 
-  def map(f: Result => Result) = Prop(prms => f(this(prms)))
+  def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
 
   def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
 
@@ -119,20 +119,29 @@ trait Prop {
   def ++(p: Prop): Prop = combine(p)(_ ++ _)
 
   /** Returns a new property that holds if and only if both this
-   *  and the given property generates a result with the same status,
-   *  if the status isn't Undecided.  */
-  def ==(p: Prop) = this.flatMap(r1 => p.flatMap(r2 =>
-    if(r1.status == Undecided || r2.status == Undecided) Prop.undecided
-    else if(r1.status == r2.status) Prop.proved
-    else Prop.falsified
-  ))
+   *  and the given property generates a result with the exact same status,
+   *  if the status isn't Undecided. Note that this means that if one of 
+   *  the properties is proved, and the other one passed, then the resulting
+   *  property will fail.  */
+  def ==(p: Prop) = this.flatMap { r1 => 
+    p.map { r2 =>
+      Result.merge(r1, r2,
+        if(r1.status == Undecided || r2.status == Undecided) Undecided
+        else if(r1.status == r2.status) Proof else False
+      )
+    }
+  }
 
   /** Returns a new property that holds if and only if both this
-   *  and the given property generates a result with the same status.
-   */
-  def ===(p: Prop) = this.flatMap(r1 => p.flatMap(r2 =>
-    if(r1.status == r2.status) Prop.proved else Prop.falsified
-  ))
+   *  and the given property generates a result with the exact
+   *  same status. Note that this means that if one of the properties is
+   *  proved, and the other one passed, then the resulting property
+   *  will fail.  */
+  def ===(p: Prop) = this.flatMap { r1 => 
+    p.map { r2 =>
+      Result.merge(r1, r2, if(r1.status == r2.status) Proof else False)
+    }
+  }
 
   override def toString = "Prop"
 
@@ -234,6 +243,13 @@ object Prop {
       immutable.Set.empty[Any],
       immutable.Set.empty[String]
     )
+
+    def merge(x: Result, y: Result, status: Status) = new Result(
+      status,
+      x.args ++ y.args,
+      x.collected ++ y.collected,
+      x.labels ++ y.labels
+    )
   }
 
   /** The result of evaluating a property */
@@ -261,7 +277,9 @@ object Prop {
 
     def label(l: String) = new Result(status, args, collected, labels + l)
 
-    def &&(r: Result) = (this.status,r.status) match {
+    import Result.merge
+
+    def &&(r: Result) = merge(this, r, ((this.status,r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
@@ -275,9 +293,9 @@ object Prop {
       case (True,_) => r
 
       case (Undecided,Undecided) => this
-    }
+    }).status)
 
-    def ||(r: Result) = (this.status,r.status) match {
+    def ||(r: Result) = merge(this, r, ((this.status,r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
@@ -291,9 +309,9 @@ object Prop {
       case (_,True) => r
 
       case (Undecided,Undecided) => this
-    }
+    }).status)
 
-    def ++(r: Result) = (this.status,r.status) match {
+    def ++(r: Result) = merge(this, r, ((this.status,r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
@@ -308,7 +326,7 @@ object Prop {
 
       case (False, _) => this
       case (_, False) => r
-    }
+    }).status)
 
   }
 
