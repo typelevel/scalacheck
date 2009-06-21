@@ -27,7 +27,7 @@ trait Prop {
   def combine(p: Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
-  protected def check(prms: Test.Params): Unit = {
+  def check(prms: Test.Params): Unit = {
     import ConsoleReporter.{testReport, propReport}
     testReport(Test.check(prms, this, propReport))
   }
@@ -453,6 +453,13 @@ object Prop {
   property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l => 
     atLeastOne(l:_*)
   }
+
+  /** Existential quantifier */
+  def exists[A,P](f: A => P)(implicit 
+    pv: P => Prop, 
+    pp: A => Pretty,
+    aa: Arbitrary[A]
+  ): Prop = exists(aa.arbitrary)(f)
 
   /** Existential quantifier */
   def exists[A,P](g: Gen[A])(f: A => P)(implicit 

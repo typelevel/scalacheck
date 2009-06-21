@@ -38,7 +38,7 @@ class Properties(val name: String) extends Prop {
 
   def apply(p: Prop.Params) = oneProperty(p)
 
-  override protected def check(prms: Test.Params): Unit = {
+  override def check(prms: Test.Params): Unit = {
     import ConsoleReporter.{testReport, propReport}
     Test.checkProperties(this, prms, propReport, testReport)
   }
