@@ -117,7 +117,7 @@ object Arbitrary {
 
   /** Arbitrary instance of string */
   implicit lazy val arbString: Arbitrary[String] =
-    Arbitrary(arbitrary[List[Char]].map(List.toString(_)))
+    Arbitrary(arbitrary[List[Char]] map (_.mkString))
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] =

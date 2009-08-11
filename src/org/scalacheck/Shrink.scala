@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import util.Buildable
+import scala.collection.{ JavaConversions => jcl }
 
 sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
@@ -22,7 +23,7 @@ object Shrink {
   import java.util.ArrayList
 
   /** Shrink instance of container */
-  private def shrinkContainer[C[_],T](implicit v: C[T] => Collection[T], s: Shrink[T],
+  private def shrinkContainer[C[_],T](implicit v: C[T] => Iterable[T], s: Shrink[T],
     b: Buildable[C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
 
@@ -118,7 +119,7 @@ object Shrink {
 
   /** Shrink instance of ArrayList */
   implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
-    shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
+    shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
       Buildable.buildableArrayList)
 
   /** Shrink instance of 2-tuple */

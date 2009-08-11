@@ -42,7 +42,7 @@ trait CmdLineParser extends Parsers {
 
   private class ArgsReader(args: Array[String], i: Int) extends Reader[String] {
     val pos = new Position {
-      val column = args.subArray(0,i).foldLeft(1)(_ + _.length + 1)
+      val column = args.slice(0,i).foldLeft(1)(_ + _.length + 1)
       val line = 1
       val lineContents = args.mkString(" ")
     }

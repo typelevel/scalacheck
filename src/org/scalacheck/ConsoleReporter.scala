@@ -14,6 +14,8 @@ import util.FreqMap
 
 object ConsoleReporter {
 
+  private def spaces(num: Int) = print(List.fill(num)(' ').mkString)
+  
   def propReport(s: Int, d: Int) = {
     if(d == 0) printf("\rPassed %s tests\r", s)
     else printf("\rPassed %s tests; %s discarded\r", s, d)
@@ -27,14 +29,14 @@ object ConsoleReporter {
   }
 
   def testReport(res: Test.Result) = {
-    print(List.make(78,' ').mkString)
+    spaces(78)
     val s = (if(res.passed) "+ " else "! ") + pretty(res, Params(0))
     printf("\r%s\n", format(s, "", "", 75))
     res
   }
 
   def testReport(pName: String, res: Test.Result) = {
-    print(List.make(78,' ').mkString)
+    spaces(78)
     val s = (if(res.passed) "+ " else "! ") + pName + ": " + pretty(res, Params(0))
     printf("\r%s\n", format(s, "", "", 75))
   }
