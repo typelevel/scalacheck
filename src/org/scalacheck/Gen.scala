@@ -19,12 +19,19 @@ sealed trait Gen[+T] {
 
   import Gen.choose
 
-  var label = ""
+  val label = ""
 
-  def label(l: String): this.type = {
-    label = l
-    this
+  /** Put a label on the generator to make test reports clearer */
+  def label(l: String): Gen[T] = new Gen[T] {
+    override val label = l
+    def apply(prms: Gen.Params) = Gen.this.apply(prms)
   }
+
+  /** Put a label on the generator to make test reports clearer */
+  def :|(l: String) = label(l)
+
+  /** Put a label on the generator to make test reports clearer */
+  def |:(l: String) = label(l)
 
   def apply(prms: Gen.Params): Option[T]
 
