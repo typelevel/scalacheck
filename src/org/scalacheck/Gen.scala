@@ -19,12 +19,12 @@ sealed trait Gen[+T] {
 
   import Gen.choose
 
-  val label = ""
+  var label = "" // TODO: Ugly mutable field
 
   /** Put a label on the generator to make test reports clearer */
-  def label(l: String): Gen[T] = new Gen[T] {
-    override val label = l
-    def apply(prms: Gen.Params) = Gen.this.apply(prms)
+  def label(l: String): Gen[T] = {
+    label = l
+    this
   }
 
   /** Put a label on the generator to make test reports clearer */
