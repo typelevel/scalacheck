@@ -57,6 +57,22 @@ object Buildable {
     }
   }
 
+  implicit object buildableMutableSet extends Buildable[mutable.Set] {
+    def builder[T] = new Builder[mutable.Set,T] {
+      val buf = mutable.Set.empty[T]
+      def +=(x: T) = buf += x
+      def finalise = buf
+    }
+  }
+
+  implicit object buildableImmutableSet extends Buildable[immutable.Set] {
+    def builder[T] = new Builder[immutable.Set,T] {
+      val buf = mutable.Set.empty[T]
+      def +=(x: T) = buf += x
+      def finalise = immutable.Set(buf.toSeq: _*)
+    }
+  }
+
   implicit object buildableSet extends Buildable[Set] {
     def builder[T] = new Builder[Set,T] {
       val buf = mutable.Set.empty[T]

@@ -116,6 +116,14 @@ object Shrink {
   implicit def shrinkSet[T](implicit s: Shrink[T]): Shrink[Set[T]] =
     shrinkContainer[Set,T]
 
+  /** Shrink instance of mutable Set */
+  implicit def shrinkMutableSet[T](implicit s: Shrink[T]): Shrink[mutable.Set[T]] =
+    shrinkContainer[mutable.Set,T]
+
+  /** Shrink instance of immutable Set */
+  implicit def shrinkImmutableSet[T](implicit s: Shrink[T]): Shrink[immutable.Set[T]] =
+    shrinkContainer[immutable.Set,T]
+
   /** Shrink instance of ArrayList */
   implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
     shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
