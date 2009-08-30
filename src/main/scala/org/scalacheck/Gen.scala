@@ -182,7 +182,7 @@ object Gen {
   def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[C]): Gen[C[T]] = Gen(prms => {
     val builder = b.builder[T]
     var none = false
-    val xs = gs.iterator
+    val xs = gs.elements
     while(xs.hasNext && !none) xs.next.apply(prms) match {
       case None => none = true
       case Some(x) => builder += x
@@ -281,15 +281,14 @@ object Gen {
   }
 
   /** Chooses one of the given values, with a weighted random distribution. 
-   */
-  @deprecated("Use 'frequency' with constant generators instead.")
-  def elementsFreq[T](vs: (Int, T)*): Gen[T] =
+   *  @deprecated Use <code>frequency</code> with constant generators 
+   *  instead. */
+  @deprecated def elementsFreq[T](vs: (Int, T)*): Gen[T] =
     frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
 
   /** A generator that returns a random element from a list 
-   */
-  @deprecated("Use 'oneOf' with constant generators instead.")
-  def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
+   *  @deprecated Use <code>oneOf</code> with constant generators instead. */
+  @deprecated def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
     i <- choose(0,xs.length-1)
   } yield xs(i)
 
@@ -302,7 +301,7 @@ object Gen {
    *  is given by <code>n</code>. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit b: Buildable[C]
   ): Gen[C[T]] = sequence[C,T](new Iterable[Gen[T]] {
-    def iterator = new Iterator[Gen[T]] {
+    def elements = new Iterator[Gen[T]] {
       var i = 0
       def hasNext = i < n
       def next = { i += 1; g }
@@ -343,18 +342,17 @@ object Gen {
 
   /** Generates a list of the given length. This method is equal to calling 
    *  <code>containerOfN[List,T](n,g)</code>. 
-   */
-  @deprecated("Use the method 'listOfN' instead.")
-  def vectorOf[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
+   *  @deprecated Use the method <code>listOfN</code> instead. */
+  @deprecated def vectorOf[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](l: Iterable[T]) = choose(0,l.size) flatMap (pick(_,l))
+  def someOf[T](l: Collection[T]) = choose(0,l.size) flatMap (pick(_,l))
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
 
   /** A generator that picks a given number of elements from a list, randomly */
-  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] =
+  def pick[T](n: Int, l: Collection[T]): Gen[Seq[T]] =
     if(n > l.size || n < 0) fail
     else Gen(prms => {
       val buf = new ListBuffer[T]
@@ -404,7 +402,7 @@ object Gen {
   def identifier: Gen[String] = for {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
-  } yield (c::cs).mkString
+  } yield List.toString(c::cs)
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLowerCase &&
     s.forall(_.isLetterOrDigit)

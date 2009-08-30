@@ -62,23 +62,21 @@ class Properties(val name: String) extends Prop {
   }
 
   /** Adds a property to this property collection
-   */
-  @deprecated(" Use 'property(propName) = prop' instead.")
-  def specify(propName: String, prop: => Prop) =
+   *  @deprecated Use <code>property(propName) = prop</code> instead. */
+  @deprecated def specify(propName: String, prop: => Prop) =
     property(propName) = Prop.secure(prop)
 
   /** Adds a property to this property collection
-   */
-  @deprecated("Use 'property(propName) = forAll(...)'")
-  def specify[A1,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,P] (
     propName: String, f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1]
   ): Unit = property(propName) = Prop.forAll(f)
 
   /** Adds a property to this property collection
-   */
-  @deprecated("Use 'property(propName) = forAll(...)' instead") def specify[A1,A2,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,A2,P] (
     propName: String, f: (A1,A2) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
@@ -86,9 +84,8 @@ class Properties(val name: String) extends Prop {
   ): Unit = property(propName) = Prop.forAll(f)
 
   /** Adds a property to this property collection
-   */
-  @deprecated("Use 'property(propName) = forAll(...)' instead")
-  def specify[A1,A2,A3,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,A2,A3,P] (
     propName: String, f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
@@ -97,9 +94,8 @@ class Properties(val name: String) extends Prop {
   ): Unit = property(propName) = Prop.forAll(f)
 
   /** Adds a property to this property collection
-  */
-  @deprecated("Use 'property(propName) = forAll(...)' instead")
-  def specify[A1,A2,A3,A4,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,A2,A3,A4,P] (
     propName: String, f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
@@ -109,9 +105,8 @@ class Properties(val name: String) extends Prop {
   ): Unit = property(propName) = Prop.forAll(f)
 
   /** Adds a property to this property collection
-   */
-  @deprecated("Use 'property(propName) = forAll(...)' instead")
-  def specify[A1,A2,A3,A4,A5,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,A2,A3,A4,A5,P] (
     propName: String, f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],
@@ -122,9 +117,8 @@ class Properties(val name: String) extends Prop {
   ): Unit = property(propName) = Prop.forAll(f)
 
   /** Adds a property to this property collection
-   */
-  @deprecated("Use 'property(propName) = forAll(...)' instead")
-  def specify[A1,A2,A3,A4,A5,A6,P] (
+   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
+  @deprecated def specify[A1,A2,A3,A4,A5,A6,P] (
     propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1],

@@ -247,7 +247,7 @@ object Prop {
     def merge(x: Result, y: Result, status: Status) = new Result(
       status,
       x.args ++ y.args,
-      x.collected union y.collected,
+      x.collected ++ y.collected,
       x.labels ++ y.labels
     )
   }
@@ -545,7 +545,7 @@ object Prop {
         val p = secure(f(x))
         (x, provedToTrue(p(prms)))
       }
-      results.dropWhile(!_._2.failure).headOption match {
+      results.dropWhile(!_._2.failure).firstOption match {
         case None => Right(results.head)
         case Some(xr) => Left(xr)
       }
@@ -676,7 +676,7 @@ object Prop {
     f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
-  ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
+  ) = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (

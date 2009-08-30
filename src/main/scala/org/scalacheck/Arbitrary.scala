@@ -107,6 +107,10 @@ object Arbitrary {
   implicit lazy val arbDouble: Arbitrary[Double] =
     Arbitrary(sized(s => choose(-s:Double,s:Double)))
 
+  /** Arbitrary instance of Float */
+  implicit lazy val arbFloat: Arbitrary[Float] =
+    Arbitrary(arbitrary[Double].map(_.toFloat))
+
   /** Arbitrary instance of char */
   implicit lazy val arbChar: Arbitrary[Char] =
     Arbitrary(choose(0,255).map(_.toChar))
@@ -115,9 +119,13 @@ object Arbitrary {
   implicit lazy val arbByte: Arbitrary[Byte] =
     Arbitrary(arbitrary[Int].map(_.toByte))
 
+  /** Arbitrary instance of Short */
+  implicit lazy val arbShort: Arbitrary[Short] =
+    Arbitrary(arbitrary[Int].map(_.toShort))
+
   /** Arbitrary instance of string */
   implicit lazy val arbString: Arbitrary[String] =
-    Arbitrary(arbitrary[List[Char]] map (_.mkString))
+    Arbitrary(arbitrary[List[Char]].map(List.toString(_)))
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] =
@@ -197,9 +205,14 @@ object Arbitrary {
   implicit def arbArray[T](implicit a: Arbitrary[T]): Arbitrary[Array[T]] =
     Arbitrary(containerOf[Array,T](arbitrary[T]))
 
-  import scala.collection.Set
-  implicit def arbSet[T](implicit a: Arbitrary[T]): Arbitrary[Set[T]] =
-    Arbitrary(containerOf[Set,T](arbitrary[T]))
+  implicit def arbImmutableSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.immutable.Set[T]] =
+    Arbitrary(containerOf[collection.immutable.Set,T](arbitrary[T]))
+
+  implicit def arbMutableSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.mutable.Set[T]] =
+    Arbitrary(containerOf[collection.mutable.Set,T](arbitrary[T]))
+
+  implicit def arbSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.Set[T]] =
+    Arbitrary(containerOf[collection.Set,T](arbitrary[T]))
 
   import java.util.ArrayList
   implicit def arbArrayList[T](implicit a: Arbitrary[T]): Arbitrary[ArrayList[T]] =

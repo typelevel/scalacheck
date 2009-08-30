@@ -1,4 +1,4 @@
-<project name="ScalaCheck" basedir="." default="build">
+<project name="scalacheck" basedir="." default="build">
 
   <!-- Global properties -->
 
@@ -13,7 +13,7 @@
 
   <path id="scalacheck.classpath">
     <pathelement location="${scala.lib}"/>
-    <pathelement location="build"/>
+    <pathelement location="target/classes"/>
   </path>
 
   <taskdef resource="scala/tools/ant/antlib.xml"
@@ -31,35 +31,34 @@
   <!-- Targets -->
 
   <target name="prepare">
-    <mkdir dir="build"/>
-    <mkdir dir="dist"/>
-    <mkdir dir="build/doc"/>
-    <mkdir dir="build/doc/api"/>
-    <mkdir dir="build/pkg"/>
-    <mkdir dir="build/pkg/lib"/>
-    <mkdir dir="build/pkg/doc"/>
-    <mkdir dir="build/pkg/src"/>
+    <mkdir dir="target/doc/main/api"/>
+    <mkdir dir="target/classes"/>
+    <mkdir dir="target/sbaz/lib"/>
+    <mkdir dir="target/sbaz/doc/scalacheck"/>
   </target>
 
   <target name="clean">
-    <delete dir="build"/>
-    <delete dir="dist"/>
+    <delete dir="target"/>
   </target>
 
   <target name="build" depends="prepare">
-    <scalac addParams="-unchecked -deprecation" srcdir="src" destdir="build" classpathref="scalacheck.classpath"/>
+    <scalac 
+      addParams="-unchecked -deprecation" 
+      srcdir="src/main/scala" 
+      destdir="target/classes" 
+      classpathref="scalacheck.classpath"/>
   </target>
 
   <target name="test" depends="build">
     <exec executable="scala" failonerror="true">
       <arg value="-classpath"/>
-      <arg value="build"/>
+      <arg value="target/classes"/>
       <arg value="test.scala"/>
     </exec>
   </target>
 
   <target name="doc" depends="prepare">
-    <copy todir="build/doc">
+    <copy todir="target/doc/main">
       <fileset dir=".">
         <include name="LICENSE"/>
         <include name="RELEASE"/>
@@ -67,7 +66,7 @@
     </copy>
     <scaladoc
       srcdir="src"
-      destdir="build/doc/api"
+      destdir="target/doc/main/api"
       windowtitle="${name} ${version}"
       doctitle="${name} ${version}"
       addparams="-linksource"
@@ -77,8 +76,8 @@
   </target>
 
   <target name="jar" depends="clean,build">
-    <jar destfile="dist/${name}-${version}.jar">
-      <fileset dir="build">
+    <jar destfile="target/${name}-${version}.jar">
+      <fileset dir="target/classes">
         <include name="org/**"/>
       </fileset>
       <manifest>
@@ -97,8 +96,8 @@
   </target>
 
   <target name="jar-src" depends="clean,build">
-    <jar destfile="dist/${name}-${version}-src.jar">
-      <fileset dir="src">
+    <jar destfile="target/${name}-${version}-src.jar">
+      <fileset dir="src/main/scala">
         <include name="org/**"/>
       </fileset>
       <manifest>
@@ -116,25 +115,25 @@
   </target>
 
   <target name="dist" depends="jar,jar-src,doc">
-    <copy file="dist/${name}-${version}.jar" tofile="build/pkg/lib/scalacheck.jar"/>
-    <copy file="dist/${name}-${version}-src.jar" tofile="build/pkg/src/scalacheck-src.jar"/>
-    <copy todir="build/pkg/doc">
-      <fileset dir="build/doc"/>
+    <copy file="target/${name}-${version}.jar" tofile="target/sbaz/lib/scalacheck.jar"/>
+    <copy file="target/${name}-${version}-src.jar" tofile="target/sbaz/src/scalacheck-src.jar"/>
+    <copy todir="target/sbaz/doc/scalacheck">
+      <fileset dir="target/doc/main"/>
     </copy>
     <exec executable="sbaz" failonerror="true">
       <arg value="pack"/>
       <arg value="scalacheck"/>
-      <arg value="build/pkg"/>
+      <arg value="target/sbaz"/>
       <arg value="--version"/>
       <arg value="${version}"/>
       <arg value="--outdir"/>
-      <arg value="dist"/>
+      <arg value="target"/>
       <arg value="--linkbase"/>
       <arg value="http://scalacheck.googlecode.com/files/"/>
       <arg value="--description"/>
       <arg value='ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library'/>
     </exec>
-    <move file="scalacheck-${version}.advert" todir="dist"/>
+    <move file="scalacheck-${version}.advert" todir="target"/>
   </target>
 
   <target name="dist-release">
@@ -147,7 +146,7 @@
     <exec executable="sbaz" failonerror="true">
       <arg value="install"/>
       <arg value="-f"/>
-      <arg value="dist/scalacheck-${version}.sbp"/>
+      <arg value="target/scalacheck-${version}.sbp"/>
     </exec>
   </target>
   

@@ -18,7 +18,7 @@ trait Buildable[C[_]] {
   def builder[T]: Builder[C,T]
   def fromIterable[T](it: Iterable[T]): C[T] = {
     val b = builder[T]
-    val elems = it.iterator
+    val elems = it.elements
     while(elems.hasNext) b += elems.next
     b.finalise
   }
@@ -41,7 +41,7 @@ object Buildable {
     def builder[T] = new Builder[Stream,T] {
       val buf = new scala.collection.mutable.ListBuffer[T]
       def +=(x: T) = buf += x
-      def finalise = buf.toStream
+      def finalise = Stream.fromIterator(buf.elements)
     }
   }
 
@@ -54,6 +54,22 @@ object Buildable {
         buf.copyToArray(arr, 0)
         arr
       }
+    }
+  }
+
+  implicit object buildableMutableSet extends Buildable[mutable.Set] {
+    def builder[T] = new Builder[mutable.Set,T] {
+      val buf = mutable.Set.empty[T]
+      def +=(x: T) = buf += x
+      def finalise = buf
+    }
+  }
+
+  implicit object buildableImmutableSet extends Buildable[immutable.Set] {
+    def builder[T] = new Builder[immutable.Set,T] {
+      val buf = mutable.Set.empty[T]
+      def +=(x: T) = buf += x
+      def finalise = immutable.Set(buf.toSeq: _*)
     }
   }
 

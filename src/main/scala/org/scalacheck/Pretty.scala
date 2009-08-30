@@ -34,7 +34,7 @@ object Pretty {
 
   def pad(s: String, c: Char, length: Int) = 
     if(s.length >= length) s
-    else s + List.fill(length-s.length)(c).mkString    
+    else s + List.make(length-s.length, c).mkString
 
   def break(s: String, lead: String, length: Int): String =
     if(s.length <= length) s
