@@ -454,91 +454,6 @@ object Prop {
     atLeastOne(l:_*)
   }
 
-  /** Existential quantifier */
-  def exists[A,P](f: A => P)(implicit 
-    pv: P => Prop, 
-    pp: A => Pretty,
-    aa: Arbitrary[A]
-  ): Prop = exists(aa.arbitrary)(f)
-
-  /** Existential quantifier */
-  def exists[A,P](g: Gen[A])(f: A => P)(implicit 
-    pv: P => Prop, 
-    pp: A => Pretty
-  ): Prop = Prop { prms =>
-    g(prms.genPrms) match {
-      case None => undecided(prms)
-      case Some(x) =>
-        val p = secure(f(x))
-        val r = p(prms).addArg(Arg(g.label,x,0,x,pp))
-        r.status match {
-          case True => new Result(Proof, r.args, r.collected, r.labels)
-          case False => new Result(Undecided, r.args, r.collected, r.labels)
-          case _ => r
-        }
-    }
-  }
-
-  /** Universal quantifier, does not shrink failed test cases. */
-  def forAllNoShrink[A,P](g: Gen[A])(f: A => P)(implicit 
-    pv: P => Prop, 
-    pp: A => Pretty
-  ): Prop = Prop { prms =>
-    g(prms.genPrms) match {
-      case None => undecided(prms)
-      case Some(x) =>
-        val p = secure(f(x))
-        provedToTrue(p(prms)).addArg(Arg(g.label,x,0,x,pp))
-    }
-  }
-
-  /** Universal quantifier, shrinks failed arguments with given shrink
-   *  function */
-  def forAllShrink[A <% Pretty, P <% Prop](g: Gen[A], 
-    shrink: A => Stream[A])(f: A => P
-  ): Prop = Prop { prms =>
-
-    def pp(a: A): Pretty = a
-
-    /** Returns the first failed result in Left or success in Right */
-    def getFirstFailure(xs: Stream[A]): Either[(A,Result),(A,Result)] = {
-      assert(!xs.isEmpty, "Stream cannot be empty")
-      val results = xs.map { x =>
-        val p = secure(f(x))
-        (x, provedToTrue(p(prms)))
-      }
-      results.dropWhile(!_._2.failure).headOption match {
-        case None => Right(results.head)
-        case Some(xr) => Left(xr)
-      }
-    }
-
-    def shrinker(x: A, r: Result, shrinks: Int, orig: A): Result = {
-      val xs = shrink(x)
-      val res = r.addArg(Arg(g.label,x,shrinks,orig,pp))
-      if(xs.isEmpty) res else getFirstFailure(xs) match {
-        case Right(_) => res
-        case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
-      }
-    }
-
-    g(prms.genPrms) match {
-      case None => undecided(prms)
-      case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
-        case Right((x,r)) => r.addArg(Arg(g.label,x,0,x,pp))
-        case Left((x,r)) => shrinker(x,r,0,x)
-      }
-    }
-
-  }
-
-  /** Universal quantifier, shrinks failed arguments with the default
-   *  shrink function for the type */
-  def forAll[T,P](g: Gen[T])(f: T => P)(implicit 
-    pv: P => Prop, 
-    s: Shrink[T] 
-  ): Prop = forAllShrink(g, shrink[T])(f)
-
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
   def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ === fail):_*)
@@ -576,16 +491,196 @@ object Prop {
   def secure[P <% Prop](p: => P): Prop =
     try { p: Prop } catch { case e => exception(e) }
 
+  /** Existential quantifier for an explicit generator. */
+  def exists[A,P](f: A => P)(implicit 
+    pv: P => Prop, 
+    pp: A => Pretty,
+    aa: Arbitrary[A]
+  ): Prop = exists(aa.arbitrary)(f)
+
+  /** Existential quantifier for an explicit generator. */
+  def exists[A,P](g: Gen[A])(f: A => P)(implicit 
+    pv: P => Prop, 
+    pp: A => Pretty
+  ): Prop = Prop { prms =>
+    g(prms.genPrms) match {
+      case None => undecided(prms)
+      case Some(x) =>
+        val p = secure(f(x))
+        val r = p(prms).addArg(Arg(g.label,x,0,x,pp))
+        r.status match {
+          case True => new Result(Proof, r.args, r.collected, r.labels)
+          case False => new Result(Undecided, r.args, r.collected, r.labels)
+          case _ => r
+        }
+    }
+  }
+
+  /** Universal quantifier for an explicit generator. Does not shrink failed
+   *  test cases. */
+  def forAllNoShrink[A,P](g: Gen[A])(f: A => P)(implicit 
+    pv: P => Prop, 
+    pp: A => Pretty
+  ): Prop = Prop { prms =>
+    g(prms.genPrms) match {
+      case None => undecided(prms)
+      case Some(x) =>
+        val p = secure(f(x))
+        provedToTrue(p(prms)).addArg(Arg(g.label,x,0,x,pp))
+    }
+  }
+
+  /** Universal quantifier for an explicit generator. Shrinks failed arguments
+   *  with the given shrink function */
+  def forAllShrink[T <% Pretty, P <% Prop](g: Gen[T], 
+    shrink: T => Stream[T])(f: T => P
+  ): Prop = Prop { prms =>
+
+    def pp(a: T): Pretty = a
+
+    /** Returns the first failed result in Left or success in Right */
+    def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
+      assert(!xs.isEmpty, "Stream cannot be empty")
+      val results = xs.map { x =>
+        val p = secure(f(x))
+        (x, provedToTrue(p(prms)))
+      }
+      results.dropWhile(!_._2.failure).headOption match {
+        case None => Right(results.head)
+        case Some(xr) => Left(xr)
+      }
+    }
+
+    def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
+      val xs = shrink(x)
+      val res = r.addArg(Arg(g.label,x,shrinks,orig,pp))
+      if(xs.isEmpty) res else getFirstFailure(xs) match {
+        case Right(_) => res
+        case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
+      }
+    }
+
+    g(prms.genPrms) match {
+      case None => undecided(prms)
+      case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
+        case Right((x,r)) => r.addArg(Arg(g.label,x,0,x,pp))
+        case Left((x,r)) => shrinker(x,r,0,x)
+      }
+    }
+
+  }
+
+  /** Universal quantifier for an explicit generator. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,P](
+    g1: Gen[T1])(
+    f: T1 => P)(implicit 
+    p: P => Prop, 
+    s1: Shrink[T1],
+    pp1: T1 => Pretty
+  ): Prop = forAllShrink(g1, shrink[T1])(f)
+
+  /** Universal quantifier for two explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,P](
+    g1: Gen[T1], g2: Gen[T2])(
+    f: (T1,T2) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2)(f(t, _:T2)))
+
+  /** Universal quantifier for three explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
+    f: (T1,T2,T3) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3)(f(t, _:T2, _:T3)))
+
+  /** Universal quantifier for four explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,T4,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
+    f: (T1,T2,T3,T4) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
+
+  /** Universal quantifier for five explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,T4,T5,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
+    f: (T1,T2,T3,T4,T5) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
+
+  /** Universal quantifier for six explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,T4,T5,T6,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
+    f: (T1,T2,T3,T4,T5,T6) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
+
+  /** Universal quantifier for seven explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,T4,T5,T6,T7,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
+    f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty,
+    s7: Shrink[T7], pp7: T7 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
+
+  /** Universal quantifier for eight explicit generators. Shrinks failed arguments
+   *  with the default shrink function for the type */
+  def forAll[T1,T2,T3,T4,T5,T6,T7,T8,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
+    f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty,
+    s7: Shrink[T7], pp7: T7 => Pretty,
+    s8: Shrink[T8], pp8: T8 => Pretty
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
+
   /** Converts a function into a universally quantified property */
   def forAll[A1,P] (
-    f:  A1 => P)(implicit
+    f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
   ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (
-    f:  (A1,A2) => P)(implicit
+    f: (A1,A2) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty
@@ -593,7 +688,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,P] (
-    f:  (A1,A2,A3) => P)(implicit
+    f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
@@ -602,7 +697,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,P] (
-    f:  (A1,A2,A3,A4) => P)(implicit
+    f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
@@ -612,7 +707,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,P] (
-    f:  (A1,A2,A3,A4,A5) => P)(implicit
+    f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
@@ -623,7 +718,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,P] (
-    f:  (A1,A2,A3,A4,A5,A6) => P)(implicit
+    f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
@@ -635,7 +730,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,A7,P] (
-    f:  (A1,A2,A3,A4,A5,A6,A7) => P)(implicit
+    f: (A1,A2,A3,A4,A5,A6,A7) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
@@ -648,7 +743,7 @@ object Prop {
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,A7,A8,P] (
-    f:  (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
+    f: (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
