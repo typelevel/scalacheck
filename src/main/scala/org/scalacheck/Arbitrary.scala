@@ -107,6 +107,10 @@ object Arbitrary {
   implicit lazy val arbDouble: Arbitrary[Double] =
     Arbitrary(sized(s => choose(-s:Double,s:Double)))
 
+  /** Arbitrary instance of Float */
+  implicit lazy val arbFloat: Arbitrary[Float] =
+    Arbitrary(arbitrary[Double].map(_.toFloat))
+
   /** Arbitrary instance of char */
   implicit lazy val arbChar: Arbitrary[Char] =
     Arbitrary(choose(0,255).map(_.toChar))
@@ -114,6 +118,10 @@ object Arbitrary {
   /** Arbitrary instance of byte */
   implicit lazy val arbByte: Arbitrary[Byte] =
     Arbitrary(arbitrary[Int].map(_.toByte))
+
+  /** Arbitrary instance of Short */
+  implicit lazy val arbShort: Arbitrary[Short] =
+    Arbitrary(arbitrary[Int].map(_.toShort))
 
   /** Arbitrary instance of string */
   implicit lazy val arbString: Arbitrary[String] =
