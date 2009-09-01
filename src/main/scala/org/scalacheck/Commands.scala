@@ -48,17 +48,44 @@ trait Commands extends Prop {
     def run(s: State): Any
     def nextState(s: State): State
 
+    /** @deprecated Use <code>preConditions += ...</code> instead. */
+    @deprecated def preCondition_=(f: State => Boolean) = {
+      preConditions.clear
+      preConditions += f
+    }
+
+    /** Returns all preconditions merged into a single function */
+    def preCondition: (State => Boolean) = s => preConditions.toList.forall(_.apply(s))
+
     /** A precondition is a function that
      *  takes the current abstract state as parameter and returns a boolean
-     *  that says if the precondition is fulfilled or not. */
-    var preCondition: State => Boolean = s => true
+     *  that says if the precondition is fulfilled or not. You can add several
+     *  conditions to the precondition list */
+    val preConditions = new collection.mutable.ListBuffer[State => Boolean]
+
+    /** @deprecated Use <code>postConditions += ...</code> instead. */
+    @deprecated def postCondition_=(f: (State,Any) => Prop) = {
+      postConditions.clear
+      postConditions += ((s0,s1,r) => f(s0,r))
+    }
+
+    /** @deprecated Use <code>postConditions += ...</code> instead. */
+    @deprecated def postCondition_=(f: (State,State,Any) => Prop) = {
+      postConditions.clear
+      postConditions += f
+    }
+
+    /** Returns all postconditions merged into a single function */
+    def postCondition: (State,State,Any) => Prop = (s0,s1,r) => all(postConditions.map(_.apply(s0,s1,r)): _*)
 
     /** A postcondition is a function that
-     *  takes two parameters, s and r. s is the abstract state before
-     *  the command was run, and r is the result from the command's run
+     *  takes three parameters, s0, s1 and r. s0 is the abstract state before
+     *  the command was run, s1 is the abstract state after the command was
+     *  run, and r is the result from the command's run
      *  method. The postcondition function should return a Boolean (or
-     *  a Prop instance) that says if the condition holds or not. */
-    var postCondition: (State,Any) => Prop = (s,r) => proved
+     *  a Prop instance) that says if the condition holds or not. You can add several
+     *  conditions to the postConditions list. */
+    val postConditions = new collection.mutable.ListBuffer[(State,State,Any) => Prop]
   }
 
   /** A command that binds its result for later use */
@@ -110,7 +137,7 @@ trait Commands extends Prop {
   private def runCommands(cmds: Cmds): Prop = cmds match {
     case Cmds(Nil, _) => proved
     case Cmds(c::cs, s::ss) =>
-      c.postCondition(s,c.run(s)) && runCommands(Cmds(cs,ss))
+      c.postCondition(s,c.nextState(s),c.run(s)) && runCommands(Cmds(cs,ss))
     case _ => error("Should not be here")
   }
 

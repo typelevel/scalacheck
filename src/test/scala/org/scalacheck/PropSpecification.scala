@@ -1,0 +1,101 @@
+/*-------------------------------------------------------------------------*\
+**  ScalaCheck                                                             **
+**  Copyright (c) 2007-2009 Rickard Nilsson. All rights reserved.          **
+**  http://www.scalacheck.org                                              **
+**                                                                         **
+**  This software is released under the terms of the Revised BSD License.  **
+**  There is NO WARRANTY. See the file LICENSE for the full text.          **
+\*-------------------------------------------------------------------------*/
+
+package org.scalacheck
+
+import Prop._
+import Gen.{value, fail, frequency, oneOf}
+import Arbitrary._
+import Shrink._
+
+object PropSpecification extends Properties("Prop") {
+
+  property("Prop.&& Commutativity") = forAll { (p1: Prop, p2: Prop) =>
+    (p1 && p2) === (p2 && p1)
+  }
+  property("Prop.&& Exception") = forAll { p: Prop =>
+    (p && exception(null)) == exception(null)
+  }
+  property("Prop.&& Identity") = forAll { p: Prop =>
+    (p && proved) === p
+  }
+  property("Prop.&& False") = {
+    val g = oneOf(proved,falsified,undecided)
+    forAll(g)(p => (p && falsified) == falsified)
+  }
+  property("Prop.&& Undecided") = {
+    val g = oneOf(proved,undecided)
+    forAll(g)(p => (p && undecided) === undecided)
+  }
+  property("Prop.&& Right prio") = forAll { (sz: Int, prms: Params) =>
+    val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
+    p(prms).labels.contains("RHS")
+  }
+
+  property("Prop.|| Commutativity") = forAll { (p1: Prop, p2: Prop) =>
+    (p1 || p2) === (p2 || p1)
+  }
+  property("Prop.|| Exception") = forAll { p: Prop =>
+    (p || exception(null)) == exception(null)
+  }
+  property("Prop.|| Identity") = forAll { p: Prop =>
+    (p || falsified) === p
+  }
+  property("Prop.|| True") = {
+    val g = oneOf(proved,falsified,undecided)
+    forAll(g)(p => (p || proved) == proved)
+  }
+  property("Prop.|| Undecided") = {
+    val g = oneOf(falsified,undecided)
+    forAll(g)(p => (p || undecided) === undecided)
+  }
+
+  property("Prop.++ Commutativity") = forAll { (p1: Prop, p2: Prop) =>
+    (p1 ++ p2) === (p2 ++ p1)
+  }
+  property("Prop.++ Exception") = forAll { p: Prop =>
+    (p ++ exception(null)) == exception(null)
+  }
+  property("Prop.++ Identity 1") = {
+    val g = oneOf(falsified,proved,exception(null))
+    forAll(g)(p => (p ++ proved) === p)
+  }
+  property("Prop.++ Identity 2") = forAll { p: Prop =>
+    (p ++ undecided) === p
+  }
+  property("Prop.++ False") = {
+    val g = oneOf(falsified,proved,undecided)
+    forAll(g)(p => (p ++ falsified) === falsified)
+  }
+
+  property("undecided") = forAll { prms: Params => 
+    undecided(prms).status == Undecided
+  }
+
+  property("falsified") = forAll { prms: Params => 
+    falsified(prms).status == False
+  }
+
+  property("proved") = forAll((prms: Params) => proved(prms).status == Proof)
+
+  property("passed") = forAll((prms: Params) => passed(prms).status == True)
+
+  property("exception") = forAll { (prms: Params, e: Throwable) =>
+    exception(e)(prms).status == Exception(e)
+  }
+
+  property("all") = forAll(Gen.listOf1(value(proved)))(l => all(l:_*))
+
+  property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l => 
+    atLeastOne(l:_*)
+  }
+
+  property("throws") = ((1/0) throws classOf[ArithmeticException])
+
+}
