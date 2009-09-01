@@ -24,9 +24,13 @@ object Pretty {
 
   case class Params(verbosity: Int)
 
+  val defaultParams = Params(0)
+
   def apply(f: Params => String) = new Pretty { def apply(p: Params) = f(p) }
 
   def pretty[T <% Pretty](t: T, prms: Params): String = t(prms)
+
+  def pretty[T <% Pretty](t: T): String = t(defaultParams)
 
   implicit def strBreak(s1: String) = new {
     def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2

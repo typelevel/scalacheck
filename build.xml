@@ -49,14 +49,6 @@
       classpathref="scalacheck.classpath"/>
   </target>
 
-  <target name="test" depends="build">
-    <exec executable="scala" failonerror="true">
-      <arg value="-classpath"/>
-      <arg value="target/classes"/>
-      <arg value="test.scala"/>
-    </exec>
-  </target>
-
   <target name="doc" depends="prepare">
     <copy todir="target/doc/main">
       <fileset dir=".">
@@ -65,7 +57,7 @@
       </fileset>
     </copy>
     <scaladoc
-      srcdir="src"
+      srcdir="src/main/scala"
       destdir="target/doc/main/api"
       windowtitle="${name} ${version}"
       doctitle="${name} ${version}"
