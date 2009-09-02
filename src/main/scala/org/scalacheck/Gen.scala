@@ -348,4 +348,20 @@ object Gen {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
   } yield List.toString(c::cs)
+
+  /* Generates a string of alpha characters */
+  def alphaStr: Gen[String] = for(cs <- listOf(Gen.alphaChar)) yield cs.mkString
+
+  /* Generates a string of digits */
+  def numStr: Gen[String] = for(cs <- listOf(Gen.numChar)) yield cs.mkString
+
+
+  //// Number Generators ////
+
+  /* Generates positive integers */
+  def posInt: Gen[Int] = sized(max => choose(0, max))
+
+  /* Generates negative integers */
+  def negInt: Gen[Int] = sized(max => choose(-max, -1))
+
 }

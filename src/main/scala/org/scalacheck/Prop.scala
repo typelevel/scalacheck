@@ -437,17 +437,110 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Does not shrink failed
    *  test cases. */
-  def forAllNoShrink[A,P](g: Gen[A])(f: A => P)(implicit 
+  def forAllNoShrink[T1,P](
+    g1: Gen[T1])(
+    f: T1 => P)(implicit 
     pv: P => Prop, 
-    pp: A => Pretty
+    pp1: T1 => Pretty
   ): Prop = Prop { prms =>
-    g(prms.genPrms) match {
+    g1(prms.genPrms) match {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
-        provedToTrue(p(prms)).addArg(Arg(g.label,x,0,x,pp))
+        provedToTrue(p(prms)).addArg(Arg(g1.label,x,0,x,pp1))
     }
   }
+
+  /** Universal quantifier for two explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,P](
+    g1: Gen[T1], g2: Gen[T2])(
+    f: (T1,T2) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2)(f(t, _:T2)))
+
+  /** Universal quantifier for three explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
+    f: (T1,T2,T3) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3)(f(t, _:T2, _:T3)))
+
+  /** Universal quantifier for four explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,T4,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
+    f: (T1,T2,T3,T4) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
+
+  /** Universal quantifier for five explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,T4,T5,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
+    f: (T1,T2,T3,T4,T5) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
+
+  /** Universal quantifier for six explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,T4,T5,T6,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
+    f: (T1,T2,T3,T4,T5,T6) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
+
+  /** Universal quantifier for seven explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,T4,T5,T6,T7,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
+    f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
+
+  /** Universal quantifier for eight explicit generators.
+   *  Does not shrink failed test cases. */
+  def forAllNoShrink[T1,T2,T3,T4,T5,T6,T7,T8,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
+    f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
+    p: P => Prop,
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty,
+    pp8: T8 => Pretty
+  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
