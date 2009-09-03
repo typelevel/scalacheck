@@ -154,6 +154,12 @@ trait Prop {
   /** Put a label on the property to make test reports clearer */
   def |:(l: String) = label(l)
 
+  /** Put a label on the property to make test reports clearer */
+  def :|(l: Symbol) = label(l.toString.drop(1))
+
+  /** Put a label on the property to make test reports clearer */
+  def |:(l: Symbol) = label(l.toString.drop(1))
+
 }
 
 object Prop {

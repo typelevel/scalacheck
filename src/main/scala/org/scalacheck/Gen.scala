@@ -33,6 +33,12 @@ sealed trait Gen[+T] {
   /** Put a label on the generator to make test reports clearer */
   def |:(l: String) = label(l)
 
+  /** Put a label on the generator to make test reports clearer */
+  def :|(l: Symbol) = label(l.toString.drop(1))
+
+  /** Put a label on the generator to make test reports clearer */
+  def |:(l: Symbol) = label(l.toString.drop(1))
+
   def apply(prms: Gen.Params): Option[T]
 
   def map[U](f: T => U): Gen[U] = Gen(prms => this(prms).map(f)).label(label)
