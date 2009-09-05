@@ -21,17 +21,16 @@ object Shrink {
   import scala.collection._
   import java.util.ArrayList
 
+  /** Interleaves to streams */
+  private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
+    if(xs.isEmpty) ys
+    else if(ys.isEmpty) xs
+    else Stream(xs.head, ys.head) append interleave(xs.tail, ys.tail)
+
   /** Shrink instance of container */
   private def shrinkContainer[C[_],T](implicit v: C[T] => Collection[T], s: Shrink[T],
     b: Buildable[C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
-
-    def interleave(xs: Stream[Stream[T]], ys: Stream[Stream[T]]): Stream[Stream[T]] =
-      (xs,ys) match {
-        case (xs,ys) if xs.isEmpty => ys
-        case (xs,ys) if ys.isEmpty => xs
-        case (cons(x,xs),cons(y,ys)) => cons(x, cons(y, interleave(xs,ys)))
-      }
 
     def removeChunks(n: Int, xs: Stream[T]): Stream[Stream[T]] =
       if(xs.isEmpty) empty
@@ -76,15 +75,12 @@ object Shrink {
   /** Shrink instance of integer */
   implicit lazy val shrinkInt: Shrink[Int] = Shrink { n =>
 
-    def iterate[T](f: T => T, x: T): Stream[T] = {
-      val y = f(x)
-      cons(y, iterate(f,y))
-    }
+    def halfs(n: Int): Stream[Int] = 
+      if(n == 0) empty else cons(n, halfs(n/2))
 
-    if(n == 0) empty
-    else {
-      val ns = cons(0, iterate((_:Int)/2, n).takeWhile(_ != 0).map(n - _))
-      if(n < 0) cons(-n,ns) else ns
+    if(n == 0) empty else {
+      val ns = halfs(n/2).map(n - _)
+      Stream(0, 1, -1) append interleave(ns, ns.map(-1 * _))
     }
   }
 

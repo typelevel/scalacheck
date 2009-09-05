@@ -57,8 +57,8 @@ object GenSpecification extends Properties("Gen") {
 
   property("listOf1") = forAll(listOf1(arbitrary[Int]))(_.length > 0)
 
-  property("listOfN") = forAll { n:Int => (n >= 0) ==>
-    forAll(listOfN(n, arbitrary[Int])) { l => l.length == n }
+  property("listOfN") = forAll(choose(0,100)) { n =>
+    forAll(listOfN(n, arbitrary[Int])) { _.length == n }
   }
 
   property("someOf") = forAll { l: List[Int] =>

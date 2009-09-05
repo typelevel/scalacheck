@@ -83,7 +83,16 @@ object Arbitrary {
     Arbitrary(oneOf(true,false))
 
   /** Arbitrary instance of Int */
-  implicit lazy val arbInt: Arbitrary[Int] =
+  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(
+    frequency(
+      (20, sized(s => choose(-s,s))),
+      (1, 0),
+      (1, 1),
+      (1, -1),
+      (1, Integer.MAX_VALUE),
+      (1, Integer.MIN_VALUE)
+    )
+  )
     Arbitrary(sized(s => choose(-s,s)))
 
   /** Arbitrary instance of Long */
