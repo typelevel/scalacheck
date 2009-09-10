@@ -220,28 +220,29 @@ object Prop {
 
     import Result.merge
 
-    def &&(r: Result) = merge(this, r, ((this.status,r.status) match {
+    def &&(r: Result) = (this.status, r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
       case (False,_) => this
       case (_,False) => r
 
-      case (_,Proof) => this
-      case (Proof,_) => r
+      case (Undecided,_) => this
+      case (_,Undecided) => r
 
-      case (_,True) => this
-      case (True,_) => r
+      case (_,Proof) => merge(this, r, this.status)
+      case (Proof,_) => merge(this, r, this.status)
 
-      case (Undecided,Undecided) => this
-    }).status)
+      case (True,True) => merge(this, r, True)
+    }
 
-    def ||(r: Result) = merge(this, r, ((this.status,r.status) match {
+    def ||(r: Result) = (this.status, r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
-      case (_,False) => this
+      case (False,False) => merge(this, r, False)
       case (False,_) => r
+      case (_,False) => this
 
       case (Proof,_) => this
       case (_,Proof) => r
@@ -249,10 +250,10 @@ object Prop {
       case (True,_) => this
       case (_,True) => r
 
-      case (Undecided,Undecided) => this
-    }).status)
+      case (Undecided,Undecided) => merge(this, r, Undecided)
+    }
 
-    def ++(r: Result) = merge(this, r, ((this.status,r.status) match {
+    def ++(r: Result) = (this.status, r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
@@ -267,8 +268,7 @@ object Prop {
 
       case (False, _) => this
       case (_, False) => r
-    }).status)
-
+    }
   }
 
   sealed trait Status

@@ -80,7 +80,7 @@ object Shrink {
 
     if(n == 0) empty else {
       val ns = halfs(n/2).map(n - _)
-      Stream(0, 1, -1) append interleave(ns, ns.map(-1 * _))
+      cons(0, interleave(ns, ns.map(-1 * _)))
     }
   }
 
