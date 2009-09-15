@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import util.Buildable
+import scala.collection.{ JavaConversions => jcl }
 
 sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
@@ -21,17 +22,16 @@ object Shrink {
   import scala.collection._
   import java.util.ArrayList
 
+  /** Interleaves to streams */
+  private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
+    if(xs.isEmpty) ys
+    else if(ys.isEmpty) xs
+    else Stream(xs.head, ys.head) append interleave(xs.tail, ys.tail)
+
   /** Shrink instance of container */
   private def shrinkContainer[C[_],T](implicit v: C[T] => Collection[T], s: Shrink[T],
     b: Buildable[C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
-
-    def interleave(xs: Stream[Stream[T]], ys: Stream[Stream[T]]): Stream[Stream[T]] =
-      (xs,ys) match {
-        case (xs,ys) if xs.isEmpty => ys
-        case (xs,ys) if ys.isEmpty => xs
-        case (cons(x,xs),cons(y,ys)) => cons(x, cons(y, interleave(xs,ys)))
-      }
 
     def removeChunks(n: Int, xs: Stream[T]): Stream[Stream[T]] =
       if(xs.isEmpty) empty
@@ -76,15 +76,12 @@ object Shrink {
   /** Shrink instance of integer */
   implicit lazy val shrinkInt: Shrink[Int] = Shrink { n =>
 
-    def iterate[T](f: T => T, x: T): Stream[T] = {
-      val y = f(x)
-      cons(y, iterate(f,y))
-    }
+    def halfs(n: Int): Stream[Int] = 
+      if(n == 0) empty else cons(n, halfs(n/2))
 
-    if(n == 0) empty
-    else {
-      val ns = cons(0, iterate((_:Int)/2, n).takeWhile(_ != 0).map(n - _))
-      if(n < 0) cons(-n,ns) else ns
+    if(n == 0) empty else {
+      val ns = halfs(n/2).map(n - _)
+      cons(0, interleave(ns, ns.map(-1 * _)))
     }
   }
 
@@ -110,7 +107,7 @@ object Shrink {
 
   /** Shrink instance of Array */
   implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
-    shrinkContainer[Array,T]
+    shrinkContainer[Array,T](Predef.identity _, s, Buildable.buildableArray)
 
   /** Shrink instance of Set */
   implicit def shrinkSet[T](implicit s: Shrink[T]): Shrink[Set[T]] =
@@ -126,7 +123,8 @@ object Shrink {
 
   /** Shrink instance of ArrayList */
   implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
-    shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
+    // shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
+    shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
       Buildable.buildableArrayList)
 
   /** Shrink instance of 2-tuple */

@@ -33,6 +33,12 @@ sealed trait Gen[+T] {
   /** Put a label on the generator to make test reports clearer */
   def |:(l: String) = label(l)
 
+  /** Put a label on the generator to make test reports clearer */
+  def :|(l: Symbol) = label(l.toString.drop(1))
+
+  /** Put a label on the generator to make test reports clearer */
+  def |:(l: Symbol) = label(l.toString.drop(1))
+
   def apply(prms: Gen.Params): Option[T]
 
   def map[U](f: T => U): Gen[U] = Gen(prms => this(prms).map(f)).label(label)
@@ -177,7 +183,7 @@ object Gen {
   def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[C]): Gen[C[T]] = Gen(prms => {
     val builder = b.builder[T]
     var none = false
-    val xs = gs.elements
+    val xs = gs.iterator
     while(xs.hasNext && !none) xs.next.apply(prms) match {
       case None => none = true
       case Some(x) => builder += x
@@ -268,7 +274,7 @@ object Gen {
    *  is given by <code>n</code>. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit b: Buildable[C]
   ): Gen[C[T]] = sequence[C,T](new Iterable[Gen[T]] {
-    def elements = new Iterator[Gen[T]] {
+    def iterator = new Iterator[Gen[T]] {
       var i = 0
       def hasNext = i < n
       def next = { i += 1; g }
@@ -348,4 +354,20 @@ object Gen {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
   } yield List.toString(c::cs)
+
+  /* Generates a string of alpha characters */
+  def alphaStr: Gen[String] = for(cs <- listOf(Gen.alphaChar)) yield cs.mkString
+
+  /* Generates a string of digits */
+  def numStr: Gen[String] = for(cs <- listOf(Gen.numChar)) yield cs.mkString
+
+
+  //// Number Generators ////
+
+  /* Generates positive integers */
+  def posInt: Gen[Int] = sized(max => choose(0, max))
+
+  /* Generates negative integers */
+  def negInt: Gen[Int] = sized(max => choose(-max, -1))
+
 }

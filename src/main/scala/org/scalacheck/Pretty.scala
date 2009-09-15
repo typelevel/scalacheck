@@ -38,7 +38,7 @@ object Pretty {
 
   def pad(s: String, c: Char, length: Int) = 
     if(s.length >= length) s
-    else s + List.make(length-s.length, c).mkString
+    else s + List.fill(length-s.length)(c).mkString
 
   def break(s: String, lead: String, length: Int): String =
     if(s.length <= length) s
@@ -64,7 +64,7 @@ object Pretty {
     e.getClass.getName / strs2.mkString("\n")
   }
 
-  implicit def prettyArgs(args: List[Arg[_]]) = Pretty { prms =>
+  implicit def prettyArgs[T](args: List[Arg[T]]) = Pretty { prms =>
     if(args.isEmpty) "" else {
       for((a,i) <- args.zipWithIndex) yield {
         val l = if(a.label == "") "ARG_"+i else a.label
