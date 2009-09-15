@@ -33,6 +33,7 @@
   <target name="prepare">
     <mkdir dir="target/doc/main/api"/>
     <mkdir dir="target/classes"/>
+    <mkdir dir="target/test-classes"/>
     <mkdir dir="target/sbaz/lib"/>
     <mkdir dir="target/sbaz/doc/scalacheck"/>
   </target>
@@ -47,6 +48,19 @@
       srcdir="src/main/scala" 
       destdir="target/classes" 
       classpathref="scalacheck.classpath"/>
+  </target>
+
+  <target name="test" depends="build">
+    <scalac 
+      addParams="-unchecked -deprecation" 
+      srcdir="src/test/scala" 
+      destdir="target/test-classes" 
+      classpathref="scalacheck.classpath"/>
+    <exec executable="scala" failonerror="true">
+      <arg value="-classpath"/>
+      <arg value="target/classes:target/test-classes"/>
+      <arg value="test.scala"/>
+    </exec>
   </target>
 
   <target name="doc" depends="prepare">
