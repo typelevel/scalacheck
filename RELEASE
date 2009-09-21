@@ -5,7 +5,7 @@ ScalaCheck 1.6
 Author: Rickard Nilsson (rickard.nilsson@telia.com)
 
 ScalaCheck is a powerful tool for automatic unit testing of Scala and Java
-programs. It features automatic test case generation and minimization of
+programs. It features automatic test case generation and simplification of
 failing test cases. ScalaCheck started out as a Scala port of the Haskell
 library QuickCheck, and has since evolved and been extended with features not
 found in Haskell QuickCheck.
@@ -22,7 +22,7 @@ The main features of ScalaCheck is:
   * Failing test cases are simplified automatically, which makes pin-pointing
     error causes easier.
 
-  * Support for stateful testing of command sequences, and minimization of
+  * Support for stateful testing of command sequences, and simplification of
     failing command sequences.
 
 Release 1.6 of ScalaCheck presents several minor changes and fixes that have
