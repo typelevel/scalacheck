@@ -80,7 +80,7 @@ ScalaCheck links:
     </repositories>
 
     <dependency>
-      <groupId>org.scalacheck</groupId>
+      <groupId>org.scala-tools.testing</groupId>
       <artifactId>scalacheck</artifactId>
       <version>1.6</version>
     </dependency>
