@@ -183,7 +183,7 @@ object Gen {
   def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[C]): Gen[C[T]] = Gen(prms => {
     val builder = b.builder[T]
     var none = false
-    val xs = gs.elements
+    val xs = gs.iterator
     while(xs.hasNext && !none) xs.next.apply(prms) match {
       case None => none = true
       case Some(x) => builder += x
@@ -274,7 +274,7 @@ object Gen {
    *  is given by <code>n</code>. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit b: Buildable[C]
   ): Gen[C[T]] = sequence[C,T](new Iterable[Gen[T]] {
-    def elements = new Iterator[Gen[T]] {
+    def iterator = new Iterator[Gen[T]] {
       var i = 0
       def hasNext = i < n
       def next = { i += 1; g }

@@ -211,8 +211,10 @@ object Arbitrary {
   implicit def arbStream[T](implicit a: Arbitrary[T]): Arbitrary[Stream[T]] =
     Arbitrary(containerOf[Stream,T](arbitrary[T]))
 
+  /*
   implicit def arbArray[T](implicit a: Arbitrary[T]): Arbitrary[Array[T]] =
     Arbitrary(containerOf[Array,T](arbitrary[T]))
+  */
 
   implicit def arbImmutableSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.immutable.Set[T]] =
     Arbitrary(containerOf[collection.immutable.Set,T](arbitrary[T]))

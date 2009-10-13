@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import util.Buildable
+import scala.collection.{ JavaConversions => jcl }
 
 sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
@@ -104,9 +105,9 @@ object Shrink {
   implicit def shrinkStream[T](implicit s: Shrink[T]): Shrink[Stream[T]] =
     shrinkContainer[Stream,T]
 
-  /** Shrink instance of Array */
-  implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
-    shrinkContainer[Array,T]
+  ///** Shrink instance of Array */
+  //implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
+  //  shrinkContainer[Array,T](Predef.identity _, s, Buildable.buildableArray)
 
   /** Shrink instance of Set */
   implicit def shrinkSet[T](implicit s: Shrink[T]): Shrink[Set[T]] =
@@ -122,7 +123,8 @@ object Shrink {
 
   /** Shrink instance of ArrayList */
   implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
-    shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
+    // shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
+    shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
       Buildable.buildableArrayList)
 
   /** Shrink instance of 2-tuple */
@@ -244,10 +246,10 @@ object Shrink {
   implicit lazy val shrinkStringStream: Shrink[Stream[String]] = shrinkStream[String]
   implicit lazy val shrinkDoubleStream: Shrink[Stream[Double]] = shrinkStream[Double]
 
-  implicit lazy val shrinkIntArray: Shrink[Array[Int]] = shrinkArray[Int]
-  implicit lazy val shrinkBooleanArray: Shrink[Array[Boolean]] = shrinkArray[Boolean]
-  implicit lazy val shrinkStringArray: Shrink[Array[String]] = shrinkArray[String]
-  implicit lazy val shrinkDoubleArray: Shrink[Array[Double]] = shrinkArray[Double]
+  //implicit lazy val shrinkIntArray: Shrink[Array[Int]] = shrinkArray[Int]
+  //implicit lazy val shrinkBooleanArray: Shrink[Array[Boolean]] = shrinkArray[Boolean]
+  //implicit lazy val shrinkStringArray: Shrink[Array[String]] = shrinkArray[String]
+  //implicit lazy val shrinkDoubleArray: Shrink[Array[Double]] = shrinkArray[Double]
 
   implicit lazy val shrinkIntSet: Shrink[Set[Int]] = shrinkSet[Int]
   implicit lazy val shrinkBooleanSet: Shrink[Set[Boolean]] = shrinkSet[Boolean]
