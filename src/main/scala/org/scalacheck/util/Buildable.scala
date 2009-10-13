@@ -45,6 +45,7 @@ object Buildable {
     }
   }
 
+  /*
   implicit object buildableArray extends Buildable[Array] {
     def builder[T] = new Builder[Array,T] {
       val buf = new scala.collection.mutable.ArrayBuffer[T]
@@ -56,6 +57,7 @@ object Buildable {
       }
     }
   }
+  */
 
   implicit object buildableMutableSet extends Buildable[mutable.Set] {
     def builder[T] = new Builder[mutable.Set,T] {

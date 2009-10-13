@@ -105,9 +105,9 @@ object Shrink {
   implicit def shrinkStream[T](implicit s: Shrink[T]): Shrink[Stream[T]] =
     shrinkContainer[Stream,T]
 
-  /** Shrink instance of Array */
-  implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
-    shrinkContainer[Array,T](Predef.identity _, s, Buildable.buildableArray)
+  ///** Shrink instance of Array */
+  //implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
+  //  shrinkContainer[Array,T](Predef.identity _, s, Buildable.buildableArray)
 
   /** Shrink instance of Set */
   implicit def shrinkSet[T](implicit s: Shrink[T]): Shrink[Set[T]] =
@@ -246,10 +246,10 @@ object Shrink {
   implicit lazy val shrinkStringStream: Shrink[Stream[String]] = shrinkStream[String]
   implicit lazy val shrinkDoubleStream: Shrink[Stream[Double]] = shrinkStream[Double]
 
-  implicit lazy val shrinkIntArray: Shrink[Array[Int]] = shrinkArray[Int]
-  implicit lazy val shrinkBooleanArray: Shrink[Array[Boolean]] = shrinkArray[Boolean]
-  implicit lazy val shrinkStringArray: Shrink[Array[String]] = shrinkArray[String]
-  implicit lazy val shrinkDoubleArray: Shrink[Array[Double]] = shrinkArray[Double]
+  //implicit lazy val shrinkIntArray: Shrink[Array[Int]] = shrinkArray[Int]
+  //implicit lazy val shrinkBooleanArray: Shrink[Array[Boolean]] = shrinkArray[Boolean]
+  //implicit lazy val shrinkStringArray: Shrink[Array[String]] = shrinkArray[String]
+  //implicit lazy val shrinkDoubleArray: Shrink[Array[Double]] = shrinkArray[Double]
 
   implicit lazy val shrinkIntSet: Shrink[Set[Int]] = shrinkSet[Int]
   implicit lazy val shrinkBooleanSet: Shrink[Set[Boolean]] = shrinkSet[Boolean]
