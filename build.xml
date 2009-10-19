@@ -1,15 +1,19 @@
-<project name="scalacheck" basedir="." default="build">
+<project name="scalacheck" basedir="." default="build" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
-  <!-- Global properties -->
+  <!-- Paths and resources -->
 
-  <property environment="env"/>
-  <property name="scala.home" value="${env.SCALA_HOME}"/>
-  <property name="scala.lib" value="${scala.home}/lib/scala-library.jar"/>
+  <path id="maven-ant-tasks.classpath" path="maven-ant-tasks-2.0.10.jar" />
+  <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+           uri="antlib:org.apache.maven.artifact.ant"
+           classpathref="maven-ant-tasks.classpath" />
 
-  <path id="scala.classpath">
-    <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
-    <pathelement location="${scala.lib}"/>
-  </path>
+  <artifact:remoteRepository id="scala-tools.repo-snapshots" url="http://www.scala-tools.org/repo-snapshots/" />
+
+  <artifact:dependencies pathId="scala.classpath">
+    <dependency groupId="org.scala-lang" artifactId="scala-compiler" version="2.8.0-SNAPSHOT"/>
+    <dependency groupId="org.scala-lang" artifactId="scala-library" version="2.8.0-SNAPSHOT"/>
+    <remoteRepository refid="scala-tools.repo-snapshots" />
+  </artifact:dependencies>
 
   <path id="scalacheck.classpath">
     <pathelement location="${scala.lib}"/>
@@ -23,8 +27,7 @@
   <!-- Project properties -->
 
   <property name="name"          value="${ant.project.name}"/>
-  <property name="version.nr"    value="1.7"/>
-  <property name="version"       value="${version.nr}dev"/>
+  <property name="version"       value="1.7-SNAPSHOT"/>
   <property name="author"        value="Rickard Nilsson"/>
 
 
@@ -140,12 +143,6 @@
       <arg value='ScalaCheck is a library for property-based, randomized testing of Scala programs. It is a Scala implementation of the QuickCheck Haskell library'/>
     </exec>
     <move file="scalacheck-${version}.advert" todir="target"/>
-  </target>
-
-  <target name="dist-release">
-    <antcall target="dist">
-      <param name="version" value="${version.nr}"/>
-    </antcall>
   </target>
 
   <target name="install" depends="dist">
