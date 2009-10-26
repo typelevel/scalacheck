@@ -61,7 +61,7 @@ object Pretty {
     
     val strs2 = if(prms.verbosity > 0) strs else strs.take(5)
     
-    e.getClass.getName / strs2.mkString("\n")
+    e.getClass.getName + ": " e.getMessage / strs2.mkString("\n")
   }
 
   implicit def prettyArgs[T](args: List[Arg[T]]) = Pretty { prms =>
@@ -104,7 +104,7 @@ object Pretty {
         res.discarded+" tests were discarded."
       case Test.PropException(args,e,l) =>
         "Exception raised on property evaluation."/labels(l)/pretty(args,prms)/
-        "> Stack trace: "+pretty(e,prms)
+        "> Exception: "+pretty(e,prms)
       case Test.GenException(e) =>
         "Exception raised on argument generation."/"> Stack trace: "/pretty(e,prms)
     }
