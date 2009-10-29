@@ -61,7 +61,7 @@ object Pretty {
     
     val strs2 = if(prms.verbosity > 0) strs else strs.take(5)
     
-    e.getClass.getName + ": " e.getMessage / strs2.mkString("\n")
+    e.getClass.getName + ": " + e.getMessage / strs2.mkString("\n")
   }
 
   implicit def prettyArgs[T](args: List[Arg[T]]) = Pretty { prms =>
