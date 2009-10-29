@@ -16,7 +16,7 @@
   </artifact:dependencies>
 
   <path id="scalacheck.classpath">
-    <pathelement location="${scala.lib}"/>
+    <path refid="scala.classpath"/>
     <pathelement location="target/classes"/>
   </path>
 
