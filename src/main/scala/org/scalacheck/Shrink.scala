@@ -122,10 +122,10 @@ object Shrink {
     shrinkContainer[immutable.Set,T]
 
   /** Shrink instance of ArrayList */
-  implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
+  //implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
     // shrinkContainer[ArrayList,T](al => new jcl.ArrayList(al), s, 
-    shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
-      Buildable.buildableArrayList)
+  //  shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
+  //    Buildable.buildableArrayList)
 
   /** Shrink instance of 2-tuple */
   implicit def shrinkTuple2[T1,T2](implicit
@@ -256,10 +256,10 @@ object Shrink {
   implicit lazy val shrinkStringSet: Shrink[Set[String]] = shrinkSet[String]
   implicit lazy val shrinkDoubleSet: Shrink[Set[Double]] = shrinkSet[Double]
 
-  implicit lazy val shrinkIntArrayList: Shrink[ArrayList[Int]] = shrinkArrayList[Int]
-  implicit lazy val shrinkBooleanArrayList: Shrink[ArrayList[Boolean]] = shrinkArrayList[Boolean]
-  implicit lazy val shrinkStringArrayList: Shrink[ArrayList[String]] = shrinkArrayList[String]
-  implicit lazy val shrinkDoubleArrayList: Shrink[ArrayList[Double]] = shrinkArrayList[Double]
+  //implicit lazy val shrinkIntArrayList: Shrink[ArrayList[Int]] = shrinkArrayList[Int]
+  //implicit lazy val shrinkBooleanArrayList: Shrink[ArrayList[Boolean]] = shrinkArrayList[Boolean]
+  //implicit lazy val shrinkStringArrayList: Shrink[ArrayList[String]] = shrinkArrayList[String]
+  //implicit lazy val shrinkDoubleArrayList: Shrink[ArrayList[Double]] = shrinkArrayList[Double]
 
   implicit lazy val shrinkIntOption: Shrink[Option[Int]] = shrinkOption[Int]
   implicit lazy val shrinkBooleanOption: Shrink[Option[Boolean]] = shrinkOption[Boolean]

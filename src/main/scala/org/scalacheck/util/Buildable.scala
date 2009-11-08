@@ -27,7 +27,7 @@ trait Buildable[C[_]] {
 object Buildable {
 
   import scala.collection._
-  import java.util.ArrayList
+  //import java.util.ArrayList
 
   implicit object buildableList extends Buildable[List] {
     def builder[T] = new Builder[List,T] {
@@ -83,6 +83,7 @@ object Buildable {
     }
   }
 
+  /*
   implicit object buildableArrayList extends Buildable[ArrayList] {
     def builder[T] = new Builder[ArrayList,T] {
       val al = new ArrayList[T]
@@ -90,5 +91,6 @@ object Buildable {
       def finalise = al
     }
   }
+  */
 
 }
