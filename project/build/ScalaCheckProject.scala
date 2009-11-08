@@ -18,8 +18,7 @@ class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
 
-  //val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.1"
-  val depTestInterface = "org.scala-tools.testing" %  "test-interface"
+  val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.1"
 
   override def testFrameworks = super.testFrameworks ++
     List(new TestFramework("org.scalacheck.ScalaCheckFramework"))
