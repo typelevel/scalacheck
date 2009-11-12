@@ -48,6 +48,15 @@ class ScalaCheckFramework extends Framework {
     }
 
     def run(testClassName: String, fingerprint: TestFingerprint, args: Array[String]) = {
+
+      def loadClass = {
+        try {
+          val obj = Class.forName(testClassName + "$", true, loader)
+          obj.getField("MODULE$").get(null)
+        } catch { case _ =>
+          Class.forName(testClassName, true, loader).newInstance
+        }
+      }
       
       // TODO Loggers
 
@@ -56,10 +65,10 @@ class ScalaCheckFramework extends Framework {
 
       fingerprint.superClassName match {
         case "org.scalacheck.Prop" => 
-          val p = loader.loadClass(testClassName).newInstance.asInstanceOf[Prop]
+          val p = loadClass.asInstanceOf[Prop]
           Array(asEvent((testClassName, Test.check(prms, p))))
         case "org.scalacheck.Properties" =>
-          val ps = loader.loadClass(testClassName).newInstance.asInstanceOf[Properties]
+          val ps = loadClass.asInstanceOf[Properties]
           Test.checkProperties(ps, prms).map(asEvent).toArray
       }
     }

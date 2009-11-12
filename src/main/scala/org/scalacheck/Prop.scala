@@ -127,7 +127,7 @@ trait Prop {
     p.map { r2 =>
       Result.merge(r1, r2,
         if(r1.status == Undecided || r2.status == Undecided) Undecided
-        else if(r1.status == r2.status) Proof else False
+        else if(r1.status == r2.status) True else False
       )
     }
   }
@@ -139,7 +139,7 @@ trait Prop {
    *  will fail.  */
   def ===(p: Prop) = this.flatMap { r1 => 
     p.map { r2 =>
-      Result.merge(r1, r2, if(r1.status == r2.status) Proof else False)
+      Result.merge(r1, r2, if(r1.status == r2.status) True else False)
     }
   }
 
