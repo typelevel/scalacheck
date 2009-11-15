@@ -225,11 +225,9 @@ object Arbitrary {
   implicit def arbSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.Set[T]] =
     Arbitrary(containerOf[collection.Set,T](arbitrary[T]))
 
-  /*
   import java.util.ArrayList
   implicit def arbArrayList[T](implicit a: Arbitrary[T]): Arbitrary[ArrayList[T]] =
     Arbitrary(containerOf[ArrayList,T](arbitrary[T]))
-  */
 
 
   // Functions //
