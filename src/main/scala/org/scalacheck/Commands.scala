@@ -16,8 +16,6 @@ import Shrink._
 /** See User Guide for usage examples */
 trait Commands extends Prop {
 
-  import Prop.extendedBoolean
-
   /** The abstract state data type. This type must be immutable.
    *  The state type that encodes the abstract state. The abstract state
    *  should model all the features we need from the real state, the system

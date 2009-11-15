@@ -59,6 +59,14 @@ class ScalaCheckFramework extends Framework {
       }
       
       // TODO Loggers
+      def propCallback(n: String, s: Int, d: Int) = {}
+
+      def testCallback(n: String, r: Test.Result) = for(l <- loggers) {
+        import Pretty._
+        l.info(
+          (if(r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
+        )
+      }
 
       // TODO val prms = Test.parseParams(args)
       val prms = Test.defaultParams
@@ -69,7 +77,8 @@ class ScalaCheckFramework extends Framework {
           Array(asEvent((testClassName, Test.check(prms, p))))
         case "org.scalacheck.Properties" =>
           val ps = loadClass.asInstanceOf[Properties]
-          Test.checkProperties(ps, prms).map(asEvent).toArray
+          val rs = Test.checkProperties(ps, prms, propCallback, testCallback)
+          rs.map(asEvent).toArray
       }
     }
 

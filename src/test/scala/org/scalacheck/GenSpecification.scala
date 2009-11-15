@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import Gen._
-import Prop.{forAll, someFailing, extendedBoolean, noneFailing}
+import Prop.{forAll, someFailing, noneFailing}
 import Arbitrary._
 import Shrink._
 

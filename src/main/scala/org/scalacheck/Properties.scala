@@ -53,80 +53,12 @@ class Properties(val name: String) extends Prop {
   override def check: Unit = Test.checkProperties(this)
 
   /** Adds all properties from another property collection to this one. */
-  def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p
+  def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p 
 
   /** Used for specifying properties. Usage:
    *  <code>property("myProp") = ...</code> */
   lazy val property = new {
-    def update(propName: String, p: Prop) = props += ((name+"."+propName, p))
+    def update(propName: String, p: Prop): Unit = props += ((name+"."+propName, p))
   }
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = prop</code> instead. */
-  @deprecated def specify(propName: String, prop: => Prop) =
-    property(propName) = Prop.secure(prop)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,P] (
-    propName: String, f: A1 => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1]
-  ): Unit = property(propName) = Prop.forAll(f)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,A2,P] (
-    propName: String, f: (A1,A2) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2]
-  ): Unit = property(propName) = Prop.forAll(f)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,A2,A3,P] (
-    propName: String, f: (A1,A2,A3) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3]
-  ): Unit = property(propName) = Prop.forAll(f)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,A2,A3,A4,P] (
-    propName: String, f: (A1,A2,A3,A4) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4]
-  ): Unit = property(propName) = Prop.forAll(f)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,A2,A3,A4,A5,P] (
-    propName: String, f: (A1,A2,A3,A4,A5) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5]
-  ): Unit = property(propName) = Prop.forAll(f)
-
-  /** Adds a property to this property collection
-   *  @deprecated Use <code>property(propName) = forAll(...)</code> instead */
-  @deprecated def specify[A1,A2,A3,A4,A5,A6,P] (
-    propName: String, f: (A1,A2,A3,A4,A5,A6) => P)(implicit
-    p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1],
-    a2: Arbitrary[A2], s2: Shrink[A2],
-    a3: Arbitrary[A3], s3: Shrink[A3],
-    a4: Arbitrary[A4], s4: Shrink[A4],
-    a5: Arbitrary[A5], s5: Shrink[A5],
-    a6: Arbitrary[A6], s6: Shrink[A6]
-  ): Unit = property(propName) = Prop.forAll(f)
 
 }

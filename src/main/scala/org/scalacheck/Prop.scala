@@ -118,6 +118,9 @@ trait Prop {
    *  as the other property.  */
   def ++(p: Prop): Prop = combine(p)(_ ++ _)
 
+  /** Combines two properties through implication */
+  def ==>(p: Prop): Prop = combine(p)(_ ==> _)
+
   /** Returns a new property that holds if and only if both this
    *  and the given property generates a result with the exact same status,
    *  if the status isn't Undecided. Note that this means that if one of 
@@ -269,6 +272,19 @@ object Prop {
       case (False, _) => this
       case (_, False) => r
     }
+
+    def ==>(r: Result) = (this.status, r.status) match {
+      case (Exception(_),_) => this
+      case (_,Exception(_)) => r
+
+      case (False,_) => merge(this, r, Undecided)
+
+      case (Undecided,_) => this
+
+      case (Proof,_) => merge(this, r, r.status)
+      case (True,_) => merge(this, r, r.status)
+    }
+
   }
 
   sealed trait Status
@@ -301,10 +317,6 @@ object Prop {
 
 
   // Implicit defs
-
-  implicit def extendedBoolean(b: Boolean) = new {
-    def ==>(p: => Prop) = Prop.==>(b,p)
-  }
 
   class ExtendedAny[T <% Pretty](x: => T) {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
@@ -342,7 +354,10 @@ object Prop {
   lazy val passed = Prop(Result(True))
 
   /** A property that denotes an exception */
-  def exception(e: Throwable) = Prop(Result(Exception(e)))
+  def exception(e: Throwable): Prop = Prop(Result(Exception(e)))
+
+  /** A property that denotes an exception */
+  lazy val exception: Prop = exception(null)
 
   def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop = 
     if(x == y) proved else falsified :| {
@@ -356,8 +371,10 @@ object Prop {
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.genPrms.size)(prms))
 
-  /** Implication */
-  def ==>(b: => Boolean, p: => Prop): Prop = secure(if (b) p else undecided)
+  /** Implication 
+   *  @deprecated Use the implication operator of the Prop class instead
+   */
+  @deprecated def ==>(b: => Boolean, p: => Prop): Prop = (b: Prop) ==> p
 
   /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
