@@ -57,8 +57,8 @@ class Properties(val name: String) extends Prop {
 
   /** Used for specifying properties. Usage:
    *  <code>property("myProp") = ...</code> */
-  lazy val property = new {
-    def update(propName: String, p: Prop): Unit = props += ((name+"."+propName, p))
+  class PropertySpecifier() {
+    def update(propName: String, p: Prop) = props += ((name+"."+propName, p))
   }
-
+  lazy val property = new PropertySpecifier()
 }
