@@ -9,10 +9,12 @@
 
 package org.scalacheck
 
-case class Arg[T](
-  label: String, 
-  arg: T, 
-  shrinks: Int, 
-  origArg: T,
-  prettyPrinter: T => Pretty
-)
+case class Arg[+T](
+  label: String,
+  arg: T,
+  shrinks: Int,
+  origArg: T
+)(implicit prettyPrinter: T => Pretty) {
+  lazy val prettyArg: Pretty = prettyPrinter(arg)
+  lazy val prettyOrigArg: Pretty = prettyPrinter(origArg)
+}

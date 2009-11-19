@@ -47,9 +47,9 @@ object Pretty {
   def format(s: String, lead: String, trail: String, width: Int) =
     s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
 
-  implicit def prettyAny[T](t: T) = Pretty { p => t.toString }
+  implicit def prettyAny(t: Any) = Pretty { p => t.toString }
 
-  implicit def prettyList(l: List[_]) = Pretty { p => 
+  implicit def prettyList(l: List[Any]) = Pretty { p => 
     l.map("\""+_+"\"").mkString("List(", ", ", ")") 
   }
 
@@ -64,15 +64,15 @@ object Pretty {
     e.getClass.getName + ": " + e.getMessage / strs2.mkString("\n")
   }
 
-  implicit def prettyArgs[T](args: List[Arg[T]]) = Pretty { prms =>
+  implicit def prettyArgs(args: List[Arg[Any]]): Pretty = Pretty { prms =>
     if(args.isEmpty) "" else {
       for((a,i) <- args.zipWithIndex) yield {
         val l = if(a.label == "") "ARG_"+i else a.label
         val s = 
           if(a.shrinks == 0) "" 
-          else " (orig arg: "+pretty(a.origArg, prms)(a.prettyPrinter)+")"
+          else " (orig arg: "+a.prettyOrigArg(prms)+")"
 
-        "> "+l+": "+pretty(a.arg, prms)(a.prettyPrinter)+""+s
+        "> "+l+": "+a.prettyArg(prms)+""+s
       }
     }.mkString("\n")
   }

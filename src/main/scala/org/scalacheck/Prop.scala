@@ -174,7 +174,7 @@ object Prop {
 
   // Types
 
-  type Args = List[Arg[_]]
+  type Args = List[Arg[Any]]
   type FM = FreqMap[immutable.Set[Any]]
 
   /** Property parameters */
@@ -215,7 +215,7 @@ object Prop {
       case _ => false
     }
 
-    def addArg(a: Arg[_]) = new Result(status, a::args, collected, labels)
+    def addArg(a: Arg[Any]) = new Result(status, a::args, collected, labels)
 
     def collect(x: Any) = new Result(status, args, collected + x, labels)
 
@@ -449,7 +449,7 @@ object Prop {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
-        val r = p(prms).addArg(Arg(g.label,x,0,x,pp))
+        val r = p(prms).addArg(Arg(g.label,x,0,x))
         r.status match {
           case True => new Result(Proof, r.args, r.collected, r.labels)
           case False => new Result(Undecided, r.args, r.collected, r.labels)
@@ -470,7 +470,7 @@ object Prop {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
-        provedToTrue(p(prms)).addArg(Arg(g1.label,x,0,x,pp1))
+        provedToTrue(p(prms)).addArg(Arg(g1.label,x,0,x))
     }
   }
 
@@ -571,8 +571,6 @@ object Prop {
     shrink: T => Stream[T])(f: T => P
   ): Prop = Prop { prms =>
 
-    def pp(a: T): Pretty = a
-
     /** Returns the first failed result in Left or success in Right */
     def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
@@ -588,7 +586,7 @@ object Prop {
 
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
       val xs = shrink(x)
-      val res = r.addArg(Arg(g.label,x,shrinks,orig,pp))
+      val res = r.addArg(Arg(g.label,x,shrinks,orig))
       if(xs.isEmpty) res else getFirstFailure(xs) match {
         case Right(_) => res
         case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
@@ -598,7 +596,7 @@ object Prop {
     g(prms.genPrms) match {
       case None => undecided(prms)
       case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
-        case Right((x,r)) => r.addArg(Arg(g.label,x,0,x,pp))
+        case Right((x,r)) => r.addArg(Arg(g.label,x,0,x))
         case Left((x,r)) => shrinker(x,r,0,x)
       }
     }
