@@ -95,13 +95,15 @@ sealed trait Gen[+T] {
     if(label.length == 0) "Gen()" else "Gen(\"" + label + "\")"
 
   /** Returns a new property that holds if and only if both this
-   *  and the given generator generates the same result. */
-  def ==[U](g: Gen[U]) = forAll(this)(r => forAll(g)(_ == r))
+   *  and the given generator generates the same result, or both
+   *  generators generate no result.
+   *  @deprecated Use <code>==</code> instead */
+  @deprecated def ===[U](g: Gen[U]): Prop = this == g
 
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
-  def ===[U](g: Gen[U]) = Prop(prms =>
+  def ==[U](g: Gen[U]) = Prop(prms =>
     (this(prms.genPrms), g(prms.genPrms)) match {
       case (None,None) => proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => proved(prms)

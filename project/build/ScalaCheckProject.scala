@@ -2,7 +2,7 @@ import sbt._
 
 class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
 
-  override def crossScalaVersions = List("2.8.0.Beta1-RC1")
+  override def crossScalaVersions = List("2.8.0.Beta1-RC2")
 
   override def managedStyle = ManagedStyle.Maven
 
@@ -18,10 +18,7 @@ class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
 
-  val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.1"
-
-  override def testFrameworks = super.testFrameworks ++
-    List(new TestFramework("org.scalacheck.ScalaCheckFramework"))
+  val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.2"
 
   Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 

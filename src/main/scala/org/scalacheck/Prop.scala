@@ -122,16 +122,13 @@ trait Prop {
   def ==>(p: Prop): Prop = combine(p)(_ ==> _)
 
   /** Returns a new property that holds if and only if both this
-   *  and the given property generates a result with the exact same status,
-   *  if the status isn't Undecided. Note that this means that if one of 
-   *  the properties is proved, and the other one passed, then the resulting
-   *  property will fail.  */
+   *  and the given property generates a result with the exact
+   *  same status. Note that this means that if one of the properties is
+   *  proved, and the other one passed, then the resulting property
+   *  will fail. */
   def ==(p: Prop) = this.flatMap { r1 => 
     p.map { r2 =>
-      Result.merge(r1, r2,
-        if(r1.status == Undecided || r2.status == Undecided) Undecided
-        else if(r1.status == r2.status) True else False
-      )
+      Result.merge(r1, r2, if(r1.status == r2.status) True else False)
     }
   }
 
@@ -139,12 +136,9 @@ trait Prop {
    *  and the given property generates a result with the exact
    *  same status. Note that this means that if one of the properties is
    *  proved, and the other one passed, then the resulting property
-   *  will fail.  */
-  def ===(p: Prop) = this.flatMap { r1 => 
-    p.map { r2 =>
-      Result.merge(r1, r2, if(r1.status == r2.status) True else False)
-    }
-  }
+   *  will fail. 
+   *  @deprecated Use <code>==</code> instead */
+  @deprecated def ===(p: Prop): Prop = this == p
 
   override def toString = "Prop"
 
@@ -399,7 +393,7 @@ object Prop {
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ === fail):_*)
+  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ == fail):_*)
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */

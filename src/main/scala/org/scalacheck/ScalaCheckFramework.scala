@@ -33,6 +33,7 @@ class ScalaCheckFramework extends Framework {
     private def asEvent(nr: (String, Test.Result)) = nr match { 
       case (n: String, r: Test.Result) => new Event {
         val testName = n
+        val description = n
         val result = r.status match {
           case Test.Passed => Result.Success
           case _:Test.Proved => Result.Success
@@ -47,7 +48,7 @@ class ScalaCheckFramework extends Framework {
       }
     }
 
-    def run(testClassName: String, fingerprint: TestFingerprint, args: Array[String]) = {
+    def run(testClassName: String, fingerprint: TestFingerprint, handler: EventHandler, args: Array[String]) {
 
       def loadClass = {
         try {
@@ -61,11 +62,14 @@ class ScalaCheckFramework extends Framework {
       // TODO Loggers
       def propCallback(n: String, s: Int, d: Int) = {}
 
-      def testCallback(n: String, r: Test.Result) = for(l <- loggers) {
-        import Pretty._
-        l.info(
-          (if(r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
-        )
+      def testCallback(n: String, r: Test.Result) = {
+        for (l <- loggers) {
+          import Pretty._
+          l.info(
+            (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
+            )
+        }
+        handler.handle(asEvent((n,r)))
       }
 
       // TODO val prms = Test.parseParams(args)
@@ -74,11 +78,10 @@ class ScalaCheckFramework extends Framework {
       fingerprint.superClassName match {
         case "org.scalacheck.Prop" => 
           val p = loadClass.asInstanceOf[Prop]
-          Array(asEvent((testClassName, Test.check(prms, p))))
+          handler.handle(asEvent((testClassName, Test.check(prms, p))))
         case "org.scalacheck.Properties" =>
           val ps = loadClass.asInstanceOf[Properties]
-          val rs = Test.checkProperties(ps, prms, propCallback, testCallback)
-          rs.map(asEvent).toArray
+          Test.checkProperties(ps, prms, propCallback, testCallback)
       }
     }
 

@@ -18,40 +18,40 @@ object GenSpecification extends Properties("Gen") {
 
   property("sequence") =
     forAll(listOf(frequency((10,value(arbitrary[Int])),(1,value(fail)))))(l =>
-      (someFailing(l) && (sequence[List,Int](l) === fail)) ||
+      (someFailing(l) && (sequence[List,Int](l) == fail)) ||
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
 
-  property("lzy") = forAll((g: Gen[Int]) => lzy(g) === g)
+  property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
-  property("wrap") = forAll((g: Gen[Int]) => wrap(g) === g)
+  property("wrap") = forAll((g: Gen[Int]) => wrap(g) == g)
 
   property("value") = forAll((x:Int, prms:Params) => value(x)(prms) == Some(x))
 
   property("fail") = forAll((prms: Params) => fail(prms) == None)
 
   property("choose-int") = forAll { (l: Int, h: Int) =>
-    if(l > h) choose(l,h) === fail
+    if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 
   property("choose-long") = forAll { (l: Long, h: Long) =>
-    if(l > h) choose(l,h) === fail
+    if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 
   property("choose-double") = forAll { (l: Double, h: Double) =>
-    if(l > h) choose(l,h) === fail
+    if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 
-  property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) === g)
+  property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) == g)
 
-  property("sized") = forAll((g: Gen[Int]) => sized(i => g) === g)
+  property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
 
   property("oneOf") = forAll { l: List[Int] =>
     val gs = l.map(value(_))
-    if(l.isEmpty) oneOf(gs: _*) === fail
+    if(l.isEmpty) oneOf(gs: _*) == fail
     else forAll(oneOf(gs: _*))(l.contains)
   }
 
@@ -67,7 +67,7 @@ object GenSpecification extends Properties("Gen") {
 
   property("pick") = forAll { l: List[Int] =>
     forAll(choose(-1, 2*l.length)) { n =>
-      if(n < 0 || n > l.length) pick(n,l) === fail
+      if(n < 0 || n > l.length) pick(n,l) == fail
       else forAll(pick(n,l)) { m => m.length == n && m.forall(l.contains) }
     }
   }
