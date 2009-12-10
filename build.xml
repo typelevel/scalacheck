@@ -17,7 +17,7 @@
   </artifact:dependencies>
 
   <artifact:dependencies pathId="testinterface.classpath">
-    <dependency groupId="org.scala-tools.testing" artifactId="test-interface" version="0.1"/>
+    <dependency groupId="org.scala-tools.testing" artifactId="test-interface" version="0.2"/>
     <remoteRepository refid="scala-tools.repo-releases" />
   </artifact:dependencies>
 
@@ -59,7 +59,7 @@
 
   <target name="build" depends="prepare">
     <scalac 
-      addParams="-unchecked -deprecation -verbose" 
+      addParams="-unchecked -deprecation -verbose"
       srcdir="src/main/scala" 
       destdir="target/classes" 
       classpathref="scalacheck.classpath"/>
