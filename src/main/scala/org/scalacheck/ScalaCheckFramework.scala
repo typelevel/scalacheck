@@ -72,8 +72,12 @@ class ScalaCheckFramework extends Framework {
         handler.handle(asEvent((n,r)))
       }
 
-      // TODO val prms = Test.parseParams(args)
-      val prms = Test.defaultParams
+      import Test.cmdLineParser.{Success, NoSuccess}
+      val prms = Test.cmdLineParser.parseParams(args) match {
+        case Success(params, _) => params
+        // TODO: Maybe handle this a bit better than throwing exception?
+        case e: NoSuccess => throw new Exception(e.toString)
+      }
 
       fingerprint.superClassName match {
         case "org.scalacheck.Prop" => 

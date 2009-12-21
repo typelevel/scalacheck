@@ -16,6 +16,7 @@ object Test {
   import ConsoleReporter.{testReport, propReport}
   import scala.collection.immutable
   import Prop.FM
+  import util.CmdLineParser
 
   private def secure[T](x: => T): Either[T,Throwable] =
     try { Left(x) } catch { case e => Right(e) }
@@ -94,6 +95,59 @@ object Test {
       (workers > 1 && wrkSize <= 0)
     ) throw new IllegalArgumentException("Invalid test parameters")
   }
+
+  private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
+    object OptMinSuccess extends IntOpt {
+      val default = Test.defaultParams.minSuccessfulTests
+      val names = Set("minSuccessfulTests", "s")
+      val help = "Number of tests that must succeed in order to pass a property"
+    }
+    object OptMaxDiscarded extends IntOpt {
+      val default = Test.defaultParams.maxDiscardedTests
+      val names = Set("maxDiscardedTests", "d")
+      val help =
+        "Number of tests that can be discarded before ScalaCheck stops " +
+        "testing a property"
+    }
+    object OptMinSize extends IntOpt {
+      val default = Test.defaultParams.minSize
+      val names = Set("minSize", "n")
+      val help = "Minimum data generation size"
+    }
+    object OptMaxSize extends IntOpt {
+      val default = Test.defaultParams.maxSize
+      val names = Set("maxSize", "x")
+      val help = "Maximum data generation size"
+    }
+    object OptWorkers extends IntOpt {
+      val default = Test.defaultParams.workers
+      val names = Set("workers", "w")
+      val help = "Number of threads to execute in parallel for testing"
+    }
+    object OptWorkSize extends IntOpt {
+      val default = Test.defaultParams.wrkSize
+      val names = Set("wrkSize", "z")
+      val help = "Amount of work each thread should do at a time"
+    }
+
+    val opts = Set[Opt[_]](
+      OptMinSuccess, OptMaxDiscarded, OptMinSize,
+      OptMaxSize, OptWorkers, OptWorkSize
+    )
+
+    def parseParams(args: Array[String]) = parseArgs(args) {
+      optMap => Test.Params(
+        optMap(OptMinSuccess),
+        optMap(OptMaxDiscarded),
+        optMap(OptMinSize),
+        optMap(OptMaxSize),
+        Test.defaultParams.rng,
+        optMap(OptWorkers),
+        optMap(OptWorkSize)
+      )
+    }
+  }
+
     
   
   // Testing functions
