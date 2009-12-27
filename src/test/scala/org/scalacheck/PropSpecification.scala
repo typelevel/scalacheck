@@ -26,7 +26,21 @@ object PropSpecification extends Properties("Prop") {
 
   property("Prop.==> true") = forAll { p1: Prop =>
     val g = oneOf(passed,proved)
-    forAll(g) { p2 => (p2 ==> p1) == p1 }
+    forAll(g) { p2 => 
+      val p = p2 ==> p1
+      (p == p1) || (p2 == passed && p1 == proved && p == passed)
+    }
+  }
+
+  property("Prop.==> short circuit") = forAll { n: Int =>
+    def positiveDomain(n: Int): Boolean = n match {
+      case n if n > 0 => true
+      case n if (n & 1) == 0 => throw new java.lang.Exception("exception")
+      case _ => loopForever
+    }
+    def loopForever: Nothing = loopForever
+
+    (n > 0) ==> positiveDomain(n)
   }
 
   property("Prop.&& Commutativity") = forAll { (p1: Prop, p2: Prop) =>

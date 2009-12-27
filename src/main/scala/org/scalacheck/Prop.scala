@@ -15,7 +15,9 @@ import scala.collection._
 /** A property is a generator that generates a property result */
 trait Prop {
 
-  import Prop.{Result,Params,Proof,True,False,Exception,Undecided}
+  import Prop.{Result,Params,Proof,True,False,Exception,Undecided,provedToTrue}
+  import Test.cmdLineParser.{Success, NoSuccess}
+  import Result.merge
 
   def apply(prms: Params): Result
 
@@ -31,7 +33,6 @@ trait Prop {
     testReport(Test.check(prms, this, propReport))
   }
 
-  import Test.cmdLineParser.{Success, NoSuccess}
 
   /** Convenience method that makes it possible to use a this property
    *  as an application that checks itself on execution */
@@ -66,7 +67,11 @@ trait Prop {
   def ++(p: Prop): Prop = combine(p)(_ ++ _)
 
   /** Combines two properties through implication */
-  def ==>(p: Prop): Prop = combine(p)(_ ==> _)
+  def ==>(p: => Prop): Prop = flatMap { r1 =>
+    if(r1.proved) p map { r2 => merge(r1,r2,r2.status) }
+    else if(r1.success) p map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
+    else Prop(r1.copy(status = Undecided))
+  }
 
   /** Returns a new property that holds if and only if both this
    *  and the given property generates a result with the exact
@@ -138,11 +143,11 @@ object Prop {
   }
 
   /** The result of evaluating a property */
-  class Result(
-    val status: Status,
-    val args: Args,
-    val collected: immutable.Set[Any],
-    val labels: immutable.Set[String]
+  case class Result(
+    status: Status,
+    args: Args,
+    collected: immutable.Set[Any],
+    labels: immutable.Set[String]
   ) {
     def success = status match {
       case True => true
@@ -156,11 +161,13 @@ object Prop {
       case _ => false
     }
 
-    def addArg(a: Arg[Any]) = new Result(status, a::args, collected, labels)
+    def proved = status == Proof
 
-    def collect(x: Any) = new Result(status, args, collected + x, labels)
+    def addArg(a: Arg[Any]) = copy(args = a::args)
 
-    def label(l: String) = new Result(status, args, collected, labels + l)
+    def collect(x: Any) = copy(collected = collected+x)
+
+    def label(l: String) = copy(labels = labels+l)
 
     import Result.merge
 
