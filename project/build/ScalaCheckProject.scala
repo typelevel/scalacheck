@@ -2,7 +2,7 @@ import sbt._
 
 class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
 
-  override def crossScalaVersions = List("2.8.0.Beta1-RC5", "2.8.0.Beta1-RC4")
+  override def crossScalaVersions = List("2.8.0.Beta1")
 
   override def managedStyle = ManagedStyle.Maven
 
