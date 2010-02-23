@@ -72,36 +72,47 @@ object Arbitrary {
   /** Returns an arbitrary generator for the type T. */
   def arbitrary[T](implicit a: Arbitrary[T]): Gen[T] = a.arbitrary
 
-
-  // Arbitrary instances for common types //
-
-
-  // Primitive types //
+  /**** Arbitrary instances for each AnyVal ****/
+  
+  /** Arbitrary AnyVal */
+  implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(Gen.genAnyVal)
 
   /** Arbitrary instance of Boolean */
   implicit lazy val arbBool: Arbitrary[Boolean] =
-    Arbitrary(oneOf(true,false))
+    Arbitrary(oneOf(true, false))
 
   /** Arbitrary instance of Int */
-  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(
-    frequency(
-      (20, sized(s => choose(-s,s))),
-      (1, 0),
-      (1, 1),
-      (1, -1),
-      (1, Integer.MAX_VALUE),
-      (1, Integer.MIN_VALUE)
-    )
-  )
-    Arbitrary(sized(s => choose(-s,s)))
+  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(Gen.genInt)
 
   /** Arbitrary instance of Long */
-  implicit lazy val arbLong: Arbitrary[Long] =
-    Arbitrary(sized { s: Int =>
-      val l = s * 10000L
-      choose(-l,l)
-    })
+  implicit lazy val arbLong: Arbitrary[Long] = Arbitrary(Gen.genLong)
 
+  /** Arbitrary instance of Double */
+  implicit lazy val arbDouble: Arbitrary[Double] =
+    Arbitrary(sized(s => choose(-s:Double,s:Double)))
+
+  /** Arbitrary instance of Float */
+  implicit lazy val arbFloat: Arbitrary[Float] =
+    Arbitrary(arbitrary[Double].map(_.toFloat))
+
+  /** Arbitrary instance of Char */
+  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(Gen.genChar)
+
+  /** Arbitrary instance of Byte */
+  implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(Gen.genByte)
+
+  /** Arbitrary instance of Short */
+  implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(Gen.genShort)
+  
+  /** Absolutely, totally, 100% arbitrarily chosen Unit. */
+  implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(value(()))
+  
+  /**** Arbitrary instances of other common types ****/
+
+  /** Arbitrary instance of String */
+  implicit lazy val arbString: Arbitrary[String] =
+    Arbitrary(arbitrary[List[Char]].map(List.toString(_)))
+  
   /** Arbitrary instance of Date */
   implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(for {
     l <- arbitrary[Long]
@@ -112,29 +123,48 @@ object Arbitrary {
   implicit lazy val arbThrowable: Arbitrary[Throwable] =
     Arbitrary(value(new Exception))
 
-  /** Arbitrary instance of Double */
-  implicit lazy val arbDouble: Arbitrary[Double] =
-    Arbitrary(sized(s => choose(-s:Double,s:Double)))
+  /** Arbitrary BigInt */
+  implicit lazy val arbBigInt: Arbitrary[BigInt] = {
+    def chooseBigInt: Gen[BigInt] = sized((s: Int) => choose(-s, s)) map (x => BigInt(x))
+    def chooseReallyBigInt = chooseBigInt.combine(choose(32, 128))((x, y) => Some(x.get << y.get))
 
-  /** Arbitrary instance of Float */
-  implicit lazy val arbFloat: Arbitrary[Float] =
-    Arbitrary(arbitrary[Double].map(_.toFloat))
+    Arbitrary(
+      frequency(
+        (5, chooseBigInt),
+        (10, chooseReallyBigInt),
+        (1, BigInt(0)),
+        (1, BigInt(1)),
+        (1, BigInt(-1)),
+        (1, BigInt(Int.MaxValue) + 1),
+        (1, BigInt(Int.MinValue) - 1),
+        (1, BigInt(Long.MaxValue)),
+        (1, BigInt(Long.MinValue)),
+        (1, BigInt(Long.MaxValue) + 1),
+        (1, BigInt(Long.MinValue) - 1)
+      )
+    )
+  }
+  
+  /** Arbitrary BigDecimal */
+  implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
+    import java.math.MathContext._
+    val mcGen = oneOf(List(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128) map (x => value(x)) : _*)
 
-  /** Arbitrary instance of char */
-  implicit lazy val arbChar: Arbitrary[Char] =
-    Arbitrary(choose(0,255).map(_.toChar))
-
-  /** Arbitrary instance of byte */
-  implicit lazy val arbByte: Arbitrary[Byte] =
-    Arbitrary(arbitrary[Int].map(_.toByte))
-
-  /** Arbitrary instance of Short */
-  implicit lazy val arbShort: Arbitrary[Short] =
-    Arbitrary(arbitrary[Int].map(_.toShort))
-
-  /** Arbitrary instance of string */
-  implicit lazy val arbString: Arbitrary[String] =
-    Arbitrary(arbitrary[List[Char]].map(List.toString(_)))
+    Arbitrary(
+      for (mc <- mcGen; scale <- arbInt.arbitrary ; x <- arbBigInt.arbitrary) yield {
+        BigDecimal(x, scale, mc)
+      }
+    )
+  }
+  
+  /** Arbitrary java.lang.Number */
+  implicit lazy val arbNumber: Arbitrary[Number] = {
+    import Gen._
+    val gens = List(genByte, genShort, genInt, genLong, genFloat, genDouble) map (g => g map (_.asInstanceOf[Number]))
+    Arbitrary(oneOf(gens: _*))
+    // XXX TODO - restore BigInt and BigDecimal
+    // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))    
+  }
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] =

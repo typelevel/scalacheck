@@ -147,15 +147,9 @@ object Gen {
     *  the range between l and h doesn't fit in a Long. */
     def choose(l: Long, h: Long): Long = {
       val d = h-l+1
-      if(d <= 0) throw new IllegalArgumentException
-      else {
-        def rnd: Long = {
-          val bits = rng.nextLong
-          val n = bits % d
-          if(bits - n + (d-1) >= 0) n else rnd
-        }
-        rnd + l
-      }
+      
+      if (d <= 0) throw new IllegalArgumentException
+      else l + (Math.abs(rng.nextLong) % d)
     }
 
     def choose(l: Double, h: Double) = {
@@ -210,19 +204,19 @@ object Gen {
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = Gen(p => None)
 
-  /** A generator that generates a random integer in the given (inclusive)
+  /** A generator that generates a random Integer in the given (inclusive)
    *  range. */
   def choose(low: Int, high: Int) = if(low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
 
-  /** A generator that generates a random integer in the given (inclusive)
+  /** A generator that generates a random Long in the given (inclusive)
    *  range. */
   def choose(low: Long, high: Long) = if(low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
 
-  /** A generator that generates a random double in the given (inclusive)
+  /** A generator that generates a random Double in the given (inclusive)
    *  range. */
-  def choose(low: Double, high: Double) = if(low > high) fail else
+  def choose(low: Double, high: Double) = if (low > high) fail else
     parameterized(prms => value(prms.choose(low,high)))
 
   /** Creates a generator that can access its generation parameters */
@@ -347,7 +341,6 @@ object Gen {
   /* Generates an alphanumerical character */
   def alphaNumChar = frequency((1,numChar), (9,alphaChar))
 
-
   //// String Generators ////
 
   /* Generates a string that starts with a lower-case alpha character,
@@ -363,13 +356,105 @@ object Gen {
   /* Generates a string of digits */
   def numStr: Gen[String] = for(cs <- listOf(Gen.numChar)) yield cs.mkString
 
-
   //// Number Generators ////
 
   /* Generates positive integers */
-  def posInt: Gen[Int] = sized(max => choose(0, max))
+  def posInt: Gen[Int] = sized(max => choose(1, max))
 
   /* Generates negative integers */
   def negInt: Gen[Int] = sized(max => choose(-max, -1))
+  
+  private val MAXBITS = 20
+  private def basicGenerators[T](minT: T, maxT: T)(implicit num: Numeric[T]): List[(Int, Gen[T])] = {
+    import num._
+    
+    List(
+      (1, minT),
+      (1, maxT),
+      (1, zero),
+      (1, one),
+      (1, -one)
+    )
+  }
+  private def bitWidthGenerators[T](bits: Int, chooser: (T, T) => Gen[T])(implicit num: Numeric[T]): Option[(Int, Gen[T])] = {
+    import num._
+    
+    def rangedGeneratorFromBits(b: Int): Option[Gen[T]] = {
+      val x1 = fromInt(1 << b)
+      val x2 = fromInt(1 << (b + 1))
+      if (x2 <= x1) None
+      else Some(chooser(x1, x2))
+    }
+    
+    rangedGeneratorFromBits(bits) map (x => (1, x))
+  }
+  
+  /** Creates plausibly well-rounded generator for Byte/Short/Int/Long, including
+    * zero, +/- unity, and both extremities.
+    */
+  def integralGenerator[T](minT: T, maxT: T, chooser: (T, T) => Gen[T])(implicit num: Integral[T]): Gen[T] = {
+    import num._
 
+    // count the number of bits in this representation
+    def bits(x: T, acc: Int): Int = {
+      val next = x * (one + one)
+      if (next < x) acc // overflow
+      else bits(next, acc + 1)
+    }
+    def getMaxBits = bits(one, 0) min MAXBITS
+    
+    // generators for 2 to 4, 2 to 8, 2 to 16, etc. so as to weight toward
+    // more likely to be relevant numbers
+    val weightedGens: List[(Int, Gen[T])] =
+      for (b <- (1 to getMaxBits).toList ; g <- bitWidthGenerators(b, chooser)) yield g
+    
+    // (1 to getMaxBits).toList map (bitWidthGenerators(_, chooser))
+    
+    val args = basicGenerators(minT, maxT) ++ weightedGens ++ List(
+      (10, chooser(minT + one, -one)),
+      (10, chooser(one, maxT - one))
+    )
+    
+    frequency(args: _*)
+  }
+  
+  /** Like integralGenerator for Float/Double - also makes sure to explore the -1.0 to 1.0 range. */
+  def fractionalGenerator[T](minT: T, maxT: T, chooser: (T, T) => Gen[T], specials: T*)(implicit num: Fractional[T]): Gen[T] = {
+    import num._
+    
+    val extras: List[(Int, Gen[T])] = 
+      (specials.toList map (s => (1, value(s)))) ++
+      ((1 to 20).toList map (bitWidthGenerators(_, chooser).get))
+    
+    val args = basicGenerators(minT, maxT) ++ extras ++ List(
+      (5, chooser(-one, zero)),
+      (5, chooser(zero, one)),
+      (10, chooser(minT + one, -one)),
+      (10, chooser(one, maxT - one))  
+    )
+    
+    frequency(args: _*)
+  }
+  
+  //// AnyVal Generators ////
+  def genUnit: Gen[Unit]      = value(())
+  def genBool: Gen[Boolean]   = oneOf(true, false)
+  def genChar: Gen[Char]      = choose(Char.MinValue, Char.MaxValue) map (_.toChar)
+  def genByte: Gen[Byte]      = integralGenerator(Byte.MinValue, Byte.MaxValue, choose(_: Byte, _: Byte) map (_.toByte))
+  def genShort: Gen[Short]    = integralGenerator(Short.MinValue, Short.MaxValue, choose(_: Short, _: Short) map (_.toShort))
+  def genInt: Gen[Int]        = integralGenerator(Int.MinValue, Int.MaxValue, choose(_: Int, _: Int))
+  def genLong: Gen[Long]      = integralGenerator(Long.MinValue >> 2, Long.MaxValue >> 2, choose(_: Long, _: Long))
+  def genFloat: Gen[Float]    = fractionalGenerator(
+    Float.MinValue, Float.MaxValue,
+    (x: Float, y: Float) => choose(x.toDouble, y.toDouble) map (_.toFloat)
+    // I find that including these by default is a little TOO testy.
+    // Float.Epsilon, Float.NaN, Float.PositiveInfinity, Float.NegativeInfinity
+  )
+  def genDouble: Gen[Double]  = fractionalGenerator(
+    Double.MinValue, Double.MaxValue,
+    choose(_: Double, _: Double)
+    // As above.  Perhaps behind some option?
+    // Double.Epsilon, Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity
+  )
+  def genAnyVal: Gen[AnyVal]  = oneOf(genUnit, genBool, genChar, genByte, genShort, genInt, genLong, genFloat, genDouble)
 }

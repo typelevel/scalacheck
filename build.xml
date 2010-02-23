@@ -59,7 +59,7 @@
 
   <target name="build" depends="prepare">
     <scalac 
-      addParams="-unchecked -deprecation -verbose"
+      addParams="-unchecked -deprecation"
       srcdir="src/main/scala" 
       destdir="target/classes" 
       classpathref="scalacheck.classpath"/>
