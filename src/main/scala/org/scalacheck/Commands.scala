@@ -47,7 +47,8 @@ trait Commands extends Prop {
     def nextState(s: State): State
 
     /** @deprecated Use <code>preConditions += ...</code> instead. */
-    @deprecated def preCondition_=(f: State => Boolean) = {
+    @deprecated("Use 'preConditions += ...' instead.")
+    def preCondition_=(f: State => Boolean) = {
       preConditions.clear
       preConditions += f
     }
@@ -62,13 +63,15 @@ trait Commands extends Prop {
     val preConditions = new collection.mutable.ListBuffer[State => Boolean]
 
     /** @deprecated Use <code>postConditions += ...</code> instead. */
-    @deprecated def postCondition_=(f: (State,Any) => Prop) = {
+    @deprecated("Use 'postConditions += ...' instead.")
+    def postCondition_=(f: (State,Any) => Prop) = {
       postConditions.clear
       postConditions += ((s0,s1,r) => f(s0,r))
     }
 
     /** @deprecated Use <code>postConditions += ...</code> instead. */
-    @deprecated def postCondition_=(f: (State,State,Any) => Prop) = {
+    @deprecated("Use 'postConditions += ...' instead.")
+    def postCondition_=(f: (State,State,Any) => Prop) = {
       postConditions.clear
       postConditions += f
     }

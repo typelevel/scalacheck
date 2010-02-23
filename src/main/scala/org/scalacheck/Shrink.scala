@@ -29,7 +29,7 @@ object Shrink {
     else Stream(xs.head, ys.head) append interleave(xs.tail, ys.tail)
 
   /** Shrink instance of container */
-  private def shrinkContainer[C[_],T](implicit v: C[T] => Collection[T], s: Shrink[T],
+  private def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
     b: Buildable[C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
 

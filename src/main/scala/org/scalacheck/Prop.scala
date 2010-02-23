@@ -90,7 +90,8 @@ trait Prop {
    *  proved, and the other one passed, then the resulting property
    *  will fail. 
    *  @deprecated Use <code>==</code> instead */
-  @deprecated def ===(p: Prop): Prop = this == p
+  @deprecated("Use == instead.")
+  def ===(p: Prop): Prop = this == p
 
   override def toString = "Prop"
 
@@ -322,7 +323,8 @@ object Prop {
   /** Implication 
    *  @deprecated Use the implication operator of the Prop class instead
    */
-  @deprecated def ==>(b: => Boolean, p: => Prop): Prop = (b: Prop) ==> p
+  @deprecated("Use the implication operator of the Prop class instead")
+  def ==>(b: => Boolean, p: => Prop): Prop = (b: Prop) ==> p
 
   /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
@@ -526,7 +528,7 @@ object Prop {
         val p = secure(f(x))
         (x, provedToTrue(p(prms)))
       }
-      results.dropWhile(!_._2.failure).firstOption match {
+      results.dropWhile(!_._2.failure).headOption match {
         case None => Right(results.head)
         case Some(xr) => Left(xr)
       }

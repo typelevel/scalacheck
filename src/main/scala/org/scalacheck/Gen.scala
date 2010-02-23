@@ -98,7 +98,8 @@ sealed trait Gen[+T] {
    *  and the given generator generates the same result, or both
    *  generators generate no result.
    *  @deprecated Use <code>==</code> instead */
-  @deprecated def ===[U](g: Gen[U]): Prop = this == g
+  @deprecated("Use == instead")
+  def ===[U](g: Gen[U]): Prop = this == g
 
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
@@ -252,12 +253,14 @@ object Gen {
   /** Chooses one of the given values, with a weighted random distribution. 
    *  @deprecated Use <code>frequency</code> with constant generators 
    *  instead. */
-  @deprecated def elementsFreq[T](vs: (Int, T)*): Gen[T] =
+  @deprecated("Use 'frequency' with constant generators instead.")
+  def elementsFreq[T](vs: (Int, T)*): Gen[T] =
     frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
 
   /** A generator that returns a random element from a list 
    *  @deprecated Use <code>oneOf</code> with constant generators instead. */
-  @deprecated def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
+  @deprecated("Use 'oneOf' with constant generators instead.")
+  def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
     i <- choose(0,xs.length-1)
   } yield xs(i)
 
@@ -308,13 +311,14 @@ object Gen {
   /** Generates a list of the given length. This method is equal to calling 
    *  <code>containerOfN[List,T](n,g)</code>. 
    *  @deprecated Use the method <code>listOfN</code> instead. */
-  @deprecated def vectorOf[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
+  @deprecated("Use 'listOfN' instead.")
+  def vectorOf[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](l: Collection[T]) = choose(0,l.size) flatMap (pick(_,l))
+  def someOf[T](l: Iterable[T]) = choose(0,l.size) flatMap (pick(_,l))
 
   /** A generator that picks a given number of elements from a list, randomly */
-  def pick[T](n: Int, l: Collection[T]): Gen[Seq[T]] =
+  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] =
     if(n > l.size || n < 0) fail
     else Gen(prms => {
       val buf = new ListBuffer[T]
@@ -348,7 +352,7 @@ object Gen {
   def identifier: Gen[String] = for {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
-  } yield List.toString(c::cs)
+  } yield (c::cs).mkString
 
   /* Generates a string of alpha characters */
   def alphaStr: Gen[String] = for(cs <- listOf(Gen.alphaChar)) yield cs.mkString

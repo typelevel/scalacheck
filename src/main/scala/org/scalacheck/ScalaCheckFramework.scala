@@ -39,7 +39,7 @@ class ScalaCheckFramework extends Framework {
           case _:Test.Proved => Result.Success
           case _:Test.Failed => Result.Error
           case Test.Exhausted => Result.Skipped
-          case _:Test.PropException => Result.Failure
+          case _:Test.PropException | _:Test.GenException => Result.Failure
         }
         val error = r.status match {
           case Test.PropException(_, e, _) => e

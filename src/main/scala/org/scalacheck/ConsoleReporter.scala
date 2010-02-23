@@ -27,14 +27,14 @@ object ConsoleReporter {
   }
 
   def testReport(res: Test.Result) = {
-    print(List.make(78,' ').mkString)
+    print(List.fill(78)(' ').mkString)
     val s = (if(res.passed) "+ " else "! ") + pretty(res, Params(0))
     printf("\r%s\n", format(s, "", "", 75))
     res
   }
 
   def testReport(pName: String, res: Test.Result) = {
-    print(List.make(78,' ').mkString)
+    print(List.fill(78)(' ').mkString)
     val s = (if(res.passed) "+ " else "! ") + pName + ": " + pretty(res, Params(0))
     printf("\r%s\n", format(s, "", "", 75))
   }

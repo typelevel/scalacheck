@@ -41,7 +41,7 @@ object Buildable {
     def builder[T] = new Builder[Stream,T] {
       val buf = new scala.collection.mutable.ListBuffer[T]
       def +=(x: T) = buf += x
-      def finalise = Stream.fromIterator(buf.iterator)
+      def finalise = buf.toStream
     }
   }
 

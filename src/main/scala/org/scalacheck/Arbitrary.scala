@@ -111,7 +111,7 @@ object Arbitrary {
 
   /** Arbitrary instance of String */
   implicit lazy val arbString: Arbitrary[String] =
-    Arbitrary(arbitrary[List[Char]].map(List.toString(_)))
+    Arbitrary(arbitrary[List[Char]] map (_.mkString))
   
   /** Arbitrary instance of Date */
   implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(for {

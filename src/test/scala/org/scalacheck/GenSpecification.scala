@@ -75,11 +75,11 @@ object GenSpecification extends Properties("Gen") {
   property("numChar") = forAll(numChar)(_.isDigit)
 
   property("alphaUpperChar") = forAll(alphaUpperChar) { c => 
-    c.isLetter && c.isUpperCase
+    c.isLetter && c.isUpper
   }
 
   property("alphaLowerChar") = forAll(alphaLowerChar) { c => 
-    c.isLetter && c.isLowerCase
+    c.isLetter && c.isLower
   }
 
   property("alphaChar") = forAll(alphaChar)(_.isLetter)
@@ -87,7 +87,7 @@ object GenSpecification extends Properties("Gen") {
   property("alphaNumChar") = forAll(alphaNumChar)(_.isLetterOrDigit)
 
   property("identifier") = forAll(identifier) { s =>
-    s.length > 0 && s(0).isLetter && s(0).isLowerCase &&
+    s.length > 0 && s(0).isLetter && s(0).isLower &&
     s.forall(_.isLetterOrDigit)
   }
 
