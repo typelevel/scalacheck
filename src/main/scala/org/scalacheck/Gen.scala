@@ -122,8 +122,12 @@ sealed trait Gen[+T] {
     }
   )
 
-  def |[U >: T](g: Gen[U]): Gen[U] = 
-    choose(0,1).flatMap(n => if(n == 0) g else this)
+  private var freq = 1
+  def |[U >: T](g: Gen[U]): Gen[U] = {
+    val h = Gen.frequency((freq, this), (1, g))
+    h.freq = freq+1
+    h
+  }
 
   /** Generates a sample value by using default parameters */
   def sample: Option[T] = apply(Gen.defaultParams)
@@ -185,7 +189,7 @@ object Gen {
       case None => none = true
       case Some(x) => builder += x
     }
-    if(none) None else Some(builder.finalise)
+    if(none) None else Some(builder.result())
   })
 
   /** Wraps a generator lazily. The given parameter is only evalutated once,
@@ -244,10 +248,15 @@ object Gen {
     } yield x
   }
 
+  /** Picks a random value from a list */
+  def oneOf[T](xs: Seq[T]): Gen[T] = if(xs.isEmpty) fail else for {
+    i <- choose(0, xs.size-1)
+  } yield xs(i)
+
   /** Picks a random generator from a list */
-  def oneOf[T](gs: Gen[T]*) = if(gs.isEmpty) fail else for {
-    i <- choose(0,gs.length-1)
-    x <- gs(i)
+  def oneOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) = for {
+    i <- choose(0, gs.length+1)
+    x <- if(i == 0) g1 else if(i == 1) g2 else gs(i-2) 
   } yield x
 
   /** Chooses one of the given values, with a weighted random distribution. 

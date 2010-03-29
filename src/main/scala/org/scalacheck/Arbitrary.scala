@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import util.{FreqMap,Buildable,Builder}
+import util.{FreqMap,Buildable}
 
 sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
@@ -148,20 +148,20 @@ object Arbitrary {
   /** Arbitrary BigDecimal */
   implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
     import java.math.MathContext._
-    val mcGen = oneOf(List(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128) map (x => value(x)) : _*)
-
-    Arbitrary(
-      for (mc <- mcGen; scale <- arbInt.arbitrary ; x <- arbBigInt.arbitrary) yield {
-        BigDecimal(x, scale, mc)
-      }
-    )
+    val mcGen = oneOf(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128)
+    val bdGen = for {
+      mc <- mcGen
+      scale <- arbInt.arbitrary
+      x <- arbBigInt.arbitrary
+    } yield BigDecimal(x, scale, mc)
+    Arbitrary(bdGen)
   }
   
   /** Arbitrary java.lang.Number */
   implicit lazy val arbNumber: Arbitrary[Number] = {
     import Gen._
-    val gens = List(genByte, genShort, genInt, genLong, genFloat, genDouble) map (g => g map (_.asInstanceOf[Number]))
-    Arbitrary(oneOf(gens: _*))
+    val gen = oneOf(genByte, genShort, genInt, genLong, genFloat, genDouble)
+    Arbitrary(gen map (_.asInstanceOf[Number]))
     // XXX TODO - restore BigInt and BigDecimal
     // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))    
   }

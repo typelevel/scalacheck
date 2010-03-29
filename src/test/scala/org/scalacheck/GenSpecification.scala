@@ -49,10 +49,26 @@ object GenSpecification extends Properties("Gen") {
 
   property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
 
-  property("oneOf") = forAll { l: List[Int] =>
-    val gs = l.map(value(_))
-    if(l.isEmpty) oneOf(gs: _*) == fail
-    else forAll(oneOf(gs: _*))(l.contains)
+  property("oneOf n") = forAll { l: List[Int] =>
+    if(l.isEmpty) oneOf(l) == fail
+    else forAll(oneOf(l))(l.contains)
+  }
+
+  property("oneOf 2") = forAll { (n1:Int, n2:Int) =>
+    forAll(oneOf(n1, n2)) { n => n == n1 || n == n2 }
+  }
+
+  property("oneOf 2 gens") = forAll { (n1:Int, n2:Int) =>
+    val g1 = Gen.value(n1)
+    val g2 = Gen.value(n2)
+    forAll(oneOf(g1, g2)) { n => n == n1 || n == n2 }
+  }
+
+  property("|") = forAll { (n1:Int, n2:Int, n3: Int) =>
+    val g1 = Gen.value(n1)
+    val g2 = Gen.value(n2)
+    val g3 = Gen.value(n3)
+    forAll(g1 | g2 | g3) { n => n == n1 || n == n2 || n == n3}
   }
 
   property("listOf1") = forAll(listOf1(arbitrary[Int]))(_.length > 0)

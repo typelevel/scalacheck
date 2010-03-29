@@ -9,85 +9,55 @@
 
 package org.scalacheck.util
 
-trait Builder[C[_], T] {
-  def +=(x: T)
-  def finalise: C[T]
-}
+import scala.collection._
 
 trait Buildable[C[_]] {
-  def builder[T]: Builder[C,T]
-  def fromIterable[T](it: Iterable[T]): C[T] = {
+  def builder[T]: mutable.Builder[T,C[T]]
+  def fromIterable[T](it: Traversable[T]): C[T] = {
     val b = builder[T]
-    val elems = it.iterator
-    while(elems.hasNext) b += elems.next
-    b.finalise
+    b ++= it
+    b.result()
   }
 }
 
 object Buildable {
 
-  import scala.collection._
-  import java.util.ArrayList
-
   implicit object buildableList extends Buildable[List] {
-    def builder[T] = new Builder[List,T] {
-      val buf = new scala.collection.mutable.ListBuffer[T]
-      def +=(x: T) = buf += x
-      def finalise = buf.toList
-    }
+    def builder[T] = new mutable.ListBuffer[T]
   }
 
   implicit object buildableStream extends Buildable[Stream] {
-    def builder[T] = new Builder[Stream,T] {
-      val buf = new scala.collection.mutable.ListBuffer[T]
-      def +=(x: T) = buf += x
-      def finalise = buf.toStream
-    }
+    def builder[T] = (new mutable.ListBuffer[T]).mapResult(_.toStream)
   }
 
   /*
   implicit object buildableArray extends Buildable[Array] {
-    def builder[T] = new Builder[Array,T] {
-      val buf = new scala.collection.mutable.ArrayBuffer[T]
-      def +=(x: T) = buf += x
-      def finalise = {
-        val arr = new Array[T](buf.size)
-        buf.copyToArray(arr, 0)
-        arr
-      }
-    }
+    def builder[T] = new mutable.ArrayBuilder[T] {}
   }
   */
 
   implicit object buildableMutableSet extends Buildable[mutable.Set] {
-    def builder[T] = new Builder[mutable.Set,T] {
-      val buf = mutable.Set.empty[T]
-      def +=(x: T) = buf += x
-      def finalise = buf
-    }
+    def builder[T] = new mutable.SetBuilder(mutable.Set.empty[T])
   }
 
   implicit object buildableImmutableSet extends Buildable[immutable.Set] {
-    def builder[T] = new Builder[immutable.Set,T] {
-      val buf = mutable.Set.empty[T]
-      def +=(x: T) = buf += x
-      def finalise = immutable.Set(buf.toSeq: _*)
-    }
+    def builder[T] = new mutable.SetBuilder(immutable.Set.empty[T])
   }
 
   implicit object buildableSet extends Buildable[Set] {
-    def builder[T] = new Builder[Set,T] {
-      val buf = mutable.Set.empty[T]
-      def +=(x: T) = buf += x
-      def finalise = buf
-    }
+    def builder[T] = new mutable.SetBuilder(Set.empty[T])
   }
 
+  import java.util.ArrayList
   implicit object buildableArrayList extends Buildable[ArrayList] {
-    def builder[T] = new Builder[ArrayList,T] {
+    def builder[T] = new mutable.Builder[T,ArrayList[T]] {
       val al = new ArrayList[T]
-      def +=(x: T) = al.add(x)
-      def finalise = al
+      def +=(x: T) = {
+        al.add(x)
+        this
+      }
+      def clear() = al.clear()
+      def result() = al
     }
   }
 
