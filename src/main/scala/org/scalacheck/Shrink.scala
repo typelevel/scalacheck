@@ -30,7 +30,7 @@ object Shrink {
 
   /** Shrink instance of container */
   private def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
-    b: Buildable[C]
+    b: Buildable[T,C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
 
     def removeChunks(n: Int, xs: Stream[T]): Stream[Stream[T]] =
@@ -60,7 +60,7 @@ object Shrink {
 
     val ys = v(xs)
     val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable[T])
+    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
 
   }
 
