@@ -145,7 +145,7 @@ trait Commands extends Prop {
   private def commandsProp: Prop = {
 
     def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) =>
-      shrink(cs)(shrinkList).flatMap(cs => validCmds(initialState(), cs).toList)
+      shrink(cs)(shrinkContainer).flatMap(cs => validCmds(initialState(), cs).toList)
     }
 
     forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)

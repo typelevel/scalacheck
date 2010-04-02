@@ -229,35 +229,12 @@ object Arbitrary {
   /** Arbitrary instance of any buildable container (such as lists, arrays,
    *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
-  //implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[C]
-  //): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
+  implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[T,C]
+  ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
-  // The above code crashes in Scala 2.7, therefore we must explicitly define
-  // the arbitrary containers for each supported type below.
-
-  implicit def arbList[T](implicit a: Arbitrary[T]): Arbitrary[List[T]] =
-    Arbitrary(containerOf[List,T](arbitrary[T]))
-
-  implicit def arbStream[T](implicit a: Arbitrary[T]): Arbitrary[Stream[T]] =
-    Arbitrary(containerOf[Stream,T](arbitrary[T]))
-
-  /*
-  implicit def arbArray[T](implicit a: Arbitrary[T]): Arbitrary[Array[T]] =
-    Arbitrary(containerOf[Array,T](arbitrary[T]))
-  */
-
-  implicit def arbImmutableSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.immutable.Set[T]] =
-    Arbitrary(containerOf[collection.immutable.Set,T](arbitrary[T]))
-
-  implicit def arbMutableSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.mutable.Set[T]] =
-    Arbitrary(containerOf[collection.mutable.Set,T](arbitrary[T]))
-
-  implicit def arbSet[T](implicit a: Arbitrary[T]): Arbitrary[collection.Set[T]] =
-    Arbitrary(containerOf[collection.Set,T](arbitrary[T]))
-
-  import java.util.ArrayList
-  implicit def arbArrayList[T](implicit a: Arbitrary[T]): Arbitrary[ArrayList[T]] =
-    Arbitrary(containerOf[ArrayList,T](arbitrary[T]))
+  /** Arbitrary instance of any array. */
+  implicit def arbArray[T](implicit a: Arbitrary[T], c: ClassManifest[T]
+  ): Arbitrary[Array[T]] = Arbitrary(containerOf[Array,T](arbitrary[T]))
 
 
   // Functions //

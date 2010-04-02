@@ -28,8 +28,19 @@ object Shrink {
     else if(ys.isEmpty) xs
     else Stream(xs.head, ys.head) append interleave(xs.tail, ys.tail)
 
+  /** Shrink instance factory */
+  def apply[T](s: T => Stream[T]): Shrink[T] = new Shrink[T] {
+    override def shrink(x: T) = s(x)
+  }
+
+  /** Shrink a value */
+  def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
+
+  /** Default shrink instance */
+  implicit def shrinkAny[T]: Shrink[T] = Shrink(x => empty)
+
   /** Shrink instance of container */
-  private def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
+  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
     b: Buildable[T,C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
 
@@ -64,15 +75,6 @@ object Shrink {
 
   }
 
-  def apply[T](s: T => Stream[T]): Shrink[T] = new Shrink[T] {
-    override def shrink(x: T) = s(x)
-  }
-
-  def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
-
-  /** Default shrink instance */
-  implicit def shrinkAny[T]: Shrink[T] = Shrink(x => empty)
-
   /** Shrink instance of integer */
   implicit lazy val shrinkInt: Shrink[Int] = Shrink { n =>
 
@@ -87,7 +89,7 @@ object Shrink {
 
   /** Shrink instance of String */
   implicit lazy val shrinkString: Shrink[String] = Shrink { s =>
-    shrinkList[Char].shrink(s.toList).map(_.mkString)
+    shrinkContainer[List,Char].shrink(s.toList).map(_.mkString)
   }
 
   /** Shrink instance of Option */
@@ -96,35 +98,6 @@ object Shrink {
       case None    => empty
       case Some(x) => cons(None, for(y <- shrink(x)) yield Some(y))
     }
-
-  /** Shrink instance of List */
-  implicit def shrinkList[T](implicit s: Shrink[T]): Shrink[List[T]] =
-    shrinkContainer[List,T]
-
-  /** Shrink instance of Stream */
-  implicit def shrinkStream[T](implicit s: Shrink[T]): Shrink[Stream[T]] =
-    shrinkContainer[Stream,T]
-
-  ///** Shrink instance of Array */
-  //implicit def shrinkArray[T](implicit s: Shrink[T]): Shrink[Array[T]] =
-  //  shrinkContainer[Array,T](Predef.identity _, s, Buildable.buildableArray)
-
-  /** Shrink instance of Set */
-  implicit def shrinkSet[T](implicit s: Shrink[T]): Shrink[Set[T]] =
-    shrinkContainer[Set,T]
-
-  /** Shrink instance of mutable Set */
-  implicit def shrinkMutableSet[T](implicit s: Shrink[T]): Shrink[mutable.Set[T]] =
-    shrinkContainer[mutable.Set,T]
-
-  /** Shrink instance of immutable Set */
-  implicit def shrinkImmutableSet[T](implicit s: Shrink[T]): Shrink[immutable.Set[T]] =
-    shrinkContainer[immutable.Set,T]
-
-  /** Shrink instance of ArrayList */
-  implicit def shrinkArrayList[T](implicit s: Shrink[T]): Shrink[ArrayList[T]] =
-    shrinkContainer[ArrayList,T](al => jcl.asBuffer(al), s, 
-      Buildable.buildableArrayList)
 
   /** Shrink instance of 2-tuple */
   implicit def shrinkTuple2[T1,T2](implicit
@@ -232,51 +205,4 @@ object Shrink {
       (for(x9 <- shrink(t9)) yield (t1, t2, t3, t4, t5, t6, t7, t8, x9))
     }
 
-
-  //// workarounds for Scala bug #298. ////
-
-  implicit lazy val shrinkIntList: Shrink[List[Int]] = shrinkList[Int]
-  implicit lazy val shrinkBooleanList: Shrink[List[Boolean]] = shrinkList[Boolean]
-  implicit lazy val shrinkStringList: Shrink[List[String]] = shrinkList[String]
-  implicit lazy val shrinkDoubleList: Shrink[List[Double]] = shrinkList[Double]
-
-  implicit lazy val shrinkIntStream: Shrink[Stream[Int]] = shrinkStream[Int]
-  implicit lazy val shrinkBooleanStream: Shrink[Stream[Boolean]] = shrinkStream[Boolean]
-  implicit lazy val shrinkStringStream: Shrink[Stream[String]] = shrinkStream[String]
-  implicit lazy val shrinkDoubleStream: Shrink[Stream[Double]] = shrinkStream[Double]
-
-  //implicit lazy val shrinkIntArray: Shrink[Array[Int]] = shrinkArray[Int]
-  //implicit lazy val shrinkBooleanArray: Shrink[Array[Boolean]] = shrinkArray[Boolean]
-  //implicit lazy val shrinkStringArray: Shrink[Array[String]] = shrinkArray[String]
-  //implicit lazy val shrinkDoubleArray: Shrink[Array[Double]] = shrinkArray[Double]
-
-  implicit lazy val shrinkIntSet: Shrink[Set[Int]] = shrinkSet[Int]
-  implicit lazy val shrinkBooleanSet: Shrink[Set[Boolean]] = shrinkSet[Boolean]
-  implicit lazy val shrinkStringSet: Shrink[Set[String]] = shrinkSet[String]
-  implicit lazy val shrinkDoubleSet: Shrink[Set[Double]] = shrinkSet[Double]
-
-  implicit lazy val shrinkIntArrayList: Shrink[ArrayList[Int]] = shrinkArrayList[Int]
-  implicit lazy val shrinkBooleanArrayList: Shrink[ArrayList[Boolean]] = shrinkArrayList[Boolean]
-  implicit lazy val shrinkStringArrayList: Shrink[ArrayList[String]] = shrinkArrayList[String]
-  implicit lazy val shrinkDoubleArrayList: Shrink[ArrayList[Double]] = shrinkArrayList[Double]
-
-  implicit lazy val shrinkIntOption: Shrink[Option[Int]] = shrinkOption[Int]
-  implicit lazy val shrinkBooleanOption: Shrink[Option[Boolean]] = shrinkOption[Boolean]
-  implicit lazy val shrinkStringOption: Shrink[Option[String]] = shrinkOption[String]
-  implicit lazy val shrinkDoubleOption: Shrink[Option[Double]] = shrinkOption[Double]
-
-  implicit lazy val shrinkIntTuple2: Shrink[Tuple2[Int,Int]] = shrinkTuple2[Int,Int]
-  implicit lazy val shrinkBooleanTuple2: Shrink[Tuple2[Boolean,Boolean]] = shrinkTuple2[Boolean,Boolean]
-  implicit lazy val shrinkStringTuple2: Shrink[Tuple2[String,String]] = shrinkTuple2[String,String]
-  implicit lazy val shrinkDoubleTuple2: Shrink[Tuple2[Double,Double]] = shrinkTuple2[Double,Double]
-
-  implicit lazy val shrinkIntTuple3: Shrink[Tuple3[Int,Int,Int]] = shrinkTuple3[Int,Int,Int]
-  implicit lazy val shrinkBooleanTuple3: Shrink[Tuple3[Boolean,Boolean,Boolean]] = shrinkTuple3[Boolean,Boolean,Boolean]
-  implicit lazy val shrinkStringTuple3: Shrink[Tuple3[String,String,String]] = shrinkTuple3[String,String,String]
-  implicit lazy val shrinkDoubleTuple3: Shrink[Tuple3[Double,Double,Double]] = shrinkTuple3[Double,Double,Double]
-
-  implicit lazy val shrinkIntTuple4: Shrink[Tuple4[Int,Int,Int,Int]] = shrinkTuple4[Int,Int,Int,Int]
-  implicit lazy val shrinkBooleanTuple4: Shrink[Tuple4[Boolean,Boolean,Boolean,Boolean]] = shrinkTuple4[Boolean,Boolean,Boolean,Boolean]
-  implicit lazy val shrinkStringTuple4: Shrink[Tuple4[String,String,String,String]] = shrinkTuple4[String,String,String,String]
-  implicit lazy val shrinkDoubleTuple4: Shrink[Tuple4[Double,Double,Double,Double]] = shrinkTuple4[Double,Double,Double,Double]
 }
