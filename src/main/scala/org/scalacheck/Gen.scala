@@ -326,6 +326,12 @@ object Gen {
   /** A generator that picks a random number of elements from a list */
   def someOf[T](l: Iterable[T]) = choose(0,l.size) flatMap (pick(_,l))
 
+  /** A generator that picks a random number of elements from a list */
+  def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) = for {
+    n <- choose(0, gs.length+2)
+    x <- pick(n, g1, g2, gs: _*)
+  } yield x
+
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] =
     if(n > l.size || n < 0) fail
@@ -335,6 +341,13 @@ object Gen {
       while(buf.length > n) buf.remove(choose(0,buf.length-1)(prms).get)
       Some(buf)
     })
+
+  /** A generator that picks a given number of elements from a list, randomly */
+  def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[Seq[T]] = for {
+    is <- pick(n, 0 until (gs.size+2))
+    allGs = gs ++ (g1::g2::Nil)
+    xs <- sequence[List,T](is.toList.map(allGs(_)))
+  } yield xs 
 
 
   //// Character Generators ////
