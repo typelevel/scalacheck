@@ -1,3 +1,0 @@
-#!/bin/sh
-
-java -Xmx1024M -jar `dirname $0`/tools/xsbt-launch-0.6.12.jar "$@"

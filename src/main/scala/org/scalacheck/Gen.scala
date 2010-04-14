@@ -154,7 +154,7 @@ object Gen {
       val d = h-l+1
       
       if (d <= 0) throw new IllegalArgumentException
-      else l + (Math.abs(rng.nextLong) % d)
+      else l + (math.abs(rng.nextLong) % d)
     }
 
     def choose(l: Double, h: Double) = {

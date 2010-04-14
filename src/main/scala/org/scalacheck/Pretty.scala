@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Math.round
+import math.round
 
 
 sealed trait Pretty {
