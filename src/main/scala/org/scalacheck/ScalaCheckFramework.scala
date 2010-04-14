@@ -51,10 +51,10 @@ class ScalaCheckFramework extends Framework {
     def run(testClassName: String, fingerprint: TestFingerprint, handler: EventHandler, args: Array[String]) {
 
       def loadClass = {
-        try {
+        if(fingerprint.isModule) {
           val obj = Class.forName(testClassName + "$", true, loader)
           obj.getField("MODULE$").get(null)
-        } catch { case _ =>
+        } else {
           Class.forName(testClassName, true, loader).newInstance
         }
       }
