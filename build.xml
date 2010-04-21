@@ -39,7 +39,7 @@
   <!-- Project properties -->
 
   <property name="name"          value="${ant.project.name}"/>
-  <property name="version"       value="1.7-SNAPSHOT"/>
+  <property name="version"       value="1.8-SNAPSHOT"/>
   <property name="author"        value="Rickard Nilsson"/>
 
 
