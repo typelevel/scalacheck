@@ -36,12 +36,12 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-long") = forAll { (l: Long, h: Long) =>
-    if(l > h) choose(l,h) == fail
+    if(l > h || h-l < 0) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 
   property("choose-double") = forAll { (l: Double, h: Double) =>
-    if(l > h) choose(l,h) == fail
+    if(l > h || h-l > Double.MaxValue) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 

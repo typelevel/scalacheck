@@ -14,6 +14,52 @@ import util.Buildable
 import Prop._
 import Arbitrary._
 
+trait Choose[T] {
+  def choose(min: T, max: T): Gen[T]
+}
+
+object Choose {
+  import Gen.{fail, parameterized, value}
+
+  implicit val chooseLong: Choose[Long] = new Choose[Long] {
+    def choose(low: Long, high: Long) =
+      if(low > high || (high-low < 0)) fail 
+      else parameterized(prms => value(prms.choose(low,high)))
+  }
+
+  implicit val chooseDouble: Choose[Double] = new Choose[Double] {
+    def choose(low: Double, high: Double) = 
+      if (low > high || (high-low > Double.MaxValue)) fail 
+      else parameterized(prms => value(prms.choose(low,high)))
+  }
+
+  implicit val chooseInt: Choose[Int] = new Choose[Int] {
+    def choose(low: Int, high: Int) = 
+      chooseLong.choose(low, high).map(_.toInt)
+  }
+
+  implicit val chooseByte: Choose[Byte] = new Choose[Byte] {
+    def choose(low: Byte, high: Byte) = 
+      chooseLong.choose(low, high).map(_.toByte)
+  }
+
+  implicit val chooseShort: Choose[Short] = new Choose[Short] {
+    def choose(low: Short, high: Short) = 
+      chooseLong.choose(low, high).map(_.toShort)
+  }
+
+  implicit val chooseChar: Choose[Char] = new Choose[Char] {
+    def choose(low: Char, high: Char) = 
+      chooseLong.choose(low, high).map(_.toChar)
+  }
+
+  implicit val chooseFloat: Choose[Float] = new Choose[Float] {
+    def choose(low: Float, high: Float) = 
+      chooseDouble.choose(low, high).map(_.toFloat)
+  }
+}
+
+
 /** Class that represents a generator. */
 sealed trait Gen[+T] {
 
@@ -145,23 +191,21 @@ object Gen {
   case class Params(size: Int, rng: java.util.Random) {
     def resize(newSize: Int) = Params(newSize,rng)
 
-    /** @throws IllegalArgumentException if l is greater than h. */
-    def choose(l: Int, h: Int): Int = choose(l:Long, h:Long).toInt
-
     /** @throws IllegalArgumentException if l is greater than h, or if
-    *  the range between l and h doesn't fit in a Long. */
+     *  the range between l and h doesn't fit in a Long. */
     def choose(l: Long, h: Long): Long = {
       val d = h-l+1
-      
-      if (d <= 0) throw new IllegalArgumentException
+      if (d <= 0) throw new IllegalArgumentException("Invalid range")
       else l + (math.abs(rng.nextLong) % d)
     }
 
+    /** @throws IllegalArgumentException if l is greater than h, or if
+     *  the range between l and h doesn't fit in a Double. */
     def choose(l: Double, h: Double) = {
-      if (h <= l) h
+      val d = h-l
+      if (d < 0 || d > Double.MaxValue) throw new IllegalArgumentException
       else rng.nextDouble * (h-l) + l
     }
-
   }
 
   /* Default generator parameters */
@@ -209,20 +253,12 @@ object Gen {
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = Gen(p => None)
 
-  /** A generator that generates a random Integer in the given (inclusive)
-   *  range. */
-  def choose(low: Int, high: Int) = if(low > high) fail else
-    parameterized(prms => value(prms.choose(low,high)))
-
-  /** A generator that generates a random Long in the given (inclusive)
-   *  range. */
-  def choose(low: Long, high: Long) = if(low > high) fail else
-    parameterized(prms => value(prms.choose(low,high)))
-
-  /** A generator that generates a random Double in the given (inclusive)
-   *  range. */
-  def choose(low: Double, high: Double) = if (low > high) fail else
-    parameterized(prms => value(prms.choose(low,high)))
+  /** A generator that generates a random value in the given (inclusive)
+   *  range. If the range is invalid, the generator will not generate any value.
+   */
+  def choose[T](min: T, max: T)(implicit c: Choose[T]): Gen[T] = {
+    c.choose(min, max)
+  }
 
   /** Creates a generator that can access its generation parameters */
   def parameterized[T](f: Params => Gen[T]): Gen[T] = Gen(prms => f(prms)(prms))
@@ -338,7 +374,10 @@ object Gen {
     else Gen(prms => {
       val buf = new ListBuffer[T]
       buf ++= l
-      while(buf.length > n) buf.remove(choose(0,buf.length-1)(prms).get)
+      while(buf.length > n) {
+        val g = choose(0, buf.length-1)
+        buf.remove(g(prms).get)
+      }
       Some(buf)
     })
 
@@ -384,103 +423,45 @@ object Gen {
 
   //// Number Generators ////
 
-  /* Generates positive integers */
+  /* Generates positive integers
+   * @deprecated Use <code>posNum[Int]code> instead */
+  @deprecated("Use posNum[Int] instead")
   def posInt: Gen[Int] = sized(max => choose(1, max))
 
-  /* Generates negative integers */
+  /* Generates negative integers
+   * @deprecated Use <code>negNum[Int]code> instead */
+  @deprecated("Use negNum[Int] instead")
   def negInt: Gen[Int] = sized(max => choose(-max, -1))
-  
-  private val MAXBITS = 20
-  private def basicGenerators[T](minT: T, maxT: T)(implicit num: Numeric[T]): List[(Int, Gen[T])] = {
-    import num._
-    
-    List(
-      (1, minT),
-      (1, maxT),
-      (1, zero),
-      (1, one),
-      (1, -one)
-    )
-  }
-  private def bitWidthGenerators[T](bits: Int, chooser: (T, T) => Gen[T])(implicit num: Numeric[T]): Option[(Int, Gen[T])] = {
-    import num._
-    
-    def rangedGeneratorFromBits(b: Int): Option[Gen[T]] = {
-      val x1 = fromInt(1 << b)
-      val x2 = fromInt(1 << (b + 1))
-      if (x2 <= x1) None
-      else Some(chooser(x1, x2))
-    }
-    
-    rangedGeneratorFromBits(bits) map (x => (1, x))
-  }
-  
-  /** Creates plausibly well-rounded generator for Byte/Short/Int/Long, including
-    * zero, +/- unity, and both extremities.
-    */
-  def integralGenerator[T](minT: T, maxT: T, chooser: (T, T) => Gen[T])(implicit num: Integral[T]): Gen[T] = {
-    import num._
 
-    // count the number of bits in this representation
-    def bits(x: T, acc: Int): Int = {
-      val next = x * (one + one)
-      if (next < x) acc // overflow
-      else bits(next, acc + 1)
-    }
-    def getMaxBits = bits(one, 0) min MAXBITS
-    
-    // generators for 2 to 4, 2 to 8, 2 to 16, etc. so as to weight toward
-    // more likely to be relevant numbers
-    val weightedGens: List[(Int, Gen[T])] =
-      for (b <- (1 to getMaxBits).toList ; g <- bitWidthGenerators(b, chooser)) yield g
-    
-    // (1 to getMaxBits).toList map (bitWidthGenerators(_, chooser))
-    
-    val args = basicGenerators(minT, maxT) ++ weightedGens ++ List(
-      (10, chooser(minT + one, -one)),
-      (10, chooser(one, maxT - one))
-    )
-    
-    frequency(args: _*)
-  }
-  
-  /** Like integralGenerator for Float/Double - also makes sure to explore the -1.0 to 1.0 range. */
-  def fractionalGenerator[T](minT: T, maxT: T, chooser: (T, T) => Gen[T], specials: T*)(implicit num: Fractional[T]): Gen[T] = {
+  /** Generates positive numbers of uniform distribution, with an
+   *  upper bound of the generation size parameter. */
+  def posNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    
-    val extras: List[(Int, Gen[T])] = 
-      (specials.toList map (s => (1, value(s)))) ++
-      ((1 to 20).toList map (bitWidthGenerators(_, chooser).get))
-    
-    val args = basicGenerators(minT, maxT) ++ extras ++ List(
-      (5, chooser(-one, zero)),
-      (5, chooser(zero, one)),
-      (10, chooser(minT + one, -one)),
-      (10, chooser(one, maxT - one))  
-    )
-    
-    frequency(args: _*)
+    sized(max => c.choose(one, fromInt(max)))
   }
   
-  //// AnyVal Generators ////
-  def genUnit: Gen[Unit]      = value(())
-  def genBool: Gen[Boolean]   = oneOf(true, false)
-  def genChar: Gen[Char]      = choose(Char.MinValue, Char.MaxValue) map (_.toChar)
-  def genByte: Gen[Byte]      = integralGenerator(Byte.MinValue, Byte.MaxValue, choose(_: Byte, _: Byte) map (_.toByte))
-  def genShort: Gen[Short]    = integralGenerator(Short.MinValue, Short.MaxValue, choose(_: Short, _: Short) map (_.toShort))
-  def genInt: Gen[Int]        = integralGenerator(Int.MinValue, Int.MaxValue, choose(_: Int, _: Int))
-  def genLong: Gen[Long]      = integralGenerator(Long.MinValue >> 2, Long.MaxValue >> 2, choose(_: Long, _: Long))
-  def genFloat: Gen[Float]    = fractionalGenerator(
-    Float.MinValue, Float.MaxValue,
-    (x: Float, y: Float) => choose(x.toDouble, y.toDouble) map (_.toFloat)
-    // I find that including these by default is a little TOO testy.
-    // Float.Epsilon, Float.NaN, Float.PositiveInfinity, Float.NegativeInfinity
-  )
-  def genDouble: Gen[Double]  = fractionalGenerator(
-    Double.MinValue, Double.MaxValue,
-    choose(_: Double, _: Double)
-    // As above.  Perhaps behind some option?
-    // Double.Epsilon, Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity
-  )
-  def genAnyVal: Gen[AnyVal]  = oneOf(genUnit, genBool, genChar, genByte, genShort, genInt, genLong, genFloat, genDouble)
+  /** Generates negative numbers of uniform distribution, with an
+   *  lower bound of the negated generation size parameter. */
+  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
+    import num._
+    sized(max => c.choose(-fromInt(max), -one))
+  }
+  
+  /** Generates numbers within the given inclusive range, with
+   *  extra weight on zero, +/- unity, both extremities, and any special
+   *  numbers provided. The special numbers must lie within the given range,
+   *  otherwise they won't be included. */
+  def chooseNum[T](minT: T, maxT: T, specials: T*)(
+    implicit num: Numeric[T], c: Choose[T]
+  ): Gen[T] = {
+    import num._
+    val basics = List(minT, maxT, zero, one, -one)
+    val basicsAndSpecials = for {
+      t <- specials ++ basics if t >= minT && t <= maxT
+    } yield (1, value(t))
+    val allGens = basicsAndSpecials ++ List(
+      (basicsAndSpecials.length, c.choose(minT, maxT))
+    )
+    frequency(allGens: _*)
+  }
 }

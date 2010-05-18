@@ -75,34 +75,58 @@ object Arbitrary {
   /**** Arbitrary instances for each AnyVal ****/
   
   /** Arbitrary AnyVal */
-  implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(Gen.genAnyVal)
-
+  implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
+    arbitrary[Unit], arbitrary[Boolean], arbitrary[Char], arbitrary[Byte],
+    arbitrary[Short], arbitrary[Int], arbitrary[Long], arbitrary[Float],
+    arbitrary[Double]
+  ))
+ 
   /** Arbitrary instance of Boolean */
   implicit lazy val arbBool: Arbitrary[Boolean] =
     Arbitrary(oneOf(true, false))
 
   /** Arbitrary instance of Int */
-  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(Gen.genInt)
+  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(
+    Gen.chooseNum(Int.MinValue, Int.MaxValue)
+  )
 
   /** Arbitrary instance of Long */
-  implicit lazy val arbLong: Arbitrary[Long] = Arbitrary(Gen.genLong)
-
-  /** Arbitrary instance of Double */
-  implicit lazy val arbDouble: Arbitrary[Double] =
-    Arbitrary(sized(s => choose(-s:Double,s:Double)))
+  implicit lazy val arbLong: Arbitrary[Long] = Arbitrary(
+    Gen.chooseNum(Long.MinValue >> 2, Long.MaxValue >> 2)
+  )
 
   /** Arbitrary instance of Float */
-  implicit lazy val arbFloat: Arbitrary[Float] =
-    Arbitrary(arbitrary[Double].map(_.toFloat))
+  implicit lazy val arbFloat: Arbitrary[Float] = Arbitrary(
+    Gen.chooseNum(
+      Float.MinValue, Float.MaxValue
+      // I find that including these by default is a little TOO testy.
+      // Float.Epsilon, Float.NaN, Float.PositiveInfinity, Float.NegativeInfinity
+    )
+  )
+
+  /** Arbitrary instance of Double */
+  implicit lazy val arbDouble: Arbitrary[Double] = Arbitrary(
+    Gen.chooseNum(
+      Double.MinValue, Double.MaxValue
+      // As above.  Perhaps behind some option?
+      // Double.Epsilon, Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity
+    )
+  )
 
   /** Arbitrary instance of Char */
-  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(Gen.genChar)
+  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(
+    Gen.choose(Char.MinValue, Char.MaxValue)
+  )
 
   /** Arbitrary instance of Byte */
-  implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(Gen.genByte)
+  implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(
+    Gen.chooseNum(Byte.MinValue, Byte.MaxValue)
+  )
 
   /** Arbitrary instance of Short */
-  implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(Gen.genShort)
+  implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(
+    Gen.chooseNum(Short.MinValue, Short.MaxValue)
+  )
   
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
   implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(value(()))
@@ -159,8 +183,10 @@ object Arbitrary {
   
   /** Arbitrary java.lang.Number */
   implicit lazy val arbNumber: Arbitrary[Number] = {
-    import Gen._
-    val gen = oneOf(genByte, genShort, genInt, genLong, genFloat, genDouble)
+    val gen = Gen.oneOf(
+      arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long], 
+      arbitrary[Float], arbitrary[Double]
+    )
     Arbitrary(gen map (_.asInstanceOf[Number]))
     // XXX TODO - restore BigInt and BigDecimal
     // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))    
