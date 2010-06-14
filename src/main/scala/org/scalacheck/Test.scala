@@ -26,13 +26,13 @@ object Test {
 
   /** Test parameters */
   case class Params(
-    minSuccessfulTests: Int, 
-    maxDiscardedTests: Int,
-    minSize: Int, 
-    maxSize: Int, 
-    rng: java.util.Random, 
-    workers: Int, 
-    wrkSize: Int
+    minSuccessfulTests: Int = 100, 
+    maxDiscardedTests: Int = 500,
+    minSize: Int = 0, 
+    maxSize: Int = Gen.Params().size, 
+    rng: java.util.Random = Gen.Params().rng,
+    workers: Int = 1, 
+    wrkSize: Int = 20
   )
 
   /** Test statistics */
@@ -81,8 +81,10 @@ object Test {
   /** Test callback. Takes property name, and test results. */
   type TestResCallback = (String,Result) => Unit
 
-  /** Default testing parameters */
-  val defaultParams = Params(100,500,0,100,util.StdRand,1,20)
+  /** Default testing parameters
+   *  @deprecated Use <code>Test.Params()</code> instead */
+  @deprecated("Use Test.Params() instead")
+  val defaultParams = Params()
   
   private def assertParams(prms: Params) = {
     import prms._
@@ -98,34 +100,34 @@ object Test {
 
   private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
     object OptMinSuccess extends IntOpt {
-      val default = Test.defaultParams.minSuccessfulTests
+      val default = Test.Params().minSuccessfulTests
       val names = Set("minSuccessfulTests", "s")
       val help = "Number of tests that must succeed in order to pass a property"
     }
     object OptMaxDiscarded extends IntOpt {
-      val default = Test.defaultParams.maxDiscardedTests
+      val default = Test.Params().maxDiscardedTests
       val names = Set("maxDiscardedTests", "d")
       val help =
         "Number of tests that can be discarded before ScalaCheck stops " +
         "testing a property"
     }
     object OptMinSize extends IntOpt {
-      val default = Test.defaultParams.minSize
+      val default = Test.Params().minSize
       val names = Set("minSize", "n")
       val help = "Minimum data generation size"
     }
     object OptMaxSize extends IntOpt {
-      val default = Test.defaultParams.maxSize
+      val default = Test.Params().maxSize
       val names = Set("maxSize", "x")
       val help = "Maximum data generation size"
     }
     object OptWorkers extends IntOpt {
-      val default = Test.defaultParams.workers
+      val default = Test.Params().workers
       val names = Set("workers", "w")
       val help = "Number of threads to execute in parallel for testing"
     }
     object OptWorkSize extends IntOpt {
-      val default = Test.defaultParams.wrkSize
+      val default = Test.Params().wrkSize
       val names = Set("wrkSize", "z")
       val help = "Amount of work each thread should do at a time"
     }
@@ -141,7 +143,7 @@ object Test {
         optMap(OptMaxDiscarded),
         optMap(OptMinSize),
         optMap(OptMaxSize),
-        Test.defaultParams.rng,
+        Test.Params().rng,
         optMap(OptWorkers),
         optMap(OptWorkSize)
       )
@@ -294,14 +296,11 @@ object Test {
    *  <code>maxDiscarded</code> parameter specifies how many
    *  discarded tests that should be allowed before ScalaCheck
    *  gives up. */
-  def check(p: Prop, maxDiscarded: Int): Result = {
-    val Params(minSuccessfulTests, _, minSize, maxSize, rng, workers, wrkSize) = defaultParams
-    val params = Params(minSuccessfulTests,maxDiscarded,minSize,maxSize,rng,workers,wrkSize)
-    testReport(check(params, p, propReport))
-  }
+  def check(p: Prop, maxDiscarded: Int): Result = 
+    testReport(check(Params(maxDiscardedTests = maxDiscarded), p, propReport))
 
   /** Tests a property and prints results to the console */
-  def check(p: Prop): Result = testReport(check(defaultParams, p, propReport))
+  def check(p: Prop): Result = testReport(check(Params(), p, propReport))
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
@@ -324,5 +323,5 @@ object Test {
    *  the test results. The results are also printed on the console during
    *  testing. */
   def checkProperties(ps: Properties): Seq[(String,Result)] =
-    checkProperties(ps, defaultParams, propReport, testReport)
+    checkProperties(ps, Params(), propReport, testReport)
 }

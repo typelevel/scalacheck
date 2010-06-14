@@ -176,7 +176,7 @@ sealed trait Gen[+T] {
   }
 
   /** Generates a sample value by using default parameters */
-  def sample: Option[T] = apply(Gen.defaultParams)
+  def sample: Option[T] = apply(Gen.Params())
 
 }
 
@@ -188,8 +188,11 @@ object Gen {
   import Shrink._
 
   /** Record that encapsulates all parameters required for data generation */
-  case class Params(size: Int, rng: java.util.Random) {
-    def resize(newSize: Int) = Params(newSize,rng)
+  case class Params(
+    size: Int = 100,
+    rng: java.util.Random = util.StdRand
+  ) {
+    def resize(newSize: Int) = this.copy(size = newSize)
 
     /** @throws IllegalArgumentException if l is greater than h, or if
      *  the range between l and h doesn't fit in a Long. */
@@ -208,8 +211,10 @@ object Gen {
     }
   }
 
-  /* Default generator parameters */
-  val defaultParams = Params(100, util.StdRand)
+  /* Default generator parameters
+   *  @deprecated Use <code>Gen.Params()</code> instead */
+  @deprecated("Use Gen.Params() instead")
+  val defaultParams = Params()
 
   /* Generator factory method */
   def apply[T](g: Gen.Params => Option[T]) = new Gen[T] { 

@@ -18,11 +18,8 @@ object TestAll {
 
 
     val prms = 
-      if(large) Test.Params(1000, 5000, 0, 10000, util.StdRand, workers, wrkSize)
-      else {
-        val Test.Params(a,b,c,d,e,f,g) = Test.defaultParams
-        Test.Params(a,b,c,d,e,workers,wrkSize)
-      }
+      if(!large) Test.Params(workers = workers, wrkSize = wrkSize)
+      else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers, wrkSize)
 
 
     val propReport: (String,Int,Int) => Unit = 
