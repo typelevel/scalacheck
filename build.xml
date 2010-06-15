@@ -11,8 +11,8 @@
   <artifact:remoteRepository id="scala-tools.repo-releases" url="http://www.scala-tools.org/repo-releases/" />
 
   <artifact:dependencies pathId="scala.classpath">
-    <dependency groupId="org.scala-lang" artifactId="scala-compiler" version="2.8.0.RC4"/>
-    <dependency groupId="org.scala-lang" artifactId="scala-library" version="2.8.0.RC4"/>
+    <dependency groupId="org.scala-lang" artifactId="scala-compiler" version="2.8.0.RC5"/>
+    <dependency groupId="org.scala-lang" artifactId="scala-library" version="2.8.0.RC5"/>
     <remoteRepository refid="scala-tools.repo-releases" />
   </artifact:dependencies>
 
