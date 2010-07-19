@@ -64,7 +64,8 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  sealed case class PropException(args: Prop.Args, e: Throwable, labels: Set[String]) extends Status
+  sealed case class PropException(args: Prop.Args, e: Throwable, 
+    labels: Set[String]) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */
@@ -157,8 +158,9 @@ object Test {
   /** Tests a property with the given testing parameters, and returns
    *  the test results. <code>propCallback</code> is a function which is
    *  called each time the property is evaluted. */
-  private def checkSingleThread(prms: Params, p: Prop, propCallback: PropEvalCallback): Result =
-  {
+  private def checkSingleThread(prms: Params, p: Prop, 
+    propCallback: PropEvalCallback
+  ): Result = {
     assertParams(prms)
 
     def result(s: Int, d: Int, sz: Float, freqMap: FM): Result = {
@@ -170,7 +172,8 @@ object Test {
       val propPrms = Prop.Params(Gen.Params(size.round, prms.rng), freqMap)
 
       secure(p(propPrms)) match {
-        case Right(e) => Result(GenException(e), s, d, FreqMap.empty[immutable.Set[Any]])
+        case Right(e) => Result(GenException(e), s, d, 
+          FreqMap.empty[immutable.Set[Any]])
         case Left(propRes) =>
           val fm =
             if(propRes.collected.isEmpty) freqMap
@@ -295,7 +298,9 @@ object Test {
   /** Tests a property and prints results to the console. The
    *  <code>maxDiscarded</code> parameter specifies how many
    *  discarded tests that should be allowed before ScalaCheck
-   *  gives up. */
+   *  @deprecated (v1.8) Use <code>check(Params(maxDiscardedTests = n))</code>
+   *  instead. */
+  @deprecated("Use check(Params(maxDiscardedTests = n)) instead.")
   def check(p: Prop, maxDiscarded: Int): Result = 
     testReport(check(Params(maxDiscardedTests = maxDiscarded), p, propReport))
 
