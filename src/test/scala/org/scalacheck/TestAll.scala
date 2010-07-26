@@ -10,7 +10,6 @@ object TestAll {
   def main(args: Array[String]) {
     val verbose = args.contains("-v")
     val large = args.contains("-l")
-    val wrkSize = if(large) 200 else 20
     val workers = 
       if(args.contains("-4")) 4 
       else if(args.contains("-2")) 2 
@@ -18,8 +17,8 @@ object TestAll {
 
 
     val prms = 
-      if(!large) Test.Params(workers = workers, wrkSize = wrkSize)
-      else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers, wrkSize)
+      if(!large) Test.Params(workers = workers)
+      else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers)
 
 
     val propReport: (String,Int,Int) => Unit = 

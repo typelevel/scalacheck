@@ -28,10 +28,7 @@ trait Prop {
   def combine(p: Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
-  def check(prms: Test.Params): Unit = {
-    import ConsoleReporter.{testReport, propReport}
-    testReport(Test.check(prms, this, propReport))
-  }
+  def check(prms: Test.Params): Unit = Test.check(prms, this)
 
 
   /** Convenience method that makes it possible to use a this property
@@ -49,7 +46,10 @@ trait Prop {
    *  not return the test statistics. If you need to get the results
    *  from the test, or if you want more control over the test parameters,
    *  use the <code>check</code> methods in <code>Test</code> instead. */
-  def check: Unit = Test.check(this)
+  def check: Unit = {
+    import ConsoleReporter.{propReport, testReport}
+    check(Test.Params(propCallback = propReport, testCallback = testReport))
+  }
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't

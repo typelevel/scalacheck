@@ -38,19 +38,7 @@ class Properties(val name: String) extends Prop {
 
   def apply(p: Prop.Params) = oneProperty(p)
 
-  override def check(prms: Test.Params): Unit = {
-    import ConsoleReporter.{testReport, propReport}
-    Test.checkProperties(this, prms, propReport, testReport)
-  }
-
-  /** Convenience method that checks all properties and reports the
-   *  result on the console. Calling <code>ps.check</code> is equal
-   *  to calling <code>Test.checkProperties(ps)</code>, but this method does
-   *  not return the test statistics. If you need to get the results
-   *  from the tests, or if you want more control over the test parameters,
-   *  use the <code>checkProperties</code> methods in <code>Test</code>
-   *  instead. */
-  override def check: Unit = Test.checkProperties(this)
+  override def check(prms: Test.Params): Unit = Test.checkProperties(prms, this)
 
   /** Adds all properties from another property collection to this one. */
   def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p 
