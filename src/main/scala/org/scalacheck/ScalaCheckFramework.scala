@@ -37,12 +37,13 @@ class ScalaCheckFramework extends Framework {
         val result = r.status match {
           case Test.Passed => Result.Success
           case _:Test.Proved => Result.Success
-          case _:Test.Failed => Result.Error
+          case _:Test.Failed => Result.Failure
           case Test.Exhausted => Result.Skipped
-          case _:Test.PropException | _:Test.GenException => Result.Failure
+          case _:Test.PropException | _:Test.GenException => Result.Error
         }
         val error = r.status match {
           case Test.PropException(_, e, _) => e
+          case _:Test.Failed => new Exception(Pretty.pretty(r,Pretty.Params(0)))
           case _ => null
         }
       }
@@ -60,7 +61,7 @@ class ScalaCheckFramework extends Framework {
       }
       
       // TODO Loggers
-      def propCallback(n: String, s: Int, d: Int) = {}
+      def propCallback(n: String, w: Int, s: Int, d: Int) = {}
 
       def testCallback(n: String, r: Test.Result) = {
         for (l <- loggers) {
@@ -74,7 +75,8 @@ class ScalaCheckFramework extends Framework {
 
       import Test.cmdLineParser.{Success, NoSuccess}
       val prms = Test.cmdLineParser.parseParams(args) match {
-        case Success(params, _) => params
+        case Success(params, _) => 
+          params copy (propCallback = propCallback, testCallback = testCallback)
         // TODO: Maybe handle this a bit better than throwing exception?
         case e: NoSuccess => throw new Exception(e.toString)
       }
@@ -85,7 +87,7 @@ class ScalaCheckFramework extends Framework {
           handler.handle(asEvent((testClassName, Test.check(prms, p))))
         case "org.scalacheck.Properties" =>
           val ps = loadClass.asInstanceOf[Properties]
-          Test.checkProperties(ps, prms, propCallback, testCallback)
+          Test.checkProperties(prms, ps)
       }
     }
 

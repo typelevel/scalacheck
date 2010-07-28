@@ -15,16 +15,9 @@ object TestAll {
       else if(args.contains("-2")) 2 
       else 1
 
-
-    val prms = 
-      if(!large) Test.Params(workers = workers)
-      else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers)
-
-
-    val propReport: (String,Int,Int) => Unit = 
+    val propReport: (String,Int,Int,Int) => Unit = 
       if(verbose) ConsoleReporter.propReport 
-      else (n, i, j) => () 
-
+      else (n, w, i, j) => () 
 
     val testReport: (String,Test.Result) => Unit = 
       if(verbose) ConsoleReporter.testReport
@@ -33,8 +26,12 @@ object TestAll {
         case _ => ConsoleReporter.testReport(n,s)
       }
 
-
-
+    val prms = {
+      val p = 
+        if(!large) Test.Params(workers = workers)
+        else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers)
+      p copy (propCallback = propReport, testCallback = testReport)
+    }
 
     def measure[T](t: => T): (T,Long,Long) = {
       val start = System.currentTimeMillis
@@ -43,27 +40,21 @@ object TestAll {
       (x,start,stop)
     }
 
-
     val (res,start,stop) = measure(
-      Test.checkProperties(ScalaCheckSpecification, prms, propReport, testReport)
+      Test.checkProperties(prms, ScalaCheckSpecification)
     )
-
 
     val min = (stop-start)/(60*1000)
     val sec = ((stop-start)-(60*1000*min)) / 1000d
 
-
     val passed = res.filter(_._2.passed).size
     val failed = res.filter(!_._2.passed).size
 
-
     if(verbose || failed > 0) println
-
 
     if(passed > 0) printf("%s test%s PASSED\n", passed, if(passed != 1) "s" else "")
     if(failed > 0) printf("%s test%s FAILED\n", failed, if(failed != 1) "s" else "")
     printf("Elapsed time: %s min %s sec\n", min, sec)
-
 
     exit(failed)
   }
