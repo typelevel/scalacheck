@@ -114,6 +114,14 @@ sealed trait Gen[+T] {
     u <- if (p(t)) Some(t) else None
   } yield u).label(label)
 
+  def withFilter(p: T => Boolean) = new GenWithFilter[T](this, p)
+
+  final class GenWithFilter[+A](self: Gen[A], p: A => Boolean) {
+    def map[B](f: A => B): Gen[B] = self filter p map f
+    def flatMap[B](f: A => Gen[B]): Gen[B] = self filter p flatMap f
+    def withFilter(q: A => Boolean): GenWithFilter[A] = new GenWithFilter[A](self, x => p(x) && q(x))
+  }
+
   def suchThat(p: T => Boolean): Gen[T] = filter(p)
 
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
