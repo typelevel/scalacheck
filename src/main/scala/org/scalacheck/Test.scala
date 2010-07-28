@@ -9,7 +9,6 @@
 
 package org.scalacheck
 
-
 object Test {
 
   import util.FreqMap
@@ -18,18 +17,12 @@ object Test {
   import util.CmdLineParser
   import ConsoleReporter.{propReport, testReport}
 
-  private def secure[T](x: => T): Either[T,Throwable] =
-    try { Left(x) } catch { case e => Right(e) }
-
-
-  // Types
-
   /** Test parameters */
   case class Params(
-    minSuccessfulTests: Int = 100, 
+    minSuccessfulTests: Int = 100,
     maxDiscardedTests: Int = 500,
-    minSize: Int = 0, 
-    maxSize: Int = Gen.Params().size, 
+    minSize: Int = 0,
+    maxSize: Int = Gen.Params().size,
     rng: java.util.Random = Gen.Params().rng,
     workers: Int = 1,
     propCallback: PropCallback = (n,w,s,d) => (),
@@ -65,45 +58,32 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  sealed case class PropException(args: Prop.Args, e: Throwable, 
+  sealed case class PropException(args: Prop.Args, e: Throwable,
     labels: Set[String]) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
    *  for evaluating the property. */
   sealed case class GenException(e: Throwable) extends Status
 
-  /** Property evaluation callback. Takes number of passed and
-   *  discarded tests, respectively */
-  @deprecated("(v1.8)")
-  type PropEvalCallback = (Int,Int) => Unit
-
-  /** Property evaluation callback. Takes property name, and number of passed
-   *  and discarded tests, respectively */
-  @deprecated("(v1.8)")
-  type NamedPropEvalCallback = (String,Int,Int) => Unit
-
-  /** Test callback. Takes property name, and test results. */
-  @deprecated("(v1.8)")
-  type TestResCallback = (String,Result) => Unit
-
+  /** Property check callback type */
   type PropCallback = (String,Int,Int,Int) => Unit
+
+  /** Test result callback type */
   type TestCallback = (String,Result) => Unit
 
-  /** Default testing parameters
-   *  @deprecated Use <code>Test.Params()</code> instead */
-  @deprecated("Use Test.Params() instead")
-  val defaultParams = Params()
-  
   private def assertParams(prms: Params) = {
     import prms._
     if(
-      minSuccessfulTests <= 0 || 
-      maxDiscardedTests < 0 || 
-      minSize < 0 || 
+      minSuccessfulTests <= 0 ||
+      maxDiscardedTests < 0 ||
+      minSize < 0 ||
       maxSize < minSize ||
       workers <= 0
     ) throw new IllegalArgumentException("Invalid test parameters")
   }
+
+  private def secure[T](x: => T): Either[T,Throwable] =
+    try { Left(x) } catch { case e => Right(e) }
 
   private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
     object OptMinSuccess extends IntOpt {
@@ -165,16 +145,16 @@ object Test {
     val sizeStep = (maxSize-minSize) / (minSuccessfulTests: Float)
     var stop = false
 
-    def worker(startSize: Float) = future {
+    def worker(workerdIdx: Int) = future {
       var n = 0
       var d = 0
-      var size = startSize
+      var size = workerdIdx*sizeStep
       var res: Result = null
       var fm = FreqMap.empty[immutable.Set[Any]]
       while(!stop && res == null && n < iterations) {
         val propPrms = Prop.Params(Gen.Params(size.round, prms.rng), fm)
         secure(p(propPrms)) match {
-          case Right(e) => res = 
+          case Right(e) => res =
             Result(GenException(e), n, d, FreqMap.empty[immutable.Set[Any]])
           case Left(propRes) =>
             fm =
@@ -183,15 +163,15 @@ object Test {
             propRes.status match {
               case Prop.Undecided =>
                 d += 1
-                propCallback("", 0, n, d)
+                propCallback("", workerdIdx, n, d)
                 if(d >= maxDiscardedTests) res = Result(Exhausted, n, d, fm)
-              case Prop.True => 
+              case Prop.True =>
                 n += 1
-                propCallback("", 0, n, d)
-              case Prop.Proof => 
+                propCallback("", workerdIdx, n, d)
+              case Prop.Proof =>
                 n += 1
                 res = Result(Proved(propRes.args), n, d, fm)
-              case Prop.False => res = 
+              case Prop.False => res =
                 Result(Failed(propRes.args, propRes.labels), n, d, fm)
               case Prop.Exception(e) => res =
                 Result(PropException(propRes.args, e, propRes.labels), n, d, fm)
@@ -208,13 +188,13 @@ object Test {
       case Result(Passed, s1, d1, fm1) => r2() match {
         case Result(Passed, s2, d2, fm2) if d1+d2 >= maxDiscardedTests =>
           () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2)
-        case Result(st, s2, d2, fm2) => 
+        case Result(st, s2, d2, fm2) =>
           () => Result(st, s1+s2, d1+d2, fm1++fm2)
       }
       case r => () => r
     }
 
-    val results = for(i <- 0 until workers) yield worker(i*sizeStep)
+    val results = for(i <- 0 until workers) yield worker(i)
     val r = results.reduceLeft(mergeResults)()
     stop = true
     results foreach (_.apply())
@@ -234,6 +214,25 @@ object Test {
 
   // Deprecated methods //
 
+  /** Default testing parameters
+   *  @deprecated Use <code>Test.Params()</code> instead */
+  @deprecated("Use Test.Params() instead")
+  val defaultParams = Params()
+
+  /** Property evaluation callback. Takes number of passed and
+   *  discarded tests, respectively */
+  @deprecated("(v1.8)")
+  type PropEvalCallback = (Int,Int) => Unit
+
+  /** Property evaluation callback. Takes property name, and number of passed
+   *  and discarded tests, respectively */
+  @deprecated("(v1.8)")
+  type NamedPropEvalCallback = (String,Int,Int) => Unit
+
+  /** Test callback. Takes property name, and test results. */
+  @deprecated("(v1.8)")
+  type TestResCallback = (String,Result) => Unit
+
   /** @deprecated (v1.8) Use <code>check(prms.copy(propCallback = myCallback), p)</code> instead. */
   @deprecated("(v1.8) Use check(prms.copy(propCallback = myCallback), p) instead")
   def check(prms: Params, p: Prop, propCallb: PropEvalCallback): Result =
@@ -244,7 +243,7 @@ object Test {
    *  discarded tests that should be allowed before ScalaCheck
    *  @deprecated (v1.8) Use <code>check(Params(maxDiscardedTests = n), p)</code> instead. */
   @deprecated("(v1.8) Use check(Params(maxDiscardedTests = n), p) instead.")
-  def check(p: Prop, maxDiscarded: Int): Result = 
+  def check(p: Prop, maxDiscarded: Int): Result =
     check(Params(maxDiscardedTests = maxDiscarded, testCallback = testReport), p)
 
   /** Tests a property and prints results to the console
@@ -266,7 +265,7 @@ object Test {
   )
 
   /** Tests all properties with the given testing parameters, and returns
-   *  the test results. 
+   *  the test results.
    *  @deprecated (v1.8) Use checkProperties(prms, ps) instead */
   @deprecated("(v1.8) Use checkProperties(prms, ps) instead")
   def checkProperties(ps: Properties, prms: Params): Seq[(String,Result)] =
