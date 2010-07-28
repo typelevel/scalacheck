@@ -38,7 +38,24 @@ class Properties(val name: String) extends Prop {
 
   def apply(p: Prop.Params) = oneProperty(p)
 
-  override def check(prms: Test.Params): Unit = Test.checkProperties(prms, this)
+  override def check(prms: Test.Params): Unit = {
+    import ConsoleReporter.{propReport, testReport}
+    val propCallback: Test.PropCallback = (n,w,s,d) => {
+      propReport(n,w,s,d)
+      prms.propCallback(n,s,w,d)
+    }
+    val testCallback: Test.TestCallback = (n,r) => {
+      testReport(n,r)
+      prms.testCallback(n,r)
+    }
+    val p = prms copy (propCallback = propCallback, testCallback = testCallback)
+    Test.checkProperties(p, this)
+  }
+
+  /** Convenience method that checks this property and reports the
+   *  result on the console. If you need to get the results from the test use
+   *  the <code>check</code> methods in <code>Test</code> instead. */
+  override def check: Unit = check(Test.Params())
 
   /** Adds all properties from another property collection to this one. */
   def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p 
@@ -48,5 +65,6 @@ class Properties(val name: String) extends Prop {
   class PropertySpecifier() {
     def update(propName: String, p: Prop) = props += ((name+"."+propName, p))
   }
+
   lazy val property = new PropertySpecifier()
 }
