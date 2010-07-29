@@ -15,22 +15,19 @@ object TestAll {
       else if(args.contains("-2")) 2 
       else 1
 
-    val propReport: (String,Int,Int,Int) => Unit = 
-      if(verbose) ConsoleReporter.propReport 
-      else (n, w, i, j) => () 
+    val testCallback = new Test.TestCallback {
+      override def onPropEval(n:String,w:Int,s:Int,d:Int) =
+        if(verbose) ConsoleReporter(0).onPropEval(n,w,s,d)
 
-    val testReport: (String,Test.Result) => Unit = 
-      if(verbose) ConsoleReporter.testReport
-      else (n, s) => s match {
-        case r if r.passed => {}
-        case _ => ConsoleReporter.testReport(n,s)
-      }
+      override def onTestResult(n:String,r:Test.Result) =
+        if(verbose || !r.passed) ConsoleReporter(0).onTestResult(n,r)
+    }
 
     val prms = {
       val p = 
         if(!large) Test.Params(workers = workers)
         else Test.Params(1000, 5000, 0, 10000, util.StdRand, workers)
-      p copy (propCallback = propReport, testCallback = testReport)
+      p copy (testCallback = testCallback)
     }
 
     def measure[T](t: => T): (T,Long,Long) = {

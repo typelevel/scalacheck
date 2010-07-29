@@ -26,6 +26,8 @@ package org.scalacheck
  */
 class Properties(val name: String) extends Prop {
 
+  import Test.cmdLineParser.{Success, NoSuccess}
+
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
   /** Returns one property which holds if and only if all of the
@@ -38,24 +40,28 @@ class Properties(val name: String) extends Prop {
 
   def apply(p: Prop.Params) = oneProperty(p)
 
-  override def check(prms: Test.Params): Unit = {
-    import ConsoleReporter.{propReport, testReport}
-    val propCallback: Test.PropCallback = (n,w,s,d) => {
-      propReport(n,w,s,d)
-      prms.propCallback(n,s,w,d)
-    }
-    val testCallback: Test.TestCallback = (n,r) => {
-      testReport(n,r)
-      prms.testCallback(n,r)
-    }
-    val p = prms copy (propCallback = propCallback, testCallback = testCallback)
-    Test.checkProperties(p, this)
-  }
+  /** Convenience method that checks the properties with the given parameters
+   *  and reports the result on the console. If you need to get the results 
+   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  instead. */
+  override def check(prms: Test.Params): Unit = Test.checkProperties(
+    prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
+  )
 
-  /** Convenience method that checks this property and reports the
+  /** Convenience method that checks the properties and reports the
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
   override def check: Unit = check(Test.Params())
+
+  /** Convenience method that makes it possible to use a this instance
+   *  as an application that checks itself on execution */
+  override def main(args: Array[String]): Unit = 
+    Test.cmdLineParser.parseParams(args) match {
+      case Success(params, _) => Test.checkProperties(params, this)
+      case e: NoSuccess =>
+        println("Incorrect options:"+"\n"+e+"\n")
+        Test.cmdLineParser.printHelp
+    }
 
   /** Adds all properties from another property collection to this one. */
   def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p 

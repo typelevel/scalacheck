@@ -28,33 +28,28 @@ trait Prop {
   def combine(p: Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
-  def check(prms: Test.Params): Unit = {
-    import ConsoleReporter.{propReport, testReport}
-    val propCallback: Test.PropCallback = (n,w,s,d) => {
-      propReport(n,w,s,d)
-      prms.propCallback(n,s,w,d)
-    }
-    val testCallback: Test.TestCallback = (n,r) => {
-      testReport(n,r)
-      prms.testCallback(n,r)
-    }
-    val p = prms copy (propCallback = propCallback, testCallback = testCallback)
-    Test.check(p, this)
-  }
-
-  /** Convenience method that makes it possible to use a this property
-   *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = Test.cmdLineParser.parseParams(args) match {
-    case Success(params, _) => check(params)
-    case e: NoSuccess =>
-      println("Incorrect options:"+"\n"+e+"\n")
-      Test.cmdLineParser.printHelp
-  }
+  /** Convenience method that checks this property with the given parameters
+   *  and reports the result on the console. If you need to get the results 
+   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  instead. */
+  def check(prms: Test.Params): Unit = Test.check(
+    prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
+  )
 
   /** Convenience method that checks this property and reports the
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
   def check: Unit = check(Test.Params())
+
+  /** Convenience method that makes it possible to use a this property
+   *  as an application that checks itself on execution */
+  def main(args: Array[String]): Unit = 
+    Test.cmdLineParser.parseParams(args) match {
+      case Success(params, _) => Test.check(params, this)
+      case e: NoSuccess =>
+        println("Incorrect options:"+"\n"+e+"\n")
+        Test.cmdLineParser.printHelp
+    }
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't

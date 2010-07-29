@@ -15,7 +15,6 @@ object Test {
   import scala.collection.immutable
   import Prop.FM
   import util.CmdLineParser
-  import ConsoleReporter.{propReport, testReport}
 
   /** Test parameters */
   case class Params(
@@ -25,8 +24,7 @@ object Test {
     maxSize: Int = Gen.Params().size,
     rng: java.util.Random = Gen.Params().rng,
     workers: Int = 1,
-    propCallback: PropCallback = (n,w,s,d) => (),
-    testCallback: TestCallback = (n,r) => ()
+    testCallback: TestCallback = new TestCallback {}
   )
 
   /** Test statistics */
@@ -65,11 +63,28 @@ object Test {
    *  for evaluating the property. */
   sealed case class GenException(e: Throwable) extends Status
 
-  /** Property check callback type */
-  type PropCallback = (String,Int,Int,Int) => Unit
+  trait TestCallback { self =>
+    /** Called each time a property is evaluated */
+    def onPropEval(name: String, threadIdx: Int, succeeded: Int, 
+      discarded: Int): Unit = ()
 
-  /** Test result callback type */
-  type TestCallback = (String,Result) => Unit
+    /** Called whenever a property has finished testing */
+    def onTestResult(name: String, result: Result): Unit = ()
+
+    def chain(testCallback: TestCallback) = new TestCallback {
+      override def onPropEval(name: String, threadIdx: Int,
+        succeeded: Int, discarded: Int
+      ): Unit = {
+        self.onPropEval(name,threadIdx,succeeded,discarded)
+        testCallback.onPropEval(name,threadIdx,succeeded,discarded)
+      }
+
+      override def onTestResult(name: String, result: Result): Unit = {
+        self.onTestResult(name,result)
+        testCallback.onTestResult(name,result)
+      }
+    }
+  }
 
   private def assertParams(prms: Params) = {
     import prms._
@@ -113,10 +128,15 @@ object Test {
       val names = Set("workers", "w")
       val help = "Number of threads to execute in parallel for testing"
     }
+    object OptVerbosity extends IntOpt {
+      val default = 1
+      val names = Set("verbosity", "v")
+      val help = "Verbosity level"
+    }
 
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscarded, OptMinSize,
-      OptMaxSize, OptWorkers
+      OptMaxSize, OptWorkers, OptVerbosity
     )
 
     def parseParams(args: Array[String]) = parseArgs(args) {
@@ -126,7 +146,8 @@ object Test {
         optMap(OptMinSize),
         optMap(OptMaxSize),
         Test.Params().rng,
-        optMap(OptWorkers)
+        optMap(OptWorkers),
+        ConsoleReporter(optMap(OptVerbosity))
       )
     }
   }
@@ -163,11 +184,11 @@ object Test {
             propRes.status match {
               case Prop.Undecided =>
                 d += 1
-                propCallback("", workerdIdx, n, d)
+                testCallback.onPropEval("", workerdIdx, n, d)
                 if(d >= maxDiscardedTests) res = Result(Exhausted, n, d, fm)
               case Prop.True =>
                 n += 1
-                propCallback("", workerdIdx, n, d)
+                testCallback.onPropEval("", workerdIdx, n, d)
               case Prop.Proof =>
                 n += 1
                 res = Result(Proved(propRes.args), n, d, fm)
@@ -198,16 +219,19 @@ object Test {
     val r = results.reduceLeft(mergeResults)()
     stop = true
     results foreach (_.apply())
-    prms.testCallback("", r)
+    prms.testCallback.onTestResult("", r)
     r
   }
 
   def checkProperties(prms: Params, ps: Properties): Seq[(String,Result)] =
     ps.properties.map { case (name,p) =>
-      val propCallb: PropCallback = (n,w,s,d) => prms.propCallback(name,w,s,d)
-      val testCallb: TestCallback = (n,r) => prms.testCallback(name,r)
-      val newPrms = prms copy (propCallback = propCallb, testCallback = testCallb)
-      val res = check(newPrms, p)
+      val testCallback = new TestCallback {
+        override def onPropEval(n: String, t: Int, s: Int, d: Int) = 
+          prms.testCallback.onPropEval(name,t,s,d)
+        override def onTestResult(n: String, r: Result) = 
+          prms.testCallback.onTestResult(name,r)
+      }
+      val res = check(prms copy (testCallback = testCallback), p)
       (name,res)
     }
 
@@ -233,36 +257,43 @@ object Test {
   @deprecated("(v1.8)")
   type TestResCallback = (String,Result) => Unit
 
-  /** @deprecated (v1.8) Use <code>check(prms.copy(propCallback = myCallback), p)</code> instead. */
-  @deprecated("(v1.8) Use check(prms.copy(propCallback = myCallback), p) instead")
-  def check(prms: Params, p: Prop, propCallb: PropEvalCallback): Result =
-    check(prms copy (propCallback = (n,w,s,d) => propCallb(s,d)), p)
+  /** @deprecated (v1.8) Use <code>check(prms.copy(testCallback = myCallback), p)</code> instead. */
+  @deprecated("(v1.8) Use check(prms.copy(testCallback = myCallback), p) instead")
+  def check(prms: Params, p: Prop, propCallb: PropEvalCallback): Result = {
+    val testCallback = new TestCallback {
+      override def onPropEval(n: String, t: Int, s: Int, d: Int) = propCallb(s,d) 
+    }
+    check(prms copy (testCallback = testCallback), p)
+  }
 
   /** Tests a property and prints results to the console. The
    *  <code>maxDiscarded</code> parameter specifies how many
    *  discarded tests that should be allowed before ScalaCheck
-   *  @deprecated (v1.8) Use <code>check(Params(maxDiscardedTests = n), p)</code> instead. */
-  @deprecated("(v1.8) Use check(Params(maxDiscardedTests = n), p) instead.")
+   *  @deprecated (v1.8) Use <code>check(Params(maxDiscardedTests = n, testCallback = ConsoleReporter()), p)</code> instead. */
+  @deprecated("(v1.8) Use check(Params(maxDiscardedTests = n, testCallback = ConsoleReporter()), p) instead.")
   def check(p: Prop, maxDiscarded: Int): Result =
-    check(Params(maxDiscardedTests = maxDiscarded, testCallback = testReport), p)
+    check(Params(maxDiscardedTests = maxDiscarded, testCallback = ConsoleReporter()), p)
 
   /** Tests a property and prints results to the console
-   *  @deprecated (v1.8) Use <code>check(Params(propCallback = ConsoleReporter.propReport), p)</code> instead. */
-  @deprecated("(v1.8) Use check(Params(propCallback = ConsoleReporter.propReport, testCallback = ConsoleReporter.testReport), p) instead.")
-  def check(p: Prop): Result = check(Params(propCallback = propReport, testCallback = testReport), p)
+   *  @deprecated (v1.8) Use <code>check(Params(testCallback = ConsoleReporter()), p)</code> instead. */
+  @deprecated("(v1.8) Use check(Params(testCallback = ConsoleReporter()), p) instead.")
+  def check(p: Prop): Result = check(Params(testCallback = ConsoleReporter()), p)
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results. <code>f</code> is a function which is called each
    *  time a property is evaluted. <code>g</code> is a function called each
    *  time a property has been fully tested.
-   *  @deprecated (v1.8) Use <code>checkProperties(prms.copy(propCallback = myPropCallback, testCallback = myTestCallback), ps)</code> instead. */
-  @deprecated("(v1.8) Use checkProperties(prms.copy(propCallBack = myPropCallback, testCallback = myTestCallback), ps) instead.")
+   *  @deprecated (v1.8) Use <code>checkProperties(prms.copy(testCallback = myCallback), ps)</code> instead. */
+  @deprecated("(v1.8) Use checkProperties(prms.copy(testCallback = myCallback), ps) instead.")
   def checkProperties(ps: Properties, prms: Params,
     propCallb: NamedPropEvalCallback, testCallb: TestResCallback
-  ): Seq[(String,Result)] = checkProperties(
-    prms.copy(propCallback = (n,w,s,d) => propCallb(n,s,d), testCallback = testCallb),
-    ps
-  )
+  ): Seq[(String,Result)] = {
+    val testCallback = new TestCallback {
+      override def onPropEval(n: String, t: Int, s: Int, d: Int) = propCallb(n,s,d) 
+      override def onTestResult(n: String, r: Result) = testCallb(n,r)
+    }
+    checkProperties(prms copy (testCallback = testCallback), ps)
+  }
 
   /** Tests all properties with the given testing parameters, and returns
    *  the test results.

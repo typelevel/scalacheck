@@ -61,22 +61,24 @@ class ScalaCheckFramework extends Framework {
       }
       
       // TODO Loggers
-      def propCallback(n: String, w: Int, s: Int, d: Int) = {}
+      val testCallback = new Test.TestCallback {
+        override def onPropEval(n: String, w: Int, s: Int, d: Int) = {}
 
-      def testCallback(n: String, r: Test.Result) = {
-        for (l <- loggers) {
-          import Pretty._
-          l.info(
-            (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
-            )
+        override def onTestResult(n: String, r: Test.Result) = {
+          for (l <- loggers) {
+            import Pretty._
+            l.info(
+              (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
+              )
+          }
+          handler.handle(asEvent((n,r)))
         }
-        handler.handle(asEvent((n,r)))
       }
 
       import Test.cmdLineParser.{Success, NoSuccess}
       val prms = Test.cmdLineParser.parseParams(args) match {
         case Success(params, _) => 
-          params copy (propCallback = propCallback, testCallback = testCallback)
+          params copy (testCallback = testCallback)
         // TODO: Maybe handle this a bit better than throwing exception?
         case e: NoSuccess => throw new Exception(e.toString)
       }
