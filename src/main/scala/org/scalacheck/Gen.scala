@@ -207,12 +207,7 @@ object Gen {
     def choose(l: Long, h: Long): Long = {
       val d = h-l
       if (d < 0) throw new IllegalArgumentException("Invalid range")
-      else if (d == 0) l
-      else {
-        val r = math.abs(rng.nextLong)
-        val a = if(r == Long.MinValue) 1 else 0
-        l + (math.abs(r+a) % d) + a
-      }
+      else l + math.abs(rng.nextLong % (d+1))
     }
 
     /** @throws IllegalArgumentException if l is greater than h, or if
