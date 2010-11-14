@@ -17,10 +17,10 @@ object TestAll {
 
     val testCallback = new Test.TestCallback {
       override def onPropEval(n:String,w:Int,s:Int,d:Int) =
-        if(verbose) ConsoleReporter(0).onPropEval(n,w,s,d)
+        if(verbose) ConsoleReporter(1).onPropEval(n,w,s,d)
 
       override def onTestResult(n:String,r:Test.Result) =
-        if(verbose || !r.passed) ConsoleReporter(0).onTestResult(n,r)
+        if(verbose || !r.passed) ConsoleReporter(1).onTestResult(n,r)
     }
 
     val prms = {

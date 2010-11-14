@@ -59,7 +59,10 @@ object Pretty {
       getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
     }
     
-    val strs2 = if(prms.verbosity > 0) strs else strs.take(5)
+    val strs2 = 
+      if(prms.verbosity <= 0) Array[String]()
+      else if(prms.verbosity <= 1) strs.take(5)
+      else strs
     
     e.getClass.getName + ": " + e.getMessage / strs2.mkString("\n")
   }
@@ -69,7 +72,7 @@ object Pretty {
       for((a,i) <- args.zipWithIndex) yield {
         val l = if(a.label == "") "ARG_"+i else a.label
         val s = 
-          if(a.shrinks == 0) "" 
+          if(a.shrinks == 0 || prms.verbosity <= 1) "" 
           else " (orig arg: "+a.prettyOrigArg(prms)+")"
 
         "> "+l+": "+a.prettyArg(prms)+""+s
@@ -106,9 +109,16 @@ object Pretty {
         "Exception raised on property evaluation."/labels(l)/pretty(args,prms)/
         "> Exception: "+pretty(e,prms)
       case Test.GenException(e) =>
-        "Exception raised on argument generation."/"> Stack trace: "/pretty(e,prms)
+        "Exception raised on argument generation."/
+        "> Exception: "+pretty(e,prms)
     }
-    s/pretty(res.freqMap,prms)
+    val t = if(prms.verbosity <= 1) "" else "Elapsed time: "+prettyTime(res.time)
+    s/t/pretty(res.freqMap,prms)
   }
 
+  def prettyTime(millis: Long): String = {
+    val min = millis/(60*1000)
+    val sec = (millis-(60*1000*min)) / 1000d
+    "%d:%.3f".format(min, sec)
+  }
 }

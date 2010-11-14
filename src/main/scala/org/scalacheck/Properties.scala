@@ -57,10 +57,14 @@ class Properties(val name: String) extends Prop {
    *  as an application that checks itself on execution */
   override def main(args: Array[String]): Unit = 
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) => Test.checkProperties(params, this)
+      case Success(params, _) => 
+        val res = Test.checkProperties(params, this)
+        val failed = res.filter(!_._2.passed).size
+        System.exit(failed)
       case e: NoSuccess =>
         println("Incorrect options:"+"\n"+e+"\n")
         Test.cmdLineParser.printHelp
+        System.exit(-1)
     }
 
   /** Adds all properties from another property collection to this one. */

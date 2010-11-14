@@ -45,10 +45,13 @@ trait Prop {
    *  as an application that checks itself on execution */
   def main(args: Array[String]): Unit = 
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) => Test.check(params, this)
+      case Success(params, _) => 
+        if(Test.check(params, this).passed) System.exit(0)
+        else System.exit(1)
       case e: NoSuccess =>
         println("Incorrect options:"+"\n"+e+"\n")
         Test.cmdLineParser.printHelp
+        System.exit(-1)
     }
 
   /** Returns a new property that holds if and only if both this

@@ -28,7 +28,7 @@ object Test {
   )
 
   /** Test statistics */
-  case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FM) {
+  case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FM, time: Long = 0) {
     def passed = status match {
       case Passed => true
       case Proved(_) => true
@@ -206,21 +206,23 @@ object Test {
     }
 
     def mergeResults(r1: () => Result, r2: () => Result) = r1() match {
-      case Result(Passed, s1, d1, fm1) => r2() match {
-        case Result(Passed, s2, d2, fm2) if d1+d2 >= maxDiscardedTests =>
-          () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2)
-        case Result(st, s2, d2, fm2) =>
-          () => Result(st, s1+s2, d1+d2, fm1++fm2)
+      case Result(Passed, s1, d1, fm1, t) => r2() match {
+        case Result(Passed, s2, d2, fm2, t) if d1+d2 >= maxDiscardedTests =>
+          () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, t)
+        case Result(st, s2, d2, fm2, t) =>
+          () => Result(st, s1+s2, d1+d2, fm1++fm2, t)
       }
       case r => () => r
     }
 
+    val start = System.currentTimeMillis
     val results = for(i <- 0 until workers) yield worker(i)
     val r = results.reduceLeft(mergeResults)()
     stop = true
     results foreach (_.apply())
-    prms.testCallback.onTestResult("", r)
-    r
+    val timedRes = r.copy(time = System.currentTimeMillis-start)
+    prms.testCallback.onTestResult("", timedRes)
+    timedRes
   }
 
   def checkProperties(prms: Params, ps: Properties): Seq[(String,Result)] =
