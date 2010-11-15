@@ -15,8 +15,8 @@ class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
 
   override def documentOptions = Nil
 
-  val publishTo = "Scala Tools Nexus" at "http://nexus.scala-tools.org/content/repositories/snapshots/"
-  //val publishTo = "Scala Tools Nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
+  //val publishTo = "Scala Tools Nexus" at "http://nexus.scala-tools.org/content/repositories/snapshots/"
+  val publishTo = "Scala Tools Nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
 
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
