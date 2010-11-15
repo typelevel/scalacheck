@@ -15,20 +15,21 @@ import org.scalatools.testing._
 
 class ScalaCheckFramework extends Framework {
 
+  private case object PropFingerprint extends TestFingerprint {
+    val superClassName = "org.scalacheck.Prop"
+    val isModule = false
+  }
+
+  private case object PropsFingerprint extends TestFingerprint {
+    val superClassName = "org.scalacheck.Properties"
+    val isModule = true
+  }
+
   val name = "ScalaCheck"
 
-  val tests = Array[TestFingerprint](
-    new TestFingerprint {
-      val superClassName = "org.scalacheck.Prop"
-      val isModule = false
-    },
-    new TestFingerprint {
-      val superClassName = "org.scalacheck.Properties"
-      val isModule = true
-    }
-  )
+  val tests = Array[Fingerprint](PropsFingerprint, PropsFingerprint)
  
-  def testRunner(loader: ClassLoader,  loggers: Array[Logger]) = new Runner {
+  def testRunner(loader: ClassLoader,  loggers: Array[Logger]) = new Runner2 {
 
     private def asEvent(nr: (String, Test.Result)) = nr match { 
       case (n: String, r: Test.Result) => new Event {
@@ -49,18 +50,8 @@ class ScalaCheckFramework extends Framework {
       }
     }
 
-    def run(testClassName: String, fingerprint: TestFingerprint, handler: EventHandler, args: Array[String]) {
+    def run(testClassName: String, fingerprint: Fingerprint, handler: EventHandler, args: Array[String]) {
 
-      def loadClass = {
-        if(fingerprint.isModule) {
-          val obj = Class.forName(testClassName + "$", true, loader)
-          obj.getField("MODULE$").get(null)
-        } else {
-          Class.forName(testClassName, true, loader).newInstance
-        }
-      }
-      
-      // TODO Loggers
       val testCallback = new Test.TestCallback {
         override def onPropEval(n: String, w: Int, s: Int, d: Int) = {}
 
@@ -69,7 +60,7 @@ class ScalaCheckFramework extends Framework {
             import Pretty._
             l.info(
               (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
-              )
+            )
           }
           handler.handle(asEvent((n,r)))
         }
@@ -83,13 +74,16 @@ class ScalaCheckFramework extends Framework {
         case e: NoSuccess => throw new Exception(e.toString)
       }
 
-      fingerprint.superClassName match {
-        case "org.scalacheck.Prop" => 
-          val p = loadClass.asInstanceOf[Prop]
-          handler.handle(asEvent((testClassName, Test.check(prms, p))))
-        case "org.scalacheck.Properties" =>
-          val ps = loadClass.asInstanceOf[Properties]
-          Test.checkProperties(prms, ps)
+      fingerprint match {
+        case fp: SubclassFingerprint =>
+          if(fp.isModule) {
+            val obj = Class.forName(testClassName + "$", true, loader)
+            val ps = obj.getField("MODULE$").get(null).asInstanceOf[Properties]
+            Test.checkProperties(prms, ps)
+          } else {
+            val p = Class.forName(testClassName, true, loader).newInstance.asInstanceOf[Prop]
+            handler.handle(asEvent((testClassName, Test.check(prms, p))))
+          }
       }
     }
 

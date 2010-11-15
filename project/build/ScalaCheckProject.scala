@@ -21,7 +21,7 @@ class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
 
-  val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.3"
+  val depTestInterface = "org.scala-tools.testing" %  "test-interface" % "0.5"
 
   Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 

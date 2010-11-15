@@ -17,7 +17,7 @@
   </artifact:dependencies>
 
   <artifact:dependencies pathId="testinterface.classpath">
-    <dependency groupId="org.scala-tools.testing" artifactId="test-interface" version="0.3"/>
+    <dependency groupId="org.scala-tools.testing" artifactId="test-interface" version="0.5"/>
     <remoteRepository refid="scala-tools.repo-releases" />
   </artifact:dependencies>
 
