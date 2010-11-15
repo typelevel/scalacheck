@@ -72,6 +72,7 @@
       destdir="target/test-classes" 
       classpathref="scalacheck.classpath"/>
     <java 
+      failonerror="true"
       classname="org.scalacheck.TestAll"
       classpathref="scalacheck.test.classpath"/>
   </target>

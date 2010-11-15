@@ -119,6 +119,7 @@ object Pretty {
   def prettyTime(millis: Long): String = {
     val min = millis/(60*1000)
     val sec = (millis-(60*1000*min)) / 1000d
-    "%d:%.3f".format(min, sec)
+    if(min <= 0) "%.3f sec ".format(sec)
+    else "%d min %.3f sec ".format(min, sec)
   }
 }
