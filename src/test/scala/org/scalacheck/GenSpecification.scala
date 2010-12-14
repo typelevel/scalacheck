@@ -107,4 +107,19 @@ object GenSpecification extends Properties("Gen") {
     s.forall(_.isLetterOrDigit)
   }
 
+  property("resultOf1") = forAll(resultOf((m: Int) => 0))(_ == 0)
+
+  property("resultOf2") = {
+    case class A(m: Int, s: String)
+    forAll(resultOf(A)) { a:A => true }
+  }
+
+  // Some bug in Scala causes a compilation error if this is placed inside
+  // the property
+  private case class B(n: Int, s: String, b: Boolean)
+
+  property("resultOf3") = {
+    implicit val arbB = Arbitrary(resultOf(B))
+    forAll { b:B => true }
+  }
 }

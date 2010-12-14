@@ -479,4 +479,89 @@ object Gen {
     )
     frequency(allGens: _*)
   }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R] =
+    arbitrary[T] map f
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,R](f: (T1,T2) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2]
+  ): Gen[R] = arbitrary[T1] flatMap { t => resultOf(f(t, _:T2)) }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,R](f: (T1,T2,T3) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3]
+  ): Gen[R] = arbitrary[T1] flatMap { t => resultOf(f(t, _:T2, _:T3)) }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,R](f: (T1,T2,T3,T4) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,R](f: (T1,T2,T3,T4,T5) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,R](
+    f: (T1,T2,T3,T4,T5,T6) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], a5: Arbitrary[T5], a6: Arbitrary[T6]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,R](
+    f: (T1,T2,T3,T4,T5,T6,T7) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,T8,R](
+    f: (T1,T2,T3,T4,T5,T6,T7,T8) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,T8,T9,R](
+    f: (T1,T2,T3,T4,T5,T6,T7,T8,T9) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8],
+    a9: Arbitrary[T9]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8, _:T9))
+  }
+
 }
