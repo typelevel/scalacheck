@@ -1,23 +1,43 @@
-<project name="scalacheck" basedir="." default="build" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project
+  name="scalacheck"
+  basedir="." default="build"
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
-  <!-- Paths and resources -->
+  <path
+    id="maven-ant-tasks.classpath"
+    path="tools/maven-ant-tasks-2.0.10.jar" />
 
-  <path id="maven-ant-tasks.classpath" path="tools/maven-ant-tasks-2.0.10.jar" />
-  <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
-           uri="antlib:org.apache.maven.artifact.ant"
-           classpathref="maven-ant-tasks.classpath" />
+  <typedef
+    resource="org/apache/maven/artifact/ant/antlib.xml"
+    uri="antlib:org.apache.maven.artifact.ant"
+    classpathref="maven-ant-tasks.classpath" />
 
-  <artifact:remoteRepository id="scala-tools.repo-snapshots" url="http://www.scala-tools.org/repo-snapshots/" />
-  <artifact:remoteRepository id="scala-tools.repo-releases" url="http://www.scala-tools.org/repo-releases/" />
+  <artifact:remoteRepository
+    id="scala-tools.repo-snapshots"
+    url="http://www.scala-tools.org/repo-snapshots/" />
+
+  <artifact:remoteRepository
+    id="scala-tools.repo-releases"
+    url="http://www.scala-tools.org/repo-releases/" />
 
   <artifact:dependencies pathId="scala.classpath">
-    <dependency groupId="org.scala-lang" artifactId="scala-compiler" version="2.8.1"/>
-    <dependency groupId="org.scala-lang" artifactId="scala-library" version="2.8.1"/>
+    <dependency
+      groupId="org.scala-lang"
+      artifactId="scala-compiler"
+      version="2.9.0-SNAPSHOT"/>
+    <dependency
+      groupId="org.scala-lang"
+      artifactId="scala-library"
+      version="2.9.0-SNAPSHOT"/>
     <remoteRepository refid="scala-tools.repo-releases" />
+    <remoteRepository refid="scala-tools.repo-snapshots" />
   </artifact:dependencies>
 
   <artifact:dependencies pathId="testinterface.classpath">
-    <dependency groupId="org.scala-tools.testing" artifactId="test-interface" version="0.5"/>
+    <dependency
+      groupId="org.scala-tools.testing"
+      artifactId="test-interface"
+      version="0.5"/>
     <remoteRepository refid="scala-tools.repo-releases" />
   </artifact:dependencies>
 
@@ -32,18 +52,13 @@
     <pathelement location="target/test-classes"/>
   </path>
 
-  <taskdef resource="scala/tools/ant/antlib.xml"
-           classpathref="scala.classpath"/>
+  <taskdef
+    resource="scala/tools/ant/antlib.xml"
+    classpathref="scala.classpath"/>
 
-
-  <!-- Project properties -->
-
-  <property name="name"          value="${ant.project.name}"/>
-  <property name="version"       value="1.8-SNAPSHOT"/>
-  <property name="author"        value="Rickard Nilsson"/>
-
-
-  <!-- Targets -->
+  <property name="name"    value="${ant.project.name}"/>
+  <property name="version" value="1.9-SNAPSHOT"/>
+  <property name="author"  value="Rickard Nilsson"/>
 
   <target name="prepare">
     <mkdir dir="target/doc/main/api"/>
@@ -57,21 +72,27 @@
     <delete dir="target"/>
   </target>
 
+  <target name="clean-all" depends="clean">
+    <delete dir="lib_managed"/>
+    <delete dir="project/build/target"/>
+    <delete dir="project/boot"/>
+  </target>
+
   <target name="build" depends="prepare">
-    <scalac 
+    <scalac
       addParams="-unchecked -deprecation"
-      srcdir="src/main/scala" 
-      destdir="target/classes" 
+      srcdir="src/main/scala"
+      destdir="target/classes"
       classpathref="scalacheck.classpath"/>
   </target>
 
   <target name="test" depends="build">
-    <scalac 
-      addParams="-unchecked -deprecation" 
-      srcdir="src/test/scala" 
-      destdir="target/test-classes" 
+    <scalac
+      addParams="-unchecked -deprecation"
+      srcdir="src/test/scala"
+      destdir="target/test-classes"
       classpathref="scalacheck.classpath"/>
-    <java 
+    <java
       failonerror="true"
       classname="org.scalacheck.TestAll"
       classpathref="scalacheck.test.classpath"/>
@@ -101,8 +122,12 @@
         <include name="org/**"/>
       </fileset>
       <manifest>
-        <attribute name="Built-By" value="${author}"/>
-        <attribute name="Export-Package" value='org.scalacheck;version="${version}"'/>
+        <attribute
+          name="Built-By"
+          value="${author}"/>
+        <attribute
+          name="Export-Package"
+          value='org.scalacheck;version="${version}"'/>
         <section name="org.scalacheck">
           <attribute name="Specification-Title"    value="${name}"/>
           <attribute name="Specification-Version"  value="${version}"/>
@@ -135,8 +160,12 @@
   </target>
 
   <target name="dist" depends="jar,jar-src,doc">
-    <copy file="target/${name}-${version}.jar" tofile="target/sbaz/lib/scalacheck.jar"/>
-    <copy file="target/${name}-${version}-src.jar" tofile="target/sbaz/src/scalacheck-src.jar"/>
+    <copy
+      file="target/${name}-${version}.jar"
+      tofile="target/sbaz/lib/scalacheck.jar"/>
+    <copy
+      file="target/${name}-${version}-src.jar"
+      tofile="target/sbaz/src/scalacheck-src.jar"/>
     <copy todir="target/sbaz/doc/scalacheck">
       <fileset dir="target/doc/main"/>
     </copy>
@@ -163,5 +192,5 @@
       <arg value="target/scalacheck-${version}.sbp"/>
     </exec>
   </target>
-  
+
 </project>
