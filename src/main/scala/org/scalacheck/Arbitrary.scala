@@ -115,7 +115,10 @@ object Arbitrary {
 
   /** Arbitrary instance of Char */
   implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(
-    Gen.choose(Char.MinValue, Char.MaxValue)
+    Gen.frequency(
+      (0xD800-Char.MinValue, Gen.choose(Char.MinValue,0xD800-1)),
+      (Char.MaxValue-0xDFFF, Gen.choose(0xDFFF+1,Char.MaxValue))
+    )
   )
 
   /** Arbitrary instance of Byte */
