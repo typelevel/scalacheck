@@ -67,10 +67,10 @@ object ConsoleReporter {
     res.status match {
       case Test.Proved(_) => {}
       case Test.Passed => {}
-      case f @ Test.Failed(_, _) => error(m + f)
+      case f @ Test.Failed(_, _) => sys.error(m + f)
       case Test.Exhausted => {}
-      case f @ Test.GenException(_) => error(m + f)
-      case f @ Test.PropException(_, _, _) => error(m + f)
+      case f @ Test.GenException(_) => sys.error(m + f)
+      case f @ Test.PropException(_, _, _) => sys.error(m + f)
     }
   }
 

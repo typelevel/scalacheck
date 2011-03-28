@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing}
+import Prop.{forAll, someFailing, noneFailing, sizedProp}
 import Arbitrary._
 import Shrink._
 
@@ -71,7 +71,17 @@ object GenSpecification extends Properties("Gen") {
     forAll(g1 | g2 | g3) { n => n == n1 || n == n2 || n == n3}
   }
 
-  property("listOf1") = forAll(listOf1(arbitrary[Int]))(_.length > 0)
+  property("listOf") = sizedProp { sz =>
+    forAll(listOf(arbitrary[Int])) { l => 
+      l.length >= 0 && l.length <= sz
+    }
+  }
+
+  property("listOf1") = sizedProp { sz =>
+    forAll(listOf1(arbitrary[Int])) { l => 
+      l.length > 0 && l.length <= math.max(1,sz)
+    }
+  }
 
   property("listOfN") = forAll(choose(0,100)) { n =>
     forAll(listOfN(n, arbitrary[Int])) { _.length == n }
@@ -114,11 +124,8 @@ object GenSpecification extends Properties("Gen") {
     forAll(resultOf(A)) { a:A => true }
   }
 
-  // Some bug in Scala causes a compilation error if this is placed inside
-  // the property
-  private case class B(n: Int, s: String, b: Boolean)
-
   property("resultOf3") = {
+    case class B(n: Int, s: String, b: Boolean)
     implicit val arbB = Arbitrary(resultOf(B))
     forAll { b:B => true }
   }
