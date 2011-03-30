@@ -169,7 +169,7 @@ object Test {
     def worker(workerdIdx: Int) = future {
       var n = 0
       var d = 0
-      var size = workerdIdx*sizeStep
+      var size = minSize + (workerdIdx*sizeStep*iterations)
       var res: Result = null
       var fm = FreqMap.empty[immutable.Set[Any]]
       while(!stop && res == null && n < iterations) {

@@ -321,7 +321,9 @@ object Prop {
   def =?[T](x: T, y: T)(implicit pp: T => Pretty): Prop = ?=(y, x)
 
   /** A property that depends on the generator size */
-  def sizedProp(f: Int => Prop): Prop = Prop(prms => f(prms.genPrms.size)(prms))
+  def sizedProp(f: Int => Prop): Prop = Prop { prms => 
+    provedToTrue(f(prms.genPrms.size)(prms))
+  }
 
   /** Implication 
    *  @deprecated Use the implication operator of the Prop class instead

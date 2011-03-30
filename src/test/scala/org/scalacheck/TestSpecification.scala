@@ -36,6 +36,14 @@ object TestSpecification extends Properties("Test") {
 
   val genException = forAll(undefinedInt)((n: Int) => true)
 
+  property("size") = forAll { prms: Test.Params =>
+    val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
+    Test.check(prms, p).status match {
+      case Passed => true
+      case _ => false
+    }
+  }
+
   property("propFailing") = forAll { prms: Test.Params =>
     Test.check(prms, failing).status match {
       case _:Failed => true
@@ -80,7 +88,7 @@ object TestSpecification extends Properties("Test") {
 
   property("propShrinked") = forAll { prms: Test.Params =>
     Test.check(prms, shrinked).status match {
-      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_)::Nil,_) => 
+      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_)::Nil,_) =>
         x == 0 && y == 0 && z == 0
       case x => false
     }
