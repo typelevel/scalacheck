@@ -13,6 +13,7 @@ import Gen._
 import Prop._
 import Test._
 import Arbitrary._
+import collection.mutable.ListBuffer
 
 object TestSpecification extends Properties("Test") {
 
@@ -35,6 +36,21 @@ object TestSpecification extends Properties("Test") {
   } yield n/0
 
   val genException = forAll(undefinedInt)((n: Int) => true)
+
+  property("workers") = forAll { prms: Test.Params =>
+    val threads = ListBuffer.fill(prms.workers)(false)
+    
+    val cb = new Test.TestCallback {
+      override def onPropEval(n: String, threadIdx: Int, s: Int, d: Int) = {
+        threads(threadIdx) = true
+      }
+    }
+
+    Test.check(prms.copy(testCallback = cb), passing).status match {
+      case Passed => threads.forall(t => t)
+      case _ => false
+    }
+  }
 
   property("size") = forAll { prms: Test.Params =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
