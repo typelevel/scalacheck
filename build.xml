@@ -24,11 +24,11 @@
     <dependency
       groupId="org.scala-lang"
       artifactId="scala-compiler"
-      version="2.9.0.RC1"/>
+      version="2.9.0.RC2"/>
     <dependency
       groupId="org.scala-lang"
       artifactId="scala-library"
-      version="2.9.0.RC1"/>
+      version="2.9.0.RC2"/>
     <remoteRepository refid="scala-tools.repo-releases" />
     <remoteRepository refid="scala-tools.repo-snapshots" />
   </artifact:dependencies>
