@@ -242,7 +242,7 @@ object Test {
 
   /** Default testing parameters
    *  @deprecated Use <code>Test.Params()</code> instead */
-  @deprecated("Use Test.Params() instead")
+  @deprecated("Use Test.Params() instead", "1.8")
   val defaultParams = Params()
 
   /** Property evaluation callback. Takes number of passed and

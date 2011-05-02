@@ -152,7 +152,7 @@ sealed trait Gen[+T] {
    *  and the given generator generates the same result, or both
    *  generators generate no result.
    *  @deprecated Use <code>==</code> instead */
-  @deprecated("Use == instead")
+  @deprecated("Use == instead", "1.7")
   def ===[U](g: Gen[U]): Prop = this == g
 
   /** Returns a new property that holds if and only if both this
@@ -223,7 +223,7 @@ object Gen {
 
   /* Default generator parameters
    *  @deprecated Use <code>Gen.Params()</code> instead */
-  @deprecated("Use Gen.Params() instead")
+  @deprecated("Use Gen.Params() instead", "1.8")
   val defaultParams = Params()
 
   /* Generator factory method */
@@ -313,13 +313,13 @@ object Gen {
   /** Chooses one of the given values, with a weighted random distribution.
    *  @deprecated Use <code>frequency</code> with constant generators
    *  instead. */
-  @deprecated("Use 'frequency' with constant generators instead.")
+  @deprecated("Use 'frequency' with constant generators instead.", "1.6")
   def elementsFreq[T](vs: (Int, T)*): Gen[T] =
     frequency(vs.map { case (w,v) => (w, value(v)) } : _*)
 
   /** A generator that returns a random element from a list
    *  @deprecated Use <code>oneOf</code> with constant generators instead. */
-  @deprecated("Use 'oneOf' with constant generators instead.")
+  @deprecated("Use 'oneOf' with constant generators instead.", "1.6")
   def elements[T](xs: T*): Gen[T] = if(xs.isEmpty) fail else for {
     i <- choose(0,xs.length-1)
   } yield xs(i)
@@ -371,7 +371,7 @@ object Gen {
   /** Generates a list of the given length. This method is equal to calling
    *  <code>containerOfN[List,T](n,g)</code>.
    *  @deprecated Use the method <code>listOfN</code> instead. */
-  @deprecated("Use 'listOfN' instead.")
+  @deprecated("Use 'listOfN' instead.", "1.6")
   def vectorOf[T](n: Int, g: Gen[T]) = containerOfN[List,T](n,g)
 
   /** A generator that picks a random number of elements from a list */
@@ -440,12 +440,12 @@ object Gen {
 
   /* Generates positive integers
    * @deprecated Use <code>posNum[Int]code> instead */
-  @deprecated("Use posNum[Int] instead")
+  @deprecated("Use posNum[Int] instead", "1.7")
   def posInt: Gen[Int] = sized(max => choose(1, max))
 
   /* Generates negative integers
    * @deprecated Use <code>negNum[Int]code> instead */
-  @deprecated("Use negNum[Int] instead")
+  @deprecated("Use negNum[Int] instead", "1.7")
   def negInt: Gen[Int] = sized(max => choose(-max, -1))
 
   /** Generates positive numbers of uniform distribution, with an

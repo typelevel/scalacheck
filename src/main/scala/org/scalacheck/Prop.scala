@@ -93,7 +93,7 @@ trait Prop {
    *  proved, and the other one passed, then the resulting property
    *  will fail. 
    *  @deprecated Use <code>==</code> instead */
-  @deprecated("Use == instead.")
+  @deprecated("Use == instead.", "1.7")
   def ===(p: Prop): Prop = this == p
 
   override def toString = "Prop"
@@ -328,7 +328,7 @@ object Prop {
   /** Implication 
    *  @deprecated Use the implication operator of the Prop class instead
    */
-  @deprecated("Use the implication operator of the Prop class instead")
+  @deprecated("Use the implication operator of the Prop class instead", "1.7")
   def ==>(b: => Boolean, p: => Prop): Prop = (b: Prop) ==> p
 
   /** Implication with several conditions */
