@@ -40,19 +40,34 @@ trait Prop {
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
   def check: Unit = check(Test.Params())
-
-  /** Convenience method that makes it possible to use a this property
-   *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = 
+  
+  /** The logic for main, separated out to make it easier to
+   *  avoid System.exit calls.  Returns exit code.
+   */
+  def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
       case Success(params, _) => 
-        if(Test.check(params, this).passed) System.exit(0)
-        else System.exit(1)
+        if (Test.check(params, this).passed) 0
+        else 1
       case e: NoSuccess =>
         println("Incorrect options:"+"\n"+e+"\n")
         Test.cmdLineParser.printHelp
-        System.exit(-1)
+        -1
     }
+  }
+  
+  /** Whether main should call System.exit with an exit code.
+   *  Defaults to true; override to change.
+   */
+  def mainCallsExit = true
+
+  /** Convenience method that makes it possible to use this property
+   *  as an application that checks itself on execution */
+  def main(args: Array[String]): Unit = {
+    val code = mainRunner(args)
+    if (mainCallsExit)
+      System exit code
+  }
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
