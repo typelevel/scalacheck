@@ -16,7 +16,7 @@ class ScalaCheckProject(info: ProjectInfo) extends DefaultProject(info) {
   val scalaToolsSnapshots = "Scala Tools Snapshots" at
     "http://nexus.scala-tools.org/content/repositories/snapshots/"
 
-  val publishTo = scalaToolsSnapshots
+  val publishTo = scalaToolsReleases
 
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
