@@ -38,16 +38,16 @@ object TestSpecification extends Properties("Test") {
   val genException = forAll(undefinedInt)((n: Int) => true)
 
   property("workers") = forAll { prms: Test.Params =>
-    val threads = ListBuffer.fill(prms.workers)(false)
+    var res = true
     
     val cb = new Test.TestCallback {
       override def onPropEval(n: String, threadIdx: Int, s: Int, d: Int) = {
-        threads(threadIdx) = true
+        res = res && threadIdx >= 0 && threadIdx <= (prms.workers-1)
       }
     }
 
     Test.check(prms.copy(testCallback = cb), passing).status match {
-      case Passed => threads.forall(t => t)
+      case Passed => res
       case _ => false
     }
   }
