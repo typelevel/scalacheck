@@ -57,7 +57,7 @@
     classpathref="scala.classpath"/>
 
   <property name="name"    value="${ant.project.name}"/>
-  <property name="version" value="1.9-SNAPSHOT"/>
+  <property name="version" value="1.10-SNAPSHOT"/>
   <property name="author"  value="Rickard Nilsson"/>
 
   <target name="prepare">
