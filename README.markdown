@@ -2,7 +2,7 @@ ScalaCheck is a library written in the Scala Programming Language and is used fo
 
 * [The source code for ScalaCheck is hosted on GitHub](http://github.com/rickynils/scalacheck)
 
-* [Documentation and downloads are on Google Code](http://code.google.com/p/scalacheck/)
+* [Bug reports, documentation and downloads are on Google Code](http://code.google.com/p/scalacheck/)
 
 * [Snapshots and Releases published to the repository on scala-tools.org](http://scala-tools.org/repo-releases/org/scalacheck/scalacheck/)
 
