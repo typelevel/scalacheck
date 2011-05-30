@@ -117,6 +117,10 @@ object GenSpecification extends Properties("Gen") {
     s.forall(_.isLetterOrDigit)
   }
 
+  // BigDecimal generation is tricky; just ensure that the generator gives
+  // its constructor valid values.
+  property("BigDecimal") = forAll { _: BigDecimal => true }
+
   property("resultOf1") = forAll(resultOf((m: Int) => 0))(_ == 0)
 
   property("resultOf2") = {

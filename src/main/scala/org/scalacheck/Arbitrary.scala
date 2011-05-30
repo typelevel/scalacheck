@@ -177,9 +177,10 @@ object Arbitrary {
     import java.math.MathContext._
     val mcGen = oneOf(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128)
     val bdGen = for {
-      mc <- mcGen
-      scale <- arbInt.arbitrary
       x <- arbBigInt.arbitrary
+      mc <- mcGen
+      val limit = if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0)
+      scale <- Gen.chooseNum(Int.MinValue + limit , Int.MaxValue)
     } yield BigDecimal(x, scale, mc)
     Arbitrary(bdGen)
   }
