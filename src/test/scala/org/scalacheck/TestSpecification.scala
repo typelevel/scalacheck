@@ -52,6 +52,14 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
+  property("minSuccessfulTests") = forAll { prms: Test.Params =>
+    val r = Test.check(prms, passing)
+    r.status match {
+      case Passed => r.succeeded >= prms.minSuccessfulTests
+      case _ => false
+    }
+  }
+
   property("size") = forAll { prms: Test.Params =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
     Test.check(prms, p).status match {

@@ -207,7 +207,7 @@ object Arbitrary {
   /** Arbitrary instance of test params */
   implicit lazy val arbTestParams: Arbitrary[Test.Params] =
     Arbitrary(for {
-      minSuccTests <- choose(10,150)
+      minSuccTests <- choose(5,150)
       maxDiscTests <- choose(100,500)
       minSize <- choose(0,500)
       sizeDiff <- choose(0,500)

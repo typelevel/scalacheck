@@ -162,7 +162,7 @@ object Test {
     if(workers > 1)
       assert(!p.isInstanceOf[Commands], "Commands cannot be checked multi-threaded")
 
-    val iterations = minSuccessfulTests / workers
+    val iterations = minSuccessfulTests / (workers: Float)
     val sizeStep = (maxSize-minSize) / (minSuccessfulTests: Float)
     var stop = false
 
