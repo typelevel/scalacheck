@@ -1,8 +1,8 @@
 ScalaCheck is a library written in the Scala Programming Language and is used for automated specification-based testing of Scala or Java software applications. ScalaCheck was originally inspired by the Haskell library [QuickCheck](http://hackage.haskell.org/package/QuickCheck), but has also ventured into its own. 
 
-* [The source code for ScalaCheck is hosted on GitHub](http://github.com/rickynils/scalacheck)
+* [The source code and issue handling for ScalaCheck is hosted on GitHub](http://github.com/rickynils/scalacheck)
 
-* [Bug reports, documentation and downloads are on Google Code](http://code.google.com/p/scalacheck/)
+* [Documentation and downloads are on Google Code](http://code.google.com/p/scalacheck/)
 
 * [Snapshots and Releases published to the repository on scala-tools.org](http://scala-tools.org/repo-releases/org/scalacheck/scalacheck/)
 
