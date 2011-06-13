@@ -37,31 +37,6 @@ object ConsoleReporter {
    *  the given verbosity */
   def apply(verbosity: Int = 0) = new ConsoleReporter(verbosity)
 
-  @deprecated("(v1.8)", "1.8")
-  def propReport(s: Int, d: Int) = {
-    if(d == 0) printf("\rPassed %s tests\r", s)
-    else printf("\rPassed %s tests; %s discarded\r", s, d)
-    Console.flush
-  }
-
-  @deprecated("(v1.8)", "1.8")
-  def propReport(pName: String, s: Int, d: Int) = {
-    if(d == 0) printf("\r  %s: Passed %s tests\r", pName, s)
-    else printf("\r  %s: Passed %s tests; %s discarded\r", pName, s, d)
-    Console.flush
-  }
-
-  @deprecated("(v1.8)", "1.8")
-  def testReport(res: Test.Result) = {
-    print(List.fill(78)(' ').mkString)
-    val s = (if(res.passed) "+ " else "! ") + pretty(res, Params(0))
-    printf("\r%s\n", format(s, "", "", 75))
-    res
-  }
-
-  @deprecated("(v1.8)", "1.8")
-  def testStatsEx(res: Test.Result): Unit = testStatsEx("", res)
-
   def testStatsEx(msg: String, res: Test.Result) = {
     lazy val m = if(msg.length == 0) "" else msg + ": "
     res.status match {

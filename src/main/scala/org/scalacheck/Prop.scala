@@ -102,15 +102,6 @@ trait Prop {
     }
   }
 
-  /** Returns a new property that holds if and only if both this
-   *  and the given property generates a result with the exact
-   *  same status. Note that this means that if one of the properties is
-   *  proved, and the other one passed, then the resulting property
-   *  will fail. 
-   *  @deprecated Use <code>==</code> instead */
-  @deprecated("Use == instead.", "1.7")
-  def ===(p: Prop): Prop = this == p
-
   override def toString = "Prop"
 
   /** Put a label on the property to make test reports clearer */
@@ -339,12 +330,6 @@ object Prop {
   def sizedProp(f: Int => Prop): Prop = Prop { prms => 
     provedToTrue(f(prms.genPrms.size)(prms))
   }
-
-  /** Implication 
-   *  @deprecated Use the implication operator of the Prop class instead
-   */
-  @deprecated("Use the implication operator of the Prop class instead", "1.7")
-  def ==>(b: => Boolean, p: => Prop): Prop = (b: Prop) ==> p
 
   /** Implication with several conditions */
   def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
