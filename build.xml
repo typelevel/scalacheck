@@ -24,11 +24,11 @@
     <dependency
       groupId="org.scala-lang"
       artifactId="scala-compiler"
-      version="2.9.0"/>
+      version="2.9.0-1"/>
     <dependency
       groupId="org.scala-lang"
       artifactId="scala-library"
-      version="2.9.0"/>
+      version="2.9.0-1"/>
     <remoteRepository refid="scala-tools.repo-releases" />
     <remoteRepository refid="scala-tools.repo-snapshots" />
   </artifact:dependencies>
@@ -108,9 +108,7 @@
     <scaladoc
       srcdir="src/main/scala"
       destdir="target/doc/main/api"
-      windowtitle="${name} ${version}"
       doctitle="${name} ${version}"
-      addparams="-linksource"
       classpathref="scalacheck.classpath">
       <include name="**/*.scala"/>
     </scaladoc>
