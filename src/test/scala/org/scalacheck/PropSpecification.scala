@@ -13,6 +13,7 @@ import Prop._
 import Gen.{value, fail, frequency, oneOf}
 import Arbitrary._
 import Shrink._
+import java.util.concurrent.atomic.AtomicBoolean
 
 object PropSpecification extends Properties("Prop") {
 
@@ -125,4 +126,21 @@ object PropSpecification extends Properties("Prop") {
 
   property("throws") = ((1/0) throws classOf[ArithmeticException])
 
+  property("Prop.within success") = forAll(oneOf(proved, passed)){ g =>
+    within(20, 10, g)
+  }
+  
+  property("Prop.within success timeout") = forAll(oneOf(proved, passed)){ g =>
+    within(10, 2, g.map(result => {
+      Thread.sleep(20)
+      result
+    })) == falsified
+  }
+  
+  property("Prop.within failure") = within(20, 2, falsified) == falsified
+  
+  property("Prop.within success after initial failure") = within(20, 2, {
+    val onceOnly = new AtomicBoolean(false)
+    if (onceOnly.getAndSet(true)) falsified else passed
+  })
 }
