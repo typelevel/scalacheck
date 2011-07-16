@@ -744,7 +744,7 @@ object Prop {
   ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 
   /** Ensures that the property expression passed in completes within the given space of time. */
-  def within(maximumMs: Long = 1000, waitTimeMs: Long = 20, wrappedProp: => Prop): Prop = new Prop {
+  def within(maximumMs: Long)(wrappedProp: => Prop): Prop = new Prop {
     def attempt(prms: Params, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {

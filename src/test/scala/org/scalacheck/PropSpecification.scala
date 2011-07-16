@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import Prop._
-import Gen.{value, fail, frequency, oneOf}
+import Gen.{value, fail, frequency, oneOf, choose}
 import Arbitrary._
 import Shrink._
 import java.util.concurrent.atomic.AtomicBoolean
@@ -19,15 +19,15 @@ object PropSpecification extends Properties("Prop") {
 
   property("Prop.==> undecided") = forAll { p1: Prop =>
     val g = oneOf(falsified,undecided)
-    forAll(g) { p2 => 
-      val p3 = (p2 ==> p1) 
+    forAll(g) { p2 =>
+      val p3 = (p2 ==> p1)
       p3 == undecided || (p3 == exception && p1 == exception)
     }
   }
 
   property("Prop.==> true") = forAll { p1: Prop =>
     val g = oneOf(passed,proved)
-    forAll(g) { p2 => 
+    forAll(g) { p2 =>
       val p = p2 ==> p1
       (p == p1) || (p2 == passed && p1 == proved && p == passed)
     }
@@ -102,11 +102,11 @@ object PropSpecification extends Properties("Prop") {
     forAll(g)(p => (p ++ falsified) == falsified)
   }
 
-  property("undecided") = forAll { prms: Params => 
+  property("undecided") = forAll { prms: Params =>
     undecided(prms).status == Undecided
   }
 
-  property("falsified") = forAll { prms: Params => 
+  property("falsified") = forAll { prms: Params =>
     falsified(prms).status == False
   }
 
@@ -120,27 +120,20 @@ object PropSpecification extends Properties("Prop") {
 
   property("all") = forAll(Gen.listOf1(value(proved)))(l => all(l:_*))
 
-  property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l => 
+  property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l =>
     atLeastOne(l:_*)
   }
 
   property("throws") = ((1/0) throws classOf[ArithmeticException])
 
-  property("Prop.within success") = forAll(oneOf(proved, passed)){ g =>
-    within(20, 10, g)
+  property("within") = forAll(
+    oneOf(0, 20, 40), oneOf(10, 30, 50)
+  ) { (timeout: Int, sleep: Int) =>
+    val q = within(timeout)(passed.map(r => {
+      Thread.sleep(sleep)
+      r
+    }))
+
+    if(sleep > timeout) q == falsified else q == passed
   }
-  
-  property("Prop.within success timeout") = forAll(oneOf(proved, passed)){ g =>
-    within(10, 2, g.map(result => {
-      Thread.sleep(20)
-      result
-    })) == falsified
-  }
-  
-  property("Prop.within failure") = within(20, 2, falsified) == falsified
-  
-  property("Prop.within success after initial failure") = within(20, 2, {
-    val onceOnly = new AtomicBoolean(false)
-    if (onceOnly.getAndSet(true)) falsified else passed
-  })
 }
