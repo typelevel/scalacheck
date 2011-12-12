@@ -134,7 +134,7 @@ object PropSpecification extends Properties("Prop") {
         r
       }))
 
-      if(sleep > timeout) q == falsified else q == passed
+      if(sleep > 0.9*timeout) q == falsified else q == passed
     }
   }
 }

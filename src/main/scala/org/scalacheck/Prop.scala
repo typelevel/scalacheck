@@ -11,6 +11,7 @@ package org.scalacheck
 
 import util.{FreqMap,Buildable}
 import scala.collection._
+import scala.annotation.tailrec
 
 /** A property is a generator that generates a property result */
 trait Prop {
@@ -745,7 +746,7 @@ object Prop {
 
   /** Ensures that the property expression passed in completes within the given space of time. */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = new Prop {
-    def attempt(prms: Params, endTime: Long): Result = {
+    @tailrec private def attempt(prms: Params, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
         (if (result.failure) result else Result(False)).label("Timeout")
