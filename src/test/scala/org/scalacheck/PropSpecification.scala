@@ -126,15 +126,16 @@ object PropSpecification extends Properties("Prop") {
 
   property("throws") = ((1/0) throws classOf[ArithmeticException])
 
-  property("within") = forAll(oneOf(0, 100)) { timeout: Int => 
-    val sleep = 50
+  property("within") = forAll(oneOf(10, 100), oneOf(10, 100)) { (timeout: Int, sleep: Int) => 
     (timeout >= 0 && sleep >= 0) ==> {
       val q = within(timeout)(passed.map(r => {
         Thread.sleep(sleep)
         r
       }))
 
-      if(sleep > 0.9*timeout) q == falsified else q == passed
+      if(sleep < 0.9*timeout) q == passed
+      else if (sleep < 1.1*timeout) passed
+      else q == falsified
     }
   }
 }
