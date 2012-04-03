@@ -6,7 +6,7 @@ organization := "org.scala-tools.testing"
 
 scalaVersion := "2.9.1"
 
-crossScalaVersions := Seq("2.9.0-1", "2.9.1", "2.9.2-RC1")
+crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.2-RC1", "2.9.2-RC2")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
 
