@@ -25,9 +25,10 @@ object PropSpecification extends Properties("Prop") {
     }
   }
 
-  property("Prop.==> true") = forAll { p1: Prop =>
-    val g = oneOf(passed,proved)
-    forAll(g) { p2 =>
+  property("Prop.==> true") = {
+    val g1 = oneOf(proved,falsified,undecided,exception)
+    val g2 = oneOf(passed,proved)
+    forAll(g1, g2) { case (p1,p2) =>
       val p = p2 ==> p1
       (p == p1) || (p2 == passed && p1 == proved && p == passed)
     }
@@ -44,14 +45,16 @@ object PropSpecification extends Properties("Prop") {
     (n > 0) ==> positiveDomain(n)
   }
 
-  property("Prop.&& Commutativity") = forAll { (p1: Prop, p2: Prop) =>
-    (p1 && p2) == (p2 && p1)
+  property("Prop.&& Commutativity") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { p: Prop =>
     (p && exception) == exception
   }
-  property("Prop.&& Identity") = forAll { p: Prop =>
-    (p && proved) == p
+  property("Prop.&& Identity") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g)(p => (p && proved) == p)
   }
   property("Prop.&& False") = forAll { p: Prop =>
     val q = p && falsified
@@ -66,14 +69,16 @@ object PropSpecification extends Properties("Prop") {
     p(prms).labels.contains("RHS")
   }
 
-  property("Prop.|| Commutativity") = forAll { (p1: Prop, p2: Prop) =>
-    (p1 || p2) == (p2 || p1)
+  property("Prop.|| Commutativity") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
   }
   property("Prop.|| Exception") = forAll { p: Prop =>
     (p || exception) == exception
   }
-  property("Prop.|| Identity") = forAll { p: Prop =>
-    (p || falsified) == p
+  property("Prop.|| Identity") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g)(p => (p || falsified) == p)
   }
   property("Prop.|| True") = {
     val g = oneOf(proved,falsified,undecided)
@@ -84,8 +89,9 @@ object PropSpecification extends Properties("Prop") {
     forAll(g)(p => (p || undecided) == undecided)
   }
 
-  property("Prop.++ Commutativity") = forAll { (p1: Prop, p2: Prop) =>
-    (p1 ++ p2) == (p2 ++ p1)
+  property("Prop.++ Commutativity") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
   }
   property("Prop.++ Exception") = forAll { p: Prop =>
     (p ++ exception) == exception
@@ -94,8 +100,9 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(falsified,proved,exception)
     forAll(g)(p => (p ++ proved) == p)
   }
-  property("Prop.++ Identity 2") = forAll { p: Prop =>
-    (p ++ undecided) == p
+  property("Prop.++ Identity 2") = {
+    val g = oneOf(proved,falsified,undecided,exception)
+    forAll(g)(p => (p ++ undecided) == p)
   }
   property("Prop.++ False") = {
     val g = oneOf(falsified,proved,undecided)

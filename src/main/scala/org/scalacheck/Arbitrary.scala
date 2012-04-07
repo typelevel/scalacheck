@@ -197,13 +197,19 @@ object Arbitrary {
   }
 
   /** Generates an arbitrary property */
-  implicit lazy val arbProp: Arbitrary[Prop] =
+  implicit lazy val arbProp: Arbitrary[Prop] = {
+    import Prop._
+    val undecidedOrPassed = forAll { b: Boolean =>
+      b ==> true
+    }
     Arbitrary(frequency(
-      (5, Prop.proved),
-      (4, Prop.falsified),
-      (2, Prop.undecided),
-      (1, Prop.exception(null))
+      (5, proved),
+      (4, falsified),
+      (3, undecidedOrPassed),
+      (2, undecided),
+      (1, exception(null))
     ))
+  }
 
   /** Arbitrary instance of test params */
   implicit lazy val arbTestParams: Arbitrary[Test.Params] =
