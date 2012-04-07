@@ -52,11 +52,25 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  property("minSuccessfulTests") = forAll { prms: Test.Params =>
-    val r = Test.check(prms, passing)
+  property("minSuccessfulTests") = forAll { (prms: Test.Params, p: Prop) =>
+    val r = Test.check(prms, p)
     r.status match {
       case Passed => r.succeeded >= prms.minSuccessfulTests
-      case _ => false
+      case Exhausted => r.succeeded + r.discarded >= prms.minSuccessfulTests
+      case _ => true
+    }
+  }
+
+  property("maxDiscardRatio") = forAll { (prms: Test.Params, p: Prop) =>
+    val r = Test.check(prms, p)
+    r.status match {
+      case Passed => r.succeeded*prms.maxDiscardRatio >= r.discarded
+      case Exhausted => 
+        r.succeeded + r.discarded >= prms.minSuccessfulTests &&
+        r.succeeded*prms.maxDiscardRatio < r.discarded
+      case _ => 
+        r.succeeded + r.discarded < prms.minSuccessfulTests ||
+        r.succeeded*prms.maxDiscardRatio >= r.discarded
     }
   }
 

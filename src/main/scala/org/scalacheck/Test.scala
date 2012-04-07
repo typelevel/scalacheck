@@ -19,7 +19,7 @@ object Test {
   /** Test parameters */
   case class Params(
     minSuccessfulTests: Int = 100,
-    maxDiscardedTests: Int = 500,
+    maxDiscardRatio: Float = 5,
     minSize: Int = 0,
     maxSize: Int = Gen.Params().size,
     rng: java.util.Random = Gen.Params().rng,
@@ -90,7 +90,7 @@ object Test {
     import prms._
     if(
       minSuccessfulTests <= 0 ||
-      maxDiscardedTests < 0 ||
+      maxDiscardRatio <= 0 ||
       minSize < 0 ||
       maxSize < minSize ||
       workers <= 0
@@ -106,12 +106,13 @@ object Test {
       val names = Set("minSuccessfulTests", "s")
       val help = "Number of tests that must succeed in order to pass a property"
     }
-    object OptMaxDiscarded extends IntOpt {
-      val default = Test.Params().maxDiscardedTests
-      val names = Set("maxDiscardedTests", "d")
+    object OptMaxDiscardRatio extends FloatOpt {
+      val default = Test.Params().maxDiscardRatio
+      val names = Set("maxDiscardRatio", "r")
       val help =
-        "Number of tests that can be discarded before ScalaCheck stops " +
-        "testing a property"
+        "The maximum ratio between discarded and succeeded tests " +
+        "allowed before ScalaCheck stops testing a property. At " +
+        "least minSuccessfulTests will always be tested, though."
     }
     object OptMinSize extends IntOpt {
       val default = Test.Params().minSize
@@ -135,14 +136,14 @@ object Test {
     }
 
     val opts = Set[Opt[_]](
-      OptMinSuccess, OptMaxDiscarded, OptMinSize,
+      OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
       OptMaxSize, OptWorkers, OptVerbosity
     )
 
     def parseParams(args: Array[String]) = parseArgs(args) {
       optMap => Test.Params(
         optMap(OptMinSuccess),
-        optMap(OptMaxDiscarded),
+        optMap(OptMaxDiscardRatio),
         optMap(OptMinSize),
         optMap(OptMaxSize),
         Test.Params().rng,
@@ -167,8 +168,8 @@ object Test {
     var stop = false
 
     def worker(workerdIdx: Int) = future {
-      var n = 0
-      var d = 0
+      var n = 0  // passed tests
+      var d = 0  // discarded tests
       var size = minSize + (workerdIdx*sizeStep*iterations)
       var res: Result = null
       var fm = FreqMap.empty[immutable.Set[Any]]
@@ -185,7 +186,8 @@ object Test {
               case Prop.Undecided =>
                 d += 1
                 testCallback.onPropEval("", workerdIdx, n, d)
-                if(d >= maxDiscardedTests) res = Result(Exhausted, n, d, fm)
+                if( n+d >= minSuccessfulTests && maxDiscardRatio*n < d)
+                  res = Result(Exhausted, n, d, fm)
               case Prop.True =>
                 n += 1
                 testCallback.onPropEval("", workerdIdx, n, d)
@@ -207,8 +209,10 @@ object Test {
 
     def mergeResults(r1: () => Result, r2: () => Result) = r1() match {
       case Result(Passed, s1, d1, fm1, t) => r2() match {
-        case Result(Passed, s2, d2, fm2, t) if d1+d2 >= maxDiscardedTests =>
-          () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, t)
+        case Result(Passed, s2, d2, fm2, t) if 
+          s1+s2+d1+d2 >= minSuccessfulTests &&
+          maxDiscardRatio*(s1+s2) < (d1+d2) =>
+            () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, t)
         case Result(st, s2, d2, fm2, t) =>
           () => Result(st, s1+s2, d1+d2, fm1++fm2, t)
       }
