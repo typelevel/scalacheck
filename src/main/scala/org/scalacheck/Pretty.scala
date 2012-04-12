@@ -49,6 +49,8 @@ object Pretty {
 
   implicit def prettyAny(t: Any) = Pretty { p => t.toString }
 
+  implicit def prettyString(t: String) = Pretty { p => "\""++t++"\"" }
+
   implicit def prettyList(l: List[Any]) = Pretty { p => 
     l.map("\""+_+"\"").mkString("List(", ", ", ")") 
   }
