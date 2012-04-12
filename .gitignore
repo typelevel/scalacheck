@@ -12,6 +12,6 @@
 
 # /project/
 /project/boot
-
-# /project/build/
+/project/project/
+/project/target/
 /project/build/target
