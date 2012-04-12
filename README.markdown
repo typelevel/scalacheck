@@ -1,52 +1,136 @@
-ScalaCheck is a library written in the Scala Programming Language and is used for automated specification-based testing of Scala or Java software applications. ScalaCheck was originally inspired by the Haskell library [QuickCheck](http://hackage.haskell.org/package/QuickCheck), but has also ventured into its own. 
+# ScalaCheck
 
-* [The source code and issue handling for ScalaCheck is hosted on GitHub](http://github.com/rickynils/scalacheck)
+ScalaCheck is a library written in the Scala Programming Language and is used
+for automated specification-based testing of Scala or Java software
+applications. ScalaCheck was originally inspired by the Haskell library
+[QuickCheck](http://hackage.haskell.org/package/QuickCheck), but has also
+ventured into its own.
 
-* [Documentation and downloads are on Google Code](http://code.google.com/p/scalacheck/)
+ScalaCheck has no dependencies other than the Scala runtime, and is supported
+by [SBT](https://github.com/harrah/xsbt/wiki),
+[ScalaTest](http://www.scalatest.org/) and
+[Specs2](http://etorreborre.github.com/specs2/). You can of course also use
+ScalaCheck completely standalone, with its built-in test runner.
 
-* [Snapshots and Releases published to the repository on scala-tools.org](http://scala-tools.org/repo-releases/org/scalacheck/scalacheck/)
+## Quick start
 
-* [The mailing list is hosted by Google Groups](http://groups.google.com/group/scalacheck)
+Specify some of the methods of `java.util.String` like this:
 
-Build Instructions
-------------------
+    import org.scalacheck.Properties
+    import org.scalacheck.Prop.forAll
 
-The root directory of the project contains the SBT launcher, shell script, and Windows command script.
+    object StringSpecification extends Properties("String") {
+      property("startsWith") = forAll((a: String, b: String) => (a+b).startsWith(a))
 
-This is the directory structure of the build.
+      property("concatenate") = forAll((a: String, b: String) =>
+        (a+b).length > a.length && (a+b).length > b.length
+      )
 
-           |-project  +
-           |          |-build +
-           |          |       |- ScalaCheckProject.scala  Project Definition, containing module structure, compiler
-           |          |       |                           options, cross module dependencies, etc.
-           |          |       |- build.properties         Version of SBT, Scala, and ScalaCheck.
-           |          |                                   A different version of Scala is used to run SBT and compile
-           |          |                                   the Project Definition than is used to compile ScalaCheck.
-           |          |-target                            Compiled Project Definition
-           |          |
-           |          |-boot                              Versions of Scala Compiler and Library.
-           |
-           |-src   +
-           |       |-main +
-           |       |      |-scala                         Source files
-           |       |
-           |       |-test +
-           |              |-scala                         Test source files
-           |
-           |-lib_managed                                  Managed Dependencies for this module.
-           |
-           |-target +
-                    | - <scala version M>                 All built artifacts (classes, jars, scaladoc) for module N
-                                                          built for version M of Scala.
+      property("substring") = forAll((a: String, b: String, c: String) =>
+        (a+b+c).substring(a.length, a.length+b.length) == b
+      )
+    }
 
-1. ./sbt update (this step is required after a fresh checkout, after changing the version of
-                     SBT, Scala, or other dependencies)
-2. ./sbt [compile | package | test-compile | test | publish-local | publish]
+Then compile and run the tests like this:
 
-For continuous compilation of a module:
+    $ scalac -cp scalacheck.jar StringSpecification.scala
 
-    $ ./sbt
-    > project scalacheck
-    > ~compile
+    $ scala -cp .:scalacheck.jar StringSpecification
+    + String.startsWith: OK, passed 100 tests.
+    ! String.concat: Falsified after 0 passed tests.
+    > ARG_0: ""
+    > ARG_1: ""
+    + String.substring: OK, passed 100 tests.
 
-For other options, read [the SBT documentation](http://code.google.com/p/simple-build-tool/wiki/DocumentationHome).
+As we can see, the second property was not quite right. ScalaCheck discovers
+this and presents the arguments that make the property fail, two empty strings.
+The other two properties both pass 100 test rounds, each with a randomized set
+of input parameters.
+
+## Documentation
+
+* [User guide](https://github.com/rickynils/scalacheck/wiki/User-Guide)
+* [API documentation](http://scalacheck.googlecode.com/svn/artifacts/1.9/doc/api/index.html)
+* [Mailing list](http://groups.google.com/group/scalacheck)
+
+## Download
+
+The current release of ScalaCheck is 1.9, and it is available in the Sonatype
+OSS repository. There should be builds available for all 2.9.x versions of
+Scala. If you lack some build, please submit an issue. ScalaCheck 1.9 is
+unfortunately not compatible with Scala 2.8.x. If you need to use ScalaCheck
+with an old version of Scala, please check out the [previous
+releases](http://code.google.com/p/scalacheck/downloads/list).
+
+Notice, ScalaCheck was previously published under the repository group id (or
+organization) `org.scala-tools.testing`, but this has been changed to
+`org.scalacheck`. Please make sure to update your dependencies. The current
+ScalaCheck release might still be available under the old id, but new builds
+will only be published under the new id.
+
+If you are using SBT, add the following to your build file to make ScalaCheck available in your project:
+
+    resolvers ++= Seq(
+      "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
+      "releases"  at "http://oss.sonatype.org/content/repositories/releases"
+    )
+
+    libraryDependencies ++= Seq(
+      "org.scalacheck" %% "scalacheck" % "1.9" % "test"
+    )
+
+If you are using Maven, the following will do the trick:
+
+    <dependency>
+      <groupId>org.scalacheck</groupId>
+      <artifactId>scalacheck_2.9.1</artifactId>
+      <version>1.9</version>
+      <scope>test</scope>
+    </dependency>
+
+    <repository>
+      <id>oss.sonatype.org</id>
+      <name>releases</name>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
+
+    <repository>
+      <id>oss.sonatype.org</id>
+      <name>snapshots</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+
+    <repository>
+      <id>central</id>
+      <name>Maven repository</name>
+      <url>http://repo1.maven.org/maven2</url>
+    </repository>
+
+    <repository>
+      <id>ObjectWeb</id>
+      <name>ObjectWeb repository</name>
+      <url>http://maven.ow2.org/maven2</url>
+    </repository>
+
+## Bugs and feature requests
+
+Please feel free to submit any bugs you find or feature requests you have in
+the [issue tracker](https://github.com/rickynils/scalacheck/issues) here at
+GitHub. Pull requests are of course also welcome!
+
+## Build instructions
+
+ScalaCheck uses SBT for building, and the root directory contains an SBT
+launcher which makes building very easy. Just clone the git repository and
+build ScalaCheck in the following way:
+
+    ./sbt update
+    ./sbt compile
+
+Run the test suite like this:
+
+    ./sbt test
+
+The tests for ScalaCheck is of course written in ScalaCheck. SBT even handles
+bootstrapping, so the newly built ScalaCheck will be used to run the tests on
+itself.
