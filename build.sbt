@@ -8,9 +8,9 @@ licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-licen
 
 homepage := Some(url("http://www.scalacheck.org"))
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.2-RC1", "2.9.2-RC2", "2.9.2-RC3")
+crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.2")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
 
