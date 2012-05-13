@@ -186,7 +186,7 @@ object Test {
               case Prop.Undecided =>
                 d += 1
                 testCallback.onPropEval("", workerdIdx, n, d)
-                if( n+d >= minSuccessfulTests && maxDiscardRatio*n < d)
+                if ((n > minSuccessfulTests || d > minSuccessfulTests) && maxDiscardRatio*n < d)
                   res = Result(Exhausted, n, d, fm)
               case Prop.True =>
                 n += 1
@@ -194,29 +194,37 @@ object Test {
               case Prop.Proof =>
                 n += 1
                 res = Result(Proved(propRes.args), n, d, fm)
-              case Prop.False => res =
-                Result(Failed(propRes.args, propRes.labels), n, d, fm)
-              case Prop.Exception(e) => res =
-                Result(PropException(propRes.args, e, propRes.labels), n, d, fm)
+                stop = true
+              case Prop.False =>
+                res = Result(Failed(propRes.args, propRes.labels), n, d, fm)
+                stop = true
+              case Prop.Exception(e) =>
+                res = Result(PropException(propRes.args, e, propRes.labels), n, d, fm)
+                stop = true
             }
         }
         size += sizeStep
       }
-      if(res != null) stop = true
-      else res = Result(Passed, n, d, fm)
-      res
+      if (res == null) {
+        if (maxDiscardRatio*n > d) Result(Passed, n, d, fm)
+        else Result(Exhausted, n, d, fm)
+      } else res
     }
 
-    def mergeResults(r1: () => Result, r2: () => Result) = r1() match {
-      case Result(Passed, s1, d1, fm1, t) => r2() match {
-        case Result(Passed, s2, d2, fm2, t) if 
-          s1+s2+d1+d2 >= minSuccessfulTests &&
-          maxDiscardRatio*(s1+s2) < (d1+d2) =>
-            () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, t)
-        case Result(st, s2, d2, fm2, t) =>
-          () => Result(st, s1+s2, d1+d2, fm1++fm2, t)
+    def mergeResults(r1: () => Result, r2: () => Result) = {
+      val Result(st1, s1, d1, fm1, _) = r1()
+      val Result(st2, s2, d2, fm2, _) = r2()
+      if (st1 != Passed && st1 != Exhausted)
+        () => Result(st1, s1+s2, d1+d2, fm1++fm2, 0)
+      else if (st2 != Passed && st2 != Exhausted)
+        () => Result(st2, s1+s2, d1+d2, fm1++fm2, 0)
+      else {
+        //if (s1+s2+d1+d2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) < (d1+d2))
+        if (s1+s2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) > (d1+d2))
+          () => Result(Passed, s1+s2, d1+d2, fm1++fm2, 0)
+        else
+          () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, 0)
       }
-      case r => () => r
     }
 
     val start = System.currentTimeMillis
