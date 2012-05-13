@@ -117,7 +117,12 @@ trait Commands extends Prop {
   private def runCommands(cmds: Cmds): Prop = cmds match {
     case Cmds(Nil, _) => proved
     case Cmds(c::cs, s::ss) =>
-      c.postCondition(s,c.nextState(s),c.run_(s)) && runCommands(Cmds(cs,ss))
+      val nextStateResult = c.nextState(s)
+      val runResult = c.run_(s)
+      ("Original state = " + s) |:
+      ("nextStateResult = " + nextStateResult) |:
+      ("runResult = " + runResult) |:
+      c.postCondition(s,nextStateResult,runResult) && runCommands(Cmds(cs,ss))
     case _ => sys.error("Should not be here")
   }
 
