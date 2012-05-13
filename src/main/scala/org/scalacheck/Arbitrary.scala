@@ -179,7 +179,7 @@ object Arbitrary {
     val bdGen = for {
       x <- arbBigInt.arbitrary
       mc <- mcGen
-      val limit = if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0)
+      limit <- value(if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0))
       scale <- Gen.chooseNum(Int.MinValue + limit , Int.MaxValue)
     } yield BigDecimal(x, scale, mc)
     Arbitrary(bdGen)

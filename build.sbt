@@ -10,9 +10,16 @@ homepage := Some(url("http://www.scalacheck.org"))
 
 scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.2")
+crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2", "2.10.0-M1", "2.10.0-M2", "2.10.0-M3")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
+
+libraryDependencies <++= (scalaVersion){sVer =>
+  sVer match {
+    case "2.10.0-M3" => Seq("org.scala-lang" % "scala-actors" % sVer)
+    case _ => Seq()
+  }
+}
 
 javacOptions ++= Seq("-Xmx1024M")
 
