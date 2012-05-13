@@ -193,7 +193,7 @@ object Prop {
       case (_,Undecided) => r
 
       case (_,Proof) => merge(this, r, this.status)
-      case (Proof,_) => merge(this, r, this.status)
+      case (Proof,_) => merge(this, r, r.status)
 
       case (True,True) => merge(this, r, True)
     }
