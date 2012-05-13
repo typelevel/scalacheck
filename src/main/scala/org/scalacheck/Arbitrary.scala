@@ -203,8 +203,9 @@ object Arbitrary {
       b ==> true
     }
     Arbitrary(frequency(
-      (5, proved),
       (4, falsified),
+      (4, passed),
+      (3, proved),
       (3, undecidedOrPassed),
       (2, undecided),
       (1, exception(null))

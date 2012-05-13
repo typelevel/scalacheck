@@ -329,6 +329,9 @@ object Prop {
 
   /** A property that depends on the generator size */
   def sizedProp(f: Int => Prop): Prop = Prop { prms => 
+    // provedToTrue since if the property is proved for
+    // one size, it shouldn't be regarded as proved for
+    // all sizes.
     provedToTrue(f(prms.genPrms.size)(prms))
   }
 
