@@ -78,10 +78,7 @@ object TestSpecification extends Properties("Test") {
 
   property("size") = forAll { prms: Test.Params =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
-    Test.check(prms, p).status match {
-      case Passed => true
-      case _ => false
-    }
+    Test.check(prms, p).status == Passed
   }
 
   property("propFailing") = forAll { prms: Test.Params =>
@@ -92,10 +89,7 @@ object TestSpecification extends Properties("Test") {
   }
 
   property("propPassing") = forAll { prms: Test.Params =>
-    Test.check(prms, passing).status match {
-      case Passed => true
-      case _ => false
-    }
+    Test.check(prms, passing).status == Passed
   }
 
   property("propProved") = forAll { prms: Test.Params =>
@@ -106,10 +100,7 @@ object TestSpecification extends Properties("Test") {
   }
 
   property("propExhausted") = forAll { prms: Test.Params =>
-    Test.check(prms, exhausted).status match {
-      case Exhausted => true
-      case _ => false
-    }
+    Test.check(prms, exhausted).status == Exhausted
   }
 
   property("propPropException") = forAll { prms: Test.Params =>
