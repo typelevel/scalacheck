@@ -163,18 +163,18 @@ object Test {
     if(workers > 1)
       assert(!p.isInstanceOf[Commands], "Commands cannot be checked multi-threaded")
 
-    val iterations = minSuccessfulTests / (workers: Float)
-    val sizeStep = (maxSize-minSize) / (minSuccessfulTests: Float)
+    val iterations = math.ceil(minSuccessfulTests / (workers: Double))
+    val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
 
-    def worker(workerdIdx: Int) = future {
+    def worker(workerIdx: Int) = future {
       var n = 0  // passed tests
       var d = 0  // discarded tests
-      var size = minSize + (workerdIdx*sizeStep*iterations)
       var res: Result = null
       var fm = FreqMap.empty[immutable.Set[Any]]
       while(!stop && res == null && n < iterations) {
-        val propPrms = Prop.Params(Gen.Params(size.round, prms.rng), fm)
+        val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
+        val propPrms = Prop.Params(Gen.Params(size.round.toInt, prms.rng), fm)
         secure(p(propPrms)) match {
           case Right(e) => res =
             Result(GenException(e), n, d, FreqMap.empty[immutable.Set[Any]])
@@ -185,12 +185,16 @@ object Test {
             propRes.status match {
               case Prop.Undecided =>
                 d += 1
-                testCallback.onPropEval("", workerdIdx, n, d)
-                if ((n > minSuccessfulTests || d > minSuccessfulTests) && maxDiscardRatio*n < d)
+                testCallback.onPropEval("", workerIdx, n, d)
+                // The below condition is kind of hacky. We have to have
+                // some margin, otherwise workers will stop testing too
+                // early because they have been exhausted, but the overall
+                // test has not.
+                if (n+d >= minSuccessfulTests && workers*maxDiscardRatio*n < d)
                   res = Result(Exhausted, n, d, fm)
               case Prop.True =>
                 n += 1
-                testCallback.onPropEval("", workerdIdx, n, d)
+                testCallback.onPropEval("", workerIdx, n, d)
               case Prop.Proof =>
                 n += 1
                 res = Result(Proved(propRes.args), n, d, fm)
@@ -203,7 +207,6 @@ object Test {
                 stop = true
             }
         }
-        size += sizeStep
       }
       if (res == null) {
         if (maxDiscardRatio*n > d) Result(Passed, n, d, fm)

@@ -55,26 +55,24 @@ object TestSpecification extends Properties("Test") {
   property("minSuccessfulTests") = forAll { (prms: Test.Params, p: Prop) =>
     val r = Test.check(prms, p)
     r.status match {
-      case Passed => "Passed "+r.succeeded+" "+r.discarded |:
+      case Passed => r.status+", s="+r.succeeded+", d="+r.discarded |:
         r.succeeded >= prms.minSuccessfulTests
-      case Exhausted => "Exhausted "+r.succeeded+" "+r.discarded |:
+      case Exhausted => r.status+", s="+r.succeeded+", d="+r.discarded |:
         r.succeeded + r.discarded >= prms.minSuccessfulTests
-      case _ => r.status.toString+" "+r.succeeded+" "+r.discarded |:
-        true
+      case _ => r.status+", s="+r.succeeded+", d="+r.discarded |:
+        r.succeeded < prms.minSuccessfulTests
     }
   }
 
   property("maxDiscardRatio") = forAll { (prms: Test.Params, p: Prop) =>
     val r = Test.check(prms, p)
     r.status match {
-      case Passed => "Passed "+r.succeeded+" "+r.discarded |:
-        r.succeeded*prms.maxDiscardRatio >= r.discarded
-      case Exhausted => "Exhausted "+r.succeeded+" "+r.discarded |:
-        r.succeeded + r.discarded >= prms.minSuccessfulTests &&
-        r.succeeded*prms.maxDiscardRatio < r.discarded
-      case _ => r.status.toString+" "+r.succeeded+" "+r.discarded |:
-        r.succeeded + r.discarded < prms.minSuccessfulTests ||
-        r.succeeded*prms.maxDiscardRatio >= r.discarded
+      case Passed => r.status+", s="+r.succeeded+", d="+r.discarded |:
+        r.discarded <= prms.maxDiscardRatio*r.succeeded
+      case Exhausted => r.status+", s="+r.succeeded+", d="+r.discarded |:
+        r.discarded > prms.maxDiscardRatio*r.succeeded
+      case _ => r.status+", s="+r.succeeded+", d="+r.discarded |:
+        true
     }
   }
 
