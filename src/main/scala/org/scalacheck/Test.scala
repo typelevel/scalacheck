@@ -19,12 +19,17 @@ object Test {
   /** Test parameters */
   case class Params(
     minSuccessfulTests: Int = 100,
-    maxDiscardRatio: Float = 5,
+
+    /** @deprecated Use maxDiscardRatio instead. */
+    @deprecated("Use maxDiscardRatio instead.", "1.10")
+    maxDiscardedTests: Int = -1,
+
     minSize: Int = 0,
     maxSize: Int = Gen.Params().size,
     rng: java.util.Random = Gen.Params().rng,
     workers: Int = 1,
-    testCallback: TestCallback = new TestCallback {}
+    testCallback: TestCallback = new TestCallback {},
+    maxDiscardRatio: Float = 5
   )
 
   /** Test statistics */
@@ -142,20 +147,28 @@ object Test {
 
     def parseParams(args: Array[String]) = parseArgs(args) {
       optMap => Test.Params(
-        optMap(OptMinSuccess),
-        optMap(OptMaxDiscardRatio),
-        optMap(OptMinSize),
-        optMap(OptMaxSize),
-        Test.Params().rng,
-        optMap(OptWorkers),
-        ConsoleReporter(optMap(OptVerbosity))
+        minSuccessfulTests = optMap(OptMinSuccess),
+        maxDiscardRatio = optMap(OptMaxDiscardRatio),
+        minSize = optMap(OptMinSize),
+        maxSize = optMap(OptMaxSize),
+        rng = Test.Params().rng,
+        workers = optMap(OptWorkers),
+        testCallback = ConsoleReporter(optMap(OptVerbosity))
       )
     }
   }
 
   /** Tests a property with the given testing parameters, and returns
    *  the test results. */
-  def check(prms: Params, p: Prop): Result = {
+  def check(params: Params, p: Prop): Result = {
+
+    // maxDiscardedTests is deprecated, but if someone
+    // uses it let it override maxDiscardRatio
+    val mdr = 
+      if(params.maxDiscardedTests < 0) params.maxDiscardRatio
+      else (params.maxDiscardedTests: Float)/(params.minSuccessfulTests: Float)
+    val prms = params.copy( maxDiscardRatio = mdr)
+
     import prms._
     import actors.Futures.future
 
@@ -222,8 +235,7 @@ object Test {
       else if (st2 != Passed && st2 != Exhausted)
         () => Result(st2, s1+s2, d1+d2, fm1++fm2, 0)
       else {
-        //if (s1+s2+d1+d2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) < (d1+d2))
-        if (s1+s2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) > (d1+d2))
+        if (s1+s2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) >= (d1+d2))
           () => Result(Passed, s1+s2, d1+d2, fm1++fm2, 0)
         else
           () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, 0)

@@ -215,13 +215,19 @@ object Arbitrary {
   /** Arbitrary instance of test params */
   implicit lazy val arbTestParams: Arbitrary[Test.Params] =
     Arbitrary(for {
-      minSuccTests <- choose(5,150)
-      maxDiscTests <- choose(0.5f,5f)
+      minSuccTests <- choose(10,200)
+      maxDiscardRatio <- choose(0.2f,10f)
       minSize <- choose(0,500)
       sizeDiff <- choose(0,500)
       maxSize <- choose(minSize, minSize + sizeDiff)
       ws <- choose(1,4)
-    } yield Test.Params(minSuccTests,maxDiscTests,minSize,maxSize,workers = ws))
+    } yield Test.Params(
+      minSuccessfulTests = minSuccTests,
+      maxDiscardRatio = maxDiscardRatio,
+      minSize = minSize,
+      maxSize = maxSize,
+      workers = ws
+    ))
 
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Params] =
