@@ -187,10 +187,10 @@ object Test {
                 d += 1
                 testCallback.onPropEval("", workerIdx, n, d)
                 // The below condition is kind of hacky. We have to have
-                // some margin, otherwise workers will stop testing too
+                // some margin, otherwise workers might stop testing too
                 // early because they have been exhausted, but the overall
                 // test has not.
-                if (n+d >= minSuccessfulTests && workers*maxDiscardRatio*n < d)
+                if (n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d)
                   res = Result(Exhausted, n, d, fm)
               case Prop.True =>
                 n += 1
@@ -200,10 +200,10 @@ object Test {
                 res = Result(Proved(propRes.args), n, d, fm)
                 stop = true
               case Prop.False =>
-                res = Result(Failed(propRes.args, propRes.labels), n, d, fm)
+                res = Result(Failed(propRes.args,propRes.labels), n, d, fm)
                 stop = true
               case Prop.Exception(e) =>
-                res = Result(PropException(propRes.args, e, propRes.labels), n, d, fm)
+                res = Result(PropException(propRes.args,e,propRes.labels), n, d, fm)
                 stop = true
             }
         }
