@@ -64,7 +64,6 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  /* Temporarily disabled
   property("maxDiscardRatio") = forAll { (prms: Test.Params, p: Prop) =>
     val r = Test.check(prms, p)
     r.status match {
@@ -76,7 +75,6 @@ object TestSpecification extends Properties("Test") {
         true
     }
   }
-  */
 
   property("size") = forAll { prms: Test.Params =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
