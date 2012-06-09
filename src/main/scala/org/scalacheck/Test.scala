@@ -29,7 +29,8 @@ object Test {
     rng: java.util.Random = Gen.Params().rng,
     workers: Int = 1,
     testCallback: TestCallback = new TestCallback {},
-    maxDiscardRatio: Float = 5
+    maxDiscardRatio: Float = 5,
+    customClassLoader: Option[ClassLoader] = None
   )
 
   /** Test statistics */
@@ -181,6 +182,7 @@ object Test {
     var stop = false
 
     def worker(workerIdx: Int) = future {
+      params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
       var n = 0  // passed tests
       var d = 0  // discarded tests
       var res: Result = null
