@@ -28,10 +28,10 @@ class ScalaCheckFramework extends Framework {
   val name = "ScalaCheck"
 
   val tests = Array[Fingerprint](PropsFingerprint, PropsFingerprint)
- 
+
   def testRunner(loader: ClassLoader,  loggers: Array[Logger]) = new Runner2 {
 
-    private def asEvent(nr: (String, Test.Result)) = nr match { 
+    private def asEvent(nr: (String, Test.Result)) = nr match {
       case (n: String, r: Test.Result) => new Event {
         val testName = n
         val description = n
@@ -68,7 +68,7 @@ class ScalaCheckFramework extends Framework {
 
       import Test.cmdLineParser.{Success, NoSuccess}
       val prms = Test.cmdLineParser.parseParams(args) match {
-        case Success(params, _) => 
+        case Success(params, _) =>
           params.copy(_testCallback = testCallback, _customClassLoader = Some(loader))
         // TODO: Maybe handle this a bit better than throwing exception?
         case e: NoSuccess => throw new Exception(e.toString)

@@ -39,7 +39,7 @@ object TestSpecification extends Properties("Test") {
 
   property("workers") = forAll { prms: Test.Parameters =>
     var res = true
-    
+
     val cb = new Test.TestCallback {
       override def onPropEval(n: String, threadIdx: Int, s: Int, d: Int) = {
         res = res && threadIdx >= 0 && threadIdx <= (prms.workers-1)
@@ -78,7 +78,7 @@ object TestSpecification extends Properties("Test") {
 
   // Verify that maxDiscardedTests (which is deprecated) overrides
   // maxDiscardRatio
-  property("maxDiscardedTests") = 
+  property("maxDiscardedTests") =
     forAll(arbitrary[Test.Params], arbitrary[Prop], choose(1,1000)) {
       case (prms, p, maxDiscardedTests) => (maxDiscardedTests > 0) ==> {
         val maxDiscardRatio = (maxDiscardedTests: Float)/prms.minSuccessfulTests

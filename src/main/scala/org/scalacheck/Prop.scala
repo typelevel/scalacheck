@@ -30,8 +30,8 @@ trait Prop {
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. If you need to get the results 
-   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  and reports the result on the console. If you need to get the results
+   *  from the test use the <code>check</code> methods in <code>Test</code>
    *  instead.
    *  @deprecated (in 1.10.0) Use <code>check(Test.Parameters)</code> instead.
    */
@@ -41,8 +41,8 @@ trait Prop {
   )
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. If you need to get the results 
-   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  and reports the result on the console. If you need to get the results
+   *  from the test use the <code>check</code> methods in <code>Test</code>
    *  instead. */
   def check(prms: Test.Parameters): Unit = Test.check(
     prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
@@ -52,13 +52,13 @@ trait Prop {
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
   def check: Unit = check(Test.Parameters.default)
-  
+
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.
    */
   def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) => 
+      case Success(params, _) =>
         if (Test.check(params, this).passed) 0
         else 1
       case e: NoSuccess =>
@@ -67,7 +67,7 @@ trait Prop {
         -1
     }
   }
-  
+
   /** Whether main should call System.exit with an exit code.
    *  Defaults to true; override to change.
    */
@@ -108,7 +108,7 @@ trait Prop {
    *  same status. Note that this means that if one of the properties is
    *  proved, and the other one passed, then the resulting property
    *  will fail. */
-  def ==(p: Prop) = this.flatMap { r1 => 
+  def ==(p: Prop) = this.flatMap { r1 =>
     p.map { r2 =>
       Result.merge(r1, r2, if(r1.status == r2.status) True else False)
     }
@@ -329,7 +329,7 @@ object Prop {
   /** A property that denotes an exception */
   lazy val exception: Prop = exception(null)
 
-  def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop = 
+  def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop =
     if(x == y) proved else falsified :| {
       val exp = Pretty.pretty[T](y, Pretty.Params(0))
       val act = Pretty.pretty[T](x, Pretty.Params(0))
@@ -339,7 +339,7 @@ object Prop {
   def =?[T](x: T, y: T)(implicit pp: T => Pretty): Prop = ?=(y, x)
 
   /** A property that depends on the generator size */
-  def sizedProp(f: Int => Prop): Prop = Prop { prms => 
+  def sizedProp(f: Int => Prop): Prop = Prop { prms =>
     // provedToTrue since if the property is proved for
     // one size, it shouldn't be regarded as proved for
     // all sizes.
@@ -404,15 +404,15 @@ object Prop {
     try { p: Prop } catch { case e => exception(e) }
 
   /** Existential quantifier for an explicit generator. */
-  def exists[A,P](f: A => P)(implicit 
-    pv: P => Prop, 
+  def exists[A,P](f: A => P)(implicit
+    pv: P => Prop,
     pp: A => Pretty,
     aa: Arbitrary[A]
   ): Prop = exists(aa.arbitrary)(f)
 
   /** Existential quantifier for an explicit generator. */
-  def exists[A,P](g: Gen[A])(f: A => P)(implicit 
-    pv: P => Prop, 
+  def exists[A,P](g: Gen[A])(f: A => P)(implicit
+    pv: P => Prop,
     pp: A => Pretty
   ): Prop = Prop { prms =>
     g(prms.genPrms) match {
@@ -432,8 +432,8 @@ object Prop {
    *  test cases. */
   def forAllNoShrink[T1,P](
     g1: Gen[T1])(
-    f: T1 => P)(implicit 
-    pv: P => Prop, 
+    f: T1 => P)(implicit
+    pv: P => Prop,
     pp1: T1 => Pretty
   ): Prop = Prop { prms =>
     g1(prms.genPrms) match {
@@ -537,7 +537,7 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
-  def forAllShrink[T <% Pretty, P <% Prop](g: Gen[T], 
+  def forAllShrink[T <% Pretty, P <% Prop](g: Gen[T],
     shrink: T => Stream[T])(f: T => P
   ): Prop = Prop { prms =>
 
@@ -577,8 +577,8 @@ object Prop {
    *  with the default shrink function for the type */
   def forAll[T1,P](
     g1: Gen[T1])(
-    f: T1 => P)(implicit 
-    p: P => Prop, 
+    f: T1 => P)(implicit
+    p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
   ): Prop = forAllShrink(g1, shrink[T1])(f)

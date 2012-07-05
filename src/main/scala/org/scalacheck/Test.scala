@@ -98,7 +98,7 @@ object Test {
     val default: Parameters = new Default {}
   }
 
-  /** Test parameters 
+  /** Test parameters
    *  @deprecated (in 1.10.0) Use <code>Test.Parameters</code> instead.
    */
   @deprecated("Use 'Test.Parameters' instead", "1.10.0")
@@ -122,7 +122,7 @@ object Test {
 
     // maxDiscardedTests is deprecated, but if someone
     // uses it let it override maxDiscardRatio
-    val maxDiscardRatio = 
+    val maxDiscardRatio =
       if(params.maxDiscardedTests < 0) Parameters.default.maxDiscardRatio
       else (params.maxDiscardedTests: Float)/(params.minSuccessfulTests: Float)
 
@@ -167,7 +167,7 @@ object Test {
 
   trait TestCallback { self =>
     /** Called each time a property is evaluated */
-    def onPropEval(name: String, threadIdx: Int, succeeded: Int, 
+    def onPropEval(name: String, threadIdx: Int, succeeded: Int,
       discarded: Int): Unit = ()
 
     /** Called whenever a property has finished testing */
@@ -253,7 +253,7 @@ object Test {
     def parseParams(args: Array[String]) = parseArgs(args) {
       optMap => Parameters.default.copy(
         _minSuccessfulTests = optMap(OptMinSuccess),
-        _maxDiscardRatio = 
+        _maxDiscardRatio =
           if (optMap(OptMaxDiscarded) < 0) optMap(OptMaxDiscardRatio)
           else optMap(OptMaxDiscarded).toFloat / optMap(OptMinSuccess),
         _minSize = optMap(OptMinSize),
@@ -373,9 +373,9 @@ object Test {
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] =
     ps.properties.map { case (name,p) =>
       val testCallback = new TestCallback {
-        override def onPropEval(n: String, t: Int, s: Int, d: Int) = 
+        override def onPropEval(n: String, t: Int, s: Int, d: Int) =
           prms.testCallback.onPropEval(name,t,s,d)
-        override def onTestResult(n: String, r: Result) = 
+        override def onTestResult(n: String, r: Result) =
           prms.testCallback.onTestResult(name,r)
       }
       val res = check(prms copy (_testCallback = testCallback), p)

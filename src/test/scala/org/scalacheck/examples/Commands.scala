@@ -54,7 +54,7 @@ object CommandsExamples extends Properties("CommandsExamples") {
         case (s0,s1,r) => r == s1.n
       }
     }
-     
+
     case object Dec extends Command {
       def nextState(s: State) = s.copy(s.n - 1)
       def run(s: State) = sut.dec
@@ -62,7 +62,7 @@ object CommandsExamples extends Properties("CommandsExamples") {
         case (s0,s1,r) => r == s1.n
       }
     }
-     
+
     case object Get extends Command {
       def nextState(s: State) = s
       def run(s: State) = sut.get

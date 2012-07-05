@@ -41,16 +41,16 @@ class Properties(val name: String) extends Prop {
   def apply(p: Prop.Params) = oneProperty(p)
 
   /** Convenience method that checks the properties with the given parameters
-   *  and reports the result on the console. If you need to get the results 
-   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  and reports the result on the console. If you need to get the results
+   *  from the test use the <code>check</code> methods in <code>Test</code>
    *  instead. */
   override def check(prms: Test.Parameters): Unit = Test.checkProperties(
     prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
   )
 
   /** Convenience method that checks the properties with the given parameters
-   *  and reports the result on the console. If you need to get the results 
-   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  and reports the result on the console. If you need to get the results
+   *  from the test use the <code>check</code> methods in <code>Test</code>
    *  instead.
    *  @deprecated (in 1.10.0) Use <code>check(Test.Parameters)</code> instead.
    */
@@ -69,7 +69,7 @@ class Properties(val name: String) extends Prop {
    */
   override def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) => 
+      case Success(params, _) =>
         val res = Test.checkProperties(params, this)
         val failed = res.filter(!_._2.passed).size
         failed
@@ -81,7 +81,7 @@ class Properties(val name: String) extends Prop {
   }
 
   /** Adds all properties from another property collection to this one. */
-  def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p 
+  def include(ps: Properties) = for((n,p) <- ps.properties) property(n) = p
 
   /** Used for specifying properties. Usage:
    *  <code>property("myProp") = ...</code> */

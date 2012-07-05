@@ -72,13 +72,13 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("listOf") = sizedProp { sz =>
-    forAll(listOf(arbitrary[Int])) { l => 
+    forAll(listOf(arbitrary[Int])) { l =>
       l.length >= 0 && l.length <= sz
     }
   }
 
   property("listOf1") = sizedProp { sz =>
-    forAll(listOf1(arbitrary[Int])) { l => 
+    forAll(listOf1(arbitrary[Int])) { l =>
       l.length > 0 && l.length <= math.max(1,sz)
     }
   }
@@ -100,11 +100,11 @@ object GenSpecification extends Properties("Gen") {
 
   property("numChar") = forAll(numChar)(_.isDigit)
 
-  property("alphaUpperChar") = forAll(alphaUpperChar) { c => 
+  property("alphaUpperChar") = forAll(alphaUpperChar) { c =>
     c.isLetter && c.isUpper
   }
 
-  property("alphaLowerChar") = forAll(alphaLowerChar) { c => 
+  property("alphaLowerChar") = forAll(alphaLowerChar) { c =>
     c.isLetter && c.isLower
   }
 

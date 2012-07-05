@@ -73,14 +73,14 @@ object Arbitrary {
   def arbitrary[T](implicit a: Arbitrary[T]): Gen[T] = a.arbitrary
 
   /**** Arbitrary instances for each AnyVal ****/
-  
+
   /** Arbitrary AnyVal */
   implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
     arbitrary[Unit], arbitrary[Boolean], arbitrary[Char], arbitrary[Byte],
     arbitrary[Short], arbitrary[Int], arbitrary[Long], arbitrary[Float],
     arbitrary[Double]
   ))
- 
+
   /** Arbitrary instance of Boolean */
   implicit lazy val arbBool: Arbitrary[Boolean] =
     Arbitrary(oneOf(true, false))
@@ -130,16 +130,16 @@ object Arbitrary {
   implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(
     Gen.chooseNum(Short.MinValue, Short.MaxValue)
   )
-  
+
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
   implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(value(()))
-  
+
   /**** Arbitrary instances of other common types ****/
 
   /** Arbitrary instance of String */
   implicit lazy val arbString: Arbitrary[String] =
     Arbitrary(arbitrary[List[Char]] map (_.mkString))
-  
+
   /** Arbitrary instance of Date */
   implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(for {
     l <- arbitrary[Long]
@@ -171,7 +171,7 @@ object Arbitrary {
       )
     )
   }
-  
+
   /** Arbitrary BigDecimal */
   implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
     import java.math.MathContext._
@@ -184,16 +184,16 @@ object Arbitrary {
     } yield BigDecimal(x, scale, mc)
     Arbitrary(bdGen)
   }
-  
+
   /** Arbitrary java.lang.Number */
   implicit lazy val arbNumber: Arbitrary[Number] = {
     val gen = Gen.oneOf(
-      arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long], 
+      arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long],
       arbitrary[Float], arbitrary[Double]
     )
     Arbitrary(gen map (_.asInstanceOf[Number]))
     // XXX TODO - restore BigInt and BigDecimal
-    // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))    
+    // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))
   }
 
   /** Generates an arbitrary property */
