@@ -44,6 +44,17 @@ class Properties(val name: String) extends Prop {
    *  and reports the result on the console. If you need to get the results 
    *  from the test use the <code>check</code> methods in <code>Test</code> 
    *  instead. */
+  override def check(prms: Test.Parameters): Unit = Test.checkProperties(
+    prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
+  )
+
+  /** Convenience method that checks the properties with the given parameters
+   *  and reports the result on the console. If you need to get the results 
+   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  instead.
+   *  @deprecated (in 1.10.0) Use <code>check(Test.Parameters)</code> instead.
+   */
+  @deprecated("Use 'check(Test.Parameters)' instead", "1.10.0")
   override def check(prms: Test.Params): Unit = Test.checkProperties(
     prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
   )
@@ -51,7 +62,7 @@ class Properties(val name: String) extends Prop {
   /** Convenience method that checks the properties and reports the
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
-  override def check: Unit = check(Test.Params())
+  override def check: Unit = check(Test.Parameters.default)
 
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.

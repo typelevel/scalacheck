@@ -32,15 +32,26 @@ trait Prop {
   /** Convenience method that checks this property with the given parameters
    *  and reports the result on the console. If you need to get the results 
    *  from the test use the <code>check</code> methods in <code>Test</code> 
-   *  instead. */
+   *  instead.
+   *  @deprecated (in 1.10.0) Use <code>check(Test.Parameters)</code> instead.
+   */
+  @deprecated("Use 'check(Test.Parameters)' instead", "1.10.0")
   def check(prms: Test.Params): Unit = Test.check(
     prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
+  )
+
+  /** Convenience method that checks this property with the given parameters
+   *  and reports the result on the console. If you need to get the results 
+   *  from the test use the <code>check</code> methods in <code>Test</code> 
+   *  instead. */
+  def check(prms: Test.Parameters): Unit = Test.check(
+    prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
   )
 
   /** Convenience method that checks this property and reports the
    *  result on the console. If you need to get the results from the test use
    *  the <code>check</code> methods in <code>Test</code> instead. */
-  def check: Unit = check(Test.Params())
+  def check: Unit = check(Test.Parameters.default)
   
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.

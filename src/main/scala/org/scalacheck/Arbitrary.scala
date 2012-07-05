@@ -212,22 +212,42 @@ object Arbitrary {
     ))
   }
 
-  /** Arbitrary instance of test params */
+  /** Arbitrary instance of test params
+   *  @deprecated (in 1.10.0) Use <code>arbTestParameters</code> instead.
+   */
+  @deprecated("Use 'arbTestParameters' instead", "1.10.0")
   implicit lazy val arbTestParams: Arbitrary[Test.Params] =
     Arbitrary(for {
       minSuccTests <- choose(10,200)
-      maxDiscardRatio <- choose(0.2f,10f)
-      minSize <- choose(0,500)
+      maxDiscTests <- choose(100,500)
+      mnSize <- choose(0,500)
       sizeDiff <- choose(0,500)
-      maxSize <- choose(minSize, minSize + sizeDiff)
+      mxSize <- choose(mnSize, mnSize + sizeDiff)
       ws <- choose(1,4)
     } yield Test.Params(
       minSuccessfulTests = minSuccTests,
-      maxDiscardRatio = maxDiscardRatio,
-      minSize = minSize,
-      maxSize = maxSize,
+      maxDiscardedTests = maxDiscTests,
+      minSize = mnSize,
+      maxSize = mxSize,
       workers = ws
     ))
+
+  /** Arbitrary instance of test parameters */
+  implicit lazy val arbTestParameters: Arbitrary[Test.Parameters] =
+    Arbitrary(for {
+      _minSuccTests <- choose(10,200)
+      _maxDiscardRatio <- choose(0.2f,10f)
+      _minSize <- choose(0,500)
+      sizeDiff <- choose(0,500)
+      _maxSize <- choose(_minSize, _minSize + sizeDiff)
+      _workers <- choose(1,4)
+    } yield new Test.Parameters.Default {
+      override val minSuccessfulTests = _minSuccTests
+      override val maxDiscardRatio = _maxDiscardRatio
+      override val minSize = _minSize
+      override val maxSize = _maxSize
+      override val workers = _workers
+    })
 
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Params] =
