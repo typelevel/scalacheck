@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 
 name := "scalacheck"
 
-version := "1.10.0-b1"
+version := "1.10.0-SNAPSHOT"
 
 organization := "org.scalacheck"
 
