@@ -50,14 +50,13 @@ of input parameters.
 ## Documentation
 
 * [User guide](https://github.com/rickynils/scalacheck/wiki/User-Guide)
-* [API documentation](http://scalacheck.googlecode.com/svn/artifacts/1.9/doc/api/index.html)
 * [Mailing list](http://groups.google.com/group/scalacheck)
 
 ## Download
 
-The current release of ScalaCheck is 1.9, and it is available in the Sonatype
+The current release of ScalaCheck is 1.10.0, and it is available in the Sonatype
 OSS repository. There should be builds available for all 2.9.x versions of
-Scala. If you lack some build, please submit an issue. ScalaCheck 1.9 is
+Scala. If you lack some build, please submit an issue. ScalaCheck 1.10.0 is
 unfortunately not compatible with Scala 2.8.x. If you need to use ScalaCheck
 with an old version of Scala, please check out the [previous
 releases](http://code.google.com/p/scalacheck/downloads/list).
@@ -68,7 +67,8 @@ organization) `org.scala-tools.testing`, but this has been changed to
 ScalaCheck release might still be available under the old id, but new builds
 will only be published under the new id.
 
-If you are using SBT, add the following to your build file to make ScalaCheck available in your project:
+If you are using SBT, add the following to your build file to make ScalaCheck
+available in your project:
 
     resolvers ++= Seq(
       "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
@@ -76,41 +76,33 @@ If you are using SBT, add the following to your build file to make ScalaCheck av
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.9" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
     )
 
-If you are using Maven, the following will do the trick:
+If you are using Maven, the following will do the trick (example for Scala 2.9.2):
+
+    <repositories>
+      <repository>
+        <id>oss.sonatype.org</id>
+        <name>releases</name>
+        <url>http://oss.sonatype.org/content/repositories/releases</url>
+      </repository>
+      <repository>
+        <id>oss.sonatype.org</id>
+        <name>snapshots</name>
+        <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      </repository>
+    </repositories>
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.9.1</artifactId>
-      <version>1.9</version>
-      <scope>test</scope>
+      <artifactId>scalacheck_2.9.2</artifactId>
+      <version>1.10.0</version>
     </dependency>
 
-    <repository>
-      <id>oss.sonatype.org</id>
-      <name>releases</name>
-      <url>http://oss.sonatype.org/content/repositories/releases</url>
-    </repository>
-
-    <repository>
-      <id>oss.sonatype.org</id>
-      <name>snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
-
-    <repository>
-      <id>central</id>
-      <name>Maven repository</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </repository>
-
-    <repository>
-      <id>ObjectWeb</id>
-      <name>ObjectWeb repository</name>
-      <url>http://maven.ow2.org/maven2</url>
-    </repository>
+You can also download the artifacts manually at
+[SonaType](https://oss.sonatype.org/index.html#nexus-search;quick~scalacheck).
+There you can also find source and scaladoc packages.
 
 ## Bugs and feature requests
 
