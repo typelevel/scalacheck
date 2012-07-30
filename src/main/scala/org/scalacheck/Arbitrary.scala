@@ -181,7 +181,13 @@ object Arbitrary {
       mc <- mcGen
       limit <- value(if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0))
       scale <- Gen.chooseNum(Int.MinValue + limit , Int.MaxValue)
-    } yield BigDecimal(x, scale, mc)
+    } yield {
+      try {
+        BigDecimal(x, scale, mc)
+      } catch {
+        case ae: java.lang.ArithmeticException => BigDecimal(x, scale, UNLIMITED) // Handle the case where scale/precision conflict
+      }
+    }
     Arbitrary(bdGen)
   }
 
