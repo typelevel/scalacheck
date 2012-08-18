@@ -76,8 +76,8 @@ If you are using SBT, add the following to your build file to make ScalaCheck
 available in your project:
 
     resolvers ++= Seq(
-      "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-      "releases"  at "http://oss.sonatype.org/content/repositories/releases"
+      "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
+      "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases"
     )
 
     libraryDependencies ++= Seq(
