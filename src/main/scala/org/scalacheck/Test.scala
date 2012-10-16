@@ -288,8 +288,14 @@ object Test {
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
 
-    def worker(workerIdx: Int) = actors.Futures.future {
-      params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
+    def worker(workerIdx: Int) =
+      if (workers < 2) () => workerFun(workerIdx) 
+      else actors.Futures.future {
+        params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
+        workerFun(workerIdx)
+      }
+
+    def workerFun(workerIdx: Int) = {
       var n = 0  // passed tests
       var d = 0  // discarded tests
       var res: Result = null
