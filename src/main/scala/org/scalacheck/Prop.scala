@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import util.{FreqMap,Buildable}
+import util.FreqMap
 import scala.collection._
 import scala.annotation.tailrec
 

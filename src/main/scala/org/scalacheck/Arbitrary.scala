@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import util.{FreqMap,Buildable}
+import util.{FreqMap,Buildable,Buildable2}
 
 sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
@@ -59,7 +59,7 @@ sealed abstract class Arbitrary[T] {
 object Arbitrary {
 
   import Gen.{value, choose, sized, listOf, listOf1,
-    frequency, oneOf, containerOf, resize}
+    frequency, oneOf, containerOf, container2Of, resize}
   import util.StdRand
   import scala.collection.{immutable, mutable}
   import java.util.Date
@@ -284,28 +284,29 @@ object Arbitrary {
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
-  /** Arbitrary instance of immutable map */
-  implicit def arbImmutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
-  ): Arbitrary[immutable.Map[T,U]] = Arbitrary(
-    for(seq <- arbitrary[Stream[(T,U)]]) yield immutable.Map(seq: _*)
-  )
-
-  /** Arbitrary instance of mutable map */
-  implicit def arbMutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
-  ): Arbitrary[mutable.Map[T,U]] = Arbitrary(
-    for(seq <- arbitrary[Stream[(T,U)]]) yield mutable.Map(seq: _*)
-  )
-
   /** Arbitrary instance of any buildable container (such as lists, arrays,
    *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
   implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[T,C]
   ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
+  /** Arbitrary instance of any buildable container2 (such as maps, etc).
+   *  The maximum size of the container depends on the size
+   *  generation parameter. */
+  implicit def arbContainer2[C[_,_],T,U](implicit a: Arbitrary[(T,U)], b: Buildable2[T,U,C]
+  ): Arbitrary[C[T,U]] = Arbitrary(container2Of[C,T,U](arbitrary[(T,U)]))
+
+  /** Arbitrary instance of immutable map */
+  implicit def arbImmutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
+  ): Arbitrary[immutable.Map[T,U]] = arbContainer2
+
+  /** Arbitrary instance of mutable map */
+  implicit def arbMutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
+  ): Arbitrary[mutable.Map[T,U]] = arbContainer2
+
   /** Arbitrary instance of any array. */
   implicit def arbArray[T](implicit a: Arbitrary[T], c: ClassManifest[T]
-  ): Arbitrary[Array[T]] = Arbitrary(containerOf[Array,T](arbitrary[T]))
-
+  ): Arbitrary[Array[T]] = arbContainer
 
   // Functions //
 
