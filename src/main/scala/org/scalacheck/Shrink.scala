@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import util.Buildable
+import util.{Buildable,Buildable2}
 import scala.collection.{ JavaConversions => jcl }
 
 sealed abstract class Shrink[T] {
@@ -43,37 +43,44 @@ object Shrink {
   implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
     b: Buildable[T,C]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
-
-    def removeChunks(n: Int, xs: Stream[T]): Stream[Stream[T]] =
-      if(xs.isEmpty) empty
-      else if(xs.tail.isEmpty) cons(empty, empty)
-      else {
-        val n1 = n / 2
-        val n2 = n - n1
-        lazy val xs1 = xs.take(n1)
-        lazy val xs2 = xs.drop(n1)
-        lazy val xs3 =
-          for(ys1 <- removeChunks(n1,xs1) if !ys1.isEmpty) yield ys1 append xs2
-        lazy val xs4 =
-          for(ys2 <- removeChunks(n2,xs2) if !ys2.isEmpty) yield xs1 append ys2
-
-        cons(xs1, cons(xs2, interleave(xs3,xs4)))
-      }
-
-    def shrinkOne(zs: Stream[T]): Stream[Stream[T]] =
-      if(zs.isEmpty) empty
-      else {
-        val x = zs.head
-        val xs = zs.tail
-        (for(y <- shrink(x)) yield cons(y,xs)) append
-        (for(ys <- shrinkOne(xs)) yield cons(x,ys))
-      }
-
     val ys = v(xs)
     val zs = ys.toStream
     removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
-
   }
+
+  /** Shrink instance of container2 */
+  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
+    b: Buildable2[T,U,C]
+  ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
+    val ys = v(xs)
+    val zs = ys.toStream
+    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+  }
+
+  private def removeChunks[T](n: Int, xs: Stream[T]): Stream[Stream[T]] =
+    if (xs.isEmpty) empty
+    else if (xs.tail.isEmpty) cons(empty, empty)
+    else {
+      val n1 = n / 2
+      val n2 = n - n1
+      lazy val xs1 = xs.take(n1)
+      lazy val xs2 = xs.drop(n1)
+      lazy val xs3 =
+        for (ys1 <- removeChunks(n1, xs1) if !ys1.isEmpty) yield ys1 append xs2
+      lazy val xs4 =
+        for (ys2 <- removeChunks(n2, xs2) if !ys2.isEmpty) yield xs1 append ys2
+
+      cons(xs1, cons(xs2, interleave(xs3, xs4)))
+    }
+
+  private def shrinkOne[T](zs: Stream[T]): Stream[Stream[T]] =
+    if (zs.isEmpty) empty
+    else {
+      val x = zs.head
+      val xs = zs.tail
+      (for (y <- shrink(x)) yield cons(y, xs)) append
+        (for (ys <- shrinkOne(xs)) yield cons(x, ys))
+    }
 
   /** Shrink instance of integer */
   implicit lazy val shrinkInt: Shrink[Int] = Shrink { n =>

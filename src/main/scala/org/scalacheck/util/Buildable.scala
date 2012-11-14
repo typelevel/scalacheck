@@ -20,31 +20,47 @@ trait Buildable[T,C[_]] {
   }
 }
 
+trait Buildable2[T,U,C[_,_]] {
+  def builder: mutable.Builder[(T,U),C[T,U]]
+  def fromIterable(it: Traversable[(T,U)]): C[T,U] = {
+    val b = builder
+    b ++= it
+    b.result()
+  }
+}
+
 object Buildable {
 
   implicit def buildableList[T] = new Buildable[T,List] {
-    def builder = new mutable.ListBuffer[T]
+    def builder = List.newBuilder
   }
 
   implicit def buildableStream[T] = new Buildable[T,Stream] {
-    def builder = (new mutable.ListBuffer[T]).mapResult(_.toStream)
+    def builder = Stream.newBuilder
   }
 
-  implicit def buildableArray[T](implicit cm: ClassManifest[T]) =
-    new Buildable[T,Array] {
-      def builder = mutable.ArrayBuilder.make[T]
-    }
+  implicit def buildableArray[T: ClassManifest] = new Buildable[T,Array] {
+    def builder = Array.newBuilder
+  }
 
   implicit def buildableMutableSet[T] = new Buildable[T,mutable.Set] {
-    def builder = new mutable.SetBuilder(mutable.Set.empty[T])
+    def builder = mutable.Set.newBuilder
   }
 
   implicit def buildableImmutableSet[T] = new Buildable[T,immutable.Set] {
-    def builder = new mutable.SetBuilder(immutable.Set.empty[T])
+    def builder = immutable.Set.newBuilder
+  }
+
+  implicit def buildableImmutableSortedSet[T: Ordering] = new Buildable[T,immutable.SortedSet] {
+    def builder = immutable.SortedSet.newBuilder
   }
 
   implicit def buildableSet[T] = new Buildable[T,Set] {
-    def builder = new mutable.SetBuilder(Set.empty[T])
+    def builder = Set.newBuilder
+  }
+
+  implicit def buildableSortedSet[T: Ordering] = new Buildable[T,SortedSet] {
+    def builder = SortedSet.newBuilder
   }
 
   import java.util.ArrayList
@@ -58,6 +74,30 @@ object Buildable {
       def clear() = al.clear()
       def result() = al
     }
+  }
+
+}
+
+object Buildable2 {
+  
+  implicit def buildableMutableMap[T,U] = new Buildable2[T,U,mutable.Map] {
+    def builder = mutable.Map.newBuilder
+  }
+
+  implicit def buildableImmutableMap[T,U] = new Buildable2[T,U,immutable.Map] {
+    def builder = immutable.Map.newBuilder
+  }
+
+  implicit def buildableMap[T,U] = new Buildable2[T,U,Map] {
+    def builder = Map.newBuilder
+  }
+
+  implicit def buildableImmutableSortedMap[T: Ordering, U] = new Buildable2[T,U,immutable.SortedMap] {
+    def builder = immutable.SortedMap.newBuilder
+  }
+
+  implicit def buildableSortedMap[T: Ordering, U] = new Buildable2[T,U,SortedMap] {
+    def builder = SortedMap.newBuilder
   }
 
 }
