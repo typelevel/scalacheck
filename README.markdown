@@ -49,6 +49,7 @@ of input parameters.
 
 ## Documentation
 
+* [ScalaDocs](http://rickynils.github.com/scalacheck)
 * [User guide](https://github.com/rickynils/scalacheck/wiki/User-Guide)
 * [Mailing list](http://groups.google.com/group/scalacheck)
 
