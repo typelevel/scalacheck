@@ -15,43 +15,39 @@ sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
 }
 
-/** Defines implicit <code>Arbitrary</code> instances for common types.
+/** Defines implicit [[org.scalacheck.Arbitrary]] instances for common types.
  *  <p>
  *  ScalaCheck
- *  uses implicit <code>Arbitrary</code> instances when creating properties
- *  out of functions with the <code>Prop.property</code> method, and when
- *  the <code>Arbitrary.arbitrary</code> method is used. For example, the
+ *  uses implicit [[org.scalacheck.Arbitrary]] instances when creating properties
+ *  out of functions with the `Prop.property` method, and when
+ *  the `Arbitrary.arbitrary` method is used. For example, the
  *  following code requires that there exists an implicit
- *  <code>Arbitrary[MyClass]</code> instance:
+ *  `Arbitrary[MyClass]` instance:
  *  </p>
  *
- *  <p>
- *  <code>
- *    val myProp = Prop.forAll { myClass: MyClass =&gt;<br />
- *      ...<br />
- *    }<br />
+ *  {{{
+ *    val myProp = Prop.forAll { myClass: MyClass =>
+ *      ...
+ *    }
  *
  *    val myGen = Arbitrary.arbitrary[MyClass]
- *  </code>
- *  </p>
+ *  }}}
  *
  *  <p>
  *  The required implicit definition could look like this:
  *  </p>
  *
- *  <p>
- *  <code>
+ *  {{{
  *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary(...)
- *  </code>
+ *  }}}
+ *
+ *  <p>
+ *  The factory method `Arbitrary(...)` takes a generator of type
+ *  `Gen[T]` and returns an instance of `Arbitrary[T]`.
  *  </p>
  *
  *  <p>
- *  The factory method <code>Arbitrary(...)</code> takes a generator of type
- *  <code>Gen[T]</code> and returns an instance of <code>Arbitrary[T]</code>.
- *  </p>
- *
- *  <p>
- *  The <code>Arbitrary</code> module defines implicit <code>Arbitrary</code>
+ *  The `Arbitrary` module defines implicit [[org.scalacheck.Arbitrary]]
  *  instances for common types, for convenient use in your properties and
  *  generators.
  *  </p>
@@ -219,7 +215,7 @@ object Arbitrary {
   }
 
   /** Arbitrary instance of test params
-   *  @deprecated (in 1.10.0) Use <code>arbTestParameters</code> instead.
+   *  @deprecated (in 1.10.0) Use `arbTestParameters` instead.
    */
   @deprecated("Use 'arbTestParameters' instead", "1.10.0")
   implicit lazy val arbTestParams: Arbitrary[Test.Params] =
