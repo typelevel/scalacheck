@@ -31,9 +31,9 @@ trait Prop {
 
   /** Convenience method that checks this property with the given parameters
    *  and reports the result on the console. If you need to get the results
-   *  from the test use the <code>check</code> methods in <code>Test</code>
+   *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead.
-   *  @deprecated (in 1.10.0) Use <code>check(Test.Parameters)</code> instead.
+   *  @deprecated (in 1.10.0) Use `check(Test.Parameters)` instead.
    */
   @deprecated("Use 'check(Test.Parameters)' instead", "1.10.0")
   def check(prms: Test.Params): Unit = Test.check(
@@ -42,7 +42,7 @@ trait Prop {
 
   /** Convenience method that checks this property with the given parameters
    *  and reports the result on the console. If you need to get the results
-   *  from the test use the <code>check</code> methods in <code>Test</code>
+   *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
   def check(prms: Test.Parameters): Unit = Test.check(
     prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
@@ -50,7 +50,7 @@ trait Prop {
 
   /** Convenience method that checks this property and reports the
    *  result on the console. If you need to get the results from the test use
-   *  the <code>check</code> methods in <code>Test</code> instead. */
+   *  the `check` methods in [[org.scalacheck.Test]] instead. */
   def check: Unit = check(Test.Parameters.default)
 
   /** The logic for main, separated out to make it easier to
@@ -351,7 +351,7 @@ object Prop {
     secure(if(f.isDefinedAt(x)) f(x) else undecided)
 
   /** Property holds only if the given partial function is defined at
-   *  <code>x</code>, and returns a property that holds */
+   *  `x`, and returns a property that holds */
   def iff[T](x: T, f: PartialFunction[T,Prop]): Prop =
     secure(if(f.isDefinedAt(x)) f(x) else falsified)
 
