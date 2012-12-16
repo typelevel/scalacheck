@@ -16,7 +16,7 @@ object Test {
   import Prop.FM
   import util.CmdLineParser
 
-  /** Test parameters used by the <code>Test.check</code> method.
+  /** Test parameters used by the `Test.check` method.
    */
   trait Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
@@ -40,7 +40,7 @@ object Test {
 
     /** The maximum ratio between discarded and passed tests allowed before
      *  ScalaCheck gives up and discards the property. At least
-     *  <code>minSuccesfulTests</code> will always be run, though. */
+     *  `minSuccesfulTests` will always be run, though. */
     def maxDiscardRatio: Float
 
     /** A custom class loader that should be used during test execution. */
@@ -68,17 +68,17 @@ object Test {
     }
   }
 
-  /** Test parameters used by the <code>Test.check</code> method.
+  /** Test parameters used by the `Test.check` method.
    *
-   *  To override default values, extend the <code>Parameters.Default<code>
-   *  trait:
+   *  To override default values, extend the
+   *  [[org.scalacheck.Test.Parameters.Default]] trait:
    *
-   *  <code>
+   *  {{{
    *  val myParams = new Parameters.Default {
    *    override val minSuccesfulTests = 600
    *    override val maxDiscardRatio = 8
    *  }
-   *  </code>
+   *  }}}
    */
   object Parameters {
     /** Default test parameters trait. This can be overriden if you need to
@@ -99,9 +99,9 @@ object Test {
   }
 
   /** Test parameters
-   *  @deprecated (in 1.10.0) Use <code>Test.Parameters</code> instead.
+   *  @deprecated (in 1.10.0) Use [[org.scalacheck.Test.Parameters]] instead.
    */
-  @deprecated("Use 'Test.Parameters' instead", "1.10.0")
+  @deprecated("Use [[org.scalacheck.Test.Parameters]] instead", "1.10.0")
   case class Params(
     minSuccessfulTests: Int = 100,
     maxDiscardedTests: Int = -1,
@@ -267,7 +267,7 @@ object Test {
   /** Tests a property with the given testing parameters, and returns
    *  the test results.
    *  @deprecated (in 1.10.0) Use
-   *  <code>check(Parameters, Properties)</code> instead.
+   *  `check(Parameters, Properties)` instead.
    */
   @deprecated("Use 'checkProperties(Parameters, Properties)' instead", "1.10.0")
   def check(params: Params, p: Prop): Result = {
@@ -369,7 +369,7 @@ object Test {
 
   /** Check a set of properties.
    *  @deprecated (in 1.10.0) Use
-   *  <code>checkProperties(Parameters, Properties)</code> instead.
+   *  `checkProperties(Parameters, Properties)` instead.
    */
   @deprecated("Use 'checkProperties(Parameters, Properties)' instead", "1.10.0")
   def checkProperties(prms: Params, ps: Properties): Seq[(String,Result)] =
