@@ -15,7 +15,6 @@ import Arbitrary._
 import Shrink._
 
 object GenSpecification extends Properties("Gen") {
-
   property("sequence") =
     forAll(listOf(frequency((10,value(arbitrary[Int])),(1,value(fail)))))(l =>
       (someFailing(l) && (sequence[List,Int](l) == fail)) ||
@@ -36,7 +35,7 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-long") = forAll { (l: Long, h: Long) =>
-    if(l > h || h-l < 0) choose(l,h) == fail
+    if (l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 

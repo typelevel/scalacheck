@@ -23,7 +23,7 @@ object Choose {
 
   implicit val chooseLong: Choose[Long] = new Choose[Long] {
     def choose(low: Long, high: Long) =
-      if(low > high || (high-low < 0)) fail
+      if (low > high) fail
       else parameterized(prms => value(prms.choose(low,high)))
   }
 
@@ -204,9 +204,17 @@ object Gen {
     /** @throws IllegalArgumentException if l is greater than h, or if
      *  the range between l and h doesn't fit in a Long. */
     def choose(l: Long, h: Long): Long = {
-      val d = h-l
-      if (d < 0) throw new IllegalArgumentException("Invalid range")
-      else l + math.abs(rng.nextLong % (d+1))
+      if (h < l) throw new IllegalArgumentException("Invalid range")
+      val d = h - l + 1
+      if (d <= 0) {
+        var n = rng.nextLong
+        while (n < l || n > h) {
+          n = rng.nextLong
+        }
+        n
+      } else {
+        l + math.abs(rng.nextLong % d)
+      }
     }
 
     /** @throws IllegalArgumentException if l is greater than h, or if
