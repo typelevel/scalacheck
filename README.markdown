@@ -14,7 +14,7 @@ ScalaCheck completely standalone, with its built-in test runner.
 
 ## Quick start
 
-Specify some of the methods of `java.util.String` like this:
+Specify some of the methods of `java.lang.String` like this:
 
     import org.scalacheck.Properties
     import org.scalacheck.Prop.forAll
