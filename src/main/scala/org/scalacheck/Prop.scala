@@ -401,7 +401,7 @@ object Prop {
 
   /** Wraps and protects a property */
   def secure[P <% Prop](p: => P): Prop =
-    try { p: Prop } catch { case e => exception(e) }
+    try { p: Prop } catch { case e: Throwable => exception(e) }
 
   /** Existential quantifier for an explicit generator. */
   def exists[A,P](f: A => P)(implicit
