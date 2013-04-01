@@ -12,7 +12,7 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, Params, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, extendedAny, propBoolean, within
+  Exception, Proof, within, throws, BooleanOperators
 }
 import Gen.{value, fail, frequency, oneOf, choose, listOf, listOfN}
 import java.util.concurrent.atomic.AtomicBoolean
@@ -133,7 +133,10 @@ object PropSpecification extends Properties("Prop") {
     atLeastOne(l:_*)
   }
 
-  property("throws") = ((1/0) throws classOf[ArithmeticException])
+  property("throws") = forAll { n: Int =>
+    if (n == 0) throws(classOf[ArithmeticException]) { 1/0 }
+    else true
+  }
 
   property("within") = forAll(oneOf(10, 100), oneOf(10, 100)) { (timeout: Int, sleep: Int) =>
     (timeout >= 0 && sleep >= 0) ==> {
