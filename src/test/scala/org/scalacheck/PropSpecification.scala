@@ -9,10 +9,12 @@
 
 package org.scalacheck
 
-import Prop._
+import Prop.{
+  forAll, falsified, undecided, exception, passed, proved, Params, all,
+  atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
+  Exception, Proof, extendedAny, propBoolean, within
+}
 import Gen.{value, fail, frequency, oneOf, choose, listOf, listOfN}
-import Arbitrary._
-import Shrink._
 import java.util.concurrent.atomic.AtomicBoolean
 
 object PropSpecification extends Properties("Prop") {
@@ -40,7 +42,7 @@ object PropSpecification extends Properties("Prop") {
       case n if (n & 1) == 0 => throw new java.lang.Exception("exception")
       case _ => loopForever
     }
-    def loopForever: Nothing = loopForever
+    def loopForever: Nothing = { println("looping"); loopForever }
 
     (n > 0) ==> positiveDomain(n)
   }
