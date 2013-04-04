@@ -88,7 +88,7 @@ object Arbitrary {
 
   /** Arbitrary instance of Long */
   implicit lazy val arbLong: Arbitrary[Long] = Arbitrary(
-    Gen.chooseNum(Long.MinValue / 2, Long.MaxValue / 2)
+    Gen.chooseNum(Long.MinValue, Long.MaxValue)
   )
 
   /** Arbitrary instance of Float */
