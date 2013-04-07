@@ -17,7 +17,7 @@ crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2", "2.9.
 
 mimaDefaultSettings
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.9.2" % "1.9")
+previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.10.0")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
 
