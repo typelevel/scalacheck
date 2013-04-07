@@ -3,7 +3,7 @@ import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 
 name := "scalacheck"
 
-version := "1.10.1"
+version := "1.10.2-SNAPSHOT"
 
 organization := "org.scalacheck"
 
@@ -17,7 +17,7 @@ crossScalaVersions := Seq("2.9.0", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2", "2.9.
 
 mimaDefaultSettings
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.10.0")
+previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.10.1")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
 
