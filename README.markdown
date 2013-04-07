@@ -102,7 +102,7 @@ If you are using Maven, the following will do the trick (example for Scala 2.10.
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.10.1</artifactId>
+      <artifactId>scalacheck_2.10</artifactId>
       <version>1.10.1</version>
     </dependency>
 

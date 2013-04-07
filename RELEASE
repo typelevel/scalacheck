@@ -96,6 +96,6 @@ ScalaCheck links:
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.10.1</artifactId>
+      <artifactId>scalacheck_2.10</artifactId>
       <version>1.10.1</version>
     </dependency>
