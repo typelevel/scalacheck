@@ -1,4 +1,4 @@
-ScalaCheck 1.10.0 Release Notes
+ScalaCheck 1.10.1 Release Notes
 
 Author: Rickard Nilsson <rickynils@gmail.com>
 
@@ -30,46 +30,21 @@ ScalaCheck highlights:
   * ScalaCheck is well integrated with ScalaTest, SBT and Specs.
 
 
-What's new in version 1.10.0?
+What's new in version 1.10.1?
 
-Since version 1.9 was released, several minor bugs have been fixed and a
-handful API additions have been made.
+Since version 1.10.0 was released, minor additions and fixes has been made.
+Also, the code has been adapted to Scala 2.10.
 
-A notable change is the test parameter maxDiscardRatio which has replaced
-the earlier maxDiscardedTests. maxDiscardRatio allows adjusting the
-number of allowed discarded tests relative passed tests, instead of the
-earlier absolute number.
+All ScalaCheck releases in the 1.10.x series should be considered binary
+compatible so if you have been using ScalaCheck 1.10.0 you should just be able
+to drop in 1.10.1. There have been some deprecations in 1.10.1 though, so you
+might get compilation warnings. If you run into any more serious problems it
+should be considered a bug and would merit a re-release.
 
-The test parameter change also revealed the difficulty of maintaining binary
-compatibility between different releases of Scala libraries. Therefore, the
-test parameter implementation has been changed from a case class to a trait.
-To make transition easier, the old Test.Params class has been kept but
-deprecated, and a new Test.Parameters trait has been defined. So your old code
-should work fine with 1.10.0 but you need to start using the new way of
-defining test parameters. This will only be an issue for those of you that have
-used non-default testing parameters (or integrated ScalaCheck in your own
-framework or build script). In the future, I imagine similar changes for
-Gen.Params and Prop.Params.
-
-The binary compatibility problem is also the reason that this relase is
-named 1.10.0 and not 1.10. In the future, I intend to keep binary
-compatibility between x.y.* versions, but I might break it between x.*
-versions. That said, ScalaCheck 1.10.0 should be binary compatible
-with 1.9, but that is just incidental.
-
-During the development of ScalaCheck 1.10.0, the project was moved from Google
-Code to GitHub, and the release artifacts has been moved from the
-scala-tools.org repository to the SonaType OSS repository. The Maven group id
-has also been changed, from "org.scala-tools.testing" to "org.scalacheck".
-
-In ScalaCheck 1.10, all methods that was deprecated in version 1.8 or earlier
-have been removed, so if you haven't fixed old deprecation warnings yet you
-might run into compilation errors.
-
-Builds of ScalaCheck 1.10.0 are available for Scala versions from 1.9.0 up
-to 2.10.0-M4. New builds are added when new versions of Scala is released. If
-you miss any build, please submit an issue at GitHub. I have stopped doing
-sbaz builds, if you miss them please submit an issue.
+Builds of ScalaCheck 1.10.1 are available for Scala versions from 1.9.0 up to
+2.10.1. New builds are added when new versions of Scala is released. If you
+miss any build, please submit an issue at GitHub. I have stopped doing sbaz
+builds, if you miss them please submit an issue.
 
 
 ScalaCheck links:
@@ -99,12 +74,12 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
     )
 
   * Maven dependency
 
-    Add this to your pom.xml (example for Scala 2.9.2):
+    Add this to your pom.xml (example for Scala 2.10.1):
 
     <repositories>
       <repository>
@@ -121,6 +96,6 @@ ScalaCheck links:
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.9.2</artifactId>
-      <version>1.10.0</version>
+      <artifactId>scalacheck_2.10.1</artifactId>
+      <version>1.10.1</version>
     </dependency>

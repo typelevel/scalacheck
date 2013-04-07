@@ -55,10 +55,10 @@ of input parameters.
 
 ## Download
 
-The current release of ScalaCheck is 1.10.0, and it is available in the Sonatype
-OSS repository. There should be builds available for all 2.9.x versions of
-Scala. If you lack some build, please submit an issue. ScalaCheck 1.10.0 is
-unfortunately not compatible with Scala 2.8.x.
+The current release of ScalaCheck is 1.10.1, and it is available in the
+Sonatype OSS repository. There should be builds available for all 2.9.x and
+2.10.x versions of Scala. If you lack some build, please submit an issue.
+ScalaCheck 1.10.x is unfortunately not compatible with Scala 2.8.x.
 
 The builds are available for download at
 [SonaType](https://oss.sonatype.org/index.html#nexus-search;quick~scalacheck).
@@ -82,10 +82,10 @@ available in your project:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
     )
 
-If you are using Maven, the following will do the trick (example for Scala 2.9.2):
+If you are using Maven, the following will do the trick (example for Scala 2.10.1):
 
     <repositories>
       <repository>
@@ -102,8 +102,8 @@ If you are using Maven, the following will do the trick (example for Scala 2.9.2
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.9.2</artifactId>
-      <version>1.10.0</version>
+      <artifactId>scalacheck_2.10.1</artifactId>
+      <version>1.10.1</version>
     </dependency>
 
 ## Bugs and feature requests
