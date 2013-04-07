@@ -112,6 +112,7 @@ object Test {
     testCallback: TestCallback = new TestCallback {}
   )
 
+  @deprecated("Use [[org.scalacheck.Test.Parameters]] instead", "1.10.0")
   private def paramsToParameters(params: Params) = new Parameters {
     val minSuccessfulTests = params.minSuccessfulTests
     val minSize = params.minSize
