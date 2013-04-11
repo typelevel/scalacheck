@@ -27,7 +27,7 @@ class ScalaCheckFramework extends Framework {
 
   val name = "ScalaCheck"
 
-  val tests = Array[Fingerprint](PropsFingerprint, PropsFingerprint)
+  val tests = Array[Fingerprint](PropFingerprint, PropsFingerprint)
 
   def testRunner(loader: ClassLoader,  loggers: Array[Logger]) = new Runner2 {
 
