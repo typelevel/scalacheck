@@ -44,14 +44,16 @@ trait Prop {
    *  and reports the result on the console. If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
-  def check(prms: Test.Parameters): Unit = Test.check(
-    prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
-  )
+  def check(prms: Test.Parameters): Unit = Test.check(prms, this)
 
   /** Convenience method that checks this property and reports the
    *  result on the console. If you need to get the results from the test use
    *  the `check` methods in [[org.scalacheck.Test]] instead. */
-  def check: Unit = check(Test.Parameters.default)
+  def check: Unit = check(
+    new Test.Parameters.Default {
+      override val testCallback = ConsoleReporter(1)
+    }
+  )
 
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.
