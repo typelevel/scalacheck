@@ -57,15 +57,18 @@ of input parameters.
 
 The current release of ScalaCheck is 1.10.1, and it is available in the
 Sonatype OSS repository. There should be builds available for all 2.9.x and
-2.10.x versions of Scala. If you lack some build, please submit an issue.
-ScalaCheck 1.10.x is unfortunately not compatible with Scala 2.8.x.
+2.10.x versions of Scala. If you lack some build, please submit an issue
+report. ScalaCheck 1.10.x is unfortunately not compatible with Scala 2.8.x.
 
 The builds are available for download at
-[SonaType](https://oss.sonatype.org/index.html#nexus-search;quick~scalacheck).
-There you can also find source and scaladoc packages.
+[Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cscalacheck). There
+you can also find source and scaladoc packages. If you download a ScalaCheck
+JAR-file manually, make sure that you pick one that has an artifact id ending
+with a version number that matches the Scala compiler you use, otherwise you
+may run into compatibility problems.
 
-If you need to use ScalaCheck with an old version of Scala, please check out
-the [previous releases](http://code.google.com/p/scalacheck/downloads/list).
+If you need to use ScalaCheck with a really old version of Scala, please check
+out the [previous releases](http://code.google.com/p/scalacheck/downloads/list).
 
 Notice, ScalaCheck was previously published under the repository group id (or
 organization) `org.scala-tools.testing`, but this has been changed to
