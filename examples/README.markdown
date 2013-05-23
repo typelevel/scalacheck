@@ -161,4 +161,4 @@ so the summary is not that interesting).
 Now you can go ahead and experiment by modifying the existing property or
 adding new ones. sbt will pick up any Scala file that contains ScalaCheck
 properties, if it is located somewhere under `src/test/scala`. Look at the
-existing fil `src/test/scala/Demo.scala` for inspiration.
+existing file `src/test/scala/Demo.scala` for inspiration.
