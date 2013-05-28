@@ -59,6 +59,7 @@ object Arbitrary {
   import util.StdRand
   import scala.collection.{immutable, mutable}
   import java.util.Date
+  import scala.xml.{ Null, Text, Comment, Elem, Group, Node, NodeSeq, TopScope }
 
   /** Creates an Arbitrary instance */
   def apply[T](g: => Gen[T]): Arbitrary[T] = new Arbitrary[T] {
@@ -444,4 +445,37 @@ object Arbitrary {
       t9 <- arbitrary[T9]
     } yield (t1,t2,t3,t4,t5,t6,t7,t8,t9))
 
+
+  private def nonEmptyAlphaStr: Gen[String] = for(cs ← Gen.listOf1(Gen.alphaChar)) yield cs.mkString
+
+  /** Arbitrary instance of scala.xml.Text */
+  implicit def arbText: Arbitrary[Text] = Arbitrary[Text] (for {
+    s ← nonEmptyAlphaStr
+  } yield Text(s))
+
+  /** Arbitrary instance of scala.xml.Comment */
+  implicit def arbComment: Arbitrary[Comment] = Arbitrary[Comment](for {
+    s ← nonEmptyAlphaStr
+  } yield Comment(s))
+
+  /** Arbitrary instance of scala.xml.Elem */
+  implicit def arbElem: Arbitrary[Elem] = {
+    Arbitrary[Elem](for {
+      s1    ← nonEmptyAlphaStr
+      s2    ← nonEmptyAlphaStr
+      nodes ← Gen.containerOf[Array, Node](arbitrary[Node])
+    } yield Elem(s1, s2, Null, TopScope, true, nodes.toSeq:_*))
+  }
+
+  /** Arbitrary instance of scala.xml.Group */
+  implicit def arbGroup: Arbitrary[Group] =
+    Arbitrary[Group](Gen.containerOf[List, Node](arbitrary[Node]) map (xs ⇒ Group(xs)))
+
+  /** Arbitrary instance of scala.xml.Node */
+  implicit def arbNode: Arbitrary[Node] =
+    Arbitrary[Node](Gen.frequency((Int.MaxValue, arbitrary[Text]), (Int.MaxValue, arbitrary[Comment]), (Int.MinValue, arbitrary[Elem])))
+
+  /** Arbitrary instance of scala.xml.NodeSeq */
+  implicit def arbNodeSeq: Arbitrary[NodeSeq] =
+    Arbitrary[NodeSeq](Gen.containerOf[List, Node](arbitrary[Node]) map (xs ⇒ NodeSeq.fromSeq(xs)))
 }
