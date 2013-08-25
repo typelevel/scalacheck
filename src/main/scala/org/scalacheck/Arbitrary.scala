@@ -214,26 +214,6 @@ object Arbitrary {
     ))
   }
 
-  /** Arbitrary instance of test params
-   *  @deprecated (in 1.10.0) Use `arbTestParameters` instead.
-   */
-  @deprecated("Use 'arbTestParameters' instead", "1.10.0")
-  implicit lazy val arbTestParams: Arbitrary[Test.Params] =
-    Arbitrary(for {
-      minSuccTests <- choose(10,200)
-      maxDiscTests <- choose(100,500)
-      mnSize <- choose(0,500)
-      sizeDiff <- choose(0,500)
-      mxSize <- choose(mnSize, mnSize + sizeDiff)
-      ws <- choose(1,4)
-    } yield Test.Params(
-      minSuccessfulTests = minSuccTests,
-      maxDiscardedTests = maxDiscTests,
-      minSize = mnSize,
-      maxSize = mxSize,
-      workers = ws
-    ))
-
   /** Arbitrary instance of test parameters */
   implicit lazy val arbTestParameters: Arbitrary[Test.Parameters] =
     Arbitrary(for {

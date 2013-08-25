@@ -76,24 +76,6 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  // Verify that maxDiscardedTests (which is deprecated) overrides
-  // maxDiscardRatio
-  property("maxDiscardedTests") =
-    forAll(arbitrary[Test.Params], arbitrary[Prop], choose(1,1000)) {
-      case (prms, p, maxDiscardedTests) => (maxDiscardedTests > 0) ==> {
-        val maxDiscardRatio = (maxDiscardedTests: Float)/prms.minSuccessfulTests
-        val r = Test.check(prms.copy(maxDiscardedTests = maxDiscardedTests), p)
-        r.status match {
-          case Passed => r.status+", s="+r.succeeded+", d="+r.discarded |:
-            r.discarded <= maxDiscardRatio*r.succeeded
-          case Exhausted => r.status+", s="+r.succeeded+", d="+r.discarded |:
-            r.discarded > maxDiscardRatio*r.succeeded
-          case _ => r.status+", s="+r.succeeded+", d="+r.discarded |:
-            true
-        }
-      }
-    }
-
   property("size") = forAll { prms: Test.Parameters =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
     Test.check(prms, p).status == Passed

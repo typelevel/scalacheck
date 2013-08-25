@@ -103,38 +103,6 @@ object Test {
     }
   }
 
-  /** Test parameters
-   *  @deprecated (in 1.10.0) Use [[org.scalacheck.Test.Parameters]] instead.
-   */
-  @deprecated("Use [[org.scalacheck.Test.Parameters]] instead", "1.10.0")
-  case class Params(
-    minSuccessfulTests: Int = 100,
-    maxDiscardedTests: Int = -1,
-    minSize: Int = 0,
-    maxSize: Int = Gen.Params().size,
-    rng: java.util.Random = Gen.Params().rng,
-    workers: Int = 1,
-    testCallback: TestCallback = new TestCallback {}
-  )
-
-  @deprecated("Use [[org.scalacheck.Test.Parameters]] instead", "1.10.0")
-  private def paramsToParameters(params: Params) = new Parameters {
-    val minSuccessfulTests = params.minSuccessfulTests
-    val minSize = params.minSize
-    val maxSize = params.maxSize
-    val rng = params.rng
-    val workers = params.workers
-    val testCallback = params.testCallback
-
-    // maxDiscardedTests is deprecated, but if someone
-    // uses it let it override maxDiscardRatio
-    val maxDiscardRatio =
-      if(params.maxDiscardedTests < 0) Parameters.default.maxDiscardRatio
-      else (params.maxDiscardedTests: Float)/(params.minSuccessfulTests: Float)
-
-    val customClassLoader = Parameters.default.customClassLoader
-  }
-
   /** Test statistics */
   case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FM, time: Long = 0) {
     def passed = status match {
@@ -214,14 +182,6 @@ object Test {
       val names = Set("minSuccessfulTests", "s")
       val help = "Number of tests that must succeed in order to pass a property"
     }
-    object OptMaxDiscarded extends IntOpt {
-      val default = -1
-      val names = Set("maxDiscardedTests", "d")
-      val help =
-        "Number of tests that can be discarded before ScalaCheck stops " +
-        "testing a property. NOTE: this option is deprecated, please use " +
-        "the option maxDiscardRatio (-r) instead."
-    }
     object OptMaxDiscardRatio extends FloatOpt {
       val default = Parameters.default.maxDiscardRatio
       val names = Set("maxDiscardRatio", "r")
@@ -252,32 +212,20 @@ object Test {
     }
 
     val opts = Set[Opt[_]](
-      OptMinSuccess, OptMaxDiscarded, OptMaxDiscardRatio, OptMinSize,
+      OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
       OptMaxSize, OptWorkers, OptVerbosity
     )
 
     def parseParams(args: Array[String]) = parseArgs(args) {
       optMap => Parameters.default.copy(
         _minSuccessfulTests = optMap(OptMinSuccess),
-        _maxDiscardRatio =
-          if (optMap(OptMaxDiscarded) < 0) optMap(OptMaxDiscardRatio)
-          else optMap(OptMaxDiscarded).toFloat / optMap(OptMinSuccess),
+        _maxDiscardRatio = optMap(OptMaxDiscardRatio),
         _minSize = optMap(OptMinSize),
         _maxSize = optMap(OptMaxSize),
         _workers = optMap(OptWorkers),
         _testCallback = ConsoleReporter(optMap(OptVerbosity))
       )
     }
-  }
-
-  /** Tests a property with the given testing parameters, and returns
-   *  the test results.
-   *  @deprecated (in 1.10.0) Use
-   *  `check(Parameters, Properties)` instead.
-   */
-  @deprecated("Use 'checkProperties(Parameters, Properties)' instead", "1.10.0")
-  def check(params: Params, p: Prop): Result = {
-    check(paramsToParameters(params), p)
   }
 
   /** Tests a property with the given testing parameters, and returns
@@ -372,14 +320,6 @@ object Test {
     params.testCallback.onTestResult("", timedRes)
     timedRes
   }
-
-  /** Check a set of properties.
-   *  @deprecated (in 1.10.0) Use
-   *  `checkProperties(Parameters, Properties)` instead.
-   */
-  @deprecated("Use 'checkProperties(Parameters, Properties)' instead", "1.10.0")
-  def checkProperties(prms: Params, ps: Properties): Seq[(String,Result)] =
-    checkProperties(paramsToParameters(prms), ps)
 
   /** Check a set of properties. */
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] =

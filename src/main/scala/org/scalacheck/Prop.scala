@@ -32,17 +32,6 @@ trait Prop {
   /** Convenience method that checks this property with the given parameters
    *  and reports the result on the console. If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
-   *  instead.
-   *  @deprecated (in 1.10.0) Use `check(Test.Parameters)` instead.
-   */
-  @deprecated("Use 'check(Test.Parameters)' instead", "1.10.0")
-  def check(prms: Test.Params): Unit = Test.check(
-    prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
-  )
-
-  /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. If you need to get the results
-   *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
   def check(prms: Test.Parameters): Unit = Test.check(prms, this)
 
@@ -299,8 +288,6 @@ object Prop {
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     /** See [[Prop.iff]] */
     def iff(f: PartialFunction[T,Prop]) = Prop.iff(x,f)
-    @deprecated("Use 'Prop.throws' instead", "1.10.1")
-    def throws[U <: Throwable](c: Class[U]): Prop = Prop.throws(c)(x)
     /** See [[Prop.?=]] */
     def ?=(y: T) = Prop.?=(x, y)
     /** See [[Prop.=?]] */
@@ -313,12 +300,6 @@ object Prop {
     /** See [[Prop.==>]] */
     def ==>(p: => Prop) = Prop(b) ==> p
   }
-
-  /** Implicit method that makes a number of property operators on values of
-   * type [[Any]] available in the current scope. See [[Prop.ExtendedAny]] for
-   * documentation on the operators. */
-  @deprecated("Use 'Prop.AnyOperators' instead", "1.10.1")
-  implicit def extendedAny[T <% Pretty](x: => T) = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on values of
    * type [[Any]] available in the current scope. See [[Prop.ExtendedAny]] for
@@ -413,13 +394,6 @@ object Prop {
   /** A property that holds iff none of the given generators
    *  fails generating a value */
   def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== fail):_*)
-
-  /** A property that holds if the given statement throws an exception
-   *  of the specified type
-   *  @deprecated (in 1.10.1) Use `throws(...): Boolean` instead.
-   */
-  @deprecated("Use 'throws(...): Boolean' instead", "1.10.1")
-  def throws[T <: Throwable](x: => Any, c: Class[T]): Prop = throws(c)(x)
 
   /** Returns true if the given statement throws an exception
    *  of the specified type */

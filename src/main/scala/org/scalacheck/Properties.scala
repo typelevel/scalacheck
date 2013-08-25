@@ -48,17 +48,6 @@ class Properties(val name: String) extends Prop {
     prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
   )
 
-  /** Convenience method that checks the properties with the given parameters
-   *  and reports the result on the console. If you need to get the results
-   *  from the test use the `check` methods in [[org.scalacheck.Test]]
-   *  instead.
-   *  @deprecated (in 1.10.0) Use `check(Test.Parameters)` instead.
-   */
-  @deprecated("Use 'check(Test.Parameters)' instead", "1.10.0")
-  override def check(prms: Test.Params): Unit = Test.checkProperties(
-    prms copy (testCallback = ConsoleReporter(1) chain prms.testCallback), this
-  )
-
   /** Convenience method that checks the properties and reports the
    *  result on the console. If you need to get the results from the test use
    *  the `check` methods in [[org.scalacheck.Test]] instead. */
