@@ -128,7 +128,20 @@ sealed trait Gen[+T] {
     def withFilter(q: A => Boolean): GenWithFilter[A] = new GenWithFilter[A](self, x => p(x) && q(x))
   }
 
+  /** Creates a new generator that fails if this generator
+   *  doesn't produce a value that fulfills the given condition.
+   *  If the condition is hard to fulfill, you will probably end
+   *  up with a lot of discarded tests. For complex conditions,
+   *  you should try to implement a custom generator instead. */
   def suchThat(p: T => Boolean): Gen[T] = filter(p)
+
+  /** Creates a new generator that repeatedly evaluates
+   *  this generator until the given condition is fulfilled.
+   *  Use this method with care, since you might end up in
+   *  an infinite loop if the condition never is fulfilled. */
+  def retryUntil(p: T => Boolean): Gen[T] = flatMap { t =>
+    if (p(t)) Gen.value(t).label(label) else retryUntil(p)
+  }
 
   def combine[U,V](g: Gen[U])(f: (Option[T],Option[U]) => Option[V]): Gen[V] =
     Gen(prms => f(this(prms), g(prms)))

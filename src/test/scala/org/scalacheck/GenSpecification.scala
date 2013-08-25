@@ -25,6 +25,8 @@ object GenSpecification extends Properties("Gen") {
 
   property("wrap") = forAll((g: Gen[Int]) => wrap(g) == g)
 
+  property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
+
   property("value") = forAll((x:Int, prms:Params) => value(x)(prms) == Some(x))
 
   property("fail") = forAll((prms: Params) => fail(prms) == None)
