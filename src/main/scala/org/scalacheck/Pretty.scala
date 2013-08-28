@@ -72,12 +72,11 @@ object Pretty {
   implicit def prettyArgs(args: List[Arg[Any]]): Pretty = Pretty { prms =>
     if(args.isEmpty) "" else {
       for((a,i) <- args.zipWithIndex) yield {
-        val l = if(a.label == "") "ARG_"+i else a.label
+        val l = "> "+(if(a.label == "") "ARG_"+i else a.label)
         val s =
-          if(a.shrinks == 0 || prms.verbosity <= 1) ""
-          else " (orig arg: "+a.prettyOrigArg(prms)+")"
-
-        "> "+l+": "+a.prettyArg(prms)+""+s
+          if(a.shrinks == 0) ""
+          else "\n"+l+"_ORIGINAL: "+a.prettyOrigArg(prms)
+        l+": "+a.prettyArg(prms)+""+s
       }
     }.mkString("\n")
   }
