@@ -59,12 +59,6 @@ object Choose {
   }
 }
 
-case class FiniteGenRes[+T](
-  r: T
-)
-
-sealed trait FiniteGen[+T] extends Gen[FiniteGenRes[T]]
-
 
 /** Class that represents a generator. */
 sealed trait Gen[+T] {
