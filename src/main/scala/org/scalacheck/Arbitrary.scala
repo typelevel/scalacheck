@@ -11,6 +11,7 @@ package org.scalacheck
 
 import util.{FreqMap,Buildable}
 
+
 sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
 }
@@ -278,9 +279,12 @@ object Arbitrary {
   implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[T,C]
   ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
+  // TODO: Change ClassManifest to ClassTag when support for Scala 2.9.x can
+  // be dropped
+
   /** Arbitrary instance of any array. */
-  implicit def arbArray[T](implicit a: Arbitrary[T], c: ClassManifest[T]
-  ): Arbitrary[Array[T]] = Arbitrary(containerOf[Array,T](arbitrary[T]))
+  implicit def arbArray[T : reflect.ClassManifest : Arbitrary]: Arbitrary[Array[T]] =
+    Arbitrary(containerOf[Array,T](arbitrary[T]))
 
 
   // Functions //

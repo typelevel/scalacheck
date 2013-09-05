@@ -9,7 +9,7 @@
 
 package org.scalacheck.util
 
-import scala.collection._
+import collection.mutable
 
 trait Buildable[T,C[_]] {
   def builder: mutable.Builder[T,C[T]]
@@ -30,17 +30,19 @@ object Buildable {
     def builder = (new mutable.ListBuffer[T]).mapResult(_.toStream)
   }
 
-  implicit def buildableArray[T](implicit cm: ClassManifest[T]) =
-    new Buildable[T,Array] {
-      def builder = mutable.ArrayBuilder.make[T]
-    }
+  // TODO: Change ClassManifest to ClassTag when support for Scala 2.9.x can
+  // be dropped
+
+  implicit def buildableArray[T : reflect.ClassManifest] = new Buildable[T,Array] {
+    def builder = mutable.ArrayBuilder.make[T]
+  }
 
   implicit def buildableMutableSet[T] = new Buildable[T,mutable.Set] {
     def builder = new mutable.SetBuilder(mutable.Set.empty[T])
   }
 
-  implicit def buildableImmutableSet[T] = new Buildable[T,immutable.Set] {
-    def builder = new mutable.SetBuilder(immutable.Set.empty[T])
+  implicit def buildableImmutableSet[T] = new Buildable[T,Set] {
+    def builder = new mutable.SetBuilder(Set.empty[T])
   }
 
   implicit def buildableSet[T] = new Buildable[T,Set] {
