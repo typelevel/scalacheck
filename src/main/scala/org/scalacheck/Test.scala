@@ -13,7 +13,6 @@ import Prop.Arg
 
 object Test {
 
-  import Prop.FM
   import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
   /** Test parameters used by the `Test.check` method.
@@ -104,7 +103,13 @@ object Test {
   }
 
   /** Test statistics */
-  case class Result(status: Status, succeeded: Int, discarded: Int, freqMap: FM, time: Long = 0) {
+  case class Result(
+    status: Status,
+    succeeded: Int,
+    discarded: Int,
+    freqMap: FreqMap[Set[Any]],
+    time: Long = 0
+  ) {
     def passed = status match {
       case Passed => true
       case Proved(_) => true

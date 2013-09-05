@@ -133,8 +133,6 @@ object Prop {
 
   // Types
 
-  type FM = FreqMap[immutable.Set[Any]]
-
   /** A property argument */
   case class Arg[+T](
     label: String,
@@ -147,7 +145,7 @@ object Prop {
   }
 
   /** Property parameters */
-  case class Params(val genPrms: Gen.Params, val freqMap: FM)
+  case class Params(val genPrms: Gen.Params, val freqMap: FreqMap[Set[Any]])
 
   object Result {
     def apply(st: Status) = new Result(
