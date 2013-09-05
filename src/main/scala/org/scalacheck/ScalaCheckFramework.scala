@@ -7,9 +7,9 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-// vim: set ts=2 sw=2 et:
-
 package org.scalacheck
+
+import util.Pretty
 
 import org.scalatools.testing._
 

@@ -7,11 +7,15 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck
+package org.scalacheck.util
 
-import Pretty._
-import util.FreqMap
+import Pretty.{Params, pretty}
+import org.scalacheck.{Prop, Properties, Test}
 
+/** A [[org.scalacheck.Test.TestCallback]] implementation that prints
+ *  test results directly to the console. This is the callback used
+ *  by ScalaCheck's command line test runner, and when you run [[org.scalacheck.Prop!.check:Unit*]]
+ */
 class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
 
   private val prettyPrms = Params(verbosity)
@@ -20,11 +24,11 @@ class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
     if(verbosity > 0) {
       if(name == "") {
         val s = (if(res.passed) "+ " else "! ") + pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", 75))
+        printf("\r%s\n", s.format("", "", 75))
       } else {
         val s = (if(res.passed) "+ " else "! ") + name + ": " +
           pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", 75))
+        printf("\r%s\n", s.format("", "", 75))
       }
     }
   }
@@ -36,17 +40,5 @@ object ConsoleReporter {
   /** Factory method, creates a ConsoleReporter with the
    *  the given verbosity */
   def apply(verbosity: Int = 0) = new ConsoleReporter(verbosity)
-
-  def testStatsEx(msg: String, res: Test.Result) = {
-    lazy val m = if(msg.length == 0) "" else msg + ": "
-    res.status match {
-      case Test.Proved(_) => {}
-      case Test.Passed => {}
-      case f @ Test.Failed(_, _) => sys.error(m + f)
-      case Test.Exhausted => {}
-      case f @ Test.GenException(_) => sys.error(m + f)
-      case f @ Test.PropException(_, _, _) => sys.error(m + f)
-    }
-  }
 
 }

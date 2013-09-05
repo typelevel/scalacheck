@@ -9,11 +9,11 @@
 
 package org.scalacheck
 
-import util.{FreqMap,Buildable}
-import scala.collection._
+import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
+
 import scala.annotation.tailrec
 
-/** A property is a generator that generates a property result */
+
 trait Prop {
 
   import Prop.{Result,Params,Proof,True,False,Exception,Undecided,provedToTrue}

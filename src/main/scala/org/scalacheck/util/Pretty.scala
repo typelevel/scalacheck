@@ -7,7 +7,10 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck
+package org.scalacheck.util
+
+import org.scalacheck.Prop.Arg
+import org.scalacheck.Test
 
 import math.round
 
@@ -69,7 +72,7 @@ object Pretty {
     e.getClass.getName + ": " + e.getMessage / strs2.mkString("\n")
   }
 
-  implicit def prettyArgs(args: List[Arg[Any]]): Pretty = Pretty { prms =>
+  def prettyArgs(args: Seq[Arg[Any]]): Pretty = Pretty { prms =>
     if(args.isEmpty) "" else {
       for((a,i) <- args.zipWithIndex) yield {
         val l = "> "+(if(a.label == "") "ARG_"+i else a.label)
@@ -81,7 +84,7 @@ object Pretty {
     }.mkString("\n")
   }
 
-  implicit def prettyFreqMap(fm: Prop.FM) = Pretty { prms =>
+  implicit def prettyFreqMap(fm: FreqMap[Set[Any]]) = Pretty { prms =>
     if(fm.total == 0) ""
     else {
       "> Collected test data: " / {
@@ -99,15 +102,15 @@ object Pretty {
       if(ls.isEmpty) ""
       else "> Labels of failing property: " / ls.mkString("\n")
     val s = res.status match {
-      case Test.Proved(args) => "OK, proved property."/pretty(args,prms)
+      case Test.Proved(args) => "OK, proved property."/prettyArgs(args)(prms)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
-        "Falsified after "+res.succeeded+" passed tests."/labels(l)/pretty(args,prms)
+        "Falsified after "+res.succeeded+" passed tests."/labels(l)/prettyArgs(args)(prms)
       case Test.Exhausted =>
         "Gave up after only "+res.succeeded+" passed tests. " +
         res.discarded+" tests were discarded."
       case Test.PropException(args,e,l) =>
-        "Exception raised on property evaluation."/labels(l)/pretty(args,prms)/
+        "Exception raised on property evaluation."/labels(l)/prettyArgs(args)(prms)/
         "> Exception: "+pretty(e,prms)
       case Test.GenException(e) =>
         "Exception raised on argument generation."/

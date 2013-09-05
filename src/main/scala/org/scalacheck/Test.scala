@@ -13,10 +13,8 @@ import Prop.Arg
 
 object Test {
 
-  import util.FreqMap
-  import scala.collection.immutable
   import Prop.FM
-  import util.CmdLineParser
+  import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
   /** Test parameters used by the `Test.check` method.
    */

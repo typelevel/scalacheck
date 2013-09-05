@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import util.ConsoleReporter
+
 /** Represents a collection of properties, with convenient methods
  *  for checking all properties at once. This class is itself a property, which
  *  holds if and only if all of the contained properties hold.
