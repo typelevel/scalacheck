@@ -20,7 +20,7 @@ mimaDefaultSettings
 
 previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.0-SNAPSHOT")
 
-libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
+libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
 libraryDependencies <++= (scalaVersion){sVer =>
   if(sVer startsWith "2.9") Seq.empty
