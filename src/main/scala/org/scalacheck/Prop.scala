@@ -291,7 +291,7 @@ object Prop {
 
   // Implicits
 
-  /** A collection of property operators on [[Any]] values.
+  /** A collection of property operators on `Any` values.
    *  Import [[Prop.AnyOperators]] to make the operators available. */
   class ExtendedAny[T <% Pretty](x: => T) {
     /** See [[Prop.imply]] */
@@ -304,7 +304,7 @@ object Prop {
     def =?(y: T) = Prop.=?(x, y)
   }
 
-  /** A collection of property operators on [[Boolean]] values.
+  /** A collection of property operators on `Boolean` values.
    *  Import [[Prop.BooleanOperators]] to make the operators available. */
   class ExtendedBoolean(b: => Boolean) {
     /** See [[Prop.==>]] */
@@ -312,8 +312,8 @@ object Prop {
   }
 
   /** Implicit method that makes a number of property operators on values of
-   * type [[Any]] available in the current scope. See [[Prop.ExtendedAny]] for
-   * documentation on the operators. */
+   * type `Any` available in the current scope.
+   * See [[Prop.ExtendedAny]] for documentation on the operators. */
   implicit def AnyOperators[T <% Pretty](x: => T) = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on boolean
