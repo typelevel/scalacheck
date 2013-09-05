@@ -14,50 +14,6 @@ import util.Buildable
 import Prop._
 import Arbitrary._
 
-trait Choose[T] {
-  def choose(min: T, max: T): Gen[T]
-}
-
-object Choose {
-  import Gen.{fail, parameterized, value}
-
-  implicit val chooseLong: Choose[Long] = new Choose[Long] {
-    def choose(low: Long, high: Long) =
-      if (low > high) fail
-      else parameterized(prms => value(prms.choose(low,high)))
-  }
-
-  implicit val chooseDouble: Choose[Double] = new Choose[Double] {
-    def choose(low: Double, high: Double) =
-      if (low > high || (high-low > Double.MaxValue)) fail
-      else parameterized(prms => value(prms.choose(low,high)))
-  }
-
-  implicit val chooseInt: Choose[Int] = new Choose[Int] {
-    def choose(low: Int, high: Int) =
-      chooseLong.choose(low, high).map(_.toInt)
-  }
-
-  implicit val chooseByte: Choose[Byte] = new Choose[Byte] {
-    def choose(low: Byte, high: Byte) =
-      chooseLong.choose(low, high).map(_.toByte)
-  }
-
-  implicit val chooseShort: Choose[Short] = new Choose[Short] {
-    def choose(low: Short, high: Short) =
-      chooseLong.choose(low, high).map(_.toShort)
-  }
-
-  implicit val chooseChar: Choose[Char] = new Choose[Char] {
-    def choose(low: Char, high: Char) =
-      chooseLong.choose(low, high).map(_.toChar)
-  }
-
-  implicit val chooseFloat: Choose[Float] = new Choose[Float] {
-    def choose(low: Float, high: Float) =
-      chooseDouble.choose(low, high).map(_.toFloat)
-  }
-}
 
 
 /** Class that represents a generator. */
@@ -200,6 +156,43 @@ object Gen {
 
   import Arbitrary._
   import Shrink._
+
+  trait Choose[T] {
+    def choose(min: T, max: T): Gen[T]
+  }
+  
+  object Choose {
+    implicit val chooseLong: Choose[Long] = new Choose[Long] {
+      def choose(low: Long, high: Long) =
+        if (low > high) fail
+        else parameterized(prms => value(prms.choose(low,high)))
+    }
+    implicit val chooseDouble: Choose[Double] = new Choose[Double] {
+      def choose(low: Double, high: Double) =
+        if (low > high || (high-low > Double.MaxValue)) fail
+        else parameterized(prms => value(prms.choose(low,high)))
+    }
+    implicit val chooseInt: Choose[Int] = new Choose[Int] {
+      def choose(low: Int, high: Int) =
+        chooseLong.choose(low, high).map(_.toInt)
+    }
+    implicit val chooseByte: Choose[Byte] = new Choose[Byte] {
+      def choose(low: Byte, high: Byte) =
+        chooseLong.choose(low, high).map(_.toByte)
+    }
+    implicit val chooseShort: Choose[Short] = new Choose[Short] {
+      def choose(low: Short, high: Short) =
+        chooseLong.choose(low, high).map(_.toShort)
+    }
+    implicit val chooseChar: Choose[Char] = new Choose[Char] {
+      def choose(low: Char, high: Char) =
+        chooseLong.choose(low, high).map(_.toChar)
+    }
+    implicit val chooseFloat: Choose[Float] = new Choose[Float] {
+      def choose(low: Float, high: Float) =
+        chooseDouble.choose(low, high).map(_.toFloat)
+    }
+  }
 
   /** Record that encapsulates all parameters required for data generation */
   case class Params(
