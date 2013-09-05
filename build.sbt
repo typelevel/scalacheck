@@ -1,4 +1,5 @@
 import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
+
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 
 name := "scalacheck"
@@ -21,12 +22,10 @@ previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.10.1")
 
 libraryDependencies += "org.scala-tools.testing" %  "test-interface" % "0.5"
 
-
 libraryDependencies <++= (scalaVersion){sVer =>
   if(sVer startsWith "2.9") Seq.empty
   else Seq("org.scala-lang" % "scala-actors" % sVer)
 }
-
 
 libraryDependencies <++= (scalaVersion){sVer =>
   if((sVer startsWith "2.9") || (sVer startsWith "2.10")) Seq.empty
@@ -52,15 +51,22 @@ publishArtifact in Test := false
 pomIncludeRepository := { _ => false }
 
 pomExtra := (
+  <url>http://www.scalacheck.org</url>
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>https://github.com/rickynils/scalacheck/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
   <scm>
-    <url>git@github.com:rickynils/scalacheck.git</url>
+    <url>https://github.com/rickynils/scalacheck</url>
     <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
   </scm>
   <developers>
     <developer>
       <id>rickynils</id>
       <name>Rickard Nilsson</name>
-      <url>http://www.scalacheck.org</url>
     </developer>
   </developers>
 )
