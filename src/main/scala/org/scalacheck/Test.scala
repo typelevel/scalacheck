@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import Prop.Arg
+
 object Test {
 
   import util.FreqMap
@@ -120,10 +122,10 @@ object Test {
   case object Passed extends Status
 
   /** ScalaCheck managed to prove the property correct */
-  sealed case class Proved(args: Prop.Args) extends Status
+  sealed case class Proved(args: List[Arg[Any]]) extends Status
 
   /** The property was proved wrong with the given concrete arguments.  */
-  sealed case class Failed(args: Prop.Args, labels: Set[String]) extends Status
+  sealed case class Failed(args: List[Arg[Any]], labels: Set[String]) extends Status
 
   /** The property test was exhausted, it wasn't possible to generate enough
    *  concrete arguments satisfying the preconditions to get enough passing
@@ -132,7 +134,7 @@ object Test {
 
   /** An exception was raised when trying to evaluate the property with the
    *  given concrete arguments. */
-  sealed case class PropException(args: Prop.Args, e: Throwable,
+  sealed case class PropException(args: List[Arg[Any]], e: Throwable,
     labels: Set[String]) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
@@ -253,13 +255,13 @@ object Test {
       var n = 0  // passed tests
       var d = 0  // discarded tests
       var res: Result = null
-      var fm = FreqMap.empty[immutable.Set[Any]]
+      var fm = FreqMap.empty[Set[Any]]
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
         val propPrms = Prop.Params(Gen.Params(size.round.toInt, params.rng), fm)
         secure(p(propPrms)) match {
           case Right(e) => res =
-            Result(GenException(e), n, d, FreqMap.empty[immutable.Set[Any]])
+            Result(GenException(e), n, d, FreqMap.empty[Set[Any]])
           case Left(propRes) =>
             fm =
               if(propRes.collected.isEmpty) fm

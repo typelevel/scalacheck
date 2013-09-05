@@ -133,8 +133,18 @@ object Prop {
 
   // Types
 
-  type Args = List[Arg[Any]]
   type FM = FreqMap[immutable.Set[Any]]
+
+  /** A property argument */
+  case class Arg[+T](
+    label: String,
+    arg: T,
+    shrinks: Int,
+    origArg: T
+  )(implicit prettyPrinter: T => Pretty) {
+    lazy val prettyArg: Pretty = prettyPrinter(arg)
+    lazy val prettyOrigArg: Pretty = prettyPrinter(origArg)
+  }
 
   /** Property parameters */
   case class Params(val genPrms: Gen.Params, val freqMap: FM)
@@ -143,14 +153,14 @@ object Prop {
     def apply(st: Status) = new Result(
       st,
       Nil,
-      immutable.Set.empty[Any],
-      immutable.Set.empty[String]
+      Set.empty[Any],
+      Set.empty[String]
     )
 
     def merge(x: Result, y: Result, status: Status) = new Result(
       status,
       x.args ++ y.args,
-      (x.collected.asInstanceOf[Set[AnyRef]] ++ y.collected).asInstanceOf[immutable.Set[Any]],
+      (x.collected.asInstanceOf[Set[AnyRef]] ++ y.collected).asInstanceOf[Set[Any]],
       x.labels ++ y.labels
     )
   }
@@ -158,9 +168,9 @@ object Prop {
   /** The result of evaluating a property */
   case class Result(
     status: Status,
-    args: Args,
-    collected: immutable.Set[Any],
-    labels: immutable.Set[String]
+    args: List[Arg[Any]],
+    collected: Set[Any],
+    labels: Set[String]
   ) {
     def success = status match {
       case True => true
