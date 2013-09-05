@@ -15,7 +15,7 @@ import scala.util.parsing.input.Position
 import scala.collection.Set
 import org.scalacheck.Test
 
-trait CmdLineParser extends Parsers {
+private[scalacheck] trait CmdLineParser extends Parsers {
 
   type Elem = String
 
