@@ -30,7 +30,7 @@ libraryDependencies <++= (scalaVersion){sVer =>
 
 libraryDependencies <++= (scalaVersion){sVer =>
   if((sVer startsWith "2.9") || (sVer startsWith "2.10")) Seq.empty
-  else Seq("org.scala-lang" % "scala-parser-combinators" % sVer)
+  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0-RC2")
 }
 
 javacOptions ++= Seq("-Xmx1024M")
