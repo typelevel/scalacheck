@@ -569,13 +569,15 @@ object Prop {
     shrink: T => Stream[T])(f: T => P
   ): Prop = Prop { prms =>
 
+    def result(x: T) = {
+      val p = secure(f(x))
+      provedToTrue(p(prms))
+    }
+
     /** Returns the first failed result in Left or success in Right */
     def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
-      val results = xs.map { x =>
-        val p = secure(f(x))
-        (x, provedToTrue(p(prms)))
-      }
+      val results = xs.map(x => (x, result(x)))
       results.dropWhile(!_._2.failure).headOption match {
         case None => Right(results.head)
         case Some(xr) => Left(xr)
@@ -593,10 +595,10 @@ object Prop {
 
     g(prms.genPrms) match {
       case None => undecided(prms)
-      case Some(x) => getFirstFailure(Stream.cons(x, Stream.empty)) match {
-        case Right((x,r)) => r.addArg(Arg(g.label,x,0,x))
-        case Left((x,r)) => shrinker(x,r,0,x)
-      }
+      case Some(x) => 
+        val r = result(x)
+        if (!r.failure) r.addArg(Arg(g.label,x,0,x))
+        else shrinker(x,r,0,x)
     }
 
   }
