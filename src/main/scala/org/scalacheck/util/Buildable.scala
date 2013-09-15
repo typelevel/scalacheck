@@ -11,6 +11,7 @@ package org.scalacheck.util
 
 import collection.mutable
 
+//TODO trait Buildable[T,C[_] <: Seq[_]] {
 trait Buildable[T,C[_]] {
   def builder: mutable.Builder[T,C[T]]
   def fromIterable(it: Traversable[T]): C[T] = {

@@ -149,8 +149,13 @@ object Arbitrary {
 
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
-    def chooseBigInt: Gen[BigInt] = sized((s: Int) => choose(-s, s)) map (x => BigInt(x))
-    def chooseReallyBigInt = chooseBigInt.combine(choose(32, 128))((x, y) => Some(x.get << y.get))
+    def chooseBigInt: Gen[BigInt] =
+      sized((s: Int) => choose(-s, s)) map (x => BigInt(x))
+
+    def chooseReallyBigInt = for {
+      bi <- chooseBigInt
+      n <- choose(32,128)
+    } yield bi << n
 
     Arbitrary(
       frequency(
@@ -233,15 +238,17 @@ object Arbitrary {
     })
 
   /** Arbitrary instance of gen params */
-  implicit lazy val arbGenParams: Arbitrary[Gen.Params] =
+  implicit lazy val arbGenParams: Arbitrary[Gen.Parameters] =
     Arbitrary(for {
-      size <- arbitrary[Int] suchThat (_ >= 0)
-    } yield Gen.Params(size, StdRand))
+      sz <- arbitrary[Int] suchThat (_ >= 0)
+    } yield (new Gen.Parameters.Default {
+      override def size = sz
+    }))
 
   /** Arbitrary instance of prop params */
   implicit lazy val arbPropParams: Arbitrary[Prop.Params] =
     Arbitrary(for {
-      genPrms <- arbitrary[Gen.Params]
+      genPrms <- arbitrary[Gen.Parameters]
     } yield Prop.Params(genPrms, FreqMap.empty[immutable.Set[Any]]))
 
 

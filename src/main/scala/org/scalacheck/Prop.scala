@@ -145,7 +145,7 @@ object Prop {
   }
 
   /** Property parameters */
-  case class Params(val genPrms: Gen.Params, val freqMap: FreqMap[Set[Any]])
+  case class Params(val genPrms: Gen.Parameters, val freqMap: FreqMap[Set[Any]])
 
   object Result {
     def apply(st: Status) = new Result(
@@ -443,11 +443,13 @@ object Prop {
     pv: P => Prop,
     pp: A => Pretty
   ): Prop = Prop { prms =>
-    g(prms.genPrms) match {
+    val gr = g.doApply(prms.genPrms)
+    gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
-        val r = p(prms).addArg(Arg(g.label,x,0,x))
+        val labels = gr.labels.mkString(",")
+        val r = p(prms).addArg(Arg(labels,x,0,x))
         r.status match {
           case True => new Result(Proof, r.args, r.collected, r.labels)
           case False => new Result(Undecided, r.args, r.collected, r.labels)
@@ -464,11 +466,13 @@ object Prop {
     pv: P => Prop,
     pp1: T1 => Pretty
   ): Prop = Prop { prms =>
-    g1(prms.genPrms) match {
+    val gr = g1.doApply(prms.genPrms)
+    gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
-        provedToTrue(p(prms)).addArg(Arg(g1.label,x,0,x))
+        val labels = gr.labels.mkString(",")
+        provedToTrue(p(prms)).addArg(Arg(labels,x,0,x))
     }
   }
 
@@ -569,6 +573,9 @@ object Prop {
     shrink: T => Stream[T])(f: T => P
   ): Prop = Prop { prms =>
 
+    val gr = g.doApply(prms.genPrms)
+    val labels = gr.labels.mkString(",")
+
     def result(x: T) = {
       val p = secure(f(x))
       provedToTrue(p(prms))
@@ -585,19 +592,19 @@ object Prop {
     }
 
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
-      val xs = shrink(x)
-      val res = r.addArg(Arg(g.label,x,shrinks,orig))
+      val xs = shrink(x).filter(gr.sieve)
+      val res = r.addArg(Arg(labels,x,shrinks,orig))
       if(xs.isEmpty) res else getFirstFailure(xs) match {
         case Right(_) => res
         case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
       }
     }
 
-    g(prms.genPrms) match {
+    gr.retrieve match {
       case None => undecided(prms)
       case Some(x) => 
         val r = result(x)
-        if (!r.failure) r.addArg(Arg(g.label,x,0,x))
+        if (!r.failure) r.addArg(Arg(labels,x,0,x))
         else shrinker(x,r,0,x)
     }
 

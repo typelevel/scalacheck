@@ -15,8 +15,7 @@ object Test {
 
   import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
-  /** Test parameters used by the `Test.check` method.
-   */
+  /** Test parameters used by the [[Test.check]] method. */
   trait Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
@@ -67,7 +66,7 @@ object Test {
     }
   }
 
-  /** Test parameters used by the `Test.check` method.
+  /** Test parameters used by the [[Test.check]] method.
    *
    *  To override default values, extend the
    *  [[org.scalacheck.Test.Parameters.Default]] trait:
@@ -85,8 +84,8 @@ object Test {
     trait Default extends Parameters {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
-      val maxSize: Int = Gen.Params().size
-      val rng: java.util.Random = Gen.Params().rng
+      val maxSize: Int = Gen.Parameters.default.size
+      val rng: java.util.Random = Gen.Parameters.default.rng
       val workers: Int = 1
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
@@ -246,6 +245,7 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
+    val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
 
     def worker(workerIdx: Int) =
       if (workers < 2) () => workerFun(workerIdx) 
@@ -261,7 +261,7 @@ object Test {
       var fm = FreqMap.empty[Set[Any]]
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propPrms = Prop.Params(Gen.Params(size.round.toInt, params.rng), fm)
+        val propPrms = Prop.Params(genPrms.resize(size.round.toInt), fm)
         secure(p(propPrms)) match {
           case Right(e) => res =
             Result(GenException(e), n, d, FreqMap.empty[Set[Any]])
