@@ -9,10 +9,6 @@
 
 package org.scalacheck
 
-import Gen._
-import Prop._
-import Shrink._
-
 /** See User Guide for usage examples */
 trait Commands extends Prop {
 
@@ -47,7 +43,8 @@ trait Commands extends Prop {
     def nextState(s: State): State
 
     /** Returns all preconditions merged into a single function */
-    def preCondition: (State => Boolean) = s => preConditions.toList.forall(_.apply(s))
+    def preCondition: (State => Boolean) =
+      s => preConditions.toList.forall(_.apply(s))
 
     /** A precondition is a function that
      *  takes the current abstract state as parameter and returns a boolean
@@ -56,7 +53,8 @@ trait Commands extends Prop {
     val preConditions = new collection.mutable.ListBuffer[State => Boolean]
 
     /** Returns all postconditions merged into a single function */
-    def postCondition: (State,State,Any) => Prop = (s0,s1,r) => all(postConditions.map(_.apply(s0,s1,r)): _*)
+    def postCondition: (State,State,Any) => Prop =
+      (s0,s1,r) => Prop.all(postConditions.map(_.apply(s0,s1,r)): _*)
 
     /** A postcondition is a function that
      *  takes three parameters, s0, s1 and r. s0 is the abstract state before
@@ -93,16 +91,14 @@ trait Commands extends Prop {
   }
 
   private def genCmds: Gen[Cmds] = {
-    def sizedCmds(s: State)(sz: Int): Gen[Cmds] =
-      if(sz <= 0) value(Cmds(Nil, Nil)) else for {
+    def sizedCmds(s: State, sz: Int): Gen[Cmds] = {
+      if(sz <= 0) Gen.value(Cmds(Nil, Nil)) else for {
         c <- genCommand(s) suchThat (_.preCondition(s))
-        Cmds(cs,ss) <- sizedCmds(c.nextState(s))(sz-1)
+        Cmds(cs,ss) <- sizedCmds(c.nextState(s), sz-1)
       } yield Cmds(c::cs, s::ss)
+    }
 
-    for {
-      s0 <- wrap(value(initialState()))
-      cmds <- sized(sizedCmds(s0))
-    } yield cmds
+    Gen.sized(sz => sizedCmds(initialState(), sz))
   }
 
   private def validCmds(s: State, cs: List[Command]): Option[Cmds] =
@@ -114,19 +110,20 @@ trait Commands extends Prop {
       } yield Cmds(cs, s::ss)
     }
 
-  private def runCommands(cmds: Cmds): Prop = cmds match {
-    case Cmds(Nil, _) => proved
-    case Cmds(c::cs, s::ss) =>
-      c.postCondition(s,c.nextState(s),c.run_(s)) && runCommands(Cmds(cs,ss))
-    case _ => sys.error("Should not be here")
+  private def runCommands(cmds: Cmds): Prop = Prop.all {
+    cmds.cs.indices.map { i =>
+      val (c,s) = (cmds.cs(i), cmds.ss(i))
+      c.postCondition(s,c.nextState(s),c.run_(s))
+    } : _*
   }
 
   private def commandsProp: Prop = {
-    def shrinkCmds(cmds: Cmds) = cmds match { case Cmds(cs,_) =>
-      shrink(cs)(shrinkContainer).flatMap(cs => validCmds(initialState(), cs).toList)
-    }
+    def shrinkCmds(cmds: Cmds) =
+      Shrink.shrink(cmds.cs)(Shrink.shrinkContainer).flatMap { cs =>
+        validCmds(initialState(), cs).toList
+      }
 
-    forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
+    Prop.forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
   }
 
   def apply(p: Prop.Params) = commandsProp(p)
