@@ -107,6 +107,8 @@ object Gen {
 
   //// Private interface ////
 
+  import Arbitrary.arbitrary
+
   /** Just an alias */
   private type P = Parameters
 
@@ -122,19 +124,21 @@ object Gen {
       s: U => Boolean = this.sieve,
       r: Option[U] = this.result
     ): R[U] = new R[U] {
-      override def labels = l
+      override val labels = l
       override def sieve[V >: U] = { x:Any => x match { case u:U => s(u) } }
-      def result = r
+      val result = r
     }
 
     def map[U](f: T => Option[U]): R[U] = new R[U] {
-      override def labels = R.this.labels
-      def result = R.this.retrieve.flatMap(f)
+      override val labels = R.this.labels
+      val result = R.this.retrieve.flatMap(f)
     }
 
     def flatMap[U](f: T => R[U]): R[U] = retrieve match {
       case None => map(_ => None)
-      case Some(t) => f(t).copy(l = labels ++ f(t).labels)
+      case Some(t) => 
+        val r = f(t)
+        r.copy(l = labels ++ r.labels)
     }
   }
 
@@ -267,7 +271,8 @@ object Gen {
         while(git.hasNext && !failed) r.retrieve match {
           case Some(x) =>
             builder += x
-            r = r.flatMap(_ => git.next.doApply(p))
+            val r1 = git.next.doApply(p)
+            r = r.flatMap(_ => r1)
           case None => failed = true
         }
         r.retrieve match {
@@ -280,7 +285,7 @@ object Gen {
       val sieve = gs.map(_.sieveCopy _).fold((_:T) => false) { case (f1,f2) =>
         x:T => f1(x) || f2(x)
       }
-      //g.suchThat(_.forall(sieve))
+      //TODO g.suchThat(_.forall(sieve))
       g
     }
 
@@ -294,6 +299,9 @@ object Gen {
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
   def wrap[T](g: => Gen[T]) = gen(g.doApply)
+
+  /** Creates a generator that can access its generation parameters */
+  def parameterized[T](f: Parameters => Gen[T]) = gen { p => f(p).doApply(p) }
 
   /** Creates a generator that can access its generation size */
   def sized[T](f: Int => Gen[T]) = gen { p => f(p.size).doApply(p) }
@@ -345,13 +353,15 @@ object Gen {
       var i = 1
       while(!failed && i < n) g.doApply(p).retrieve match {
         case None => failed = true
-        case Some(x) => builder += x
+        case Some(x) =>
+          builder += x
+          i += 1
       }
       if(failed) fail.doApply(p)
       else if(n <= 0) r(Some(builder.result()))
-      else {
-        val r = g.doApply(p)
-        r.map(_ => Some(builder.result()))
+      else g.doApply(p).map { x =>
+        builder += x
+        Some(builder.result())
       }
     }
     // TODO g2.suchThat(_.forall(g.sieve))
@@ -478,5 +488,89 @@ object Gen {
       (basicsAndSpecials.length, c.choose(minT, maxT))
     )
     frequency(allGens: _*)
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R] =
+    arbitrary[T] map f
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,R](f: (T1,T2) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2]
+  ): Gen[R] = arbitrary[T1] flatMap { t => resultOf(f(t, _:T2)) }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,R](f: (T1,T2,T3) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3]
+  ): Gen[R] = arbitrary[T1] flatMap { t => resultOf(f(t, _:T2, _:T3)) }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,R](f: (T1,T2,T3,T4) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,R](f: (T1,T2,T3,T4,T5) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,R](
+    f: (T1,T2,T3,T4,T5,T6) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], a5: Arbitrary[T5], a6: Arbitrary[T6]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,R](
+    f: (T1,T2,T3,T4,T5,T6,T7) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,T8,R](
+    f: (T1,T2,T3,T4,T5,T6,T7,T8) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8))
+  }
+
+  /** Takes a function and returns a generator that generates arbitrary
+   *  results of that function by feeding it with arbitrarily generated input
+   *  parameters. */
+  def resultOf[T1,T2,T3,T4,T5,T6,T7,T8,T9,R](
+    f: (T1,T2,T3,T4,T5,T6,T7,T8,T9) => R)(implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
+    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8],
+    a9: Arbitrary[T9]
+  ): Gen[R] = arbitrary[T1] flatMap {
+    t => resultOf(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8, _:T9))
   }
 }

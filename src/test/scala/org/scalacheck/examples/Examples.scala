@@ -25,10 +25,10 @@ object Examples extends Properties("Examples") {
   } 
 
   val genPerson = {
-    import org.scalacheck.Gen.{choose, value}
+    import org.scalacheck.Gen.{choose, value, oneOf}
     for {
-      firstName <- "Alan" | "Ada" | "Alonzo"
-      lastName <- "Lovelace" | "Turing" | "Church"
+      firstName <- oneOf("Alan", "Ada", "Alonzo")
+      lastName <- oneOf("Lovelace", "Turing", "Church")
       age <- choose(1,100)
     } yield Person(firstName, lastName, age)
   }

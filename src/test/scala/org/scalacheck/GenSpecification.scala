@@ -27,9 +27,9 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
-  property("value") = forAll((x:Int, prms:Params) => value(x)(prms) == Some(x))
+  property("value") = forAll((x:Int, prms:Parameters) => value(x)(prms) == Some(x))
 
-  property("fail") = forAll((prms: Params) => fail(prms) == None)
+  property("fail") = forAll((prms: Parameters) => fail(prms) == None)
 
   property("choose-int") = forAll { (l: Int, h: Int) =>
     if(l > h) choose(l,h) == fail
@@ -63,13 +63,6 @@ object GenSpecification extends Properties("Gen") {
     val g1 = Gen.value(n1)
     val g2 = Gen.value(n2)
     forAll(oneOf(g1, g2)) { n => n == n1 || n == n2 }
-  }
-
-  property("|") = forAll { (n1:Int, n2:Int, n3: Int) =>
-    val g1 = Gen.value(n1)
-    val g2 = Gen.value(n2)
-    val g3 = Gen.value(n3)
-    forAll(g1 | g2 | g3) { n => n == n1 || n == n2 || n == n3}
   }
 
   property("listOf") = sizedProp { sz =>
