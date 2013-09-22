@@ -38,7 +38,7 @@ sealed trait Gen[+T] {
 
   def apply(p: Gen.Parameters): Option[T] = doApply(p).retrieve
 
-  def map[U](f: T => U): Gen[U] = gen { p => doApply(p).map(f andThen Some[U]) }
+  def map[U](f: T => U): Gen[U] = gen { p => doApply(p).map(f) }
 
   def flatMap[U](f: T => Gen[U]): Gen[U] = gen { p =>
     doApply(p).flatMap(t => f(t).doApply(p))
@@ -129,21 +129,18 @@ object Gen {
       val result = r
     }
 
-    def map[U](f: T => Option[U]): R[U] = new R[U] {
-      override val labels = R.this.labels
-      val result = R.this.retrieve.flatMap(f)
-    }
+    def map[U](f: T => U): R[U] = r(retrieve.map(f)).copy(l = labels)
 
     def flatMap[U](f: T => R[U]): R[U] = retrieve match {
-      case None => map(_ => None)
-      case Some(t) => 
+      case None => r(None).copy(l = labels)
+      case Some(t) =>
         val r = f(t)
         r.copy(l = labels ++ r.labels)
     }
   }
 
   private[scalacheck] def r[T](r: Option[T]): R[T] = new R[T] {
-    def result = r
+    val result = r
   }
 
   /** Generator factory method */
@@ -260,33 +257,18 @@ object Gen {
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C[_],T](gs: Iterable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C[T]] =
+  def sequence[C[_],T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C[T]] =
     if(gs.isEmpty) fail
     else {
       val g = gen { p =>
-        val builder = b.builder
-        val git = gs.iterator
-        var failed = false
-        var r = git.next.doApply(p)
-        while(git.hasNext && !failed) r.retrieve match {
-          case Some(x) =>
-            builder += x
-            val r1 = git.next.doApply(p)
-            r = r.flatMap(_ => r1)
-          case None => failed = true
-        }
-        r.retrieve match {
-          case Some(x) if !failed =>
-            builder += x
-            r.map(_ => Some(builder.result()))
-          case _ => fail.doApply(p)
+        gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]))) {
+          case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
         }
       }
-      val sieve = gs.map(_.sieveCopy _).fold((_:T) => false) { case (f1,f2) =>
-        x:T => f1(x) || f2(x)
+      val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
+        x:T => s(x) || g.sieveCopy(x)
       }
-      //TODO g.suchThat(_.forall(sieve))
-      g
+      g.map(b.fromIterable) // TODO .suchThat(_.forall(sieve))
     }
 
   /** Sequences generators. If any of the given generators fails, the
@@ -296,7 +278,7 @@ object Gen {
     else {
       val g = gen { p =>
         gs.foldLeft(r(Some(collection.immutable.Vector.empty[(T,U)]))) {
-          case (rs,g) => g.doApply(p).flatMap(r => rs.map(v => Some(v :+ r)))
+          case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
         }
       }
       val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
@@ -361,28 +343,7 @@ object Gen {
    *  is given by `n`. If the given generator fails generating a value, the
    *  complete container gnerator will also fail. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit b: Buildable[T,C]
-  ): Gen[C[T]] = {
-    val g2 = gen { p =>
-      val builder = b.builder
-      builder.sizeHint(n)
-      var failed = false
-      var i = 1
-      while(!failed && i < n) g.doApply(p).retrieve match {
-        case None => failed = true
-        case Some(x) =>
-          builder += x
-          i += 1
-      }
-      if(failed) fail.doApply(p)
-      else if(n <= 0) r(Some(builder.result()))
-      else g.doApply(p).map { x =>
-        builder += x
-        Some(builder.result())
-      }
-    }
-    // TODO g2.suchThat(_.forall(g.sieve))
-    g2
-  }
+  ): Gen[C[T]] = sequence[C,T](Traversable.fill(n)(g))
 
   /** Generates a container of any type for which there exists an implicit
    *  [[org.scalacheck.util.Buildable]] instance. The elements in the container
@@ -404,13 +365,7 @@ object Gen {
    *  is given by `n`. If the given generator fails generating a value, the
    *  complete container gnerator will also fail. */
   def container2OfN[C[_,_],T,U](n: Int, g: Gen[(T,U)])(implicit b: Buildable2[T,U,C]
-  ): Gen[C[T,U]] = sequence[C,T,U](new Iterable[Gen[(T,U)]] {
-    def iterator = new Iterator[Gen[(T,U)]] {
-      var i = 0
-      def hasNext = i < n
-      def next = { i += 1; g }
-    }
-  })
+  ): Gen[C[T,U]] = sequence[C,T,U](Traversable.fill(n)(g))
 
   /** Generates a container of any type for which there exists an implicit
    *  <code>Buildable2</code> instance. The elements in the container will
