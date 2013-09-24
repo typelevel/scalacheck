@@ -9,7 +9,7 @@
 
 package org.scalacheck.util
 
-import Pretty.{Params, pretty}
+import Pretty.{Params, pretty, format}
 import org.scalacheck.{Prop, Properties, Test}
 
 /** A [[org.scalacheck.Test.TestCallback]] implementation that prints
@@ -24,11 +24,11 @@ class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
     if(verbosity > 0) {
       if(name == "") {
         val s = (if(res.passed) "+ " else "! ") + pretty(res, prettyPrms)
-        printf("\r%s\n", s.format("", "", 75))
+        printf("\r%s\n", format(s, "", "", 75))
       } else {
         val s = (if(res.passed) "+ " else "! ") + name + ": " +
           pretty(res, prettyPrms)
-        printf("\r%s\n", s.format("", "", 75))
+        printf("\r%s\n", format(s, "", "", 75))
       }
     }
   }
