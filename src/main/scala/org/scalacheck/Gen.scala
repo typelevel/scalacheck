@@ -241,10 +241,11 @@ object Gen {
   //// Various Generator Combinators ////
 
   /** A generator that always generates the given value */
-  implicit def value[T](x: T): Gen[T] = const(x)
+  @deprecated("Use Gen.const instead", "1.11.0")
+  def value[T](x: T): Gen[T] = const(x)
 
   /** A generator that always generates the given value */
-  def const[T](x: T): Gen[T] = gen(_ => r(Some(x))).suchThat(_ == x)
+  implicit def const[T](x: T): Gen[T] = gen(_ => r(Some(x))).suchThat(_ == x)
 
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = gen(_ => r(None)).suchThat(_ => false)
@@ -496,7 +497,7 @@ object Gen {
     val basics = List(minT, maxT, zero, one, -one)
     val basicsAndSpecials = for {
       t <- specials ++ basics if t >= minT && t <= maxT
-    } yield (1, value(t))
+    } yield (1, const(t))
     val allGens = basicsAndSpecials ++ List(
       (basicsAndSpecials.length, c.choose(minT, maxT))
     )

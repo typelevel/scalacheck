@@ -14,7 +14,7 @@ import Prop.{
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
   Exception, Proof, within, throws, BooleanOperators
 }
-import Gen.{value, fail, frequency, oneOf, choose, listOf, listOfN}
+import Gen.{const, fail, frequency, oneOf, choose, listOf, listOfN}
 import java.util.concurrent.atomic.AtomicBoolean
 
 object PropSpecification extends Properties("Prop") {
@@ -127,9 +127,9 @@ object PropSpecification extends Properties("Prop") {
     exception(e)(prms).status == Exception(e)
   }
 
-  property("all") = forAll(Gen.listOf1(value(proved)))(l => all(l:_*))
+  property("all") = forAll(Gen.listOf1(const(proved)))(l => all(l:_*))
 
-  property("atLeastOne") = forAll(Gen.listOf1(value(proved))) { l =>
+  property("atLeastOne") = forAll(Gen.listOf1(const(proved))) { l =>
     atLeastOne(l:_*)
   }
 
@@ -157,7 +157,7 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("someFailing") = {
-    val g: Gen[Gen[Int]] = oneOf(List(value(1), fail))
+    val g: Gen[Gen[Int]] = oneOf(List(const(1), fail))
     val gs: Gen[List[Gen[Int]]] = listOf(g)
     forAll(gs) { (gs: List[Gen[Int]]) =>
       someFailing(gs) || gs.forall(_.sample.isDefined)
@@ -165,7 +165,7 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("noneFailing") = {
-    val g: Gen[Gen[Int]] = oneOf(List(value(1), fail))
+    val g: Gen[Gen[Int]] = oneOf(List(const(1), fail))
     val gs: Gen[List[Gen[Int]]] = listOf(g)
     forAll(gs) { (gs: List[Gen[Int]]) =>
       noneFailing(gs) || gs.exists(!_.sample.isDefined)

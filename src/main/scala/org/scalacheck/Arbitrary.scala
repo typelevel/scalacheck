@@ -55,7 +55,7 @@ sealed abstract class Arbitrary[T] {
  */
 object Arbitrary {
 
-  import Gen.{value, choose, sized, listOf, listOf1,
+  import Gen.{const, choose, sized, listOf, listOf1,
     frequency, oneOf, containerOf, container2Of, resize}
   import util.StdRand
   import scala.collection.{immutable, mutable}
@@ -129,7 +129,7 @@ object Arbitrary {
   )
 
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
-  implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(value(()))
+  implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(const(()))
 
   /**** Arbitrary instances of other common types ****/
 
@@ -145,7 +145,7 @@ object Arbitrary {
 
   /** Arbitrary instance of Throwable */
   implicit lazy val arbThrowable: Arbitrary[Throwable] =
-    Arbitrary(value(new Exception))
+    Arbitrary(const(new Exception))
 
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
@@ -181,7 +181,7 @@ object Arbitrary {
     val bdGen = for {
       x <- arbBigInt.arbitrary
       mc <- mcGen
-      limit <- value(if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0))
+      limit <- const(if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0))
       scale <- Gen.chooseNum(Int.MinValue + limit , Int.MaxValue)
     } yield {
       try {
@@ -257,13 +257,13 @@ object Arbitrary {
   /** Arbitrary instance of Gen */
   implicit def arbGen[T](implicit a: Arbitrary[T]): Arbitrary[Gen[T]] =
     Arbitrary(frequency(
-      (5, arbitrary[T] map (value(_))),
+      (5, arbitrary[T] map (const(_))),
       (1, Gen.fail)
     ))
 
   /** Arbitrary instance of option type */
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
-    Arbitrary(sized(n => if(n == 0) value(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
+    Arbitrary(sized(n => if(n == 0) const(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
 
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))

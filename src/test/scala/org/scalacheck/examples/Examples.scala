@@ -25,7 +25,7 @@ object Examples extends Properties("Examples") {
   } 
 
   val genPerson = {
-    import org.scalacheck.Gen.{choose, value, oneOf}
+    import org.scalacheck.Gen.{choose, oneOf}
     for {
       firstName <- oneOf("Alan", "Ada", "Alonzo")
       lastName <- oneOf("Lovelace", "Turing", "Church")

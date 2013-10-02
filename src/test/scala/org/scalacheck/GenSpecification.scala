@@ -16,7 +16,7 @@ import Shrink._
 
 object GenSpecification extends Properties("Gen") {
   property("sequence") =
-    forAll(listOf(frequency((10,value(arbitrary[Int])),(1,value(fail)))))(l =>
+    forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
       (someFailing(l) && (sequence[List,Int](l) == fail)) ||
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
@@ -27,7 +27,7 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
-  property("value") = forAll((x:Int, prms:Parameters) => value(x)(prms) == Some(x))
+  property("const") = forAll((x:Int, prms:Parameters) => const(x)(prms) == Some(x))
 
   property("fail") = forAll((prms: Parameters) => fail(prms) == None)
 
@@ -60,8 +60,8 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("oneOf 2 gens") = forAll { (n1:Int, n2:Int) =>
-    val g1 = Gen.value(n1)
-    val g2 = Gen.value(n2)
+    val g1 = Gen.const(n1)
+    val g2 = Gen.const(n2)
     forAll(oneOf(g1, g2)) { n => n == n1 || n == n2 }
   }
 

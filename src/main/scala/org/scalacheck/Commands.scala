@@ -92,7 +92,7 @@ trait Commands extends Prop {
 
   private def genCmds: Gen[Cmds] = {
     def sizedCmds(s: State, sz: Int): Gen[Cmds] = {
-      if(sz <= 0) Gen.value(Cmds(Nil, Nil)) else for {
+      if(sz <= 0) Gen.const(Cmds(Nil, Nil)) else for {
         c <- genCommand(s) suchThat (_.preCondition(s))
         Cmds(cs,ss) <- sizedCmds(c.nextState(s), sz-1)
       } yield Cmds(c::cs, s::ss)
