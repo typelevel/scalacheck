@@ -127,9 +127,9 @@ object PropSpecification extends Properties("Prop") {
     exception(e)(prms).status == Exception(e)
   }
 
-  property("all") = forAll(Gen.listOf1(const(proved)))(l => all(l:_*))
+  property("all") = forAll(Gen.nonEmptyListOf(const(proved)))(l => all(l:_*))
 
-  property("atLeastOne") = forAll(Gen.listOf1(const(proved))) { l =>
+  property("atLeastOne") = forAll(Gen.nonEmptyListOf(const(proved))) { l =>
     atLeastOne(l:_*)
   }
 

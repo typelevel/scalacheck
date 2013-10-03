@@ -71,8 +71,8 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
-  property("listOf1") = sizedProp { sz =>
-    forAll(listOf1(arbitrary[Int])) { l =>
+  property("nonEmptyListOf") = sizedProp { sz =>
+    forAll(nonEmptyListOf(arbitrary[Int])) { l =>
       l.length > 0 && l.length <= math.max(1,sz)
     }
   }

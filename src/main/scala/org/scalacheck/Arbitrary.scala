@@ -55,8 +55,8 @@ sealed abstract class Arbitrary[T] {
  */
 object Arbitrary {
 
-  import Gen.{const, choose, sized, listOf, listOf1,
-    frequency, oneOf, containerOf, container2Of, resize}
+  import Gen.{ const, choose, sized, frequency, oneOf, containerOf
+             , container2Of, resize }
   import util.StdRand
   import scala.collection.{immutable, mutable}
   import java.util.Date
