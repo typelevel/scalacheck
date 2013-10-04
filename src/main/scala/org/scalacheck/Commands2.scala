@@ -9,76 +9,95 @@
 
 package org.scalacheck
 
-/** See User Guide for usage examples */
-private [scalacheck] trait Commands2 extends Prop {
+private[scalacheck] trait Commands2 {
 
-  /** The abstract state data type. This type must be immutable.
-   *  The state type that encodes the abstract state. The abstract state
-   *  should model all the features we need from the real state, the system
-   *  under test. We should leave out all details that aren't needed for
-   *  specifying our pre- and postconditions. The state type must be called
-   *  State and be immutable. */
-  type State <: AnyRef
+  /** The abstract state type. Must be immutable.
+   *  The [[Commands2.State]] type should model the state of the system under test (SUT).
+   *  It should leave out all details that aren't needed for specifying our
+   *  pre- and postconditions. */
+  type State
 
-  class Binding(private val key: State) {
-    def get: Any = bindings.find(_._1 eq key) match {
-      case None => sys.error("No value bound")
-      case Some(x) => x._2
-    }
-  }
+  /** A type representing one instance of the system under test (SUT).
+   *  The [[Commands2.System]] type should be a proxy to the actual system under test.
+   *  It is used in the postconditions to verify that the real system
+   *  behaves according to specification. It should be possible to have
+   *  up to [[Commands2.maxSystemInstanceCount]] co-existing instances of the System
+   *  type, and each System instance should be a proxy to a distinct
+   *  SUT instance. There should be no dependencies between the System
+   *  instances, as they might be used in parallel by ScalaCheck.
+   *  System instances are created by [[Commands2.newSystemInstance]] and destroyed by
+   *  [[Commands2.destroySystemInstance]]. [[Commands2.newSystemInstance]] and
+   *  [[Commands2.destroySystemInstance]] might be called at any time by ScalaCheck,
+   *  as long as [[Commands2.maxSystemInstanceCount]] isn't violated. */
+  type System
 
-  /** Abstract commands are defined as subtypes of the traits Command or SetCommand.
-   *  Each command must have a run method and a method that returns the new abstract
-   *  state, as it should look after the command has been run.
-   *  A command can also define a precondition that states how the current
-   *  abstract state must look if the command should be allowed to run.
-   *  Finally, we can also define a postcondition which verifies that the
-   *  system under test is in a correct state after the command exectution. */
+  /** The maximum number of concurrent [[Commands2.System]] instances allowed to exist. */
+  def maxSystemInstanceCount: Int
+
+  /** Should create a new [[Commands2.System]] instance with an internal state that
+   *  corresponds to the provided abstract state instance. The provided state
+   *  is guaranteed to fulfill [[Commands2.initialPreCondition]], and
+   *  [[Commands2.newSystemInstance]] will never be called if there already
+   *  is [[Commands2.maxSystemInstanceCount]] instances of [[Commands2.System]] */
+  def newSystemInstance(state: State): System
+
+  /** Should destroy the given SUT, so that a new [[Commands2.System]] instance can be
+   *  created with [[Commands2.newSystemInstance]]. */
+  def destroySystemInstance(system: System): Unit
+
+  /** The precondition for the initial state, when no commands yet have
+   *  run. This is used by ScalaCheck when command sequences are shrinked
+   *  and the first state might differ from what is returned from
+   *  [[Commands2.initialState]]. */
+  def initialPreCondition(state: State): Boolean
+
+  /** A generator that should produce an initial [[Commands2.State]] instance that is
+   *  usable by [[Commands2.newSystemInstance]] to create a new system under test.
+   *  The state returned by this generator is always checked with the
+   *  [[Commands2.initialPreCondition]] method before it is used. */
+  def genInitialState: Gen[State]
+
+  /** A generator that, given the current abstract state, should produce
+   *  a suitable Command instance. */
+  def genCommand(state: State): Gen[Command]
+
+  /** Abstract commands are defined as subtypes of the trait [[Commands2.Command]].
+   *  Each command must have a run method and a method
+   *  that returns the new abstract state, as it is supposed to look after
+   *  the command has been run. A command can also define a precondition
+   *  that defines how the current abstract state must look if the command
+   *  should be allowed to run. Finally, you can also define a postcondition
+   *  that verifies that the system under test is in a correct state after
+   *  the command execution. */
   trait Command {
+    /** Runs this command in the system under test,
+     *  represented by the provided [[Commands2.System]] instance. This method
+     *  can return any value as result. The returned value will be
+     *  used by the postcondition to decide if the system behaves as
+     *  expected. */
+    def run(state: State, system: System): Any
 
-    /** Used internally. */
-    protected[Commands2] def run_(s: State) = run(s)
+    /** Returns a new abstract [[Commands2.State]] instance that represents the
+     *  state of the system after this command has run. */
+    def nextState(state: State): State
 
-    def run(s: State): Any
-    def nextState(s: State): State
+    /** The precondition that decides if this command is allowed to run
+     *  when the system under test is in the specified (abstract) state. */
+    def preCondition(state: State): Boolean
 
-    /** Returns all preconditions merged into a single function */
-    def preCondition: (State => Boolean) =
-      s => preConditions.toList.forall(_.apply(s))
-
-    /** A precondition is a function that
-     *  takes the current abstract state as parameter and returns a boolean
-     *  that says if the precondition is fulfilled or not. You can add several
-     *  conditions to the precondition list */
-    val preConditions = new collection.mutable.ListBuffer[State => Boolean]
-
-    /** Returns all postconditions merged into a single function */
-    def postCondition: (State,State,Any) => Prop =
-      (s0,s1,r) => Prop.all(postConditions.map(_.apply(s0,s1,r)): _*)
-
-    /** A postcondition is a function that
-     *  takes three parameters, s0, s1 and r. s0 is the abstract state before
-     *  the command was run, s1 is the abstract state after the command was
-     *  run, and r is the result from the command's run
-     *  method. The postcondition function should return a Boolean (or
-     *  a Prop instance) that says if the condition holds or not. You can add several
-     *  conditions to the postConditions list. */
-    val postConditions = new collection.mutable.ListBuffer[(State,State,Any) => Prop]
+    /** The postcondition that decides if the system under test behaved
+     *  correctly when the command ran.
+     *  @param s0 The abstract state as it looked before this command ran.
+     *  @param s1 The abstract state as it looked after this command ran.
+     *  @param system The proxy for the system under test. The postcondition
+     *  can query the system for its current state, but care must be taken
+     *  not to mutate the system under test in any way.
+     *  @param result The result returned from the [[Command.run]] method.
+     */
+    def postCondition(s0: State, s1: State, system: System, result: Any): Prop
   }
 
-  /** A command that binds its result for later use */
-  trait SetCommand extends Command {
-    /** Used internally. */
-    protected[Commands2] final override def run_(s: State) = {
-      val r = run(s)
-      bindings += ((s,r))
-      r
-    }
-
-    final def nextState(s: State) = nextState(s, new Binding(s))
-    def nextState(s: State, b: Binding): State
-  }
-
+/* WIP
   private case class Cmds(cs: List[Command], ss: List[State]) {
     override def toString = cs.map(_.toString).mkString(", ")
   }
@@ -127,19 +146,5 @@ private [scalacheck] trait Commands2 extends Prop {
   }
 
   def apply(p: Prop.Params) = commandsProp(p)
-
-  /** initialState should reset the system under test to a well defined
-   *  initial state, and return the abstract version of that state. */
-  def initialState(): State
-
-  /** The command generator. Given an abstract state, the generator
-   *  should return a command that is allowed to run in that state. Note that
-   *  it is still neccessary to define preconditions on the commands if there
-   *  are any. The generator is just giving a hint of which commands that are
-   *  suitable for a given state, the preconditions will still be checked before
-   *  a command runs. Sometimes you maybe want to adjust the distribution of
-   *  your command generator according to the state, or do other calculations
-   *  based on the state. */
-  def genCommand(s: State): Gen[Command]
-
+*/
 }
