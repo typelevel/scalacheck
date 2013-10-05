@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import util.{FreqMap,Buildable,Buildable2}
+import util.{FreqMap, Buildable, Buildable2}
 
 
 sealed abstract class Arbitrary[T] {
@@ -55,10 +55,9 @@ sealed abstract class Arbitrary[T] {
  */
 object Arbitrary {
 
-  import Gen.{ const, choose, sized, frequency, oneOf, containerOf
-             , container2Of, resize }
+  import Gen.{const, choose, sized, frequency, oneOf, containerOf, resize}
   import util.StdRand
-  import scala.collection.{immutable, mutable}
+  import collection.{immutable, mutable}
   import java.util.Date
 
   /** Creates an Arbitrary instance */
@@ -285,7 +284,7 @@ object Arbitrary {
    *  The maximum size of the container depends on the size
    *  generation parameter. */
   implicit def arbContainer2[C[_,_],T,U](implicit a: Arbitrary[(T,U)], b: Buildable2[T,U,C]
-  ): Arbitrary[C[T,U]] = Arbitrary(container2Of[C,T,U](arbitrary[(T,U)]))
+  ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
 
   /** Arbitrary instance of immutable map */
   implicit def arbImmutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
