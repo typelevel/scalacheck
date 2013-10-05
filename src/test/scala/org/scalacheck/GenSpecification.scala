@@ -81,6 +81,10 @@ object GenSpecification extends Properties("Gen") {
     forAll(listOfN(n, arbitrary[Int])) { _.length == n }
   }
 
+  property("empty listOfN") = forAll(listOfN(0, arbitrary[Int])) { l =>
+    l.length == 0
+  }
+
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }

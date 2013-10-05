@@ -258,35 +258,31 @@ object Gen {
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C[_],T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C[T]] =
-    if(gs.isEmpty) fail
-    else {
-      val g = gen { p =>
-        gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]))) {
-          case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
-        }
+  def sequence[C[_],T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C[T]] = {
+    val g = gen { p =>
+      gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]))) {
+        case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
       }
-      val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
-        x:T => s(x) || g.sieveCopy(x)
-      }
-      g.map(b.fromIterable) // TODO .suchThat(_.forall(sieve))
     }
+    val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
+      x:T => s(x) || g.sieveCopy(x)
+    }
+    g.map(b.fromIterable) // TODO .suchThat(_.forall(sieve))
+  }
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C[_,_],T,U](gs: Traversable[Gen[(T,U)]])(implicit b: Buildable2[T,U,C]): Gen[C[T,U]] =
-    if(gs.isEmpty) fail
-    else {
-      val g = gen { p =>
-        gs.foldLeft(r(Some(collection.immutable.Vector.empty[(T,U)]))) {
-          case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
-        }
+  def sequence[C[_,_],T,U](gs: Traversable[Gen[(T,U)]])(implicit b: Buildable2[T,U,C]): Gen[C[T,U]] = {
+    val g = gen { p =>
+      gs.foldLeft(r(Some(collection.immutable.Vector.empty[(T,U)]))) {
+        case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
       }
-      val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
-        x:T => s(x) || g.sieveCopy(x)
-      }
-      g.map(b.fromIterable) // TODO .suchThat(_.forall(sieve))
     }
+    val sieve = gs.foldLeft((_:T) => false) { case (s,g) =>
+      x:T => s(x) || g.sieveCopy(x)
+    }
+    g.map(b.fromIterable) // TODO .suchThat(_.forall(sieve))
+  }
 
   /** Wraps a generator lazily. The given parameter is only evaluated once,
    *  and not until the wrapper generator is evaluated. */
