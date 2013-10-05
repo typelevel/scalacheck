@@ -268,13 +268,6 @@ object Arbitrary {
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
-  // TODO: Change ClassManifest to ClassTag when support for Scala 2.9.x can
-  // be dropped
-
-  /** Arbitrary instance of any array. */
-  implicit def arbArray[T : reflect.ClassManifest : Arbitrary]: Arbitrary[Array[T]] =
-    Arbitrary(containerOf[Array,T](arbitrary[T]))
-
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as lists, arrays,
    *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
@@ -286,14 +279,6 @@ object Arbitrary {
    *  generation parameter. */
   implicit def arbContainer2[C[_,_],T,U](implicit a: Arbitrary[(T,U)], b: Buildable2[T,U,C]
   ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
-
-  /** Arbitrary instance of immutable map */
-  implicit def arbImmutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
-  ): Arbitrary[immutable.Map[T,U]] = arbContainer2
-
-  /** Arbitrary instance of mutable map */
-  implicit def arbMutableMap[T,U](implicit at: Arbitrary[T], au: Arbitrary[U]
-  ): Arbitrary[mutable.Map[T,U]] = arbContainer2
 
   // Functions //
 
