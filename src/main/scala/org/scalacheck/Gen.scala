@@ -150,7 +150,7 @@ object Gen {
 
   //// Public interface ////
 
-  /** Generator parameters, used by [[Gen.apply]] */
+  /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
   trait Parameters {
     def size: Int
     def rng: java.util.Random
@@ -163,7 +163,7 @@ object Gen {
 
   }
 
-  /** Provides methods for creating [[Parameters]] values */
+  /** Provides methods for creating [[org.scalacheck.Gen.Parameters]] values */
   object Parameters {
     /** Default generator parameters trait. This can be overriden if you
      *  need to tweak the parameters. */
@@ -182,7 +182,7 @@ object Gen {
     def choose(min: T, max: T): Gen[T]
   }
 
-  /** Provides implicit [[Choose]] instances */
+  /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
   object Choose {
 
     private def chLng(l: Long, h: Long)(p: P): R[Long] = {

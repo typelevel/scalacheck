@@ -253,17 +253,18 @@ object Arbitrary {
 
   // Higher-order types //
 
-  /** Arbitrary instance of Gen */
+  /** Arbitrary instance of [[org.scalacheck.Gen]] */
   implicit def arbGen[T](implicit a: Arbitrary[T]): Arbitrary[Gen[T]] =
     Arbitrary(frequency(
       (5, arbitrary[T] map (const(_))),
       (1, Gen.fail)
     ))
 
-  /** Arbitrary instance of option type */
+  /** Arbitrary instance of the Option type */
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
     Arbitrary(sized(n => if(n == 0) const(None) else resize(n - 1, arbitrary[T]).map(Some(_))))
 
+  /** Arbitrary instance of the Either type */
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
@@ -274,13 +275,13 @@ object Arbitrary {
   implicit def arbArray[T : reflect.ClassManifest : Arbitrary]: Arbitrary[Array[T]] =
     Arbitrary(containerOf[Array,T](arbitrary[T]))
 
-  /** Arbitrary instance of any buildable container (such as lists, arrays,
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as lists, arrays,
    *  streams, etc). The maximum size of the container depends on the size
    *  generation parameter. */
   implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[T,C]
   ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
-  /** Arbitrary instance of any buildable container2 (such as maps, etc).
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container (such as maps, etc).
    *  The maximum size of the container depends on the size
    *  generation parameter. */
   implicit def arbContainer2[C[_,_],T,U](implicit a: Arbitrary[(T,U)], b: Buildable2[T,U,C]
