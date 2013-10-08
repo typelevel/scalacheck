@@ -30,29 +30,31 @@ let
     '';
   };
 
+in rec {
+
   mkScalaCheck = args: stdenv.mkDerivation rec {
     inherit (args) name;
-    src = fetchurl {
-      url = "https://github.com/rickynils/scalacheck/archive/${args.version}.tar.gz";
-      inherit (args) sha256;
+    src = fetchgit {
+      url = https://github.com/rickynils/scalacheck;
+      inherit (args) rev sha256;
     };
     buildInputs = [ openjre args.scala ];
     buildPhase = ''
       find src/main -name '*.scala' > sources
-      find src/test -name '*.scala' > sources-test
-      scalac -classpath ${args.test-interface}/lib/test-interface.jar \
+      scalac -classpath ${test-interface."1.0"}/lib/test-interface.jar \
         -sourcepath src/main -d ${name}.jar @sources
-      scalac -classpath ${name}.jar \
-        -sourcepath src/test -d ${name}-test.jar @sources-test
-      scala -classpath ${name}.jar:${name}-test.jar org.scalacheck.TestAll
+      ${lib.optionalString args.runTests ''
+        find src/test -name '*.scala' > sources-test
+        scalac -classpath ${name}.jar \
+          -sourcepath src/test -d ${name}-test.jar @sources-test
+        scala -classpath ${name}.jar:${name}-test.jar org.scalacheck.TestAll
+      ''}
     '';
     installPhase = ''
       mkdir -p $out/lib
       mv ${name}.jar $out/lib/
     '';
   };
-
-in rec {
 
   test-interface = {
     "1.0" = mkTestInterface {
@@ -90,28 +92,42 @@ in rec {
 
   scalacheckVersions = {
     "1.11.0-SNAPSHOT" = {
-      version = "171cc42";
-      sha256 = "03naiwg7ibc3yi7dmzfcxnpfbxlpvni60pc7dhyvdz0bzjlaw08a";
-      test-interface = test-interface."1.0";
+      rev = "5ea4cbd06a2016966f57216d665545597acd306b";
+      sha256 = "16lxckdk8gbb0jig5zvh1j9jdidb2gh81gnsbwgay7dk8lg00df4";
     };
     "1.10.1" = {
-      version = "1.10.1";
-      sha256 = "1gxqx8yjyldcy4x6q7dg7h3827fd0l7396psr1gkk87dxjh9l7hg";
-      test-interface = test-interface."1.0";
+      rev = "ecb39d126f919795738e3b0bb66dc088e31ccef3";
+      sha256 = "1yjvh1r2fp46wdmsajmljryp03qw92albjh07vvgd15qw3v6vz3k";
     };
     "1.10.0" = {
-      version = "1.10.0";
-      sha256 = "0jjvsmd8qj8b4zgdyypabj14p6am4b18cz19i69vgiwfqb4r86w1";
-      test-interface = test-interface."1.0";
+      rev = "2338afc425a905fdc55b4fd67bd8bfc3358e3390";
+      sha256 = "0a3kgdqpr421k624qhpan3krjdhii9fm4zna7fbbz3sk30gbcsnj";
+    };
+    "1.9" = {
+      rev = "ddfd03e49b05fba702539a4aff03e60ea35a57e0";
+      sha256 = "1dbxp9w7pjw1zf50x3hz6kwzm8xp3hvdbswnxsrcswagvqmc5kkm";
+      runTests = false;
+    };
+    "1.8" = {
+      rev = "f2175ed5ac20f37c1a7ec320b1c58de7a8e3c27f";
+      sha256 = "0gkwnqw9wcv0p0dbc6w0i54zw9lb32qnl8qdsp3mn6ylkwj5zx0h";
     };
   };
 
-  scalacheck = listToAttrs (flatten (mapAttrsToList (versionName: scalacheck:
-    mapAttrsToList (scalaVersion: scala: rec {
-      name = "scalacheck_${scalaVersion}-${versionName}";
+  scalacheck = mapAttrs' (scalaVer: scala: {
+    name = scalaVer;
+    value = mapAttrs' (scalacheckVer: scalacheck: {
+      name = scalacheckVer;
       value = mkScalaCheck {
-        inherit name scala;
-        inherit (scalacheck) version sha256 test-interface;
+        name = "scalacheck_${scalaVer}-${scalacheckVer}";
+        runTests = if scalacheck ? runTests then scalacheck.runTests else true;
+        inherit scala;
+        inherit (scalacheck) rev sha256;
       };
-    }) scala) scalacheckVersions));
+    }) scalacheckVersions;
+  }) scala;
+
+  scalacheck_flat = listToAttrs (flatten (mapAttrsToList (scalaVer: ss:
+    mapAttrsToList (v: s: nameValuePair "scalacheck_${scalaVer}-${v}" s) ss
+  ) scalacheck));
 }
