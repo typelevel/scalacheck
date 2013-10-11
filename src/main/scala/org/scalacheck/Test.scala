@@ -247,9 +247,9 @@ object Test {
     var stop = false
     val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
 
-    def worker(workerIdx: Int) =
+    def worker(workerIdx: Int): () => Result =
       if (workers < 2) () => workerFun(workerIdx) 
-      else actors.Futures.future {
+      else spawn {
         params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
         workerFun(workerIdx)
       }
@@ -339,4 +339,14 @@ object Test {
       (name,res)
     }
 
+  private[this] def spawn[A](body : => A): () => A = {
+    import scala.concurrent._, ExecutionContext.Implicits.global, duration.Duration
+    try {
+      val future = Future(body)
+      () => Await.result(future, Duration.Inf)
+    } catch {
+      case _: LinkageError =>
+        () => body // Scala 2.9.2 doesn't have scala.concurrent.Future, 2.9.3 and higher do.
+    }
+  }
 }
