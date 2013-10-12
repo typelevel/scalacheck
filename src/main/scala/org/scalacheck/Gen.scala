@@ -331,6 +331,14 @@ object Gen {
     }
   }
 
+  /* Implicit convenience method for using the `frequency` method
+   * like this:
+   * {{{
+   *  frequency((1, "foo"), (3, "bar"))
+   * }}}
+   */
+  implicit def freqTuple[T](t: (Int,T)): (Int,Gen[T]) = (t._1, const(t._2))
+
 
   //// List Generators ////
 
