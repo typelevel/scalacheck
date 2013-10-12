@@ -12,9 +12,9 @@ licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-licen
 
 homepage := Some(url("http://www.scalacheck.org"))
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
-crossScalaVersions := Seq("2.9.3", "2.10.2", "2.11.0-M4")
+crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M5")
 
 mimaDefaultSettings
 
@@ -22,23 +22,18 @@ previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.0-SNAPSHOT
 
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
-libraryDependencies <++= (scalaVersion){sVer =>
-  if(sVer startsWith "2.9") Seq.empty
-  else Seq("org.scala-lang" % "scala-actors" % sVer)
-}
-
-libraryDependencies <++= (scalaVersion){sVer =>
-  if((sVer startsWith "2.9") || (sVer startsWith "2.10")) Seq.empty
+libraryDependencies ++= (
+  if((scalaVersion.value startsWith "2.9") || (scalaVersion.value startsWith "2.10")) Seq.empty
   else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0-RC2")
-}
+)
 
 javacOptions ++= Seq("-Xmx1024M")
 
 scalacOptions += "-deprecation"
 
-publishTo <<= version { v: String =>
+publishTo := {
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
+  if (version.value.trim.endsWith("SNAPSHOT"))
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
