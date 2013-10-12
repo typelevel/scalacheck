@@ -47,6 +47,14 @@ object PropSpecification extends Properties("Prop") {
     (n > 0) ==> positiveDomain(n)
   }
 
+  property("Prop.==> exception") = {
+    lazy val p: Prop = {
+      throw new java.lang.Exception("exception")
+      passed
+    }
+    (passed ==> p) == exception
+  }
+
   property("Prop.&& Commutativity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
     forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }

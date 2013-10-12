@@ -16,7 +16,8 @@ import scala.annotation.tailrec
 
 trait Prop {
 
-  import Prop.{Result,Params,Proof,True,False,Exception,Undecided,provedToTrue}
+  import Prop.{Result, Params, Proof, True, False, Exception, Undecided,
+    provedToTrue, secure}
   import Test.cmdLineParser.{Success, NoSuccess}
   import Result.merge
 
@@ -75,22 +76,22 @@ trait Prop {
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate false.  */
-  def &&(p: Prop) = combine(p)(_ && _)
+  def &&(p: => Prop) = combine(secure(p))(_ && _)
 
   /** Returns a new property that holds if either this
    *  or the given property (or both) hold.  */
-  def ||(p: Prop) = combine(p)(_ || _)
+  def ||(p: => Prop) = combine(secure(p))(_ || _)
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate the same result
    *  as the other property.  */
-  def ++(p: Prop): Prop = combine(p)(_ ++ _)
+  def ++(p: => Prop): Prop = combine(secure(p))(_ ++ _)
 
   /** Combines two properties through implication */
   def ==>(p: => Prop): Prop = flatMap { r1 =>
-    if(r1.proved) p map { r2 => merge(r1,r2,r2.status) }
-    else if(r1.success) p map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
+    if(r1.proved) secure(p) map { r2 => merge(r1,r2,r2.status) }
+    else if(r1.success) secure(p) map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
     else Prop(r1.copy(status = Undecided))
   }
 
@@ -99,8 +100,8 @@ trait Prop {
    *  same status. Note that this means that if one of the properties is
    *  proved, and the other one passed, then the resulting property
    *  will fail. */
-  def ==(p: Prop) = this.flatMap { r1 =>
-    p.map { r2 =>
+  def ==(p: => Prop) = this.flatMap { r1 =>
+    secure(p).map { r2 =>
       Result.merge(r1, r2, if(r1.status == r2.status) True else False)
     }
   }
