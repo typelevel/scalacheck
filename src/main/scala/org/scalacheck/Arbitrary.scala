@@ -112,8 +112,8 @@ object Arbitrary {
   /** Arbitrary instance of Char */
   implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(
     Gen.frequency(
-      (0xD800-Char.MinValue, Gen.choose(Char.MinValue,0xD800-1)),
-      (Char.MaxValue-0xDFFF, Gen.choose(0xDFFF+1,Char.MaxValue))
+      (0xD800-Char.MinValue, Gen.choose[Char](Char.MinValue,0xD800-1)),
+      (Char.MaxValue-0xDFFF, Gen.choose[Char](0xDFFF+1,Char.MaxValue))
     )
   )
 
@@ -151,7 +151,7 @@ object Arbitrary {
     def chooseBigInt: Gen[BigInt] =
       sized((s: Int) => choose(-s, s)) map (x => BigInt(x))
 
-    def chooseReallyBigInt = for {
+    def chooseReallyBigInt: Gen[BigInt] = for {
       bi <- chooseBigInt
       n <- choose(32,128)
     } yield bi << n
