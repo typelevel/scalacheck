@@ -21,6 +21,20 @@ object GenSpecification extends Properties("Gen") {
       (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
     )
 
+  property("frequency 1") = {
+    val g = frequency((10, const(0)), (5, const(1)))
+    forAll(g) { n => true }
+  }
+
+  property("frequency 2") = {
+    val g = frequency((10, 0), (5, 1))
+    forAll(g) { n => true }
+  }
+
+  property("frequency 3") = forAll(choose(0,100000)) { n =>
+    forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
+  }
+
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
   property("wrap") = forAll((g: Gen[Int]) => wrap(g) == g)
