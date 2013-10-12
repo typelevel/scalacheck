@@ -31,41 +31,12 @@ trait Buildable2[T,U,C[_,_]] {
 }
 
 object Buildable {
+  import generic.CanBuildFrom
 
-  implicit def buildableList[T] = new Buildable[T,List] {
-    def builder = List.newBuilder
-  }
-
-  implicit def buildableStream[T] = new Buildable[T,Stream] {
-    def builder = Stream.newBuilder
-  }
-
-  // TODO: Change ClassManifest to ClassTag when support for Scala 2.9.x can
-  // be dropped
-
-  implicit def buildableArray[T : reflect.ClassManifest] = new Buildable[T,Array] {
-    def builder = mutable.ArrayBuilder.make[T]
-  }
-
-  implicit def buildableMutableSet[T] = new Buildable[T,mutable.Set] {
-    def builder = mutable.Set.newBuilder
-  }
-
-  implicit def buildableImmutableSet[T] = new Buildable[T,Set] {
-    def builder = new mutable.SetBuilder(Set.empty[T])
-  }
-
-  implicit def buildableImmutableSortedSet[T: Ordering] = new Buildable[T,immutable.SortedSet] {
-    def builder = immutable.SortedSet.newBuilder
-  }
-
-  implicit def buildableSet[T] = new Buildable[T,Set] {
-    def builder = Set.newBuilder
-  }
-
-  implicit def buildableSortedSet[T: Ordering] = new Buildable[T,SortedSet] {
-    def builder = SortedSet.newBuilder
-  }
+  implicit def buildableCanBuildFrom[T, C[_]](implicit c: CanBuildFrom[C[_], T, C[T]]) = 
+    new Buildable[T, C] {
+      def builder = c.apply
+    }
 
   import java.util.ArrayList
   implicit def buildableArrayList[T] = new Buildable[T,ArrayList] {
