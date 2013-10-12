@@ -21,7 +21,9 @@ sealed trait Gen[+T] {
   private type P = Gen.Parameters
 
   /** Should be a copy of R.sieve. Used internally in Gen when some generators
-   *  with suchThat-claues are created (when R is not available). */
+   *  with suchThat-claues are created (when R is not available). This method
+   *  actually breaks covariance, but since this method will only ever be
+   *  called with a value of exactly type T, it is OK. */
   protected def sieveCopy(x: Any): Boolean = true
 
   private[scalacheck] def doApply(p: P): R[T]
@@ -50,7 +52,7 @@ sealed trait Gen[+T] {
 
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P) = Gen.this.doApply(p).copy(s = f)
-    override def sieveCopy(x: Any) = x match { case t:T => f(t) }
+    override def sieveCopy(x: Any) = f(x.asInstanceOf[T])
   }
 
   def retryUntil(p: T => Boolean): Gen[T] = flatMap { t =>
@@ -125,7 +127,7 @@ object Gen {
       r: Option[U] = this.result
     ): R[U] = new R[U] {
       override val labels = l
-      override def sieve[V >: U] = { x:Any => x match { case u:U => s(u) } }
+      override def sieve[V >: U] = { x:Any => s(x.asInstanceOf[U]) }
       val result = r
     }
 
