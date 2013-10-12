@@ -319,7 +319,7 @@ object Gen {
 
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    def tot = (gs.map(_._1) :\ 0) (_+_)
+    def tot = gs.map(_._1).foldLeft(0)(_+_)
 
     def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
       case Nil => fail
