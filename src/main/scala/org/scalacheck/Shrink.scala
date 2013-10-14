@@ -22,11 +22,11 @@ object Shrink {
   import scala.collection._
   import java.util.ArrayList
 
-  /** Interleaves to streams */
+  /** Interleaves two streams */
   private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
     if(xs.isEmpty) ys
     else if(ys.isEmpty) xs
-    else Stream(xs.head, ys.head) append interleave(xs.tail, ys.tail)
+    else cons(xs.head, cons(ys.head, interleave(xs.tail, ys.tail)))
 
   /** Shrink instance factory */
   def apply[T](s: T => Stream[T]): Shrink[T] = new Shrink[T] {
@@ -73,13 +73,12 @@ object Shrink {
       cons(xs1, cons(xs2, interleave(xs3, xs4)))
     }
 
-  private def shrinkOne[T](zs: Stream[T]): Stream[Stream[T]] =
+  private def shrinkOne[T : Shrink](zs: Stream[T]): Stream[Stream[T]] =
     if (zs.isEmpty) empty
     else {
       val x = zs.head
       val xs = zs.tail
-      (for (y <- shrink(x)) yield cons(y, xs)) append
-        (for (ys <- shrinkOne(xs)) yield cons(x, ys))
+      shrink(x).map(cons(_,xs)).append(shrinkOne(xs).map(cons(x,_)))
     }
 
   /** Shrink instance of integer */

@@ -308,6 +308,14 @@ object Prop {
   class ExtendedBoolean(b: => Boolean) {
     /** See [[Prop.==>]] */
     def ==>(p: => Prop) = Prop(b) ==> p
+    /** See [[Prop.:|]] */
+    def :|(l: String) = Prop(b) :| l
+    /** See [[Prop.|:]] */
+    def |:(l: String) = l |: Prop(b)
+    /** See [[Prop.:|]] */
+    def :|(l: Symbol) = Prop(b) :| l
+    /** See [[Prop.|:]] */
+    def |:(l: Symbol) = l |: Prop(b)
   }
 
   /** Implicit method that makes a number of property operators on values of
