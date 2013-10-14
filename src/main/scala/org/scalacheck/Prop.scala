@@ -139,11 +139,10 @@ object Prop {
     label: String,
     arg: T,
     shrinks: Int,
-    origArg: T
-  )(implicit prettyPrinter: T => Pretty) {
-    lazy val prettyArg: Pretty = prettyPrinter(arg)
-    lazy val prettyOrigArg: Pretty = prettyPrinter(origArg)
-  }
+    origArg: T,
+    prettyArg: Pretty,
+    prettyOrigArg: Pretty
+  )
 
   /** Property parameters */
   case class Params(val genPrms: Gen.Parameters, val freqMap: FreqMap[Set[Any]])
@@ -458,7 +457,7 @@ object Prop {
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        val r = p(prms).addArg(Arg(labels,x,0,x))
+        val r = p(prms).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         r.status match {
           case True => new Result(Proof, r.args, r.collected, r.labels)
           case False => new Result(Undecided, r.args, r.collected, r.labels)
@@ -481,7 +480,7 @@ object Prop {
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        provedToTrue(p(prms)).addArg(Arg(labels,x,0,x))
+        provedToTrue(p(prms)).addArg(Arg(labels,x,0,x,pp1(x),pp1(x)))
     }
   }
 
@@ -578,15 +577,16 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
-  def forAllShrink[T <% Pretty, P <% Prop](g: Gen[T],
+  def forAllShrink[T, P](g: Gen[T],
     shrink: T => Stream[T])(f: T => P
+  )(implicit pv: P => Prop, pp: T => Pretty
   ): Prop = Prop { prms =>
 
     val gr = g.doApply(prms.genPrms)
     val labels = gr.labels.mkString(",")
 
     def result(x: T) = {
-      val p = secure(f(x))
+      val p = secure(pv(f(x)))
       provedToTrue(p(prms))
     }
 
@@ -602,18 +602,29 @@ object Prop {
 
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
       val xs = shrink(x).filter(gr.sieve)
-      val res = r.addArg(Arg(labels,x,shrinks,orig))
+      val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
       if(xs.isEmpty) res else getFirstFailure(xs) match {
-        case Right(_) => res
-        case Left((x2,r2)) => shrinker(x2, r2, shrinks+1, orig)
+        case Right((x2,r2)) => res
+        case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
       }
+    }
+
+    def replOrig(r0: Result, r1: Result) = (r0,r1) match {
+      case (Result(_,a0::_,_,_),Result(_,a1::as,_,_)) =>
+        r1.copy(
+          args = a1.copy(
+            origArg = a0.origArg,
+            prettyOrigArg = a0.prettyOrigArg
+          ) :: as
+        )
+      case _ => r1
     }
 
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) => 
         val r = result(x)
-        if (!r.failure) r.addArg(Arg(labels,x,0,x))
+        if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         else shrinker(x,r,0,x)
     }
 
@@ -627,7 +638,7 @@ object Prop {
     p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink(g1, shrink[T1])(f)
+  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
