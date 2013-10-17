@@ -35,13 +35,32 @@ trait Prop {
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
   def check(prms: Test.Parameters): Unit = Test.check(
-    prms.copy(_testCallback = prms.testCallback.chain(ConsoleReporter(1))), this
+    if(prms.testCallback.isInstanceOf[ConsoleReporter]) prms
+    else prms.copy(_testCallback = prms.testCallback.chain(ConsoleReporter(1))),
+    this
   )
 
   /** Convenience method that checks this property and reports the
    *  result on the console. If you need to get the results from the test use
    *  the `check` methods in [[org.scalacheck.Test]] instead. */
-  def check: Unit = check(new Test.Parameters.Default{})
+  def check: Unit = check(Test.Parameters.default)
+
+  /** Convenience method that checks this property with specified minimal
+   *  number of successful test and the given testing parameters, and
+   *  reports the result on the console. If you need to get the results
+   *  from the test use the `check` methods in [[org.scalacheck.Test]]
+   *  instead. */
+  def check(minSuccessfulTests: Int, prms: Test.Parameters): Unit = check(
+    prms.copy(_minSuccessfulTests = minSuccessfulTests)
+  )
+
+  /** Convenience method that checks this property with specified minimal
+   *  number of successful test and reports the result on the console.
+   *  If you need to get the results from the test use
+   *  the `check` methods in [[org.scalacheck.Test]] instead. */
+  def check(minSuccessfulTests: Int): Unit = check(
+    Test.Parameters.default.copy(_minSuccessfulTests = minSuccessfulTests)
+  )
 
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.
