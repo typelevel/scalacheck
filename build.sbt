@@ -11,9 +11,9 @@ licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-licen
 
 homepage := Some(url("http://www.scalacheck.org"))
 
-scalaVersion := "2.11.0-M5"
+scalaVersion := "2.11.0-M6"
 
-scalaBinaryVersion := "2.11.0-M5"
+scalaBinaryVersion := "2.11.0-M6"
 
 mimaDefaultSettings
 
@@ -30,7 +30,7 @@ libraryDependencies <++= (scalaVersion){sVer =>
 
 libraryDependencies <++= (scalaVersion){sVer =>
   if((sVer startsWith "2.9") || (sVer startsWith "2.10")) Seq.empty
-  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0-RC2")
+  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.0-RC3")
 }
 
 javacOptions ++= Seq("-Xmx1024M")
