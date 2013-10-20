@@ -22,11 +22,6 @@ previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.0-SNAPSHOT
 
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
-libraryDependencies ++= (
-  if((scalaVersion.value startsWith "2.9") || (scalaVersion.value startsWith "2.10")) Seq.empty
-  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0-RC2")
-)
-
 javacOptions ++= Seq("-Xmx1024M")
 
 scalacOptions += "-deprecation"

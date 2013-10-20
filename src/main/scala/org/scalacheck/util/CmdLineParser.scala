@@ -9,9 +9,6 @@
 
 package org.scalacheck.util
 
-import scala.util.parsing.combinator.Parsers
-import scala.util.parsing.input.Reader
-import scala.util.parsing.input.Position
 import scala.collection.Set
 import org.scalacheck.Test
 
@@ -99,3 +96,5 @@ private[scalacheck] trait CmdLineParser extends Parsers {
   def parseArgs[T](args: Array[String])(f: OptMap => T) =
     phrase(options map f)(new ArgsReader(args,0))
 }
+
+
