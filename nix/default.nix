@@ -2,6 +2,15 @@ with (import <nixpkgs> {});
 with lib;
 
 let
+  scalacheckRepoUrl = "https://github.com/rickynils/scalacheck";
+
+  docFooter = version: rev:
+    let shortRev = builtins.substring 0 7 rev;
+    in "ScalaCheck ${version} / ${shortRev} API documentation. © 2007-2013 Rickard Nilsson";
+
+  docSourceUrl = version: rev:
+    let tag = if hasSuffix "SNAPSHOT" version then rev else version;
+    in "${scalacheckRepoUrl}/tree/${tag}/src/main/scala€{FILE_PATH}.scala";
 
   mkTestInterface = args: stdenv.mkDerivation rec {
     name = "test-interface-${args.version}";
@@ -34,25 +43,59 @@ in rec {
 
   mkScalaCheck = args: stdenv.mkDerivation rec {
     inherit (args) name;
+    outputs = [ "jar" "srcjar" "doc" "docjar" ];
     src = fetchgit {
-      url = https://github.com/rickynils/scalacheck;
+      url = scalacheckRepoUrl;
       inherit (args) rev sha256;
     };
-    buildInputs = [ openjre args.scala ];
+    buildInputs = [ openjdk args.scala ];
     buildPhase = ''
-      find src/main -name '*.scala' > sources
-      scalac -classpath ${test-interface."1.0"}/lib/test-interface.jar \
-        -sourcepath src/main -d ${name}.jar @sources
+      export LANG="en_US.UTF-8"
+      export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+
+      testinterface="${test-interface."1.0"}/lib/test-interface.jar"
+
+      find src/main/scala -name '*.scala' > sources
+
+      scalac \
+        -classpath "$testinterface" \
+        -optimise \
+        -deprecation \
+        -d ${name}.jar \
+        @sources
+
       ${lib.optionalString args.runTests ''
-        find src/test -name '*.scala' > sources-test
-        scalac -classpath ${name}.jar \
-          -sourcepath src/test -d ${name}-test.jar @sources-test
-        scala -classpath ${name}.jar:${name}-test.jar org.scalacheck.TestAll
+        find src/test/scala -name '*.scala' > sources-test
+        scalac \
+          -classpath ${name}.jar \
+          -optimise \
+          -d ${name}-test.jar \
+          @sources-test
+        scala \
+          -classpath ${name}.jar:${name}-test.jar \
+          org.scalacheck.TestAll
       ''}
+
+      jar cf "${name}-sources.jar" LICENSE RELEASE -C src/main/scala .
+
+      mkdir api && scaladoc \
+        -doc-title ScalaCheck \
+        -doc-version "${args.version}" \
+        -doc-footer "${docFooter args.version args.rev}" \
+        -doc-source-url "${docSourceUrl args.version args.rev}" \
+        -classpath "$testinterface" \
+        -sourcepath src/main/scala \
+        -d api \
+        @sources
+
+      jar cf "${name}-javadoc.jar" -C api .
     '';
     installPhase = ''
-      mkdir -p $out/lib
-      mv ${name}.jar $out/lib/
+      mkdir -p "$jar" "$srcjar" "$doc" "$docjar"
+      mv "${name}.jar" "$jar/"
+      mv "${name}-sources.jar" "$srcjar/"
+      mv "${name}-javadoc.jar" "$docjar/"
+      mv api "$doc/"
     '';
   };
 
@@ -83,6 +126,10 @@ in rec {
     "2.10.2" = mkScala {
       version = "2.10.2";
       sha256 = "18v6jr42rif84q5cb82kynigqls2q5q3qnb61040m92496ygv4zn";
+    };
+    "2.10.3" = mkScala {
+      version = "2.10.3";
+      sha256 = "16ac935wydrxrvijv4ldnz4vl2xk8yb3yzb9bsi3nb9sic7fxl95";
     };
     "2.11.0-M4" = mkScala {
       version = "2.11.0-M4";
@@ -120,6 +167,7 @@ in rec {
       name = scalacheckVer;
       value = mkScalaCheck {
         name = "scalacheck_${scalaVer}-${scalacheckVer}";
+        version = scalacheckVer;
         runTests = if scalacheck ? runTests then scalacheck.runTests else true;
         inherit scala;
         inherit (scalacheck) rev sha256;
@@ -130,4 +178,7 @@ in rec {
   scalacheck_flat = listToAttrs (flatten (mapAttrsToList (scalaVer: ss:
     mapAttrsToList (v: s: nameValuePair "scalacheck_${scalaVer}-${v}" s) ss
   ) scalacheck));
+
+  current = scalacheck."2.10.3"."1.10.1";
+  snapshot = scalacheck."2.10.3"."1.11.0-SNAPSHOT";
 }
