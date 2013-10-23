@@ -119,7 +119,7 @@ object TestSpecification extends Properties("Test") {
 
   property("propShrinked") = forAll { prms: Test.Parameters =>
     Test.check(prms, shrinked).status match {
-      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_)::Nil,_) =>
+      case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_,_,_)::Nil,_) =>
         x == 0 && y == 0 && z == 0
       case x => false
     }
