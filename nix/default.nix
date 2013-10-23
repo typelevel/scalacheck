@@ -1,4 +1,5 @@
-with (import <nixpkgs> {});
+{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib }:
+
 with lib;
 
 let
@@ -41,22 +42,22 @@ let
 
 in rec {
 
-  mkScalaCheck = args: stdenv.mkDerivation rec {
-    inherit (args) name;
+  mkScalaCheck = scalaVer: scala: scalacheck: stdenv.mkDerivation rec {
+    name = "scalacheck_${scalaVer}-${scalacheck.version}";
     outputs = [ "jar" "srcjar" "doc" "docjar" ];
     src = fetchgit {
       url = scalacheckRepoUrl;
-      inherit (args) rev sha256;
+      inherit (scalacheck) rev sha256;
     };
-    buildInputs = [ openjdk args.scala ];
+    buildInputs = [ openjdk scala ];
+    doCheck = if scalacheck ? runTests then scalacheck.runTests else true;
+
     buildPhase = ''
       export LANG="en_US.UTF-8"
       export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-
       testinterface="${test-interface."1.0"}/lib/test-interface.jar"
 
       find src/main/scala -name '*.scala' > sources
-
       scalac \
         -classpath "$testinterface" \
         -optimise \
@@ -64,25 +65,13 @@ in rec {
         -d ${name}.jar \
         @sources
 
-      ${lib.optionalString args.runTests ''
-        find src/test/scala -name '*.scala' > sources-test
-        scalac \
-          -classpath ${name}.jar \
-          -optimise \
-          -d ${name}-test.jar \
-          @sources-test
-        scala \
-          -classpath ${name}.jar:${name}-test.jar \
-          org.scalacheck.TestAll
-      ''}
-
       jar cf "${name}-sources.jar" LICENSE RELEASE -C src/main/scala .
 
       mkdir api && scaladoc \
         -doc-title ScalaCheck \
-        -doc-version "${args.version}" \
-        -doc-footer "${docFooter args.version args.rev}" \
-        -doc-source-url "${docSourceUrl args.version args.rev}" \
+        -doc-version "${scalacheck.version}" \
+        -doc-footer "${docFooter scalacheck.version scalacheck.rev}" \
+        -doc-source-url "${docSourceUrl scalacheck.version scalacheck.rev}" \
         -classpath "$testinterface" \
         -sourcepath src/main/scala \
         -d api \
@@ -90,6 +79,19 @@ in rec {
 
       jar cf "${name}-javadoc.jar" -C api .
     '';
+
+    checkPhase = ''
+      find src/test/scala -name '*.scala' > sources-test
+      scalac \
+        -classpath ${name}.jar \
+        -optimise \
+        -d ${name}-test.jar \
+        @sources-test
+      scala \
+        -classpath ${name}.jar:${name}-test.jar \
+        org.scalacheck.TestAll
+    '';
+
     installPhase = ''
       mkdir -p "$jar" "$srcjar" "$doc" "$docjar"
       mv "${name}.jar" "$jar/"
@@ -98,6 +100,11 @@ in rec {
       mv api "$doc/"
     '';
   };
+
+  mkScalaCheckForAllScala = scalacheck:
+    mapAttrsToList (scalaVer: scala:
+      mkScalaCheck scalaVer scala scalacheck
+    ) scala;
 
   test-interface = {
     "1.0" = mkTestInterface {
@@ -131,54 +138,32 @@ in rec {
       version = "2.10.3";
       sha256 = "16ac935wydrxrvijv4ldnz4vl2xk8yb3yzb9bsi3nb9sic7fxl95";
     };
+    "2.10" = scala."2.10.3";
     "2.11.0-M4" = mkScala {
       version = "2.11.0-M4";
       sha256 = "15wv35nizyi50dv7ig2dscv7yapa65mp32liqvmwwhyvzx1h9pnh";
     };
   };
 
-  scalacheckVersions = {
-    "1.11.0-SNAPSHOT" = {
-      rev = "5ea4cbd06a2016966f57216d665545597acd306b";
-      sha256 = "16lxckdk8gbb0jig5zvh1j9jdidb2gh81gnsbwgay7dk8lg00df4";
-    };
-    "1.10.1" = {
+  scalacheckVersions = [
+    { version = "1.10.1";
       rev = "ecb39d126f919795738e3b0bb66dc088e31ccef3";
       sha256 = "1yjvh1r2fp46wdmsajmljryp03qw92albjh07vvgd15qw3v6vz3k";
-    };
-    "1.10.0" = {
+    }
+    { version = "1.10.0";
       rev = "2338afc425a905fdc55b4fd67bd8bfc3358e3390";
       sha256 = "0a3kgdqpr421k624qhpan3krjdhii9fm4zna7fbbz3sk30gbcsnj";
-    };
-    "1.9" = {
+    }
+    { version = "1.9";
       rev = "ddfd03e49b05fba702539a4aff03e60ea35a57e0";
       sha256 = "1dbxp9w7pjw1zf50x3hz6kwzm8xp3hvdbswnxsrcswagvqmc5kkm";
       runTests = false;
-    };
-    "1.8" = {
+    }
+    { version = "1.8";
       rev = "f2175ed5ac20f37c1a7ec320b1c58de7a8e3c27f";
       sha256 = "0gkwnqw9wcv0p0dbc6w0i54zw9lb32qnl8qdsp3mn6ylkwj5zx0h";
-    };
-  };
+    }
+  ];
 
-  scalacheck = mapAttrs' (scalaVer: scala: {
-    name = scalaVer;
-    value = mapAttrs' (scalacheckVer: scalacheck: {
-      name = scalacheckVer;
-      value = mkScalaCheck {
-        name = "scalacheck_${scalaVer}-${scalacheckVer}";
-        version = scalacheckVer;
-        runTests = if scalacheck ? runTests then scalacheck.runTests else true;
-        inherit scala;
-        inherit (scalacheck) rev sha256;
-      };
-    }) scalacheckVersions;
-  }) scala;
-
-  scalacheck_flat = listToAttrs (flatten (mapAttrsToList (scalaVer: ss:
-    mapAttrsToList (v: s: nameValuePair "scalacheck_${scalaVer}-${v}" s) ss
-  ) scalacheck));
-
-  current = scalacheck."2.10.3"."1.10.1";
-  snapshot = scalacheck."2.10.3"."1.11.0-SNAPSHOT";
+  scalacheck_all = concatMap mkScalaCheckForAllScala scalacheckVersions;
 }
