@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib }:
+{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib, zip, xz }:
 
 with lib;
 with builtins;
@@ -59,8 +59,6 @@ in rec {
   mkScalaCheck = scalaVer: scala: scVer: sc: stdenv.mkDerivation rec {
     name = "scalacheck_${scalaVer}-${scVer}";
 
-    outputs = [ "jar" "srcjar" "doc" "docjar" ];
-
     src = fetchgit {
       url = scalacheckRepoUrl;
       inherit (sc) rev sha256;
@@ -74,7 +72,6 @@ in rec {
       export LANG="en_US.UTF-8"
       export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
       testinterface="${test-interface."1.0"}/lib/test-interface.jar"
-
       find src/main/scala -name '*.scala' > sources
       scalac \
         -classpath "$testinterface" \
@@ -82,20 +79,6 @@ in rec {
         -deprecation \
         -d ${name}.jar \
         @sources
-
-      jar cf "${name}-sources.jar" LICENSE RELEASE -C src/main/scala .
-
-      mkdir api && scaladoc \
-        -doc-title ScalaCheck \
-        -doc-version "${scVer}" \
-        -doc-footer "${docFooter scVer sc.rev}" \
-        -doc-source-url "${docSourceUrl scVer sc.rev}" \
-        -classpath "$testinterface" \
-        -sourcepath src/main/scala \
-        -d api \
-        @sources
-
-      jar cf "${name}-javadoc.jar" -C api .
     '';
 
     checkPhase = ''
@@ -111,11 +94,49 @@ in rec {
     '';
 
     installPhase = ''
-      mkdir -p "$jar" "$srcjar" "$doc" "$docjar"
-      mv "${name}.jar" "$jar/"
-      mv "${name}-sources.jar" "$srcjar/"
-      mv "${name}-javadoc.jar" "$docjar/"
-      mv api "$doc/"
+      mkdir -p "$out"
+      mv "${name}.jar" "$out/"
+    '';
+  };
+
+  mkScalaCheckDoc = scalaVer: scala: scVer: sc: stdenv.mkDerivation rec {
+    name = "scalacheck-doc_${scalaVer}-${scVer}";
+    fname = "scalacheck_${scalaVer}-${scVer}";
+
+    src = fetchgit {
+      url = scalacheckRepoUrl;
+      inherit (sc) rev sha256;
+    };
+
+    buildInputs = [ xz zip openjdk (mkScala scala) ];
+
+    buildPhase = ''
+      export LANG="en_US.UTF-8"
+      export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+      testinterface="${test-interface."1.0"}/lib/test-interface.jar"
+      find src/main/scala -name '*.scala' > sources
+      mkdir "${fname}-api" && scaladoc \
+        -doc-title ScalaCheck \
+        -doc-version "${scVer}" \
+        -doc-footer "${docFooter scVer sc.rev}" \
+        -doc-source-url "${docSourceUrl scVer sc.rev}" \
+        -classpath "$testinterface" \
+        -sourcepath src/main/scala \
+        -d "${fname}-api" \
+        @sources
+      mkdir "${fname}-sources"
+      cp -rt "${fname}-sources" LICENSE RELEASE src/main/scala/*
+    '';
+
+    installPhase = ''
+      mkdir -p "$out"
+      jar cf "$out/${fname}-sources.jar" -C "${fname}-sources" .
+      zip -r "$out/${fname}-sources.zip" "${fname}-sources"
+      tar -czf "$out/${fname}-sources.tar.gz" "${fname}-sources"
+      jar cf "$out/${fname}-javadoc.jar" -C "${fname}-api" .
+      zip -r "$out/${fname}-javadoc.zip" "${fname}-api"
+      tar -czf "$out/${fname}-javadoc.tar.gz" "${fname}-api"
+      mv "${fname}-api" "$out/"
     '';
   };
 
