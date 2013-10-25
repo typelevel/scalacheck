@@ -319,6 +319,10 @@ object Gen {
     choose(0,gs.size-1).flatMap(gs(_)).suchThat(x => gs.exists(_.sieveCopy(x)))
   }
 
+  /** Makes a generator result optional. Either `Some(T)` or `None` will be provided. */
+  def option[T](g: Gen[T]): Gen[Option[T]] =
+    oneOf[Option[T]](g.map(Some.apply), None)
+
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
     def tot = gs.map(_._1).foldLeft(0)(_+_)
