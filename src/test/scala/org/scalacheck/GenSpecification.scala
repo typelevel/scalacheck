@@ -145,4 +145,12 @@ object GenSpecification extends Properties("Gen") {
     implicit val arbB = Arbitrary(resultOf(B))
     forAll { b:B => true }
   }
+
+  property("option") = forAll { n: Int =>
+    forAll(option(n)) {
+      case Some(m) if m == n => true
+      case None => true
+      case _ => false
+    }
+  }
 }
