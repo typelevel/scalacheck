@@ -254,6 +254,12 @@ object Test {
         workerFun(workerIdx)
       }
 
+    def spawn[A](body: => A): () => A = {
+      import scala.concurrent._, ExecutionContext.Implicits.global, duration.Duration
+      val future = Future(body)
+      () => Await.result(future, Duration.Inf)
+    }
+
     def workerFun(workerIdx: Int) = {
       var n = 0  // passed tests
       var d = 0  // discarded tests
@@ -338,15 +344,4 @@ object Test {
       val res = check(prms copy (_testCallback = testCallback), p)
       (name,res)
     }
-
-  private[this] def spawn[A](body : => A): () => A = {
-    import scala.concurrent._, ExecutionContext.Implicits.global, duration.Duration
-    try {
-      val future = Future(body)
-      () => Await.result(future, Duration.Inf)
-    } catch {
-      case _: LinkageError =>
-        () => body // Scala 2.9.2 doesn't have scala.concurrent.Future, 2.9.3 and higher do.
-    }
-  }
 }
