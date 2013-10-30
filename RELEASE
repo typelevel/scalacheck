@@ -1,8 +1,6 @@
-ScalaCheck 1.10.1 Release Notes
+ScalaCheck 1.11.0 Release Notes
 
-Author: Rickard Nilsson <rickynils@gmail.com>
-
-ScalaCheck is a powerful tool for automatic unit testing of Scala and Java
+ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
 failing test cases. ScalaCheck started out as a straightforward Scala port of
 the Haskell library QuickCheck, and has since wandered off on its own. Most
@@ -27,41 +25,39 @@ ScalaCheck highlights:
   * The ScalaCheck library has no dependencies other than the Scala
     runtime.
 
-  * ScalaCheck is well integrated with ScalaTest, SBT and Specs.
+  * ScalaCheck is well integrated with ScalaTest, sbt and Specs.
 
 
-What's new in version 1.10.1?
+What's new in version 1.11.0?
 
-Since version 1.10.0 was released, minor additions and fixes has been made.
-Also, the code has been adapted to Scala 2.10.
+The biggest change in this release of ScalaCheck is the generator
+implementation that has been rewritten more or less from scratch. The new
+implementation is a bit smarter when it comes to test case simplification.
+Previously, the test case shrinker had no knowledge about the generator that
+produced the original value. This would lead to some confusion since ScalaCheck
+could present a failing test case that couldn't have been produced directly by
+the generator used. The new implementation lets the shrinker take the generator
+boundaries into account when simplifying values. In most cases this works
+without any assistance needed from the user, but sometimes explicit boundaries
+must be assigned to the generator.
 
-All ScalaCheck releases in the 1.10.x series should be considered binary
-compatible so if you have been using ScalaCheck 1.10.0 you should just be able
-to drop in 1.10.1. There have been some deprecations in 1.10.1 though, so you
-might get compilation warnings. If you run into any more serious problems it
-should be considered a bug and would merit a re-release.
+Apart from the new generator implementation, several new methods and
+combinators have been added in several parts of the API. Some methods have been
+renamed and some classes have been moved around to make the API more clear.
 
-Builds of ScalaCheck 1.10.1 are available for Scala versions from 1.9.0 up to
-2.10.1. New builds are added when new versions of Scala is released. If you
-miss any build, please submit an issue at GitHub. I have stopped doing sbaz
-builds, if you miss them please submit an issue.
+ScalaCheck 1.11.0 introduces API changes, but most users shouldn't need to
+change their code if they're not using code that was deprecated in the previous
+ScalaCheck release.
 
+Support for Scala versions prior 2.9.3 has been dropped.
+
+A new ScalaCheck web site has been launched at http://www.scalacheck.org. The
+new site collects ScalaCheck documentation and downloads in an accessible way.
 
 ScalaCheck links:
 
-  * Project site
+  * Documentation, downloads etc
     http://www.scalacheck.org
-
-  * User Guide
-    https://github.com/rickynils/scalacheck/wiki/User-Guide
-
-  * Manual artifact download (jar, source, doc):
-    https://oss.sonatype.org/index.html#nexus-search;quick~scalacheck
-
-  * Mailing list
-    scalacheck@googlegroups.com
-    See http://groups.google.com/group/scalacheck for information and
-    registration.
 
   * Source repository
     https://github.com/rickynils/scalacheck
@@ -74,7 +70,7 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.11.0" % "test"
     )
 
   * Maven dependency
@@ -97,5 +93,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.10</artifactId>
-      <version>1.10.1</version>
+      <version>1.11.0</version>
     </dependency>
