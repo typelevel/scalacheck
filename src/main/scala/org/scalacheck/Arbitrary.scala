@@ -268,16 +268,18 @@ object Arbitrary {
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as lists, arrays,
-   *  streams, etc). The maximum size of the container depends on the size
-   *  generation parameter. */
-  implicit def arbContainer[C[_],T](implicit a: Arbitrary[T], b: Buildable[T,C]
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
+   *  (such as lists, arrays, streams, etc). The maximum size of the container
+   *  depends on the size generation parameter. */
+  implicit def arbContainer[C[_],T](implicit
+    a: Arbitrary[T], b: Buildable[T,C], t: C[T] => Traversable[T]
   ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container (such as maps, etc).
-   *  The maximum size of the container depends on the size
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container
+   *  (such as maps, etc). The maximum size of the container depends on the size
    *  generation parameter. */
-  implicit def arbContainer2[C[_,_],T,U](implicit a: Arbitrary[(T,U)], b: Buildable2[T,U,C]
+  implicit def arbContainer2[C[_,_],T,U](implicit
+    a: Arbitrary[(T,U)], b: Buildable2[T,U,C], t: C[T,U] => Traversable[(T,U)]
   ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
 
   // Functions //

@@ -13,8 +13,10 @@ package util
 import collection._
 
 object BuildableSpecification {
-  def container[C[_]](implicit ev: Buildable[String, C]) =
-    Gen.containerOf[C, String](Gen.alphaStr)
+  def container[C[_]](implicit
+    evb: Buildable[String, C],
+    evt: C[String] => Traversable[String]
+  ) = Gen.containerOf[C, String](Gen.alphaStr)
 
   implicit val listGen: Gen[List[String]] = container[List]
 

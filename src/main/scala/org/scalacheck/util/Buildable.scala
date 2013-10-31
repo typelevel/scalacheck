@@ -18,7 +18,6 @@ trait Buildable[T,C[_]] {
     b ++= it
     b.result()
   }
-  // TODO def toIterable
 }
 
 trait Buildable2[T,U,C[_,_]] {
