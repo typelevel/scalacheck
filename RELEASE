@@ -39,7 +39,8 @@ could present a failing test case that couldn't have been produced directly by
 the generator used. The new implementation lets the shrinker take the generator
 boundaries into account when simplifying values. In most cases this works
 without any assistance needed from the user, but sometimes explicit boundaries
-must be assigned to the generator.
+must be assigned to the generator. There might also be generator combinators
+that don't fully exploit the new implementation yet.
 
 Apart from the new generator implementation, several new methods and
 combinators have been added in several parts of the API. Some methods have been
