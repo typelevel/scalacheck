@@ -1,4 +1,4 @@
-# ScalaCheck: Property-based testing for Scala
+# ScalaCheck
 
 ScalaCheck is a library written in [Scala](http://www.scala-lang.org/) and 
 used for automated property-based testing of Scala or Java programs.
@@ -17,4 +17,4 @@ ScalaCheck is used by several prominent Scala projects, for example the [Scala
 compiler](http://www.scala-lang.org/) and the [Akka](http://akka.io/)
 concurrency framework.
 
-**For more information and downloads, please visit [http://www.scalacheck.org]**
+**For more information and downloads, please visit http://www.scalacheck.org**
