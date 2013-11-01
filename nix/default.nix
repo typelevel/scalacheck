@@ -185,6 +185,13 @@ in rec {
   };
 
   scalacheckVersions = {
+    "1.11.0" = {
+      rev = "062d9a3347860ecb0d947fda1cef923a66b6555d";
+      sha256 = "1088hsg5734cp8qq2865gdrzp61lhwwjvwrwa56qqkr8pbfzqglp";
+      scalaVersions = {
+        inherit (scalaVersions) "2.11.0-M5" "2.10" "2.9.3";
+      };
+    };
     "1.10.1" = {
       rev = "ecb39d126f919795738e3b0bb66dc088e31ccef3";
       sha256 = "1yjvh1r2fp46wdmsajmljryp03qw92albjh07vvgd15qw3v6vz3k";
