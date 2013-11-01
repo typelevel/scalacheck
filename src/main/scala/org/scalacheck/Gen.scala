@@ -166,7 +166,7 @@ object Gen {
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
   trait Parameters {
     def size: Int
-    def rng: java.util.Random
+    def rng: scala.util.Random
 
     /** Change the size parameter */
     def resize(newSize: Int): Parameters = new Parameters {
@@ -182,7 +182,7 @@ object Gen {
      *  need to tweak the parameters. */
     trait Default extends Parameters {
       def size: Int = 100
-      def rng: java.util.Random = util.StdRand
+      def rng: scala.util.Random = scala.util.Random
     }
 
     /** Default generator parameters instance. */

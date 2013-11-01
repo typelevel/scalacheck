@@ -56,7 +56,6 @@ sealed abstract class Arbitrary[T] {
 object Arbitrary {
 
   import Gen.{const, choose, sized, frequency, oneOf, containerOf, resize}
-  import util.StdRand
   import collection.{immutable, mutable}
   import java.util.Date
 

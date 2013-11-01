@@ -28,7 +28,7 @@ object Test {
     def maxSize: Int
 
     /** The random numbe generator used. */
-    def rng: java.util.Random
+    def rng: scala.util.Random
 
     /** The number of tests run in parallell. */
     def workers: Int
@@ -49,7 +49,7 @@ object Test {
       _minSuccessfulTests: Int = Parameters.this.minSuccessfulTests,
       _minSize: Int = Parameters.this.minSize,
       _maxSize: Int = Parameters.this.maxSize,
-      _rng: java.util.Random = Parameters.this.rng,
+      _rng: scala.util.Random = Parameters.this.rng,
       _workers: Int = Parameters.this.workers,
       _testCallback: TestCallback = Parameters.this.testCallback,
       _maxDiscardRatio: Float = Parameters.this.maxDiscardRatio,
@@ -58,7 +58,7 @@ object Test {
       val minSuccessfulTests: Int = _minSuccessfulTests
       val minSize: Int = _minSize
       val maxSize: Int = _maxSize
-      val rng: java.util.Random = _rng
+      val rng: scala.util.Random = _rng
       val workers: Int = _workers
       val testCallback: TestCallback = _testCallback
       val maxDiscardRatio: Float = _maxDiscardRatio
@@ -85,7 +85,7 @@ object Test {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
       val maxSize: Int = Gen.Parameters.default.size
-      val rng: java.util.Random = Gen.Parameters.default.rng
+      val rng: scala.util.Random = Gen.Parameters.default.rng
       val workers: Int = 1
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
