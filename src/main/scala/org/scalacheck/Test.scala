@@ -19,30 +19,30 @@ object Test {
   trait Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
-    def minSuccessfulTests: Int
+    val minSuccessfulTests: Int
 
     /** The starting size given as parameter to the generators. */
-    def minSize: Int
+    val minSize: Int
 
     /** The maximum size given as parameter to the generators. */
-    def maxSize: Int
+    val maxSize: Int
 
     /** The random numbe generator used. */
-    def rng: scala.util.Random
+    val rng: scala.util.Random
 
     /** The number of tests run in parallell. */
-    def workers: Int
+    val workers: Int
 
     /** A callback that ScalaCheck calls each time a test is executed. */
-    def testCallback: TestCallback
+    val testCallback: TestCallback
 
     /** The maximum ratio between discarded and passed tests allowed before
      *  ScalaCheck gives up and discards the property. At least
      *  `minSuccesfulTests` will always be run, though. */
-    def maxDiscardRatio: Float
+    val maxDiscardRatio: Float
 
     /** A custom class loader that should be used during test execution. */
-    def customClassLoader: Option[ClassLoader]
+    val customClassLoader: Option[ClassLoader]
 
     // private since we can't guarantee binary compatibility for this one
     private[scalacheck] def copy(
