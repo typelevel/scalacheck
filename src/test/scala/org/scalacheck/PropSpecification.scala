@@ -10,11 +10,14 @@
 package org.scalacheck
 
 import Prop.{
-  forAll, falsified, undecided, exception, passed, proved, Params, all,
+  forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
   Exception, Proof, within, throws, BooleanOperators
 }
-import Gen.{const, fail, frequency, oneOf, choose, listOf, listOfN}
+import Gen.{
+  const, fail, frequency, oneOf, choose, listOf, listOfN,
+  Parameters
+}
 import java.util.concurrent.atomic.AtomicBoolean
 
 object PropSpecification extends Properties("Prop") {
@@ -74,7 +77,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,undecided)
     forAll(g)(p => (p && undecided) == undecided)
   }
-  property("Prop.&& Right prio") = forAll { (sz: Int, prms: Params) =>
+  property("Prop.&& Right prio") = forAll { (sz: Int, prms: Parameters) =>
     val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
     p(prms).labels.contains("RHS")
   }
@@ -119,19 +122,19 @@ object PropSpecification extends Properties("Prop") {
     forAll(g)(p => (p ++ falsified) == falsified)
   }
 
-  property("undecided") = forAll { prms: Params =>
+  property("undecided") = forAll { prms: Parameters =>
     undecided(prms).status == Undecided
   }
 
-  property("falsified") = forAll { prms: Params =>
+  property("falsified") = forAll { prms: Parameters =>
     falsified(prms).status == False
   }
 
-  property("proved") = forAll((prms: Params) => proved(prms).status == Proof)
+  property("proved") = forAll((prms: Parameters) => proved(prms).status == Proof)
 
-  property("passed") = forAll((prms: Params) => passed(prms).status == True)
+  property("passed") = forAll((prms: Parameters) => passed(prms).status == True)
 
-  property("exception") = forAll { (prms: Params, e: Throwable) =>
+  property("exception") = forAll { (prms: Parameters, e: Throwable) =>
     exception(e)(prms).status == Exception(e)
   }
 

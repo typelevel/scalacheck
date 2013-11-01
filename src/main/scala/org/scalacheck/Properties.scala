@@ -21,8 +21,6 @@ import util.ConsoleReporter
  *    property("myProp1") = forAll { (n:Int, m:Int) =>
  *      n+m == m+n
  *    }
- *
- *    property("myProp2") = ((0/1) throws classOf[ArithmeticException])
  *  }
  *  }}}
  */
@@ -40,7 +38,7 @@ class Properties(val name: String) extends Prop {
    *  pairs.  */
   def properties: Seq[(String,Prop)] = props
 
-  def apply(p: Prop.Params) = oneProperty(p)
+  def apply(p: Gen.Parameters) = oneProperty(p)
 
   /** Convenience method that checks the properties with the given parameters
    *  and reports the result on the console. If you need to get the results

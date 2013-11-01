@@ -244,12 +244,6 @@ object Arbitrary {
       override def size = sz
     }))
 
-  /** Arbitrary instance of prop params */
-  implicit lazy val arbPropParams: Arbitrary[Prop.Params] =
-    Arbitrary(for {
-      genPrms <- arbitrary[Gen.Parameters]
-    } yield Prop.Params(genPrms, FreqMap.empty[immutable.Set[Any]]))
-
 
   // Higher-order types //
 

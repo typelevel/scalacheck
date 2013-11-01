@@ -126,7 +126,7 @@ trait Commands extends Prop {
     Prop.forAllShrink(genCmds label "COMMANDS", shrinkCmds)(runCommands _)
   }
 
-  def apply(p: Prop.Params) = commandsProp(p)
+  def apply(p: Gen.Parameters) = commandsProp(p)
 
   /** initialState should reset the system under test to a well defined
    *  initial state, and return the abstract version of that state. */

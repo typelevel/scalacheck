@@ -10,18 +10,17 @@
 package org.scalacheck
 
 import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
-
 import scala.annotation.tailrec
-
 
 trait Prop {
 
-  import Prop.{Result, Params, Proof, True, False, Exception, Undecided,
+  import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure}
   import Test.cmdLineParser.{Success, NoSuccess}
   import Result.merge
+  import Gen.Parameters
 
-  def apply(prms: Params): Result
+  def apply(prms: Parameters): Result
 
   def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
 
@@ -144,10 +143,9 @@ trait Prop {
 
 object Prop {
 
-  import Gen.{value, fail, frequency, oneOf}
-  import Arbitrary._
-  import Shrink._
-
+  import Gen.{value, fail, frequency, oneOf, Parameters}
+  import Arbitrary.{arbitrary}
+  import Shrink.{shrink}
 
   // Types
 
@@ -160,9 +158,6 @@ object Prop {
     prettyArg: Pretty,
     prettyOrigArg: Pretty
   )
-
-  /** Property parameters */
-  case class Params(val genPrms: Gen.Parameters, val freqMap: FreqMap[Set[Any]])
 
   object Result {
     def apply(st: Status) = new Result(
@@ -295,8 +290,8 @@ object Prop {
     }
   }
 
-  def apply(f: Params => Result): Prop = new Prop {
-    def apply(prms: Params) = f(prms)
+  def apply(f: Parameters => Result): Prop = new Prop {
+    def apply(prms: Parameters) = f(prms)
   }
 
   def apply(r: Result): Prop = Prop(prms => r)
@@ -396,7 +391,7 @@ object Prop {
     // provedToTrue since if the property is proved for
     // one size, it shouldn't be regarded as proved for
     // all sizes.
-    provedToTrue(f(prms.genPrms.size)(prms))
+    provedToTrue(f(prms.size)(prms))
   }
 
   /** Implication with several conditions */
@@ -468,7 +463,7 @@ object Prop {
     pv: P => Prop,
     pp: A => Pretty
   ): Prop = Prop { prms =>
-    val gr = g.doApply(prms.genPrms)
+    val gr = g.doApply(prms)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -491,7 +486,7 @@ object Prop {
     pv: P => Prop,
     pp1: T1 => Pretty
   ): Prop = Prop { prms =>
-    val gr = g1.doApply(prms.genPrms)
+    val gr = g1.doApply(prms)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -599,7 +594,7 @@ object Prop {
   )(implicit pv: P => Prop, pp: T => Pretty
   ): Prop = Prop { prms =>
 
-    val gr = g.doApply(prms.genPrms)
+    val gr = g.doApply(prms)
     val labels = gr.labels.mkString(",")
 
     def result(x: T) = {
@@ -639,7 +634,7 @@ object Prop {
 
     gr.retrieve match {
       case None => undecided(prms)
-      case Some(x) => 
+      case Some(x) =>
         val r = result(x)
         if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         else shrinker(x,r,0,x)
@@ -834,7 +829,7 @@ object Prop {
 
   /** Ensures that the property expression passed in completes within the given space of time. */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = new Prop {
-    @tailrec private def attempt(prms: Params, endTime: Long): Result = {
+    @tailrec private def attempt(prms: Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
         (if (result.failure) result else Result(False)).label("Timeout")
@@ -843,6 +838,6 @@ object Prop {
         else attempt(prms, endTime)
       }
     }
-    def apply(prms: Params) = attempt(prms, System.currentTimeMillis + maximumMs)
+    def apply(prms: Parameters) = attempt(prms, System.currentTimeMillis + maximumMs)
   }
 }

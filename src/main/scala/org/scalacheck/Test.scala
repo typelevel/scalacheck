@@ -267,7 +267,7 @@ object Test {
       var fm = FreqMap.empty[Set[Any]]
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propPrms = Prop.Params(genPrms.resize(size.round.toInt), fm)
+        val propPrms = genPrms.resize(size.round.toInt)
         secure(p(propPrms)) match {
           case Right(e) => res =
             Result(GenException(e), n, d, FreqMap.empty[Set[Any]])

@@ -46,15 +46,26 @@ sealed trait Gen[+T] {
     doApply(p).flatMap(t => f(t).doApply(p))
   }
 
+  /** Create a new generator that uses this generator to produce a value
+   *  that fulfills the given condition. If the condition is not fulfilled,
+   *  the generator fails (returns None). */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
   def withFilter(p: T => Boolean): WithFilter = new WithFilter(p)
 
+  /** Create a new generator that uses this generator to produce a value
+   *  that fulfills the given condition. If the condition is not fulfilled,
+   *  the generator fails (returns None). This method is identical to
+   *  [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P) = Gen.this.doApply(p).copy(s = f)
     override def sieveCopy(x: Any) = f(x.asInstanceOf[T])
   }
 
+  /** Create a generator that calls this generator repeatedly until
+   *  the given condition is fulfilled. The generated value is then
+   *  returned. Use this combinator with care, since it may result
+   *  in infinite loops. */
   def retryUntil(p: T => Boolean): Gen[T] = flatMap { t =>
     if (p(t)) Gen.const(t).suchThat(p) else retryUntil(p)
   }
@@ -65,7 +76,7 @@ sealed trait Gen[+T] {
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
   def ==[U](g: Gen[U]) = Prop { prms =>
-    (doApply(prms.genPrms).retrieve, g.doApply(prms.genPrms).retrieve) match {
+    (doApply(prms).retrieve, g.doApply(prms).retrieve) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
       case _ => Prop.falsified(prms)
@@ -75,7 +86,7 @@ sealed trait Gen[+T] {
   def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
 
   def !==[U](g: Gen[U]) = Prop { prms =>
-    (doApply(prms.genPrms).retrieve, g.doApply(prms.genPrms).retrieve) match {
+    (doApply(prms).retrieve, g.doApply(prms).retrieve) match {
       case (None,None) => Prop.falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.falsified(prms)
       case _ => Prop.proved(prms)
