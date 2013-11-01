@@ -6,7 +6,6 @@ failing test cases. ScalaCheck started out as a straightforward Scala port of
 the Haskell library QuickCheck, and has since wandered off on its own. Most
 features of QuickCheck can be found in ScalaCheck and vice versa, though.
 
-
 ScalaCheck highlights:
 
   * Specifications are written in Scala, in a DSL-like fashion using
@@ -27,28 +26,28 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and Specs.
 
-
 What's new in version 1.11.0?
 
 The biggest change in this release of ScalaCheck is the generator
 implementation that has been rewritten more or less from scratch. The new
-implementation is a bit smarter when it comes to test case simplification.
-Previously, the test case shrinker had no knowledge about the generator that
-produced the original value. This would lead to some confusion since ScalaCheck
-could present a failing test case that couldn't have been produced directly by
-the generator used. The new implementation lets the shrinker take the generator
-boundaries into account when simplifying values. In most cases this works
-without any assistance needed from the user, but sometimes explicit boundaries
-must be assigned to the generator. There might also be generator combinators
-that don't fully exploit the new implementation yet.
+implementation is smarter when it comes to test case simplification.
+Previously, the test case simplification process had no knowledge about the
+generator that produced the original value. This would lead to some confusion
+since ScalaCheck could present a failing test case that couldn't have been
+produced directly by the generator used. The new implementation lets the
+shrinker take the generator boundaries into account when simplifying values. In
+most cases this works transparantely without any assistance needed from the
+user, but sometimes explicit boundaries must be assigned to the generator. This
+is done with the standard Gen.suchThat method.
 
 Apart from the new generator implementation, several new methods and
 combinators have been added in several parts of the API. Some methods have been
 renamed and some classes have been moved around to make the API more clear.
 
-ScalaCheck 1.11.0 introduces API changes, but most users shouldn't need to
-change their code if they're not using code that was deprecated in the previous
-ScalaCheck release.
+ScalaCheck 1.11.0 introduces API changes, but most users should hopefully only
+need to change their code if they're using code that was deprecated in the
+previous ScalaCheck release. However, recompilation is needed since ScalaCheck
+1.11.0 is not binary compatible with previous versions.
 
 Support for Scala versions prior 2.9.3 has been dropped.
 
@@ -57,11 +56,11 @@ new site collects ScalaCheck documentation and downloads in an accessible way.
 
 ScalaCheck links:
 
-  * Documentation, downloads etc
-    http://www.scalacheck.org
+  * Official documentation, downloads etc: http://www.scalacheck.org
 
-  * Source repository
-    https://github.com/rickynils/scalacheck
+  * Twitter: @scalacheck
+
+  * Source repository and bug reporting: https://github.com/rickynils/scalacheck
 
   * SBT dependency
 
