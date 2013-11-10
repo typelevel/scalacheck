@@ -562,6 +562,15 @@ object Gen {
     frequency(allGens: _*)
   }
 
+  /** Generates a version 4 (random) UUID. */
+  lazy val uuid: Gen[java.util.UUID] = for {
+    l1 <- Gen.choose(Long.MinValue, Long.MaxValue)
+    l2 <- Gen.choose(Long.MinValue, Long.MaxValue)
+    y <- Gen.oneOf('8', '9', 'a', 'b')
+  } yield java.util.UUID.fromString(
+    new java.util.UUID(l1,l2).toString.updated(14, '4').updated(19, y)
+  )
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */

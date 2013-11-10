@@ -153,4 +153,10 @@ object GenSpecification extends Properties("Gen") {
       case _ => false
     }
   }
+
+  property("uuid version 4") = forAll(uuid) { _.version == 4 }
+
+  property("uuid unique") = forAll(uuid, uuid) {
+    case (u1,u2) => u1 != u2
+  }
 }
