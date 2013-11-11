@@ -342,11 +342,11 @@ object Gen {
     }
   }
 
-  /* Implicit convenience method for using the `frequency` method
-   * like this:
-   * {{{
-   *  frequency((1, "foo"), (3, "bar"))
-   * }}}
+  /** Implicit convenience method for using the `frequency` method
+   *  like this:
+   *  {{{
+   *   frequency((1, "foo"), (3, "bar"))
+   *  }}}
    */
   implicit def freqTuple[T](t: (Int,T)): (Int,Gen[T]) = (t._1, const(t._2))
 
@@ -494,36 +494,36 @@ object Gen {
 
   //// Character Generators ////
 
-  /* Generates a numerical character */
+  /** Generates a numerical character */
   def numChar: Gen[Char] = choose(48.toChar, 57.toChar)
 
-  /* Generates an upper-case alpha character */
+  /** Generates an upper-case alpha character */
   def alphaUpperChar: Gen[Char] = choose(65.toChar, 90.toChar)
 
-  /* Generates a lower-case alpha character */
+  /** Generates a lower-case alpha character */
   def alphaLowerChar: Gen[Char] = choose(97.toChar, 122.toChar)
 
-  /* Generates an alpha character */
+  /** Generates an alpha character */
   def alphaChar = frequency((1,alphaUpperChar), (9,alphaLowerChar))
 
-  /* Generates an alphanumerical character */
+  /** Generates an alphanumerical character */
   def alphaNumChar = frequency((1,numChar), (9,alphaChar))
 
 
   //// String Generators ////
 
-  /* Generates a string that starts with a lower-case alpha character,
-   * and only contains alphanumerical characters */
+  /** Generates a string that starts with a lower-case alpha character,
+   *  and only contains alphanumerical characters */
   def identifier: Gen[String] = (for {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
   } yield (c::cs).mkString).suchThat(_.forall(c => c.isLetter || c.isDigit))
 
-  /* Generates a string of alpha characters */
+  /** Generates a string of alpha characters */
   def alphaStr: Gen[String] =
     listOf(alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
 
-  /* Generates a string of digits */
+  /** Generates a string of digits */
   def numStr: Gen[String] =
     listOf(numChar).map(_.mkString).suchThat(_.forall(_.isDigit))
 
