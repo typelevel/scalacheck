@@ -19,6 +19,6 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
       b <- arbitrary[Option[Unit]]
     } yield (a, b)
 
-  property("Option coverage") =
+  property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
 }
