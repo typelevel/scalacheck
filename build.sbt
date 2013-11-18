@@ -2,6 +2,8 @@ import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 
+import VersionKeys.scalaParserCombinatorsVersion
+
 name := "scalacheck"
 
 version := "1.11.0"
@@ -14,7 +16,9 @@ homepage := Some(url("http://www.scalacheck.org"))
 
 scalaVersion := "2.10.3"
 
-crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M5")
+scalaParserCombinatorsVersion := "1.0.0-RC4"
+
+crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M6")
 
 mimaDefaultSettings
 
@@ -24,7 +28,7 @@ libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
 libraryDependencies ++= (
   if((scalaVersion.value startsWith "2.9") || (scalaVersion.value startsWith "2.10")) Seq.empty
-  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0-RC2")
+  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
 )
 
 javacOptions ++= Seq("-Xmx1024M")
