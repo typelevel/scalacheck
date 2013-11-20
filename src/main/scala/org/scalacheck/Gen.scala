@@ -59,7 +59,9 @@ sealed trait Gen[+T] {
    *  [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P) = Gen.this.doApply(p).copy(s = f)
-    override def sieveCopy(x: Any) = f(x.asInstanceOf[T])
+    override def sieveCopy(x: Any) =
+      try f(x.asInstanceOf[T])
+      catch { case _: java.lang.ClassCastException => false }
   }
 
   /** Create a generator that calls this generator repeatedly until
@@ -138,7 +140,10 @@ object Gen {
       r: Option[U] = this.result
     ): R[U] = new R[U] {
       override val labels = l
-      override def sieve[V >: U] = { x:Any => s(x.asInstanceOf[U]) }
+      override def sieve[V >: U] = { x:Any =>
+        try s(x.asInstanceOf[U])
+        catch { case _: java.lang.ClassCastException => false }
+      }
       val result = r
     }
 

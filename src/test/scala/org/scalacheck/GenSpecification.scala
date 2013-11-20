@@ -159,4 +159,10 @@ object GenSpecification extends Properties("Gen") {
   property("uuid unique") = forAll(uuid, uuid) {
     case (u1,u2) => u1 != u2
   }
+
+  property("issue #79") = {
+    // See https://github.com/rickynils/scalacheck/issues/79
+    val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
+    forAll(g) { o => o == 0 || o == "0" }
+  }
 }
