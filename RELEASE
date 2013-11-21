@@ -1,4 +1,4 @@
-ScalaCheck 1.11.0 Release Notes
+ScalaCheck 1.11.1 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -26,33 +26,10 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and Specs.
 
-What's new in version 1.11.0?
+What's new in version 1.11.1?
 
-The biggest change in this release of ScalaCheck is the generator
-implementation that has been rewritten more or less from scratch. The new
-implementation is smarter when it comes to test case simplification.
-Previously, the test case simplification process had no knowledge about the
-generator that produced the original value. This would lead to some confusion
-since ScalaCheck could present a failing test case that couldn't have been
-produced directly by the generator used. The new implementation lets the
-shrinker take the generator boundaries into account when simplifying values. In
-most cases this works transparantely without any assistance needed from the
-user, but sometimes explicit boundaries must be assigned to the generator. This
-is done with the standard Gen.suchThat method.
-
-Apart from the new generator implementation, several new methods and
-combinators have been added in several parts of the API. Some methods have been
-renamed and some classes have been moved around to make the API more clear.
-
-ScalaCheck 1.11.0 introduces API changes, but most users should hopefully only
-need to change their code if they're using code that was deprecated in the
-previous ScalaCheck release. However, recompilation is needed since ScalaCheck
-1.11.0 is not binary compatible with previous versions.
-
-Support for Scala versions prior 2.9.3 has been dropped.
-
-A new ScalaCheck web site has been launched at http://www.scalacheck.org. The
-new site collects ScalaCheck documentation and downloads in an accessible way.
+ScalaCheck 1.11.1 is maintenance release with a few bug fixes and minor
+features added. It is binary compatible with ScalaCheck 1.11.0.
 
 ScalaCheck links:
 
@@ -70,12 +47,12 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.11.0" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.11.1" % "test"
     )
 
   * Maven dependency
 
-    Add this to your pom.xml (example for Scala 2.10.1):
+    Add this to your pom.xml (example for Scala 2.10):
 
     <repositories>
       <repository>
@@ -93,5 +70,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.10</artifactId>
-      <version>1.11.0</version>
+      <version>1.11.1</version>
     </dependency>
