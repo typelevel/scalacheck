@@ -50,14 +50,6 @@ publishArtifact in Test := false
 pomIncludeRepository := { _ => false }
 
 pomExtra := (
-  <url>http://www.scalacheck.org</url>
-  <licenses>
-    <license>
-      <name>BSD</name>
-      <url>https://github.com/rickynils/scalacheck/blob/master/LICENSE</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
   <scm>
     <url>https://github.com/rickynils/scalacheck</url>
     <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
