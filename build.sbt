@@ -6,7 +6,7 @@ import VersionKeys.scalaParserCombinatorsVersion
 
 name := "scalacheck"
 
-version := "1.11.1"
+version := "1.11.2-SNAPSHOT"
 
 organization := "org.scalacheck"
 
@@ -22,7 +22,7 @@ crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M7")
 
 mimaDefaultSettings
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.0")
+previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.1")
 
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
