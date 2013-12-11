@@ -26,6 +26,8 @@ trait Prop {
 
   def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
 
+  // TODO In 1.12.0, make p call-by-name, and remove the calls to secure()
+  // in the methods that use combine()
   def combine(p: Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
@@ -106,8 +108,8 @@ trait Prop {
 
   /** Combines two properties through implication */
   def ==>(p: => Prop): Prop = flatMap { r1 =>
-    if(r1.proved) secure(p) map { r2 => merge(r1,r2,r2.status) }
-    else if(r1.success) secure(p) map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
+    if(r1.proved) p map { r2 => merge(r1,r2,r2.status) }
+    else if(r1.success) p map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
     else Prop(r1.copy(status = Undecided))
   }
 
@@ -117,7 +119,7 @@ trait Prop {
    *  proved, and the other one passed, then the resulting property
    *  will fail. */
   def ==(p: => Prop) = this.flatMap { r1 =>
-    secure(p).map { r2 =>
+    p.map { r2 =>
       Result.merge(r1, r2, if(r1.status == r2.status) True else False)
     }
   }
@@ -290,12 +292,16 @@ object Prop {
     }
   }
 
+  /** Create a new property from the given function. */
   def apply(f: Parameters => Result): Prop = new Prop {
-    def apply(prms: Parameters) = f(prms)
+    def apply(prms: Parameters) =
+      try f(prms) catch { case e: Throwable => Result(Exception(e)) }
   }
 
-  def apply(r: Result): Prop = Prop(prms => r)
+  /** Create a property that returns the given result */
+  def apply(r: Result): Prop = Prop.apply(prms => r)
 
+  /** Create a property from a boolean value */
   def apply(b: Boolean): Prop = if(b) proved else falsified
 
 
@@ -395,13 +401,15 @@ object Prop {
   }
 
   /** Implication with several conditions */
-  def imply[T](x: T, f: PartialFunction[T,Prop]): Prop =
-    secure(if(f.isDefinedAt(x)) f(x) else undecided)
+  def imply[T](x: T, f: PartialFunction[T,Prop]): Prop = secure {
+    if(f.isDefinedAt(x)) f(x) else undecided
+  }
 
   /** Property holds only if the given partial function is defined at
    *  `x`, and returns a property that holds */
-  def iff[T](x: T, f: PartialFunction[T,Prop]): Prop =
-    secure(if(f.isDefinedAt(x)) f(x) else falsified)
+  def iff[T](x: T, f: PartialFunction[T,Prop]): Prop = secure {
+    if(f.isDefinedAt(x)) f(x) else falsified
+  }
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
@@ -449,7 +457,7 @@ object Prop {
 
   /** Wraps and protects a property */
   def secure[P <% Prop](p: => P): Prop =
-    try { p: Prop } catch { case e: Throwable => exception(e) }
+    try (p: Prop) catch { case e: Throwable => exception(e) }
 
   /** Existential quantifier for an explicit generator. */
   def exists[A,P](f: A => P)(implicit

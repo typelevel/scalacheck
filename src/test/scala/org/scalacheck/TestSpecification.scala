@@ -112,8 +112,8 @@ object TestSpecification extends Properties("Test") {
 
   property("propGenException") = forAll { prms: Test.Parameters =>
     Test.check(prms, genException).status match {
-      case _:GenException => true
-      case _ => false
+      case x:PropException => true :| x.toString
+      case x => false :| x.toString
     }
   }
 

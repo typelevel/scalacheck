@@ -135,12 +135,16 @@ object Test {
   case object Exhausted extends Status
 
   /** An exception was raised when trying to evaluate the property with the
-   *  given concrete arguments. */
+   *  given concrete arguments. If an exception was raised before or during
+   *  argument generation, the argument list will be empty. */
   sealed case class PropException(args: List[Arg[Any]], e: Throwable,
     labels: Set[String]) extends Status
 
   /** An exception was raised when trying to generate concrete arguments
-   *  for evaluating the property. */
+   *  for evaluating the property.
+   *  @deprecated Not used. The type PropException is used for all exceptions.
+   */
+  @deprecated("Not used. The type PropException is used for all exceptions.", "1.11.2")
   sealed case class GenException(e: Throwable) extends Status
 
   trait TestCallback { self =>
@@ -267,38 +271,31 @@ object Test {
       var fm = FreqMap.empty[Set[Any]]
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propPrms = genPrms.resize(size.round.toInt)
-        secure(p(propPrms)) match {
-          case Right(e) => res =
-            Result(GenException(e), n, d, FreqMap.empty[Set[Any]])
-          case Left(propRes) =>
-            fm =
-              if(propRes.collected.isEmpty) fm
-              else fm + propRes.collected
-            propRes.status match {
-              case Prop.Undecided =>
-                d += 1
-                testCallback.onPropEval("", workerIdx, n, d)
-                // The below condition is kind of hacky. We have to have
-                // some margin, otherwise workers might stop testing too
-                // early because they have been exhausted, but the overall
-                // test has not.
-                if (n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d)
-                  res = Result(Exhausted, n, d, fm)
-              case Prop.True =>
-                n += 1
-                testCallback.onPropEval("", workerIdx, n, d)
-              case Prop.Proof =>
-                n += 1
-                res = Result(Proved(propRes.args), n, d, fm)
-                stop = true
-              case Prop.False =>
-                res = Result(Failed(propRes.args,propRes.labels), n, d, fm)
-                stop = true
-              case Prop.Exception(e) =>
-                res = Result(PropException(propRes.args,e,propRes.labels), n, d, fm)
-                stop = true
-            }
+        val propRes = p(genPrms.resize(size.round.toInt))
+        fm = if(propRes.collected.isEmpty) fm else fm + propRes.collected
+        propRes.status match {
+          case Prop.Undecided =>
+            d += 1
+            testCallback.onPropEval("", workerIdx, n, d)
+            // The below condition is kind of hacky. We have to have
+            // some margin, otherwise workers might stop testing too
+            // early because they have been exhausted, but the overall
+            // test has not.
+            if (n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d)
+              res = Result(Exhausted, n, d, fm)
+          case Prop.True =>
+            n += 1
+            testCallback.onPropEval("", workerIdx, n, d)
+          case Prop.Proof =>
+            n += 1
+            res = Result(Proved(propRes.args), n, d, fm)
+            stop = true
+          case Prop.False =>
+            res = Result(Failed(propRes.args,propRes.labels), n, d, fm)
+            stop = true
+          case Prop.Exception(e) =>
+            res = Result(PropException(propRes.args,e,propRes.labels), n, d, fm)
+            stop = true
         }
       }
       if (res == null) {

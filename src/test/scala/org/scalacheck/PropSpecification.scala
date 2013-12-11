@@ -22,6 +22,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object PropSpecification extends Properties("Prop") {
 
+  def propException(): Prop = {
+    throw new java.lang.Exception("exception")
+    passed
+  }
+
   property("Prop.==> undecided") = forAll { p1: Prop =>
     val g = oneOf(falsified,undecided)
     forAll(g) { p2 =>
@@ -51,11 +56,7 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("Prop.==> exception") = {
-    lazy val p: Prop = {
-      throw new java.lang.Exception("exception")
-      passed
-    }
-    (passed ==> p) == exception
+    (passed ==> propException()) == exception
   }
 
   property("Prop.&& Commutativity") = {
@@ -63,7 +64,10 @@ object PropSpecification extends Properties("Prop") {
     forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { p: Prop =>
-    (p && exception) == exception
+    (p && propException) == exception
+  }
+  property("Prop.&& Exception 2") = {
+    (passed && propException) == exception
   }
   property("Prop.&& Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
@@ -87,7 +91,7 @@ object PropSpecification extends Properties("Prop") {
     forAll(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
   }
   property("Prop.|| Exception") = forAll { p: Prop =>
-    (p || exception) == exception
+    (p || propException()) == exception
   }
   property("Prop.|| Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
@@ -107,7 +111,7 @@ object PropSpecification extends Properties("Prop") {
     forAll(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
   }
   property("Prop.++ Exception") = forAll { p: Prop =>
-    (p ++ exception) == exception
+    (p ++ propException()) == exception
   }
   property("Prop.++ Identity 1") = {
     val g = oneOf(falsified,passed,proved,exception)
