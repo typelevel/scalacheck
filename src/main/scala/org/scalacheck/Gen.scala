@@ -38,10 +38,13 @@ sealed trait Gen[+T] {
     def withFilter(q: T => Boolean): WithFilter = Gen.this.withFilter(x => p(x) && q(x))
   }
 
+  /** Evaluate this generator with the given parameters */
   def apply(p: Gen.Parameters): Option[T] = doApply(p).retrieve
 
+  /** Create a new generator by mapping the result of this generator */
   def map[U](f: T => U): Gen[U] = gen { p => doApply(p).map(f) }
 
+  /** Create a new generator by flat-mapping the result of this generator */
   def flatMap[U](f: T => Gen[U]): Gen[U] = gen { p =>
     doApply(p).flatMap(t => f(t).doApply(p))
   }
@@ -51,6 +54,7 @@ sealed trait Gen[+T] {
    *  the generator fails (returns None). */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
+  /** Creates a non-strict filtered version of this generator. */
   def withFilter(p: T => Boolean): WithFilter = new WithFilter(p)
 
   /** Create a new generator that uses this generator to produce a value
