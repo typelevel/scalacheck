@@ -317,6 +317,9 @@ object Gen {
   /** Creates a generator that can access its generation size */
   def sized[T](f: Int => Gen[T]) = gen { p => f(p.size).doApply(p) }
 
+  /** A generator that returns the current generation size */
+  lazy val size: Gen[Int] = sized { sz => sz }
+
   /** Creates a resized version of a generator */
   def resize[T](s: Int, g: Gen[T]) = gen(p => g.doApply(p.resize(s)))
 
