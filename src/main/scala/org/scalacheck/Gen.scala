@@ -304,12 +304,12 @@ object Gen {
    *  and not until the wrapper generator is evaluated. */
   def lzy[T](g: => Gen[T]): Gen[T] = {
     lazy val h = g
-    gen(h.doApply)
+    gen { p => h.doApply(p) }
   }
 
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
-  def wrap[T](g: => Gen[T]) = gen(g.doApply)
+  def wrap[T](g: => Gen[T]) = gen { p => g.doApply(p) }
 
   /** Creates a generator that can access its generation parameters */
   def parameterized[T](f: Parameters => Gen[T]) = gen { p => f(p).doApply(p) }
