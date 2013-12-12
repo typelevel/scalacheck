@@ -317,15 +317,15 @@ object Prop {
   /** A collection of property operators on `Boolean` values.
    *  Import [[Prop.BooleanOperators]] to make the operators available. */
   class ExtendedBoolean(b: => Boolean) {
-    /** See [[Prop.==>]] */
+    /** See the documentation for [[Prop]] */
     def ==>(p: => Prop) = Prop(b) ==> p
-    /** See [[Prop.:|]] */
+    /** See the documentation for [[Prop]] */
     def :|(l: String) = Prop(b) :| l
-    /** See [[Prop.|:]] */
+    /** See the documentation for [[Prop]] */
     def |:(l: String) = l |: Prop(b)
-    /** See [[Prop.:|]] */
+    /** See the documentation for [[Prop]] */
     def :|(l: Symbol) = Prop(b) :| l
-    /** See [[Prop.|:]] */
+    /** See the documentation for [[Prop]] */
     def |:(l: Symbol) = l |: Prop(b)
   }
 
