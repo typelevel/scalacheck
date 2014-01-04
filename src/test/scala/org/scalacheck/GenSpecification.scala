@@ -160,6 +160,14 @@ object GenSpecification extends Properties("Gen") {
     case (u1,u2) => u1 != u2
   }
 
+  property("zip9") = forAll(zip(
+    const(1), const(2), const(3), const(4),
+    const(5), const(6), const(7), const(8),
+    const(9)
+  )) {
+    _ == (1,2,3,4,5,6,7,8,9)
+  }
+
   property("issue #79") = {
     // See https://github.com/rickynils/scalacheck/issues/79
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))

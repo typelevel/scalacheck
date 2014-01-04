@@ -583,6 +583,106 @@ object Gen {
     new java.util.UUID(l1,l2).toString.updated(14, '4').updated(19, y)
   )
 
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2](g1: Gen[T1], g2: Gen[T2]): Gen[(T1,T2)] = {
+    val g = for {
+      t1 <- g1; t2 <- g2
+    } yield (t1,t2)
+    g.suchThat { case (t1,t2) => g1.sieveCopy(t1) && g2.sieveCopy(t2) }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3]): Gen[(T1,T2,T3)] = {
+    val g0 = zip(g1,g2)
+    val g = for {
+      (t1,t2) <- g0; t3 <- g3
+    } yield (t1,t2,t3)
+    g.suchThat { case (t1,t2,t3) => g0.sieveCopy(t1,t2) && g3.sieveCopy(t3) }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4]
+  ): Gen[(T1,T2,T3,T4)] = {
+    val g0 = zip(g1,g2,g3)
+    val g = for {
+      (t1,t2,t3) <- g0; t4 <- g4
+    } yield (t1,t2,t3,t4)
+    g.suchThat { case (t1,t2,t3,t4) => g0.sieveCopy(t1,t2,t3) && g4.sieveCopy(t4) }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4,T5](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4],
+    g5: Gen[T5]
+  ): Gen[(T1,T2,T3,T4,T5)] = {
+    val g0 = zip(g1,g2,g3,g4)
+    val g = for {
+      (t1,t2,t3,t4) <- g0; t5 <- g5
+    } yield (t1,t2,t3,t4,t5)
+    g.suchThat { case (t1,t2,t3,t4,t5) =>
+      g0.sieveCopy(t1,t2,t3,t4) && g5.sieveCopy(t5)
+    }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4,T5,T6](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4],
+    g5: Gen[T5], g6: Gen[T6]
+  ): Gen[(T1,T2,T3,T4,T5,T6)] = {
+    val g0 = zip(g1,g2,g3,g4,g5)
+    val g = for {
+      (t1,t2,t3,t4,t5) <- g0; t6 <- g6
+    } yield (t1,t2,t3,t4,t5,t6)
+    g.suchThat { case (t1,t2,t3,t4,t5,t6) =>
+      g0.sieveCopy(t1,t2,t3,t4,t5) && g6.sieveCopy(t6)
+    }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4,T5,T6,T7](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3],
+    g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7]
+  ): Gen[(T1,T2,T3,T4,T5,T6,T7)] = {
+    val g0 = zip(g1,g2,g3,g4,g5,g6)
+    val g = for {
+      (t1,t2,t3,t4,t5,t6) <- g0; t7 <- g7
+    } yield (t1,t2,t3,t4,t5,t6,t7)
+    g.suchThat { case (t1,t2,t3,t4,t5,t6,t7) =>
+      g0.sieveCopy(t1,t2,t3,t4,t5,t6) && g7.sieveCopy(t7)
+    }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4,T5,T6,T7,T8](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3],
+    g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8]
+  ): Gen[(T1,T2,T3,T4,T5,T6,T7,T8)] = {
+    val g0 = zip(g1,g2,g3,g4,g5,g6,g7)
+    val g = for {
+      (t1,t2,t3,t4,t5,t6,t7) <- g0; t8 <- g8
+    } yield (t1,t2,t3,t4,t5,t6,t7,t8)
+    g.suchThat { case (t1,t2,t3,t4,t5,t6,t7,t8) =>
+      g0.sieveCopy(t1,t2,t3,t4,t5,t6,t7) && g8.sieveCopy(t8)
+    }
+  }
+
+  /** Combines the given generators into one generator that produces a
+   *  tuple of their generated values. */
+  def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9](g1: Gen[T1], g2: Gen[T2], g3: Gen[T3],
+    g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8], g9: Gen[T9]
+  ): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9)] = {
+    val g0 = zip(g1,g2,g3,g4,g5,g6,g7,g8)
+    val g = for {
+      (t1,t2,t3,t4,t5,t6,t7,t8) <- g0; t9 <- g9
+    } yield (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+    g.suchThat { case (t1,t2,t3,t4,t5,t6,t7,t8,t9) =>
+      g0.sieveCopy(t1,t2,t3,t4,t5,t6,t7,t8) && g9.sieveCopy(t9)
+    }
+  }
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
