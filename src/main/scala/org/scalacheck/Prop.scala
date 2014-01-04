@@ -15,9 +15,8 @@ import scala.annotation.tailrec
 trait Prop {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
-    provedToTrue, secure}
+    provedToTrue, secure, mergeRes}
   import Test.cmdLineParser.{Success, NoSuccess}
-  import Result.merge
   import Gen.Parameters
 
   def apply(prms: Parameters): Result
@@ -79,8 +78,7 @@ trait Prop {
   }
 
   /** Whether main should call System.exit with an exit code.
-   *  Defaults to true; override to change.
-   */
+   *  Defaults to true; override to change. */
   def mainCallsExit = true
 
   /** Convenience method that makes it possible to use this property
@@ -108,9 +106,9 @@ trait Prop {
 
   /** Combines two properties through implication */
   def ==>(p: => Prop): Prop = flatMap { r1 =>
-    if(r1.proved) p map { r2 => merge(r1,r2,r2.status) }
-    else if(r1.success) p map { r2 => provedToTrue(merge(r1,r2,r2.status)) }
-    else Prop(r1.copy(status = Undecided))
+    if(r1.proved) p map { r2 => mergeRes(r1,r2,r2.status) }
+    else if(!r1.success) Prop(r1.copy(status = Undecided))
+    else p map { r2 => provedToTrue(mergeRes(r1,r2,r2.status)) }
   }
 
   /** Returns a new property that holds if and only if both this
@@ -120,7 +118,7 @@ trait Prop {
    *  will fail. */
   def ==(p: => Prop) = this.flatMap { r1 =>
     p.map { r2 =>
-      Result.merge(r1, r2, if(r1.status == r2.status) True else False)
+      mergeRes(r1, r2, if(r1.status == r2.status) True else False)
     }
   }
 
@@ -162,27 +160,25 @@ object Prop {
   )
 
   object Result {
-    def apply(st: Status) = new Result(
-      st,
-      Nil,
-      Set.empty[Any],
-      Set.empty[String]
-    )
-
-    def merge(x: Result, y: Result, status: Status) = new Result(
-      status,
-      x.args ++ y.args,
-      (x.collected.asInstanceOf[Set[AnyRef]] ++ y.collected).asInstanceOf[Set[Any]],
-      x.labels ++ y.labels
-    )
+    @deprecated("Will be removed in 1.12.0", "1.11.2")
+    def apply(st: Status): Result = Result(status = st)
+    @deprecated("Will be removed in 1.12.0", "1.11.2")
+    def merge(x: Result, y: Result, status: Status) = mergeRes(x,y,status)
   }
+
+  private[scalacheck] def mergeRes(x: Result, y: Result, st: Status) = Result(
+    status = st,
+    args = x.args ++ y.args,
+    collected = x.collected ++ y.collected,
+    labels = x.labels ++ y.labels
+  )
 
   /** The result of evaluating a property */
   case class Result(
     status: Status,
-    args: List[Arg[Any]],
-    collected: Set[Any],
-    labels: Set[String]
+    args: List[Arg[Any]] = Nil,
+    collected: Set[Any] = Set.empty,
+    labels: Set[String] = Set.empty
   ) {
     def success = status match {
       case True => true
@@ -204,8 +200,6 @@ object Prop {
 
     def label(l: String) = copy(labels = labels+l)
 
-    import Result.merge
-
     def &&(r: Result) = (this.status, r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
@@ -216,17 +210,17 @@ object Prop {
       case (Undecided,_) => this
       case (_,Undecided) => r
 
-      case (_,Proof) => merge(this, r, this.status)
-      case (Proof,_) => merge(this, r, r.status)
+      case (_,Proof) => mergeRes(this, r, this.status)
+      case (Proof,_) => mergeRes(this, r, r.status)
 
-      case (True,True) => merge(this, r, True)
+      case (True,True) => mergeRes(this, r, True)
     }
 
     def ||(r: Result) = (this.status, r.status) match {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
-      case (False,False) => merge(this, r, False)
+      case (False,False) => mergeRes(this, r, False)
       case (False,_) => r
       case (_,False) => this
 
@@ -236,7 +230,7 @@ object Prop {
       case (True,_) => this
       case (_,True) => r
 
-      case (Undecided,Undecided) => merge(this, r, Undecided)
+      case (Undecided,Undecided) => mergeRes(this, r, Undecided)
     }
 
     def ++(r: Result) = (this.status, r.status) match {
@@ -260,14 +254,13 @@ object Prop {
       case (Exception(_),_) => this
       case (_,Exception(_)) => r
 
-      case (False,_) => merge(this, r, Undecided)
+      case (False,_) => mergeRes(this, r, Undecided)
 
       case (Undecided,_) => this
 
-      case (Proof,_) => merge(this, r, r.status)
-      case (True,_) => merge(this, r, r.status)
+      case (Proof,_) => mergeRes(this, r, r.status)
+      case (True,_) => mergeRes(this, r, r.status)
     }
-
   }
 
   sealed trait Status
@@ -294,8 +287,9 @@ object Prop {
 
   /** Create a new property from the given function. */
   def apply(f: Parameters => Result): Prop = new Prop {
-    def apply(prms: Parameters) =
-      try f(prms) catch { case e: Throwable => Result(Exception(e)) }
+    def apply(prms: Parameters) = try f(prms) catch {
+      case e: Throwable => Result(status = Exception(e))
+    }
   }
 
   /** Create a property that returns the given result */
@@ -352,7 +346,7 @@ object Prop {
   // Private support functions
 
   private def provedToTrue(r: Result) = r.status match {
-    case Proof => new Result(True, r.args, r.collected, r.labels)
+    case Proof => r.copy(status = True)
     case _ => r
   }
 
@@ -360,19 +354,19 @@ object Prop {
   // Property combinators
 
   /** A property that never is proved or falsified */
-  lazy val undecided = Prop(Result(Undecided))
+  lazy val undecided = Prop(Result(status = Undecided))
 
   /** A property that always is false */
-  lazy val falsified = Prop(Result(False))
+  lazy val falsified = Prop(Result(status = False))
 
   /** A property that always is proved */
-  lazy val proved = Prop(Result(Proof))
+  lazy val proved = Prop(Result(status = Proof))
 
   /** A property that always is passed */
-  lazy val passed = Prop(Result(True))
+  lazy val passed = Prop(Result(status = True))
 
   /** A property that denotes an exception */
-  def exception(e: Throwable): Prop = Prop(Result(Exception(e)))
+  def exception(e: Throwable): Prop = Prop(Result(status = Exception(e)))
 
   /** A property that denotes an exception */
   lazy val exception: Prop = exception(null)
@@ -479,8 +473,8 @@ object Prop {
         val labels = gr.labels.mkString(",")
         val r = p(prms).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         r.status match {
-          case True => new Result(Proof, r.args, r.collected, r.labels)
-          case False => new Result(Undecided, r.args, r.collected, r.labels)
+          case True => r.copy(status = Proof)
+          case False => r.copy(status = Undecided)
           case _ => r
         }
     }
@@ -629,8 +623,8 @@ object Prop {
       }
     }
 
-    def replOrig(r0: Result, r1: Result) = (r0,r1) match {
-      case (Result(_,a0::_,_,_),Result(_,a1::as,_,_)) =>
+    def replOrig(r0: Result, r1: Result) = (r0.args,r1.args) match {
+      case (a0::_,a1::as) =>
         r1.copy(
           args = a1.copy(
             origArg = a0.origArg,
@@ -835,12 +829,13 @@ object Prop {
     a8: Arbitrary[A8], s8: Shrink[A8], pp8: A8 => Pretty
   ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
 
-  /** Ensures that the property expression passed in completes within the given space of time. */
+  /** Ensures that the property expression passed in completes within the given
+   *  space of time. */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = new Prop {
     @tailrec private def attempt(prms: Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
-        (if (result.failure) result else Result(False)).label("Timeout")
+        (if(result.failure) result else Result(status = False)).label("Timeout")
       } else {
         if (result.success) result
         else attempt(prms, endTime)
