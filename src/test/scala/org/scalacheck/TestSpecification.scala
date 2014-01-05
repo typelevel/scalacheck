@@ -46,7 +46,7 @@ object TestSpecification extends Properties("Test") {
       }
     }
 
-    Test.check(prms.copy(_testCallback = cb), passing).status match {
+    Test.check(prms.withTestCallback(cb), passing).status match {
       case Passed => res
       case _ => false
     }

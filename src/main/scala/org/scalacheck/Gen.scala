@@ -174,15 +174,34 @@ object Gen {
 
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
   trait Parameters {
+
+    /** The size of the generated value. Generator implementations are allowed
+     *  to freely interpret (or ignore) this value. During test execution, the
+     *  value of this parameter is controlled by [[Test.Parameters.minSize]] and
+     *  [[Test.Parameters.maxSize]]. */
     val size: Int
+
+    /** Create a copy of this [[Parameters]] instance with [[size]]
+     *  set to the specified value. */
+    def withSize(size: Int): Parameters = copy(size = size)
+
+    /** The random number generator used. */
     val rng: scala.util.Random
 
-    /** Change the size parameter */
-    def resize(newSize: Int): Parameters = new Parameters {
-      val size = newSize
-      val rng = Parameters.this.rng
-    }
+    /** Create a copy of this [[Parameters]] instance with [[rng]]
+     *  set to the specified value. */
+    def withRng(rng: scala.util.Random): Parameters = copy(rng = rng)
 
+    /** Change the size parameter.
+     *  @deprecated Use [[withSize]] instead. */
+    @deprecated("Use withSize instead.", "1.11.2")
+    def resize(newSize: Int): Parameters = withSize(newSize)
+
+    // private since we can't guarantee binary compatibility for this one
+    private case class copy(
+      size: Int = size,
+      rng: scala.util.Random = rng
+    ) extends Parameters
   }
 
   /** Provides methods for creating [[org.scalacheck.Gen.Parameters]] values */
@@ -321,7 +340,7 @@ object Gen {
   lazy val size: Gen[Int] = sized { sz => sz }
 
   /** Creates a resized version of a generator */
-  def resize[T](s: Int, g: Gen[T]) = gen(p => g.doApply(p.resize(s)))
+  def resize[T](s: Int, g: Gen[T]) = gen(p => g.doApply(p.withSize(s)))
 
   /** Picks a random value from a list */
   def oneOf[T](xs: Seq[T]): Gen[T] =

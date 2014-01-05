@@ -69,7 +69,7 @@ class ScalaCheckFramework extends Framework {
       import Test.cmdLineParser.{Success, NoSuccess}
       val prms = Test.cmdLineParser.parseParams(args) match {
         case Success(params, _) =>
-          params.copy(_testCallback = testCallback, _customClassLoader = Some(loader))
+          params.withTestCallback(testCallback).withCustomClassLoader(Some(loader))
         // TODO: Maybe handle this a bit better than throwing exception?
         case e: NoSuccess => throw new Exception(e.toString)
       }

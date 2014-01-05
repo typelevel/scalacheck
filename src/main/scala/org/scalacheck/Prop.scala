@@ -31,35 +31,44 @@ trait Prop {
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. If you need to get the results
-   *  from the test use the `check` methods in [[org.scalacheck.Test]]
-   *  instead. */
+   *  and reports the result on the console. */
   def check(prms: Test.Parameters): Unit = Test.check(
     if(prms.testCallback.isInstanceOf[ConsoleReporter]) prms
-    else prms.copy(_testCallback = prms.testCallback.chain(ConsoleReporter(1))),
+    else prms.withTestCallback(prms.testCallback.chain(ConsoleReporter(1))),
     this
   )
 
   /** Convenience method that checks this property and reports the
-   *  result on the console. If you need to get the results from the test use
-   *  the `check` methods in [[org.scalacheck.Test]] instead. */
+   *  result on the console. The default test parameters
+   *  ([[Test.Parameters.default]]) are used for the check. */
   def check: Unit = check(Test.Parameters.default)
+
+  /** Convenience method that checks this property and reports the result
+   *  on the console. The provided argument should be a function that takes
+   *  the default test parameters ([[Test.Parameters.default]])
+   *  as input and outputs a modified [[Test.Parameters]] instance that
+   *  will be used for the check. */
+  def check(paramFun: Test.Parameters => Test.Parameters): Unit = check(
+    paramFun(Test.Parameters.default)
+  )
 
   /** Convenience method that checks this property with specified minimal
    *  number of successful test and the given testing parameters, and
    *  reports the result on the console. If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
+  @deprecated("Use check(prms.withMinSuccessfulTests(n)) instead", "1.11.2")
   def check(minSuccessfulTests: Int, prms: Test.Parameters): Unit = check(
-    prms.copy(_minSuccessfulTests = minSuccessfulTests)
+    prms.withMinSuccessfulTests(minSuccessfulTests)
   )
 
   /** Convenience method that checks this property with specified minimal
    *  number of successful test and reports the result on the console.
    *  If you need to get the results from the test use
    *  the `check` methods in [[org.scalacheck.Test]] instead. */
+  @deprecated("Use check(_.withMinSuccessfulTests(n)) instead", "1.11.2")
   def check(minSuccessfulTests: Int): Unit = check(
-    Test.Parameters.default.copy(_minSuccessfulTests = minSuccessfulTests)
+    _.withMinSuccessfulTests(minSuccessfulTests)
   )
 
   /** The logic for main, separated out to make it easier to

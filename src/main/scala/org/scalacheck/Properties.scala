@@ -45,7 +45,7 @@ class Properties(val name: String) extends Prop {
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
   override def check(prms: Test.Parameters): Unit = Test.checkProperties(
-    prms copy (_testCallback = ConsoleReporter(1) chain prms.testCallback), this
+    prms.withTestCallback(ConsoleReporter(1) chain prms.testCallback), this
   )
 
   /** Convenience method that checks the properties and reports the

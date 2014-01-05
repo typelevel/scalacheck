@@ -15,72 +15,120 @@ object Test {
 
   import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
-  /** Test parameters used by the [[Test.check]] method. */
+  /** Test parameters used by the [[Test.check]] method. Default
+   *  parameters are defined by [[Parameters.Default]]. */
   trait Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
     val minSuccessfulTests: Int
 
+    /** Create a copy of this [[Parameters]] instance with [[minSuccessfulTests]]
+     *  set to the specified value. */
+    def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters = copy(
+      minSuccessfulTests = minSuccessfulTests
+    )
+
     /** The starting size given as parameter to the generators. */
     val minSize: Int
+
+    /** Create a copy of this [[Parameters]] instance with [[minSize]]
+     *  set to the specified value. */
+    def withMinSize(minSize: Int): Parameters = copy(
+      minSize = minSize
+    )
 
     /** The maximum size given as parameter to the generators. */
     val maxSize: Int
 
-    /** The random numbe generator used. */
+    /** Create a copy of this [[Parameters]] instance with [[maxSize]]
+     *  set to the specified value. */
+    def withMaxSize(maxSize: Int): Parameters = copy(
+      maxSize = maxSize
+    )
+
+    /** The random number generator used. */
     val rng: scala.util.Random
+
+    /** Create a copy of this [[Parameters]] instance with [[rng]]
+     *  set to the specified value. */
+    def withRng(rng: scala.util.Random): Parameters = copy(
+      rng = rng
+    )
 
     /** The number of tests run in parallell. */
     val workers: Int
 
+    /** Create a copy of this [[Parameters]] instance with [[workers]]
+     *  set to the specified value. */
+    def withWorkers(workers: Int): Parameters = copy(
+      workers = workers
+    )
+
     /** A callback that ScalaCheck calls each time a test is executed. */
     val testCallback: TestCallback
+
+    /** Create a copy of this [[Parameters]] instance with [[testCallback]]
+     *  set to the specified value. */
+    def withTestCallback(testCallback: TestCallback): Parameters = copy(
+      testCallback = testCallback
+    )
 
     /** The maximum ratio between discarded and passed tests allowed before
      *  ScalaCheck gives up and discards the property. At least
      *  `minSuccesfulTests` will always be run, though. */
     val maxDiscardRatio: Float
 
+    /** Create a copy of this [[Parameters]] instance with [[maxDiscardRatio]]
+     *  set to the specified value. */
+    def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters = copy(
+      maxDiscardRatio = maxDiscardRatio
+    )
+
     /** A custom class loader that should be used during test execution. */
     val customClassLoader: Option[ClassLoader]
 
+    /** Create a copy of this [[Parameters]] instance with [[customClassLoader]]
+     *  set to the specified value. */
+    def withCustomClassLoader(customClassLoader: Option[ClassLoader]
+    ): Parameters = copy(
+      customClassLoader = customClassLoader
+    )
+
     // private since we can't guarantee binary compatibility for this one
-    private[scalacheck] def copy(
-      _minSuccessfulTests: Int = Parameters.this.minSuccessfulTests,
-      _minSize: Int = Parameters.this.minSize,
-      _maxSize: Int = Parameters.this.maxSize,
-      _rng: scala.util.Random = Parameters.this.rng,
-      _workers: Int = Parameters.this.workers,
-      _testCallback: TestCallback = Parameters.this.testCallback,
-      _maxDiscardRatio: Float = Parameters.this.maxDiscardRatio,
-      _customClassLoader: Option[ClassLoader] = Parameters.this.customClassLoader
-    ): Parameters = new Parameters {
-      val minSuccessfulTests: Int = _minSuccessfulTests
-      val minSize: Int = _minSize
-      val maxSize: Int = _maxSize
-      val rng: scala.util.Random = _rng
-      val workers: Int = _workers
-      val testCallback: TestCallback = _testCallback
-      val maxDiscardRatio: Float = _maxDiscardRatio
-      val customClassLoader: Option[ClassLoader] = _customClassLoader
-    }
+    private case class copy(
+      minSuccessfulTests: Int = minSuccessfulTests,
+      minSize: Int = minSize,
+      maxSize: Int = maxSize,
+      rng: scala.util.Random = rng,
+      workers: Int = workers,
+      testCallback: TestCallback = testCallback,
+      maxDiscardRatio: Float = maxDiscardRatio,
+      customClassLoader: Option[ClassLoader] = customClassLoader
+    ) extends Parameters
   }
 
-  /** Test parameters used by the [[Test.check]] method.
-   *
-   *  To override default values, extend the
-   *  [[org.scalacheck.Test.Parameters.Default]] trait:
-   *
-   *  {{{
-   *  val myParams = new Parameters.Default {
-   *    override val minSuccesfulTests = 600
-   *    override val maxDiscardRatio = 8
-   *  }
-   *  }}}
-   */
+  /** Test parameters used by the [[Test.check]] method. Default
+   *  parameters are defined by [[Parameters.Default]]. */
   object Parameters {
     /** Default test parameters trait. This can be overriden if you need to
-     *  tweak the parameters. */
+     *  tweak the parameters:
+     *
+     *  {{{
+     *  val myParams = new Parameters.Default {
+     *    override val minSuccesfulTests = 600
+     *    override val maxDiscardRatio = 8
+     *  }
+     *  }}}
+     *
+     *  You can also use the withXXX-methods in
+     *  [[org.scalacheck.Test.Parameters]] to achieve
+     *  the same thing:
+     *
+     *  {{{
+     *  val myParams = Parameters.default
+     *    .withMinSuccessfulTests(600)
+     *    .withMaxDiscardRatio(8)
+     *  }}} */
     trait Default extends Parameters {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
@@ -225,14 +273,13 @@ object Test {
     )
 
     def parseParams(args: Array[String]) = parseArgs(args) {
-      optMap => Parameters.default.copy(
-        _minSuccessfulTests = optMap(OptMinSuccess),
-        _maxDiscardRatio = optMap(OptMaxDiscardRatio),
-        _minSize = optMap(OptMinSize),
-        _maxSize = optMap(OptMaxSize),
-        _workers = optMap(OptWorkers),
-        _testCallback = ConsoleReporter(optMap(OptVerbosity))
-      )
+      optMap => Parameters.default
+        .withMinSuccessfulTests(optMap(OptMinSuccess): Int)
+        .withMaxDiscardRatio(optMap(OptMaxDiscardRatio): Float)
+        .withMinSize(optMap(OptMinSize): Int)
+        .withMaxSize(optMap(OptMaxSize): Int)
+        .withWorkers(optMap(OptWorkers): Int)
+        .withTestCallback(ConsoleReporter(optMap(OptVerbosity)): TestCallback)
     }
   }
 
@@ -271,7 +318,7 @@ object Test {
       var fm = FreqMap.empty[Set[Any]]
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propRes = p(genPrms.resize(size.round.toInt))
+        val propRes = p(genPrms.withSize(size.round.toInt))
         fm = if(propRes.collected.isEmpty) fm else fm + propRes.collected
         propRes.status match {
           case Prop.Undecided =>
@@ -338,7 +385,7 @@ object Test {
         override def onTestResult(n: String, r: Result) =
           prms.testCallback.onTestResult(name,r)
       }
-      val res = check(prms copy (_testCallback = testCallback), p)
+      val res = check(prms.withTestCallback(testCallback), p)
       (name,res)
     }
 }
