@@ -1,5 +1,4 @@
-with (import <nixpkgs> {});
-#{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib, zip, xz }:
+{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib, zip, xz }:
 
 with lib;
 with builtins;
