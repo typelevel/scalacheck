@@ -283,6 +283,20 @@ object Test {
     }
   }
 
+  /** Tests a property with parameters that are calculated by applying
+   *  the provided function to [[Parameters.default]].
+   *  Example use:
+   *
+   *  {{{
+   *  Test.check(p) { _.
+   *    withMinSuccessfulTests(80000).
+   *    withWorkers(4)
+   *  }
+   *  }}}
+   */
+  def check(p: Prop)(f: Parameters => Parameters): Result = 
+    check(f(Parameters.default), p)
+
   /** Tests a property with the given testing parameters, and returns
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {

@@ -47,7 +47,17 @@ trait Prop {
    *  on the console. The provided argument should be a function that takes
    *  the default test parameters ([[Test.Parameters.default]])
    *  as input and outputs a modified [[Test.Parameters]] instance that
-   *  will be used for the check. */
+   *  Example use:
+   *
+   *  {{{
+   *  p.check(_.withMinSuccessfulTests(500))
+
+   *  p.check { _.
+   *    withMinSuccessfulTests(80000).
+   *    withWorkers(4)
+   *  }
+   *  }}}
+   */
   def check(paramFun: Test.Parameters => Test.Parameters): Unit = check(
     paramFun(Test.Parameters.default)
   )
