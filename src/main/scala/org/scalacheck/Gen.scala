@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import util.{Buildable, Buildable2}
+import scala.collection.immutable.TreeMap
 
 sealed trait Gen[+T] {
 
@@ -361,14 +362,17 @@ object Gen {
 
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    def tot = gs.map(_._1).foldLeft(0)(_+_)
-
-    def pick(n: Int, l: List[(Int,Gen[T])]): Gen[T] = l match {
-      case Nil => fail
-      case (k,g)::gs => if(n <= k) g else pick(n-k, gs)
+    var tot = 0l
+    val tree: TreeMap[Long, Gen[T]] = {
+      val builder = TreeMap.newBuilder[Long, Gen[T]]
+      gs.filter(_._1 > 0).foreach {
+        case (f, v) =>
+          tot += f
+          builder.+=((tot, v))
+      }
+      builder.result()
     }
-
-    choose(1,tot).flatMap(pick(_, gs.toList)).suchThat { x =>
+    choose(0L, tot).flatMap(r => tree.from(r).head._2).suchThat { x =>
       gs.exists(_._2.sieveCopy(x))
     }
   }
