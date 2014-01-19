@@ -1,4 +1,4 @@
-ScalaCheck 1.11.1 Release Notes
+ScalaCheck 1.11.2 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -24,12 +24,28 @@ ScalaCheck highlights:
   * The ScalaCheck library has no dependencies other than the Scala
     runtime.
 
-  * ScalaCheck is well integrated with ScalaTest, sbt and Specs.
+  * ScalaCheck is well integrated with ScalaTest, sbt and specs2.
 
-What's new in version 1.11.1?
+What's new in version 1.11.2?
 
-ScalaCheck 1.11.1 is maintenance release with a few bug fixes and minor
-features added. It is binary compatible with ScalaCheck 1.11.0.
+ScalaCheck 1.11.2 is maintenance release with a few bug fixes and some
+features added. It is binary compatible with ScalaCheck 1.11.1.
+
+The most notable feature addition is handy withX-methods to Test.Parameters
+and Gen.Parameters. This lets you override individual parameter values
+like this:
+
+  myProp.check(Test.Parameters.default.withMinSuccessfulTests(1000))
+
+A new check-method simplifies it further by allowing you to provide a
+function that modifies the default testing parameters:
+
+  myProp.check(_.withMinSuccessfulTests(1000).withMaxSize(500))
+
+The reason for not using Scala case classes to model parameters (which would
+make the above even nicer) is that it is very hard to maintain binary
+compatibility when new parameters are added.
+
 
 ScalaCheck links:
 
@@ -47,7 +63,7 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.11.1" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.11.2" % "test"
     )
 
   * Maven dependency
@@ -70,5 +86,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.10</artifactId>
-      <version>1.11.1</version>
+      <version>1.11.2</version>
     </dependency>
