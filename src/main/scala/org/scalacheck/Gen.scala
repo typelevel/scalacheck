@@ -362,18 +362,22 @@ object Gen {
 
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    var tot = 0l
-    val tree: TreeMap[Long, Gen[T]] = {
-      val builder = TreeMap.newBuilder[Long, Gen[T]]
-      gs.filter(_._1 > 0).foreach {
-        case (f, v) =>
-          tot += f
-          builder.+=((tot, v))
-      }
-      builder.result()
-    }
-    choose(0L, tot).flatMap(r => tree.from(r).head._2).suchThat { x =>
-      gs.exists(_._2.sieveCopy(x))
+    gs.filter(_._1 > 0) match {
+      case Nil => fail
+      case filtered =>
+        var tot = 0l
+        val tree: TreeMap[Long, Gen[T]] = {
+          val builder = TreeMap.newBuilder[Long, Gen[T]]
+          filtered.foreach {
+            case (f, v) =>
+              tot += f
+              builder.+=((tot, v))
+          }
+          builder.result()
+        }
+        choose(1L, tot).flatMap(r => tree.from(r).head._2).suchThat { x =>
+          gs.exists(_._2.sieveCopy(x))
+        }
     }
   }
 
