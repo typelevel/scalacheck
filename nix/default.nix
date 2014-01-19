@@ -1,4 +1,5 @@
 { stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib, zip, xz }:
+#with (import <nixpkgs> {});
 
 with lib;
 with builtins;
@@ -8,7 +9,7 @@ let
 
   docFooter = version: rev:
     let shortRev = builtins.substring 0 7 rev;
-    in "ScalaCheck ${version} / ${shortRev} API documentation. © 2007-2013 Rickard Nilsson";
+    in "ScalaCheck ${version} / ${shortRev} API documentation. © 2007-2014 Rickard Nilsson";
 
   docSourceUrl = version: rev:
     let tag = if hasSuffix "SNAPSHOT" version then rev else version;
@@ -185,6 +186,13 @@ in rec {
   };
 
   scalacheckVersions = {
+    "1.11.2" = {
+      rev = "1275cbcc001ae94808297c5d9c80124ed15279d7";
+      sha256 = "1n05bkn7v2i8l9x3689glj8a9900s0csrxz3a758axz6sf0a1sn9";
+      scalaVersions = {
+        inherit (scalaVersions) "2.11.0-M7" "2.10";
+      };
+    };
     "1.11.1" = {
       rev = "d7b285bf6f9a4171d41639c5d0f641c46555f7ee";
       sha256 = "12pidk5jr463gd72c2kanz9jjad6zhcxamppqq3fcjcvm93rrnjg";
@@ -230,6 +238,6 @@ in rec {
     };
   };
 
-  latest = mkScalaChecks "1.11.1" scalacheckVersions."1.11.1";
+  latest = mkScalaChecks "1.11.2" scalacheckVersions."1.11.2";
 
 }
