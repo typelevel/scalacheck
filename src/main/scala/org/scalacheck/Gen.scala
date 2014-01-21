@@ -184,14 +184,14 @@ object Gen {
 
     /** Create a copy of this [[Parameters]] instance with [[size]]
      *  set to the specified value. */
-    def withSize(size: Int): Parameters = copy(size = size)
+    def withSize(size: Int): Parameters = cp(size = size)
 
     /** The random number generator used. */
     val rng: scala.util.Random
 
     /** Create a copy of this [[Parameters]] instance with [[rng]]
      *  set to the specified value. */
-    def withRng(rng: scala.util.Random): Parameters = copy(rng = rng)
+    def withRng(rng: scala.util.Random): Parameters = cp(rng = rng)
 
     /** Change the size parameter.
      *  @deprecated Use [[withSize]] instead. */
@@ -199,7 +199,7 @@ object Gen {
     def resize(newSize: Int): Parameters = withSize(newSize)
 
     // private since we can't guarantee binary compatibility for this one
-    private case class copy(
+    private case class cp(
       size: Int = size,
       rng: scala.util.Random = rng
     ) extends Parameters

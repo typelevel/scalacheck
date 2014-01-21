@@ -24,7 +24,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[minSuccessfulTests]]
      *  set to the specified value. */
-    def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters = copy(
+    def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters = cp(
       minSuccessfulTests = minSuccessfulTests
     )
 
@@ -33,7 +33,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[minSize]]
      *  set to the specified value. */
-    def withMinSize(minSize: Int): Parameters = copy(
+    def withMinSize(minSize: Int): Parameters = cp(
       minSize = minSize
     )
 
@@ -42,7 +42,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[maxSize]]
      *  set to the specified value. */
-    def withMaxSize(maxSize: Int): Parameters = copy(
+    def withMaxSize(maxSize: Int): Parameters = cp(
       maxSize = maxSize
     )
 
@@ -51,7 +51,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[rng]]
      *  set to the specified value. */
-    def withRng(rng: scala.util.Random): Parameters = copy(
+    def withRng(rng: scala.util.Random): Parameters = cp(
       rng = rng
     )
 
@@ -60,7 +60,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[workers]]
      *  set to the specified value. */
-    def withWorkers(workers: Int): Parameters = copy(
+    def withWorkers(workers: Int): Parameters = cp(
       workers = workers
     )
 
@@ -69,7 +69,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[testCallback]]
      *  set to the specified value. */
-    def withTestCallback(testCallback: TestCallback): Parameters = copy(
+    def withTestCallback(testCallback: TestCallback): Parameters = cp(
       testCallback = testCallback
     )
 
@@ -80,7 +80,7 @@ object Test {
 
     /** Create a copy of this [[Parameters]] instance with [[maxDiscardRatio]]
      *  set to the specified value. */
-    def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters = copy(
+    def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters = cp(
       maxDiscardRatio = maxDiscardRatio
     )
 
@@ -90,12 +90,12 @@ object Test {
     /** Create a copy of this [[Parameters]] instance with [[customClassLoader]]
      *  set to the specified value. */
     def withCustomClassLoader(customClassLoader: Option[ClassLoader]
-    ): Parameters = copy(
+    ): Parameters = cp(
       customClassLoader = customClassLoader
     )
 
     // private since we can't guarantee binary compatibility for this one
-    private case class copy(
+    private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
       maxSize: Int = maxSize,
