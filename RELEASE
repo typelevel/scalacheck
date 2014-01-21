@@ -1,4 +1,4 @@
-ScalaCheck 1.11.2 Release Notes
+ScalaCheck 1.11.3 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -26,10 +26,12 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and specs2.
 
-What's new in version 1.11.2?
+What's new in version 1.11.3?
 
-ScalaCheck 1.11.2 is maintenance release with a few bug fixes and some
-features added. It is binary compatible with ScalaCheck 1.11.1.
+ScalaCheck 1.11.3 is a quick fix for making ScalaCheck compile with Scala
+2.9.3. ScalaCheck 1.11.2 unfortunately triggered a compiler bug in that
+version of Scala. The below text is taken from the ScalCheck 1.11.2 release
+notes:
 
 The most notable feature addition is handy withX-methods to Test.Parameters
 and Gen.Parameters. This lets you override individual parameter values
