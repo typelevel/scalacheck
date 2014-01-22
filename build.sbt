@@ -18,11 +18,13 @@ scalaVersion := "2.10.3"
 
 scalaParserCombinatorsVersion := "1.0.0-RC5"
 
-crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M7")
+crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-M8")
 
 mimaDefaultSettings
 
 previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.3")
+
+resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases"
 
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
