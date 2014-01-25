@@ -31,6 +31,9 @@ trait Prop {
 
   def apply(prms: Parameters): Result
 
+  def contramap(f: Parameters => Parameters): Prop =
+    new PropFromFun(params => apply(f(params)))
+
   def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
 
   def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
