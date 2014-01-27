@@ -14,60 +14,89 @@ import org.scalacheck._
 trait Commands {
 
   /** The abstract state type. Must be immutable.
-   *  The [[Commands.State]] type should model the state of the system under
+   *  The [[State]] type should model the state of the system under
    *  test (SUT). It should only contain details needed for specifying
-   *  our pre- and postconditions, and for creating [[Commands.Sut]]
+   *  our pre- and postconditions, and for creating [[Sut]]
    *  instances. */
   type State
 
   /** A type representing one instance of the system under test (SUT).
-   *  The [[Commands.Sut]] type should be a proxy to the actual system under
+   *  The [[Sut]] type should be a proxy to the actual system under
    *  test. It is used in the postconditions to verify that the real system
    *  behaves according to the specification. It should be possible to have any
-   *  number of co-existing instances of the [[Commands.Sut]] type, as long as
-   *  [[Commands.canCreateNewSut]] isn't violated, and each [[Commands.Sut]]
+   *  number of co-existing instances of the [[Sut]] type, as long as
+   *  [[canCreateNewSut]] isn't violated, and each [[Sut]]
    *  instance should be a proxy to a distinct SUT instance. There should be no
-   *  dependencies between the [[Commands.Sut]] instances, as they might be used
-   *  in parallel by ScalaCheck. [[Commands.Sut]] instances are created by
-   *  [[Commands.newSutInstance]] and destroyed by
-   *  [[Commands.destroySutInstance]]. [[Commands.newSutInstance]] and
-   *  [[Commands.destroySutInstance]] might be called at any time by
-   *  ScalaCheck, as long as [[Commands.canCreateNewSut]] isn't violated. */
+   *  dependencies between the [[Sut]] instances, as they might be used
+   *  in parallel by ScalaCheck. [[Sut]] instances are created by
+   *  [[newSutInstance]] and destroyed by
+   *  [[destroySutInstance]]. [[newSutInstance]] and
+   *  [[destroySutInstance]] might be called at any time by
+   *  ScalaCheck, as long as [[canCreateNewSut]] isn't violated. */
   type Sut
 
+  /** The number of commands that might be executed in parallel. Defaults to
+   *  one, which means the commands will only be run serially for the same
+   *  [[Sut]] instance. Distinct [[Sut]] instances might still receive
+   *  commands in parallel, if the [[Test.Parameters.workers]] parameter is
+   *  larger than one. Setting [[threadCount]] higher than one enables
+   *  ScalaCheck to reveal thread-related issues in your system under test. */
   def threadCount: Int = 1
 
-  def maxParComb: Int = 1000
+  /** When setting [[threadCount]] larger than one, ScalaCheck must evaluate
+   *  all possible command interleavings (and the end [[State]] instances
+   *  they produce), since parallel command execution is non-deterministic.
+   *  ScalaCheck tries out all possible end states with the
+   *  [[Command.postCondition]] function of the very last command executed
+   *  (there is always exactly one command executed after all parallel command
+   *  executions). If it fails to find an end state that satisfies the
+   *  postcondition, the test fails.
+   *  However, the number of possible end states grows rapidly with increasing
+   *  values of [[threadCount]]. Therefore, the lengths of the parallel command
+   *  sequences are limited so that the number of possible end states don't
+   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 10000. */
+  def maxParComb: Int = 10000
 
-  /** Decides if [[Commands.newSutInstance]] should be allowed to be called
+  /** Decides if [[newSutInstance]] should be allowed to be called
    *  with the specified state instance. This can be used to limit the number
-   *  of co-existing system instances. If this method is implemented
+   *  of co-existing [[Sut]] instances. The list of existing states represents
+   *  the initial states (not the current states) for all [[Sut]] instances
+   *  that are active for the moment. If this method is implemented
    *  incorrectly, for example if it returns false even if the list of
-   *  existing systems is empty, ScalaCheck might hang. */
-  def canCreateNewSut(newState: State,
-    existingSuts: Traversable[(State,Sut)]): Boolean
+   *  existing states is empty, ScalaCheck might hang.
+   *
+   *  If you want to allow only one [[Sut]] instance to exist at any given time
+   *  (a singleton [[Sut]]), implement this method the following way:
+   *
+   *  {{{
+   *  def canCreateNewSut(newState: State, initStates: Traversable[State]) = {
+   *    initStates.isEmpty
+   *  }
+   *  }}}
+   */
+  def canCreateNewSut(newState: State, initStates: Traversable[State]): Boolean
 
-  /** Create a new [[Commands.Sut]] instance with an internal state that
+  /** Create a new [[Sut]] instance with an internal state that
    *  corresponds to the provided abstract state instance. The provided state
-   *  is guaranteed to fulfill [[Commands.initialPreCondition]], and
-   *  [[Commands.newSutInstance]] will never be called if
-   *  [[Commands.canCreateNewSut]] is not true for the given state. */
+   *  is guaranteed to fulfill [[initialPreCondition]], and
+   *  [[newSutInstance]] will never be called if
+   *  [[canCreateNewSut]] is not true for the given state. */
   def newSutInstance(state: State): Sut
 
-  /** Destroy the system represented by the given [[Commands.Sut]]
+  /** Destroy the system represented by the given [[Sut]]
    *  instance, and release any resources related to it. */
   def destroySutInstance(sut: Sut): Unit
 
   /** The precondition for the initial state, when no commands yet have
    *  run. This is used by ScalaCheck when command sequences are shrinked
    *  and the first state might differ from what is returned from
-   *  [[Commands.initialState]]. */
+   *  [[genInitialState]]. */
   def initialPreCondition(state: State): Boolean
 
-  /** A generator that should produce an initial [[Commands.State]] instance that is
-   *  usable by [[Commands.newSutInstance]] to create a new system under test.
+  /** A generator that should produce an initial [[State]] instance that is
+   *  usable by [[newSutInstance]] to create a new system under test.
    *  The state returned by this generator is always checked with the
-   *  [[Commands.initialPreCondition]] method before it is used. */
+   *  [[initialPreCondition]] method before it is used. */
   def genInitialState: Gen[State]
 
   /** A generator that, given the current abstract state, should produce
@@ -79,19 +108,19 @@ trait Commands {
    *  properly. */
   trait Command {
     /** An abstract representation of the result of running this command in
-     *  the system under test. The [[Command.Result]] type should be immutable
+     *  the system under test. The [[Result]] type should be immutable
      *  and it should encode everything about the command run that is necessary
-     *  to know in order to correctly implement the [[Command.postCondition]]
+     *  to know in order to correctly implement the [[postCondition]]
      *  method. */
     type Result
 
     /** Executes the command in the system under test, and returns a
      *  representation of the result of the command run. The result value
      *  is later used for verifying that the command behaved according
-     *  to the specification, by the [[Command.postCondition]] method. */
+     *  to the specification, by the [[postCondition]] method. */
     def run(sut: Sut): Result
 
-    /** Returns a new [[Commands.State]] instance that represents the
+    /** Returns a new [[State]] instance that represents the
      *  state of the system after this command has run, given the system
      *  was in the provided state before the run. */
     def nextState(state: State): State
@@ -124,31 +153,44 @@ trait Commands {
     def postCondition(state: State, result: Null) = true
   }
 
+  /** A property that can be used to test this [[Commands]]
+   *  specification. */
   lazy val property: Prop = Prop.forAll(actions) { as =>
-    val sutId = new AnyRef
-    val newSut = suts.synchronized {
-      if (!canCreateNewSut(as.s, suts.values)) None else {
-        val sut = newSutInstance(as.s)
-        suts += (sutId -> (as.s,sut))
-        Some(sut)
+    try {
+      val sutId = suts.synchronized {
+        if (!canCreateNewSut(as.s, suts.values.map(_._1))) None else {
+          val sutId = new AnyRef
+          suts += (sutId -> (as.s,None))
+          Some(sutId)
+        }
       }
-    }
-    newSut match {
-      case Some(sut) => try runActions(sut, as) finally suts.synchronized {
-        suts -= sutId
-        destroySutInstance(sut)
+      sutId match {
+        case Some(id) =>
+          val sut = newSutInstance(as.s)
+          suts.synchronized { suts += (id -> (as.s,Some(sut))) }
+          try runActions(sut, as)
+          finally suts.synchronized {
+            suts -= id
+            destroySutInstance(sut)
+          }
+        // NOT IMPLEMENTED Block until canCreateNewSut is true
+        case None =>
+          println("NOT IMPL")
+          Prop.undecided
       }
-      // NOT IMPLEMENTED Block until canCreateNewSut is true
-      case None =>
-        println("NOT IMPL")
-        Prop.undecided
+    } catch { case e: Throwable =>
+      suts.synchronized {
+        for(Some(sut) <- suts.values.map(_._2)) destroySutInstance(sut)
+        suts.clear
+      }
+      throw e
     }
   }
 
   // Private methods //
 
-  /** Active SUTs */
-  private val suts = collection.mutable.Map.empty[AnyRef,(State,Sut)]
+  /** Active SUTs (SUT ID mapped to start state and sut instance) */
+  private val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
 
   private type Commands = List[Command]
 
@@ -170,9 +212,10 @@ trait Commands {
 
   private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]
   ): (Prop, List[List[(Command,String)]]) = {
-    import concurrent.{Future,Await,ExecutionContext}
-    import concurrent.duration.Duration.Inf
-    import ExecutionContext.Implicits.global
+    import concurrent.{Future, ExecutionContext, Await}
+    implicit val ec = ExecutionContext.fromExecutor(
+      java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
+    )
 
     val memo = collection.mutable.Map.empty[(State,List[Commands]), List[State]]
 
@@ -181,9 +224,12 @@ trait Commands {
       (memo.get((s,css)),css) match {
         case (Some(states),_) => states
         case (_,Nil) => List(s)
-        case (_,cs::Nil) => List(cs.init.foldLeft(s) {case (s0,c) => c.nextState(s0)})
+        case (_,cs::Nil) =>
+          List(cs.init.foldLeft(s) { case (s0,c) => c.nextState(s0) })
         case _ =>
-          val inits = scan(css) {case (cs,x) => (cs.head.nextState(s),cs.tail::x)}
+          val inits = scan(css) { case (cs,x) =>
+            (cs.head.nextState(s), cs.tail::x)
+          }
           val states = inits.distinct.flatMap(endStates).distinct
           memo += (s,css) -> states
           states
@@ -202,7 +248,7 @@ trait Commands {
       (ps,rs) <- Future.traverse(pcmds)(runCmds).map(_.unzip)
     } yield (Prop.atLeastOne(ps: _*), rs)
 
-    Await.result(res,Inf)
+    Await.result(res, concurrent.duration.Duration.Inf)
   }
 
   /** Formats a list of commands with corresponding results */
@@ -221,7 +267,7 @@ trait Commands {
     })
   }
 
-  /** [[Commands.Actions]] generator */
+  /** [[Actions]] generator */
   private lazy val actions: Gen[Actions] = {
     import Gen.{const, listOfN, choose, sized}
 
@@ -283,7 +329,7 @@ trait Commands {
     case y::ys => f(y,ys) :: scan(ys) { case (x,xs) => f(x,y::xs) }
   }
 
-  /** Short-circuit property AND operator. (Should maybe be in the Prop module) */
+  /** Short-circuit property AND operator. (Should maybe be in Prop module) */
   private def propAnd(p1: => Prop, p2: => Prop) = p1.flatMap { r =>
     if(r.success) Prop.secure(p2) else Prop(prms => r)
   }

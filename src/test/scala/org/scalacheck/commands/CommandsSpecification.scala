@@ -29,7 +29,7 @@ object CommandsSpecification extends Properties("Commands") {
     type Sut = Counter
     type State = Int
 
-    def canCreateNewSut(newState: State, existingSuts: Traversable[(State,Sut)]) = true
+    def canCreateNewSut(newState: State, initStates: Traversable[State]) = true
 
     def newSutInstance(state: State): Sut = Counter(state)
 
