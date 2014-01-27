@@ -1,0 +1,291 @@
+/*-------------------------------------------------------------------------*\
+**  ScalaCheck                                                             **
+**  Copyright (c) 2007-2014 Rickard Nilsson. All rights reserved.          **
+**  http://www.scalacheck.org                                              **
+**                                                                         **
+**  This software is released under the terms of the Revised BSD License.  **
+**  There is NO WARRANTY. See the file LICENSE for the full text.          **
+\*------------------------------------------------------------------------ */
+
+package org.scalacheck.commands
+
+import org.scalacheck._
+
+trait Commands {
+
+  /** The abstract state type. Must be immutable.
+   *  The [[Commands.State]] type should model the state of the system under
+   *  test (SUT). It should only contain details needed for specifying
+   *  our pre- and postconditions, and for creating [[Commands.Sut]]
+   *  instances. */
+  type State
+
+  /** A type representing one instance of the system under test (SUT).
+   *  The [[Commands.Sut]] type should be a proxy to the actual system under
+   *  test. It is used in the postconditions to verify that the real system
+   *  behaves according to the specification. It should be possible to have any
+   *  number of co-existing instances of the [[Commands.Sut]] type, as long as
+   *  [[Commands.canCreateNewSut]] isn't violated, and each [[Commands.Sut]]
+   *  instance should be a proxy to a distinct SUT instance. There should be no
+   *  dependencies between the [[Commands.Sut]] instances, as they might be used
+   *  in parallel by ScalaCheck. [[Commands.Sut]] instances are created by
+   *  [[Commands.newSutInstance]] and destroyed by
+   *  [[Commands.destroySutInstance]]. [[Commands.newSutInstance]] and
+   *  [[Commands.destroySutInstance]] might be called at any time by
+   *  ScalaCheck, as long as [[Commands.canCreateNewSut]] isn't violated. */
+  type Sut
+
+  def threadCount: Int = 1
+
+  def maxParComb: Int = 1000
+
+  /** Decides if [[Commands.newSutInstance]] should be allowed to be called
+   *  with the specified state instance. This can be used to limit the number
+   *  of co-existing system instances. If this method is implemented
+   *  incorrectly, for example if it returns false even if the list of
+   *  existing systems is empty, ScalaCheck might hang. */
+  def canCreateNewSut(newState: State,
+    existingSuts: Traversable[(State,Sut)]): Boolean
+
+  /** Create a new [[Commands.Sut]] instance with an internal state that
+   *  corresponds to the provided abstract state instance. The provided state
+   *  is guaranteed to fulfill [[Commands.initialPreCondition]], and
+   *  [[Commands.newSutInstance]] will never be called if
+   *  [[Commands.canCreateNewSut]] is not true for the given state. */
+  def newSutInstance(state: State): Sut
+
+  /** Destroy the system represented by the given [[Commands.Sut]]
+   *  instance, and release any resources related to it. */
+  def destroySutInstance(sut: Sut): Unit
+
+  /** The precondition for the initial state, when no commands yet have
+   *  run. This is used by ScalaCheck when command sequences are shrinked
+   *  and the first state might differ from what is returned from
+   *  [[Commands.initialState]]. */
+  def initialPreCondition(state: State): Boolean
+
+  /** A generator that should produce an initial [[Commands.State]] instance that is
+   *  usable by [[Commands.newSutInstance]] to create a new system under test.
+   *  The state returned by this generator is always checked with the
+   *  [[Commands.initialPreCondition]] method before it is used. */
+  def genInitialState: Gen[State]
+
+  /** A generator that, given the current abstract state, should produce
+   *  a suitable Command instance. */
+  def genCommand(state: State): Gen[Command]
+
+  /** A type representing the commands that can run in the system under test.
+   *  This type should be immutable and implement the equality operator
+   *  properly. */
+  trait Command {
+    /** An abstract representation of the result of running this command in
+     *  the system under test. The [[Command.Result]] type should be immutable
+     *  and it should encode everything about the command run that is necessary
+     *  to know in order to correctly implement the [[Command.postCondition]]
+     *  method. */
+    type Result
+
+    /** Executes the command in the system under test, and returns a
+     *  representation of the result of the command run. The result value
+     *  is later used for verifying that the command behaved according
+     *  to the specification, by the [[Command.postCondition]] method. */
+    def run(sut: Sut): Result
+
+    /** Returns a new [[Commands.State]] instance that represents the
+     *  state of the system after this command has run, given the system
+     *  was in the provided state before the run. */
+    def nextState(state: State): State
+
+    /** Precondition that decides if this command is allowed to run
+     *  when the system under test is in the provided state. */
+    def preCondition(state: State): Boolean
+
+    /** Postcondition that decides if this command produced the correct result
+     *  or not, given the system was in the provided state before the command
+     *  ran. */
+    def postCondition(state: State, result: Result): Prop
+
+    /** Wraps the run and postCondition methods in order not to leak the
+     *  dependant Result type. */
+    private[Commands] def runPC(sut: Sut): (String, State => Prop) = {
+      import Prop.BooleanOperators
+      val r = run(sut)
+      (if(r == null) "null" else r.toString,
+       s => preCondition(s) ==> postCondition(s,r))
+    }
+  }
+
+  /** A command that doesn't do anything */
+  case object NoOp extends Command {
+    type Result = Null
+    def run(sut: Sut) = null
+    def nextState(state: State) = state
+    def preCondition(state: State) = true
+    def postCondition(state: State, result: Null) = true
+  }
+
+  lazy val property: Prop = Prop.forAll(actions) { as =>
+    val sutId = new AnyRef
+    val newSut = suts.synchronized {
+      if (!canCreateNewSut(as.s, suts.values)) None else {
+        val sut = newSutInstance(as.s)
+        suts += (sutId -> (as.s,sut))
+        Some(sut)
+      }
+    }
+    newSut match {
+      case Some(sut) => try runActions(sut, as) finally suts.synchronized {
+        suts -= sutId
+        destroySutInstance(sut)
+      }
+      // NOT IMPLEMENTED Block until canCreateNewSut is true
+      case None =>
+        println("NOT IMPL")
+        Prop.undecided
+    }
+  }
+
+  // Private methods //
+
+  /** Active SUTs */
+  private val suts = collection.mutable.Map.empty[AnyRef,(State,Sut)]
+
+  private type Commands = List[Command]
+
+  private case class Actions(
+    s: State, seqCmds: Commands, parCmds: List[Commands]
+  )
+
+  private implicit val shrinkActions = Shrink[Actions] { as =>
+    Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
+    Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
+  }
+
+  private def runSeqCmds(sut: Sut, s0: State, cs: Commands
+  ): (Prop, State, List[String]) =
+    cs.foldLeft((Prop.proved,s0,List[String]())) { case ((p,s,rs),c) =>
+      val (r,pf) = c.runPC(sut)
+      (p && pf(s), c.nextState(s), rs :+ r)
+    }
+
+  private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]
+  ): (Prop, List[List[(Command,String)]]) = {
+    import concurrent.{Future,Await,ExecutionContext}
+    import concurrent.duration.Duration.Inf
+    import ExecutionContext.Implicits.global
+
+    val memo = collection.mutable.Map.empty[(State,List[Commands]), List[State]]
+
+    def endStates(scss: (State, List[Commands])): List[State] = {
+      val (s,css) = (scss._1, scss._2.filter(_.nonEmpty))
+      (memo.get((s,css)),css) match {
+        case (Some(states),_) => states
+        case (_,Nil) => List(s)
+        case (_,cs::Nil) => List(cs.init.foldLeft(s) {case (s0,c) => c.nextState(s0)})
+        case _ =>
+          val inits = scan(css) {case (cs,x) => (cs.head.nextState(s),cs.tail::x)}
+          val states = inits.distinct.flatMap(endStates).distinct
+          memo += (s,css) -> states
+          states
+      }
+    }
+
+    val states = Future(endStates(s, pcmds))
+
+    def runCmds(cs: Commands) =
+      if(cs.isEmpty) Future((Prop.proved,Nil)) else for {
+        (rs,(r,pf)) <- Future((cs.init.map(_.runPC(sut)._1),cs.last.runPC(sut)))
+        ss <- states
+      } yield (Prop.atLeastOne(ss.map(pf): _*), cs.zip(rs :+ r))
+
+    val res = for {
+      (ps,rs) <- Future.traverse(pcmds)(runCmds).map(_.unzip)
+    } yield (Prop.atLeastOne(ps: _*), rs)
+
+    Await.result(res,Inf)
+  }
+
+  /** Formats a list of commands with corresponding results */
+  private def prettyCmdsRes(rs: List[(Command,String)]) =
+      (rs.map { case (c,r) => s"$c => $r" }).mkString("(","; ",")")
+
+  /** Creates a property that runs the given actions in the given SUT */
+  private def runActions(sut: Sut, as: Actions): Prop = {
+    val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
+    val l1 = s"seqcmds = (state = ${as.s}) ${prettyCmdsRes(as.seqCmds zip rs1)}"
+    if(as.parCmds.isEmpty) p1 :| l1
+    else propAnd(p1 :| l1, {
+      val (p2, rs2) = runParCmds(sut, s, as.parCmds)
+      val l2 = rs2.map(prettyCmdsRes).mkString("(",", ",")")
+      p2 :| l1 :| s"parcmds = (state = ${s}) $l2"
+    })
+  }
+
+  /** [[Commands.Actions]] generator */
+  private lazy val actions: Gen[Actions] = {
+    import Gen.{const, listOfN, choose, sized}
+
+    def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] =
+      if (sz <= 0) (s,Nil) else for {
+        c <- genCommand(s) suchThat (_.preCondition(s))
+        (s1,cs) <- sizedCmds(c.nextState(s))(sz-1)
+      } yield (s1,(c::cs))
+
+    def cmdsPrecond(s: State, cmds: Commands): (State,Boolean) = cmds match {
+      case Nil => (s,true)
+      case c::cs if c.preCondition(s) => cmdsPrecond(c.nextState(s), cs)
+      case _ => (s,false)
+    }
+
+    def actionsPrecond(as: Actions) =
+      as.parCmds.length != 1 && as.parCmds.forall(_.nonEmpty) &&
+      initialPreCondition(as.s) && (cmdsPrecond(as.s, as.seqCmds) match {
+        case (s,true) => as.parCmds.forall(cmdsPrecond(s,_)._2)
+        case _ => false
+      })
+
+    // Number of sequences to test (n = threadCount, m = parSz):
+    //   2^m * 3^m * ... * n^m
+    //
+    // def f(n: Long, m: Long): Long =
+    //   if(n == 1) 1
+    //   else math.round(math.pow(n,m)) * f(n-1,m)
+    //
+    //    m  1     2       3         4           5
+    // n 1   1     1       1         1           1
+    //   2   2     4       8        16          32
+    //   3   6    36     216      1296        7776
+    //   4  24   576   13824    331776     7962624
+    //   5 120 14400 1728000 207360000 24883200000
+
+    val parSz = {
+      // Nbr of combinations
+      def seqs(n: Long, m: Long): Long =
+        if(n == 1) 1 else math.round(math.pow(n,m)) * seqs(n-1,m)
+
+      if (threadCount < 2) 0
+      else Stream.from(1).filter(seqs(threadCount,_) > maxParComb).head - 1
+    }
+
+    val g = for {
+      s0 <- genInitialState
+      (s1,seqCmds) <- sized(sizedCmds(s0))
+      parCmds <- if(parSz <= 0) const(Nil) else
+                 listOfN(threadCount, sizedCmds(s1)(parSz).map(_._2))
+    } yield Actions(s0, seqCmds, parCmds)
+
+    g.suchThat(actionsPrecond)
+  }
+
+  /** [1,2,3] -- [f(1,[2,3]), f(2,[1,3]), f(3,[1,2])] */
+  private def scan[T,U](xs: List[T])(f: (T,List[T]) => U): List[U] = xs match {
+    case Nil => Nil
+    case y::ys => f(y,ys) :: scan(ys) { case (x,xs) => f(x,y::xs) }
+  }
+
+  /** Short-circuit property AND operator. (Should maybe be in the Prop module) */
+  private def propAnd(p1: => Prop, p2: => Prop) = p1.flatMap { r =>
+    if(r.success) Prop.secure(p2) else Prop(prms => r)
+  }
+
+}
