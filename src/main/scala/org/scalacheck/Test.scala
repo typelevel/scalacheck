@@ -55,7 +55,7 @@ object Test {
       rng = rng
     )
 
-    /** The number of tests run in parallell. */
+    /** The number of tests to run in parallel. */
     val workers: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with
@@ -313,9 +313,12 @@ object Test {
       }
 
     def spawn[A](body: => A): () => A = {
-      import scala.concurrent._, ExecutionContext.Implicits.global, duration.Duration
+      import concurrent.{Future, ExecutionContext, Await}
+      implicit val ec = ExecutionContext.fromExecutor(
+        java.util.concurrent.Executors.newFixedThreadPool(workers)
+      )
       val future = Future(body)
-      () => Await.result(future, Duration.Inf)
+      () => Await.result(future, concurrent.duration.Duration.Inf)
     }
 
     def workerFun(workerIdx: Int) = {
