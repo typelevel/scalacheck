@@ -105,10 +105,8 @@ object MachineSpec extends Commands {
   case object Boot extends Command {
     type Result = Boolean
     def run(sut: Sut) = {
-//      try {
-        sut.create()
-        sut.isActive != 0
-//      } catch { case _:Throwable => false }
+      sut.create()
+      sut.isActive != 0
     }
     def nextState(state: State) = state.copy(running = true)
     def preCondition(state: State) = !state.running
