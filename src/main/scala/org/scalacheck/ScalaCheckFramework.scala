@@ -15,19 +15,20 @@ import org.scalatools.testing._
 
 class ScalaCheckFramework extends Framework {
 
-  private case object PropFingerprint extends TestFingerprint {
-    val superClassName = "org.scalacheck.Prop"
-    val isModule = false
-  }
-
-  private case object PropsFingerprint extends TestFingerprint {
-    val superClassName = "org.scalacheck.Properties"
-    val isModule = true
-  }
+  private def mkFP(mod: Boolean, cname: String) =
+    new SubclassFingerprint {
+      val superClassName = cname
+      val isModule = mod
+    }
 
   val name = "ScalaCheck"
 
-  val tests = Array[Fingerprint](PropsFingerprint, PropsFingerprint)
+  val tests = Array[Fingerprint](
+    mkFP(true, "org.scalacheck.Properties"),
+    mkFP(false, "org.scalacheck.Prop"),
+    mkFP(false, "org.scalacheck.Properties"),
+    mkFP(true, "org.scalacheck.Prop")
+  )
 
   def testRunner(loader: ClassLoader,  loggers: Array[Logger]) = new Runner2 {
 
@@ -76,14 +77,13 @@ class ScalaCheckFramework extends Framework {
 
       fingerprint match {
         case fp: SubclassFingerprint =>
-          if(fp.isModule) {
-            val obj = Class.forName(testClassName + "$", true, loader)
-            val ps = obj.getField("MODULE$").get(null).asInstanceOf[Properties]
-            Test.checkProperties(prms, ps)
-          } else {
-            val p = Class.forName(testClassName, true, loader).newInstance.asInstanceOf[Prop]
-            handler.handle(asEvent((testClassName, Test.check(prms, p))))
-          }
+          val obj =
+            if(fp.isModule) Class.forName(testClassName + "$", true, loader).getField("MODULE$").get(null)
+            else Class.forName(testClassName, true, loader).newInstance
+          if(obj.isInstanceOf[Properties])
+            Test.checkProperties(prms, obj.asInstanceOf[Properties])
+          else
+            handler.handle(asEvent((testClassName, Test.check(prms, obj.asInstanceOf[Prop]))))
       }
     }
 
