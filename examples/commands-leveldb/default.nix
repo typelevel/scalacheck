@@ -1,9 +1,11 @@
-with (import <nixpkgs> {});
+{ pkgs ? import <nixpkgs> {} }:
 
-myEnvFun {
+with pkgs;
+
+stdenv.mkDerivation {
   name = "commands-leveldb";
   buildInputs = [ gcc simpleBuildTool ];
-  extraCmds = ''
+  shellHook = ''
     export LD_LIBRARY_PATH="${gcc.gcc}/lib:$LD_LIBRARY_PATH"
   '';
 }

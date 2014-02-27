@@ -22,7 +22,8 @@ trait Commands {
 
   /** A type representing one instance of the system under test (SUT).
    *  The [[Sut]] type should be a proxy to the actual system under
-   *  test. It is used in the postconditions to verify that the real system
+   *  test and is therefore, by definition, a mutable type.
+   *  It is used in the postconditions to verify that the real system
    *  behaves according to the specification. It should be possible to have any
    *  number of co-existing instances of the [[Sut]] type, as long as
    *  [[canCreateNewSut]] isn't violated, and each [[Sut]]
@@ -69,12 +70,15 @@ trait Commands {
    *  (a singleton [[Sut]]), implement this method the following way:
    *
    *  {{{
-   *  def canCreateNewSut(newState: State, initStates: Traversable[State]) = {
-   *    initStates.isEmpty
+   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
+   *    runningSuts: Traversable[Sut]
+   *  ) = {
+   *    initSuts.isEmpty && runningSuts.isEmpty
    *  }
    *  }}}
    */
-  def canCreateNewSut(newState: State, initStates: Traversable[State]): Boolean
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]): Boolean
 
   /** Create a new [[Sut]] instance with an internal state that
    *  corresponds to the provided abstract state instance. The provided state
@@ -158,34 +162,38 @@ trait Commands {
   lazy val property: Prop = Prop.forAll(actions) { as =>
     try {
       val sutId = suts.synchronized {
-        if (!canCreateNewSut(as.s, suts.values.map(_._1))) None else {
+        val initSuts = for((state,None) <- suts.values) yield state
+        val runningSuts = for((_,Some(sut)) <- suts.values) yield sut
+        if (canCreateNewSut(as.s, initSuts, runningSuts)) {
           val sutId = new AnyRef
           suts += (sutId -> (as.s,None))
           Some(sutId)
-        }
+        } else None
       }
       sutId match {
         case Some(id) =>
           val sut = newSutInstance(as.s)
-          suts.synchronized { suts += (id -> (as.s,Some(sut))) }
-          try runActions(sut, as)
+          val doRun = suts.synchronized {
+            if (suts.contains(id)) {
+              suts += (sutId -> (as.s,Some(sut)))
+              true
+            } else false
+          }
+          try if (doRun) runActions(sut,as) else Prop.undecided
           finally suts.synchronized {
-            suts -= id
+            suts -= sutId
             destroySutInstance(sut)
           }
-        // NOT IMPLEMENTED Block until canCreateNewSut is true
-        case None =>
+        case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
           println("NOT IMPL")
           Prop.undecided
       }
     } catch { case e: Throwable =>
-      suts.synchronized {
-        for(Some(sut) <- suts.values.map(_._2)) destroySutInstance(sut)
-        suts.clear
-      }
+      suts.synchronized { suts.clear }
       throw e
     }
   }
+
 
   // Private methods //
 
@@ -255,7 +263,7 @@ trait Commands {
   private def prettyCmdsRes(rs: List[(Command,String)]) =
       (rs.map { case (c,r) => s"$c => $r" }).mkString("(","; ",")")
 
-  /** Creates a property that runs the given actions in the given SUT */
+  /** A property that runs the given actions in the given SUT */
   private def runActions(sut: Sut, as: Actions): Prop = {
     val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
     val l1 = s"seqcmds = (state = ${as.s}) ${prettyCmdsRes(as.seqCmds zip rs1)}"

@@ -5,6 +5,8 @@ import org.scalacheck.commands.Commands
 import org.iq80.leveldb._
 import org.fusesource.leveldbjni.JniDBFactory._
 
+
+
 object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 
   property("leveldbspec") = LevelDBSpec.property
@@ -20,21 +22,28 @@ object LevelDBSpec extends Commands {
   )
 
   case class Sut(
-    path: String,
+    var name: String,
     var db: Option[DB]
-  )
+  ) {
+    def path = s"db_$name"
+  }
 
-  def canCreateNewSut(newState: State, initStates: Traversable[State]) = true
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]
+  ) = {
+    !initSuts.exists(_.name == newState.name) &&
+    !runningSuts.exists(_.name == newState.name)
+  }
 
   def newSutInstance(state: State): Sut = Sut(state.name, None)
 
   def destroySutInstance(sut: Sut) = sut.db.foreach(_.close)
 
-  def initialPreCondition(state: State) = true
+  def initialPreCondition(state: State) = !state.open
 
   val genInitialState = for {
     name <- Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
-  } yield State(false, s"db_$name", Map.empty)
+  } yield State(false, name, Map.empty)
 
   def genCommand(state: State): Gen[Command] =
     if(state.open) Gen.const(Close)
