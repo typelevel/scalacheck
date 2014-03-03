@@ -4,7 +4,7 @@ script:
 scala:
   - 2.9.3
   - 2.10.3
-  - 2.11.0-M7
+  - 2.11.0-RC1
 jdk:
   - openjdk7
 notifications:
