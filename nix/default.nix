@@ -1,8 +1,8 @@
 { pkgs ? import <nixpkgs> {} }:
 
-with pkgs;
-with lib;
+with pkgs.lib;
 with builtins;
+with pkgs;
 
 let
   scalacheckRepoUrl = "https://github.com/rickynils/scalacheck";
