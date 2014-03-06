@@ -10,6 +10,7 @@
 package org.scalacheck.commands
 
 import org.scalacheck._
+import scala.util.Try
 
 trait Commands {
 
@@ -136,15 +137,14 @@ trait Commands {
     /** Postcondition that decides if this command produced the correct result
      *  or not, given the system was in the provided state before the command
      *  ran. */
-    def postCondition(state: State, result: Result): Prop
+    def postCondition(state: State, result: Try[Result]): Prop
 
     /** Wraps the run and postCondition methods in order not to leak the
      *  dependant Result type. */
     private[Commands] def runPC(sut: Sut): (String, State => Prop) = {
       import Prop.BooleanOperators
-      val r = run(sut)
-      (if(r == null) "null" else r.toString,
-       s => preCondition(s) ==> postCondition(s,r))
+      val r = Try(run(sut))
+      (r.toString, s => preCondition(s) ==> postCondition(s,r))
     }
   }
 
@@ -154,7 +154,7 @@ trait Commands {
     def run(sut: Sut) = null
     def nextState(state: State) = state
     def preCondition(state: State) = true
-    def postCondition(state: State, result: Null) = true
+    def postCondition(state: State, result: Try[Null]) = true
   }
 
   /** A property that can be used to test this [[Commands]]
@@ -175,13 +175,13 @@ trait Commands {
           val sut = newSutInstance(as.s)
           val doRun = suts.synchronized {
             if (suts.contains(id)) {
-              suts += (sutId -> (as.s,Some(sut)))
+              suts += (id -> (as.s,Some(sut)))
               true
             } else false
           }
           try if (doRun) runActions(sut,as) else Prop.undecided
           finally suts.synchronized {
-            suts -= sutId
+            suts -= id
             destroySutInstance(sut)
           }
         case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
