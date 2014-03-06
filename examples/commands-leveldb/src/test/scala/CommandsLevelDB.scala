@@ -5,6 +5,7 @@ import org.scalacheck.commands.Commands
 import org.iq80.leveldb._
 import org.fusesource.leveldbjni.JniDBFactory._
 
+import scala.util.Try
 
 
 object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
@@ -15,6 +16,8 @@ object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 
 object LevelDBSpec extends Commands {
 
+  override val threadCount = 2;
+
   case class State(
     open: Boolean,
     name: String,
@@ -23,7 +26,7 @@ object LevelDBSpec extends Commands {
 
   case class Sut(
     var name: String,
-    var db: Option[DB]
+    var db: DB
   ) {
     def path = s"db_$name"
   }
@@ -35,9 +38,9 @@ object LevelDBSpec extends Commands {
     !runningSuts.exists(_.name == newState.name)
   }
 
-  def newSutInstance(state: State): Sut = Sut(state.name, None)
+  def newSutInstance(state: State): Sut = Sut(state.name, null)
 
-  def destroySutInstance(sut: Sut) = sut.db.foreach(_.close)
+  def destroySutInstance(sut: Sut) = if(sut.db != null) sut.db.close
 
   def initialPreCondition(state: State) = !state.open
 
@@ -45,31 +48,31 @@ object LevelDBSpec extends Commands {
     name <- Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
   } yield State(false, name, Map.empty)
 
-  def genCommand(state: State): Gen[Command] =
-    if(state.open) Gen.const(Close)
-    else Gen.const(Open)
+  def genCommand(state: State): Gen[Command] = Gen.oneOf(Open,Close)
 
   case object Open extends Command {
     type Result = Unit
-    def run(sut: Sut) = {
+    def run(sut: Sut) = sut.synchronized {
       val options = new Options()
       options.createIfMissing(true)
-      sut.db = Some(factory.open(new java.io.File(sut.path), options))
+      sut.db = factory.open(new java.io.File(sut.path), options)
     }
     def nextState(state: State) = state.copy(open = true)
-    def preCondition(state: State) = !state.open
-    def postCondition(state: State, result: Result) = true
+    def preCondition(state: State) = true
+    def postCondition(state: State, result: Try[Result]) =
+      state.open != result.isSuccess
   }
 
   case object Close extends Command {
     type Result = Unit
-    def run(sut: Sut) = {
-      sut.db.foreach(_.close)
-      sut.db = None
+    def run(sut: Sut) = sut.synchronized {
+      sut.db.close
+      sut.db = null
     }
     def nextState(state: State) = state.copy(open = false)
-    def preCondition(state: State) = state.open
-    def postCondition(state: State, result: Result) = true
+    def preCondition(state: State) = true
+    def postCondition(state: State, result: Try[Result]) =
+      state.open == result.isSuccess
   }
 
 }
