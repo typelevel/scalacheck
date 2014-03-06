@@ -1,6 +1,6 @@
-{ stdenv, fetchurl, fetchgit, openjdk, glibcLocales, lib, zip, xz }:
-#with (import <nixpkgs> {});
+{ pkgs ? import <nixpkgs> {} }:
 
+with pkgs;
 with lib;
 with builtins;
 
@@ -32,7 +32,10 @@ let
   mkScala = args: stdenv.mkDerivation rec {
     name = "scala-${args.version}";
     src = fetchurl {
-      url = "http://www.scala-lang.org/files/archive/${name}.tgz";
+      urls = [
+        "http://www.scala-lang.org/files/archive/${name}.tgz"
+        "http://downloads.typesafe.com/scala/${args.version}/${name}.tgz"
+      ];
       inherit (args) sha256;
     };
     installPhase = ''
@@ -179,9 +182,9 @@ in rec {
       sha256 = "16ac935wydrxrvijv4ldnz4vl2xk8yb3yzb9bsi3nb9sic7fxl95";
     };
     "2.10" = scalaVersions."2.10.3";
-    "2.11.0-M7" = {
-      version = "2.11.0-M7";
-      sha256 = "0rhc4rnz8vfdf5f72zlr79k5iavm2q8jyin7h7mzmipr0v1lvsyn";
+    "2.11.0-RC1" = {
+      version = "2.11.0-RC1";
+      sha256 = "1ahsx0l626ri698h6hdf0h1xjdlnjkj7520l6gx1afh8i55vpa46";
     };
   };
 
@@ -190,42 +193,42 @@ in rec {
       rev = "1f648d52c93c1846b9bfdbb30ac456aa2baa58d4";
       sha256 = "05f3p434zjsi8p1cvdc6igj7phxllic5lzrimx7q2v78pqdv1vjx";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3";
       };
     };
     "1.11.2" = {
       rev = "1275cbcc001ae94808297c5d9c80124ed15279d7";
       sha256 = "1n05bkn7v2i8l9x3689glj8a9900s0csrxz3a758axz6sf0a1sn9";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10";
       };
     };
     "1.11.1" = {
       rev = "d7b285bf6f9a4171d41639c5d0f641c46555f7ee";
       sha256 = "12pidk5jr463gd72c2kanz9jjad6zhcxamppqq3fcjcvm93rrnjg";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3";
       };
     };
     "1.11.0" = {
       rev = "062d9a3347860ecb0d947fda1cef923a66b6555d";
       sha256 = "1088hsg5734cp8qq2865gdrzp61lhwwjvwrwa56qqkr8pbfzqglp";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3";
       };
     };
     "1.10.1" = {
       rev = "ecb39d126f919795738e3b0bb66dc088e31ccef3";
       sha256 = "1yjvh1r2fp46wdmsajmljryp03qw92albjh07vvgd15qw3v6vz3k";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
       };
     };
     "1.10.0" = {
       rev = "2338afc425a905fdc55b4fd67bd8bfc3358e3390";
       sha256 = "0a3kgdqpr421k624qhpan3krjdhii9fm4zna7fbbz3sk30gbcsnj";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
       };
     };
     "1.9" = {
@@ -233,14 +236,14 @@ in rec {
       sha256 = "1dbxp9w7pjw1zf50x3hz6kwzm8xp3hvdbswnxsrcswagvqmc5kkm";
       runTests = false;
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
       };
     };
     "1.8" = {
       rev = "f2175ed5ac20f37c1a7ec320b1c58de7a8e3c27f";
       sha256 = "0gkwnqw9wcv0p0dbc6w0i54zw9lb32qnl8qdsp3mn6ylkwj5zx0h";
       scalaVersions = {
-        inherit (scalaVersions) "2.11.0-M7" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
+        inherit (scalaVersions) "2.11.0-RC1" "2.10" "2.9.3" "2.9.2" "2.9.1-1" "2.9.1" "2.9.0-1" "2.9.0";
       };
     };
   };
