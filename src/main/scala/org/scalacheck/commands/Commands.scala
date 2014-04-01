@@ -148,6 +148,14 @@ trait Commands {
     }
   }
 
+  /** A command that doesn't return a result, only passes or fails. */
+  trait UnitCommand extends Command {
+    type Result = Unit
+    def postCondition(state: State, success: Boolean): Prop
+    final override def postCondition(state: State, result: Try[Unit]) =
+      postCondition(state, result.isSuccess)
+  }
+
   /** A command that doesn't do anything */
   case object NoOp extends Command {
     type Result = Null

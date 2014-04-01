@@ -50,8 +50,7 @@ object LevelDBSpec extends Commands {
 
   def genCommand(state: State): Gen[Command] = Gen.oneOf(Open,Close)
 
-  case object Open extends Command {
-    type Result = Unit
+  case object Open extends UnitCommand {
     def run(sut: Sut) = sut.synchronized {
       val options = new Options()
       options.createIfMissing(true)
@@ -59,20 +58,19 @@ object LevelDBSpec extends Commands {
     }
     def nextState(state: State) = state.copy(open = true)
     def preCondition(state: State) = true
-    def postCondition(state: State, result: Try[Result]) =
-      state.open != result.isSuccess
+    def postCondition(state: State, success: Boolean) =
+      state.open != success
   }
 
-  case object Close extends Command {
-    type Result = Unit
+  case object Close extends UnitCommand {
     def run(sut: Sut) = sut.synchronized {
       sut.db.close
       sut.db = null
     }
     def nextState(state: State) = state.copy(open = false)
     def preCondition(state: State) = true
-    def postCondition(state: State, result: Try[Result]) =
-      state.open == result.isSuccess
+    def postCondition(state: State, success: Boolean) =
+      state.open == success
   }
 
 }
