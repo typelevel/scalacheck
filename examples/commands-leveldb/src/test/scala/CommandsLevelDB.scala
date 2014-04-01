@@ -5,7 +5,8 @@ import org.scalacheck.commands.Commands
 import org.iq80.leveldb._
 import org.fusesource.leveldbjni.JniDBFactory._
 
-import scala.util.Try
+import scala.util.{Try, Success}
+import scala.collection.immutable.Map
 
 
 object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
@@ -21,7 +22,7 @@ object LevelDBSpec extends Commands {
   case class State(
     open: Boolean,
     name: String,
-    contents: Map[String,String]
+    contents: Map[List[Byte],List[Byte]]
   )
 
   case class Sut(
@@ -48,7 +49,30 @@ object LevelDBSpec extends Commands {
     name <- Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
   } yield State(false, name, Map.empty)
 
-  def genCommand(state: State): Gen[Command] = Gen.oneOf(Open,Close)
+  def genCommand(state: State): Gen[Command] =
+    if (!state.open) Gen.oneOf(Open, Close)
+    else Gen.oneOf(
+      Gen.const(Open),
+      Gen.const(Close),
+      genPut,
+      genPutExisting(state),
+      genGet,
+      genGetExisting(state)
+    )
+
+  val genPut: Gen[Put] = Gen.resultOf(Put)
+
+  def genPutExisting(state: State): Gen[Put] = for {
+    key <- Gen.oneOf(state.contents.keys.toSeq)
+    value <- Gen.oneOf(arbitrary[List[Byte]],
+                       Gen.const(state.contents(key)))
+  } yield Put(key,value)
+
+  val genGet: Gen[Get] = Gen.resultOf(Get)
+
+  def genGetExisting(state: State): Gen[Get] = for {
+    key <- Gen.oneOf(state.contents.keys.toSeq)
+  } yield Get(key)
 
   case object Open extends UnitCommand {
     def run(sut: Sut) = sut.synchronized {
@@ -71,6 +95,31 @@ object LevelDBSpec extends Commands {
     def preCondition(state: State) = true
     def postCondition(state: State, success: Boolean) =
       state.open == success
+  }
+
+  case class Put(key: List[Byte], value: List[Byte]) extends UnitCommand {
+    def run(sut: Sut) = sut.synchronized {
+      sut.db.put(key.toArray, value.toArray)
+    }
+    def preCondition(state: State) = state.open
+    def nextState(state: State) = state.copy(
+      contents = state.contents + (key -> value)
+    )
+    def postCondition(state: State, success: Boolean) = success
+  }
+
+  case class Get(key: List[Byte]) extends Command {
+    type Result = List[Byte]
+    def run(sut: Sut) = sut.synchronized {
+      sut.db.get(key.toArray).toList
+    }
+    def preCondition(state: State) = state.open
+    def nextState(state: State) = state
+    def postCondition(state: State, result: Try[List[Byte]]) =
+      state.contents.get(key) match {
+        case None => result.isFailure
+        case Some(value) => result == Success(value)
+      }
   }
 
 }
