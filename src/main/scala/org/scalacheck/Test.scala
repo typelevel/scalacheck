@@ -15,15 +15,15 @@ object Test {
 
   import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
-  /** Test parameters used by the [[Test.check]] method. Default
-   *  parameters are defined by [[Parameters.Default]]. */
+  /** Test parameters used by the check methods. Default
+   *  parameters are defined by [[Test.Parameters.Default]]. */
   trait Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
     val minSuccessfulTests: Int
 
-    /** Create a copy of this [[Parameters]] instance with [[minSuccessfulTests]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.minSuccessfulTests]] set to the specified value. */
     def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters = cp(
       minSuccessfulTests = minSuccessfulTests
     )
@@ -31,8 +31,8 @@ object Test {
     /** The starting size given as parameter to the generators. */
     val minSize: Int
 
-    /** Create a copy of this [[Parameters]] instance with [[minSize]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.minSize]] set to the specified value. */
     def withMinSize(minSize: Int): Parameters = cp(
       minSize = minSize
     )
@@ -40,8 +40,8 @@ object Test {
     /** The maximum size given as parameter to the generators. */
     val maxSize: Int
 
-    /** Create a copy of this [[Parameters]] instance with [[maxSize]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.maxSize]] set to the specified value. */
     def withMaxSize(maxSize: Int): Parameters = cp(
       maxSize = maxSize
     )
@@ -49,8 +49,8 @@ object Test {
     /** The random number generator used. */
     val rng: scala.util.Random
 
-    /** Create a copy of this [[Parameters]] instance with [[rng]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.rng]] set to the specified value. */
     def withRng(rng: scala.util.Random): Parameters = cp(
       rng = rng
     )
@@ -58,8 +58,8 @@ object Test {
     /** The number of tests run in parallell. */
     val workers: Int
 
-    /** Create a copy of this [[Parameters]] instance with [[workers]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.workers]] set to the specified value. */
     def withWorkers(workers: Int): Parameters = cp(
       workers = workers
     )
@@ -67,8 +67,8 @@ object Test {
     /** A callback that ScalaCheck calls each time a test is executed. */
     val testCallback: TestCallback
 
-    /** Create a copy of this [[Parameters]] instance with [[testCallback]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.testCallback]] set to the specified value. */
     def withTestCallback(testCallback: TestCallback): Parameters = cp(
       testCallback = testCallback
     )
@@ -78,8 +78,8 @@ object Test {
      *  `minSuccesfulTests` will always be run, though. */
     val maxDiscardRatio: Float
 
-    /** Create a copy of this [[Parameters]] instance with [[maxDiscardRatio]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.maxDiscardRatio]] set to the specified value. */
     def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters = cp(
       maxDiscardRatio = maxDiscardRatio
     )
@@ -87,8 +87,8 @@ object Test {
     /** A custom class loader that should be used during test execution. */
     val customClassLoader: Option[ClassLoader]
 
-    /** Create a copy of this [[Parameters]] instance with [[customClassLoader]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.customClassLoader]] set to the specified value. */
     def withCustomClassLoader(customClassLoader: Option[ClassLoader]
     ): Parameters = cp(
       customClassLoader = customClassLoader
@@ -107,8 +107,8 @@ object Test {
     ) extends Parameters
   }
 
-  /** Test parameters used by the [[Test.check]] method. Default
-   *  parameters are defined by [[Parameters.Default]]. */
+  /** Test parameters used by the check methods. Default
+   *  parameters are defined by [[Test.Parameters.Default]]. */
   object Parameters {
     /** Default test parameters trait. This can be overriden if you need to
      *  tweak the parameters:
@@ -284,7 +284,7 @@ object Test {
   }
 
   /** Tests a property with parameters that are calculated by applying
-   *  the provided function to [[Parameters.default]].
+   *  the provided function to [[Test.Parameters.default]].
    *  Example use:
    *
    *  {{{
@@ -294,7 +294,7 @@ object Test {
    *  }
    *  }}}
    */
-  def check(p: Prop)(f: Parameters => Parameters): Result = 
+  def check(p: Prop)(f: Parameters => Parameters): Result =
     check(f(Parameters.default), p)
 
   /** Tests a property with the given testing parameters, and returns
@@ -313,7 +313,7 @@ object Test {
     val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
 
     def worker(workerIdx: Int): () => Result =
-      if (workers < 2) () => workerFun(workerIdx) 
+      if (workers < 2) () => workerFun(workerIdx)
       else spawn {
         params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
         workerFun(workerIdx)

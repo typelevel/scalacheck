@@ -182,19 +182,19 @@ object Gen {
      *  [[Test.Parameters.maxSize]]. */
     val size: Int
 
-    /** Create a copy of this [[Parameters]] instance with [[size]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Gen.Parameters]] instance with
+     *  [[Gen.Parameters.size]] set to the specified value. */
     def withSize(size: Int): Parameters = cp(size = size)
 
     /** The random number generator used. */
     val rng: scala.util.Random
 
-    /** Create a copy of this [[Parameters]] instance with [[rng]]
-     *  set to the specified value. */
+    /** Create a copy of this [[Gen.Parameters]] instance with
+     *  [[Gen.Parameters.rng]] set to the specified value. */
     def withRng(rng: scala.util.Random): Parameters = cp(rng = rng)
 
     /** Change the size parameter.
-     *  @deprecated Use [[withSize]] instead. */
+     *  @deprecated Use [[Gen.Parameters.withSize]] instead. */
     @deprecated("Use withSize instead.", "1.11.2")
     def resize(newSize: Int): Parameters = withSize(newSize)
 
@@ -502,7 +502,7 @@ object Gen {
   def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyContainerOf[Map,T,U](g)
 
   /** Generates a map of the given length. This method is equal to calling
-   *  <code>containerOfN[List,T](n,g)</code>. */
+   *  <code>containerOfN[Map,T,U](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = containerOfN[Map,T,U](n,g)
 
   /** A generator that picks a random number of elements from a list */
