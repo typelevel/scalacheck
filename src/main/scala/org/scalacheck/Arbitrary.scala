@@ -143,7 +143,15 @@ object Arbitrary {
 
   /** Arbitrary instance of Throwable */
   implicit lazy val arbThrowable: Arbitrary[Throwable] =
+    Arbitrary(oneOf(const(new Exception), const(new Error)))
+
+  /** Arbitrary instance of Exception */
+  implicit lazy val arbException: Arbitrary[Exception] =
     Arbitrary(const(new Exception))
+
+  /** Arbitrary instance of Error */
+  implicit lazy val arbError: Arbitrary[Error] =
+    Arbitrary(const(new Error))
 
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
