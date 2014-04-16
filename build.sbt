@@ -14,11 +14,11 @@ licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-licen
 
 homepage := Some(url("http://www.scalacheck.org"))
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.0"
 
-scalaParserCombinatorsVersion := "1.0.0"
+scalaParserCombinatorsVersion := "1.0.1"
 
-crossScalaVersions := Seq("2.9.3", "2.10.3", "2.11.0-RC1")
+crossScalaVersions := Seq("2.9.3", "2.10.4", "2.11.0")
 
 mimaDefaultSettings
 
