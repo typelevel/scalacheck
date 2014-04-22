@@ -173,4 +173,21 @@ object GenSpecification extends Properties("Gen") {
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
     forAll(g) { o => o == 0 || o == "0" }
   }
+
+  private val suchThatGen = arbitrary[String]
+    .suchThat(!_.isEmpty)
+    .suchThat(!_.contains(','))
+
+  property("suchThat combined") = forAll(suchThatGen) { str: String =>
+    !(str.isEmpty || str.contains(','))
+  }
+
+  property("suchThat 1") = forAll(suchThatGen) { str: String =>
+    !str.isEmpty
+  }
+
+  property("suchThat 2") = forAll(suchThatGen) { str: String =>
+    !str.contains(',')
+  }
+
 }
