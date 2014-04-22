@@ -22,7 +22,7 @@ crossScalaVersions := Seq("2.9.3", "2.10.4", "2.11.0")
 
 mimaDefaultSettings
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.10" % "1.11.3")
+previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.11.3")
 
 resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases"
 
