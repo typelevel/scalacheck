@@ -13,6 +13,7 @@ import Gen._
 import Prop.{forAll, someFailing, noneFailing, sizedProp}
 import Arbitrary._
 import Shrink._
+import java.util.Date
 
 object GenSpecification extends Properties("Gen") {
   property("sequence") =
@@ -58,6 +59,14 @@ object GenSpecification extends Properties("Gen") {
   property("choose-double") = forAll { (l: Double, h: Double) =>
     if(l > h || h-l > Double.MaxValue) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
+  }
+
+  property("choose-xmap") = {
+    implicit val chooseDate = Choose.xmap[Long, Date](new Date(_), _.getTime)
+    forAll { (l: Date, h: Date) =>
+      if(l.after(h)) choose(l, h) == fail
+      else forAll(choose(l,h)) { x => x.compareTo(l) >= 0 && x.compareTo(h) <= 0 }
+    }
   }
 
   property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) == g)
