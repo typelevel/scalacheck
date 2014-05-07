@@ -17,7 +17,7 @@ object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 
 object LevelDBSpec extends Commands {
 
-  override val threadCount = 2;
+  override val threadCount = 1;
 
   case class State(
     open: Boolean,
@@ -52,7 +52,6 @@ object LevelDBSpec extends Commands {
   def genCommand(state: State): Gen[Command] =
     if (!state.open) Gen.oneOf(Open, Close)
     else Gen.oneOf(
-      Gen.const(Open),
       Gen.const(Close),
       genPut,
       genPutExisting(state),
@@ -81,7 +80,7 @@ object LevelDBSpec extends Commands {
       sut.db = factory.open(new java.io.File(sut.path), options)
     }
     def nextState(state: State) = state.copy(open = true)
-    def preCondition(state: State) = true
+    def preCondition(state: State) = !state.open
     def postCondition(state: State, success: Boolean) =
       state.open != success
   }
