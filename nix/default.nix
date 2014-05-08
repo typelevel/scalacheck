@@ -194,6 +194,13 @@ in rec {
   };
 
   scalacheckVersions = {
+    "1.11.4" = {
+      rev = "1e2cf540f6da181235dfd2baad862a07de6c0500";
+      sha256 = "0gbwglx5qhggxmq18lpjglc6as8bq2nzwj0rpik174a5fkamckmw";
+      scalaVersions = {
+        inherit (scalaVersions) "2.11" "2.10" "2.9.3";
+      };
+    };
     "1.11.3" = {
       rev = "1f648d52c93c1846b9bfdbb30ac456aa2baa58d4";
       sha256 = "05f3p434zjsi8p1cvdc6igj7phxllic5lzrimx7q2v78pqdv1vjx";
@@ -246,6 +253,6 @@ in rec {
     };
   };
 
-  latest = mkScalaChecks "1.11.3" scalacheckVersions."1.11.3";
+  latest = mkScalaChecks "1.11.4" scalacheckVersions."1.11.4";
 
 }

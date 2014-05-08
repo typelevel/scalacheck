@@ -6,7 +6,7 @@ import VersionKeys.scalaParserCombinatorsVersion
 
 name := "scalacheck"
 
-version := "1.11.4"
+version := "1.12.0-SNAPSHOT"
 
 organization := "org.scalacheck"
 
@@ -18,11 +18,11 @@ scalaVersion := "2.11.0"
 
 scalaParserCombinatorsVersion := "1.0.1"
 
-crossScalaVersions := Seq("2.9.3", "2.10.4", "2.11.0")
+crossScalaVersions := Seq("2.10.4", "2.11.0")
 
 mimaDefaultSettings
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.11.3")
+previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.0")
 
 resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases"
 
