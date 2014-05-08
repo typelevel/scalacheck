@@ -168,12 +168,14 @@ object GenSpecification extends Properties("Gen") {
     _ == (1,2,3,4,5,6,7,8,9)
   }
 
+  //// See https://github.com/rickynils/scalacheck/issues/79
   property("issue #79") = {
-    // See https://github.com/rickynils/scalacheck/issues/79
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
     forAll(g) { o => o == 0 || o == "0" }
   }
+  ////
 
+  //// See https://github.com/rickynils/scalacheck/issues/98
   private val suchThatGen = arbitrary[String]
     .suchThat(!_.isEmpty)
     .suchThat(!_.contains(','))
@@ -189,5 +191,6 @@ object GenSpecification extends Properties("Gen") {
   property("suchThat 2") = forAll(suchThatGen) { str: String =>
     !str.contains(',')
   }
+  ////
 
 }

@@ -63,9 +63,12 @@ sealed trait Gen[+T] {
    *  the generator fails (returns None). This method is identical to
    *  [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P) = Gen.this.doApply(p).copy(s = f)
+    def doApply(p: P) = {
+      val res = Gen.this.doApply(p)
+      res.copy(s = { x:T => res.sieve(x) && f(x) })
+    }
     override def sieveCopy(x: Any) =
-      try f(x.asInstanceOf[T])
+      try Gen.this.sieveCopy(x) && f(x.asInstanceOf[T])
       catch { case _: java.lang.ClassCastException => false }
   }
 
