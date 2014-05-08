@@ -3,8 +3,8 @@ script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test
 scala:
   - 2.9.3
-  - 2.10.3
-  - 2.11.0-RC1
+  - 2.10.4
+  - 2.11.0
 jdk:
   - openjdk7
 notifications:
