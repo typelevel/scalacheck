@@ -10,6 +10,7 @@
 package org.scalacheck
 
 /** See User Guide for usage examples */
+@deprecated("Will be replaced with a new implementation in 1.12.0", "1.11.4")
 trait Commands extends Prop {
 
   /** The abstract state data type. This type must be immutable.
