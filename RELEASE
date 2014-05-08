@@ -29,7 +29,9 @@ ScalaCheck highlights:
 What's new in version 1.11.4?
 
 ScalaCheck 1.11.4 is a minor release with a few fixes and additions since
-the last release.
+the last release. The trait org.scalacheck.Commands has been deprecated since
+it will be removed and replaced with a completely new implementation in
+ScalaCheck 1.12.0.
 
 
 ScalaCheck links:
