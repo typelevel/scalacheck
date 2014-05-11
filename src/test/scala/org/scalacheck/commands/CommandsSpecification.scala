@@ -29,7 +29,8 @@ object CommandsSpecification extends Properties("Commands") {
     type Sut = Counter
     type State = Int
 
-    def canCreateNewSut(newState: State, initStates: Traversable[State]) = true
+    def canCreateNewSut(newState: State, initSuts: Traversable[State],
+      runningSuts: Traversable[Sut]) = true
 
     def newSutInstance(state: State): Sut = Counter(state)
 
@@ -41,7 +42,7 @@ object CommandsSpecification extends Properties("Commands") {
 
     def genCommand(state: State): Gen[Command] = Gen.oneOf(Inc, Dec, Reset)
 
-    case object Inc extends Command {
+    case object Inc extends SuccessCommand {
       type Result = Int
       def run(sut: Sut) = sut.inc
       def nextState(state: State) = state+1
@@ -49,7 +50,7 @@ object CommandsSpecification extends Properties("Commands") {
       def postCondition(state: State, result: Result) = result == state+1
     }
 
-    case object Dec extends Command {
+    case object Dec extends SuccessCommand {
       type Result = Int
       def run(sut: Sut) = sut.dec
       def nextState(state: State) = state-1
@@ -57,7 +58,7 @@ object CommandsSpecification extends Properties("Commands") {
       def postCondition(state: State, result: Result) = result == state-1
     }
 
-    case object Reset extends Command {
+    case object Reset extends SuccessCommand {
       type Result = Int
       def run(sut: Sut) = sut.reset
       def nextState(state: State) = 0

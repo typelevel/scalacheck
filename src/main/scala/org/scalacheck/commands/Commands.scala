@@ -10,7 +10,7 @@
 package org.scalacheck.commands
 
 import org.scalacheck._
-import scala.util.Try
+import scala.util.{Try, Success, Failure}
 
 trait Commands {
 
@@ -146,6 +146,16 @@ trait Commands {
       val r = Try(run(sut))
       (r.toString, s => preCondition(s) ==> postCondition(s,r))
     }
+  }
+
+  /** A command that never should throw an exception on execution. */
+  trait SuccessCommand extends Command {
+    def postCondition(state: State, result: Result): Prop
+    final override def postCondition(state: State, result: Try[Result]) =
+      result match {
+        case Success(result) => postCondition(state, result)
+        case Failure(e) => Prop.exception(e)
+      }
   }
 
   /** A command that doesn't return a result, only passes or fails. */
