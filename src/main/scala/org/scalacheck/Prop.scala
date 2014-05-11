@@ -62,25 +62,6 @@ trait Prop {
     paramFun(Test.Parameters.default)
   )
 
-  /** Convenience method that checks this property with specified minimal
-   *  number of successful test and the given testing parameters, and
-   *  reports the result on the console. If you need to get the results
-   *  from the test use the `check` methods in [[org.scalacheck.Test]]
-   *  instead. */
-  @deprecated("Use check(prms.withMinSuccessfulTests(n)) instead", "1.11.2")
-  def check(minSuccessfulTests: Int, prms: Test.Parameters): Unit = check(
-    prms.withMinSuccessfulTests(minSuccessfulTests)
-  )
-
-  /** Convenience method that checks this property with specified minimal
-   *  number of successful test and reports the result on the console.
-   *  If you need to get the results from the test use
-   *  the `check` methods in [[org.scalacheck.Test]] instead. */
-  @deprecated("Use check(_.withMinSuccessfulTests(n)) instead", "1.11.2")
-  def check(minSuccessfulTests: Int): Unit = check(
-    _.withMinSuccessfulTests(minSuccessfulTests)
-  )
-
   /** The logic for main, separated out to make it easier to
    *  avoid System.exit calls.  Returns exit code.
    */
@@ -162,7 +143,7 @@ trait Prop {
 
 object Prop {
 
-  import Gen.{value, fail, frequency, oneOf, Parameters}
+  import Gen.{fail, frequency, oneOf, Parameters}
   import Arbitrary.{arbitrary}
   import Shrink.{shrink}
 
@@ -178,19 +159,13 @@ object Prop {
     prettyOrigArg: Pretty
   )
 
-  object Result {
-    @deprecated("Will be removed in 1.12.0", "1.11.2")
-    def apply(st: Status): Result = Result(status = st)
-    @deprecated("Will be removed in 1.12.0", "1.11.2")
-    def merge(x: Result, y: Result, status: Status) = mergeRes(x,y,status)
-  }
-
-  private[scalacheck] def mergeRes(x: Result, y: Result, st: Status) = Result(
-    status = st,
-    args = x.args ++ y.args,
-    collected = x.collected ++ y.collected,
-    labels = x.labels ++ y.labels
-  )
+  private[scalacheck] def mergeRes(x: Result, y: Result, st: Status) =
+    Result(
+      status = st,
+      args = x.args ++ y.args,
+      collected = x.collected ++ y.collected,
+      labels = x.labels ++ y.labels
+    )
 
   /** The result of evaluating a property */
   case class Result(

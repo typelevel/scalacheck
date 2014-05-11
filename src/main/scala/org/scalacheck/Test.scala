@@ -188,13 +188,6 @@ object Test {
   sealed case class PropException(args: List[Arg[Any]], e: Throwable,
     labels: Set[String]) extends Status
 
-  /** An exception was raised when trying to generate concrete arguments
-   *  for evaluating the property.
-   *  @deprecated Not used. The type PropException is used for all exceptions.
-   */
-  @deprecated("Not used. The type PropException is used for all exceptions.", "1.11.2")
-  sealed case class GenException(e: Throwable) extends Status
-
   trait TestCallback { self =>
     /** Called each time a property is evaluated */
     def onPropEval(name: String, threadIdx: Int, succeeded: Int,

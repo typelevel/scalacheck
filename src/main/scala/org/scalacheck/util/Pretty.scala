@@ -112,9 +112,6 @@ object Pretty {
       case Test.PropException(args,e,l) =>
         "Exception raised on property evaluation."/labels(l)/prettyArgs(args)(prms)/
         "> Exception: "+pretty(e,prms)
-      case Test.GenException(e) =>
-        "Exception raised on argument generation."/
-        "> Exception: "+pretty(e,prms)
     }
     val t = if(prms.verbosity <= 1) "" else "Elapsed time: "+prettyTime(res.time)
     s/t/pretty(res.freqMap,prms)
