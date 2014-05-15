@@ -39,4 +39,11 @@ object ShrinkSpecification extends Properties("Shrink") {
     }
   }
 
+  implicit def vectorShrink[A: Shrink] = Shrink.xmap[List[A],Vector[A]](_.toVector, _.toList)
+  property("xmap vector from list") = forAll { v: Vector[Int] ⇒
+    (!v.isEmpty && v != Vector(0)) ==> {
+      val vs = shrinkClosure(v)
+      vs.toVector.toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
+    }
+  }
 }
