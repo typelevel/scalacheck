@@ -296,9 +296,6 @@ object Test {
     import params._
 
     assertParams(params)
-    if(workers > 1) {
-      assert(!p.isInstanceOf[Commands], "Commands cannot be checked multi-threaded")
-    }
 
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)

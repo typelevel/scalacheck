@@ -6,7 +6,6 @@ object TestAll {
     include(GenSpecification)
     include(PropSpecification)
     include(TestSpecification)
-    include(CommandsSpecification)
     include(commands.CommandsSpecification)
   }
 
