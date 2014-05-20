@@ -24,8 +24,8 @@ trait Commands {
   /** A type representing one instance of the system under test (SUT).
    *  The [[Sut]] type should be a proxy to the actual system under
    *  test and is therefore, by definition, a mutable type.
-   *  It is used in the postconditions to verify that the real system
-   *  behaves according to the specification. It should be possible to have any
+   *  It is used by the [[Command.run]] method to execute commands in the
+   *  system under test. It should be possible to have any
    *  number of co-existing instances of the [[Sut]] type, as long as
    *  [[canCreateNewSut]] isn't violated, and each [[Sut]]
    *  instance should be a proxy to a distinct SUT instance. There should be no
@@ -115,8 +115,8 @@ trait Commands {
     /** An abstract representation of the result of running this command in
      *  the system under test. The [[Result]] type should be immutable
      *  and it should encode everything about the command run that is necessary
-     *  to know in order to correctly implement the [[postCondition]]
-     *  method. */
+     *  to know in order to correctly implement the
+     *  [[[Command!.postCondition* postCondition]]] method. */
     type Result
 
     /** Executes the command in the system under test, and returns a
