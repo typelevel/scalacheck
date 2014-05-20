@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import language.higherKinds
+
 import util.{Buildable,Buildable2}
 import scala.collection.{ JavaConversions => jcl }
 

@@ -35,7 +35,7 @@ libraryDependencies ++= (
 
 javacOptions ++= Seq("-Xmx1024M")
 
-scalacOptions += "-deprecation"
+scalacOptions ++= Seq("-deprecation", "-feature")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"

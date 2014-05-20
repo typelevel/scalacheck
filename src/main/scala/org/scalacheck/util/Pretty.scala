@@ -9,6 +9,9 @@
 
 package org.scalacheck.util
 
+import language.implicitConversions
+import language.reflectiveCalls
+
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
 

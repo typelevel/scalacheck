@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import language.reflectiveCalls
+
 import util.Pretty
 
 import org.scalatools.testing._

@@ -10,6 +10,8 @@
 package org.scalacheck
 package util
 
+import language.higherKinds
+
 import collection._
 
 object BuildableSpecification {

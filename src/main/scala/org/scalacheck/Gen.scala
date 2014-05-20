@@ -9,6 +9,9 @@
 
 package org.scalacheck
 
+import language.higherKinds
+import language.implicitConversions
+
 import util.{Buildable, Buildable2}
 import scala.collection.immutable.TreeMap
 

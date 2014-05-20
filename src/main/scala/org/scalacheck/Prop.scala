@@ -9,6 +9,9 @@
 
 package org.scalacheck
 
+import language.implicitConversions
+import language.reflectiveCalls
+
 import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
 import scala.annotation.tailrec
 

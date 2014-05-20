@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import language.higherKinds
+
 import util.{FreqMap, Buildable, Buildable2}
 
 

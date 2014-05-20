@@ -9,6 +9,8 @@
 
 package org.scalacheck.util
 
+import language.higherKinds
+
 import collection._
 
 trait Buildable[T,C[_]] {

@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import language.reflectiveCalls
+
 import util.ConsoleReporter
 
 /** Represents a collection of properties, with convenient methods
