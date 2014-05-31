@@ -71,19 +71,19 @@ object MachineSpec extends Commands {
 
   def canCreateNewSut(newState: State, initStates: Traversable[State]) = true
 
-  def newSutInstance(state: State): Sut = {
+  def newSut(state: State): Sut = {
     println(s"Creating SUT: ${state.name}")
     val d = con.domainDefineXML(toLibvirtXML(state))
     try {
       if(state.running) d.create()
       d
     } catch { case e: Throwable =>
-      destroySutInstance(d)
+      destroySut(d)
       throw e
     }
   }
 
-  def destroySutInstance(sut: Sut) = {
+  def destroySut(sut: Sut) = {
     println(s"Destroying SUT")
     if (sut.isActive != 0) sut.destroy()
     sut.undefine()

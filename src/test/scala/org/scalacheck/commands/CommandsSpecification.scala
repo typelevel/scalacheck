@@ -32,9 +32,9 @@ object CommandsSpecification extends Properties("Commands") {
     def canCreateNewSut(newState: State, initSuts: Traversable[State],
       runningSuts: Traversable[Sut]) = true
 
-    def newSutInstance(state: State): Sut = Counter(state)
+    def newSut(state: State): Sut = Counter(state)
 
-    def destroySutInstance(sut: Sut) = {}
+    def destroySut(sut: Sut) = {}
 
     def initialPreCondition(state: State) = true
 

@@ -31,9 +31,9 @@ trait Commands {
    *  instance should be a proxy to a distinct SUT instance. There should be no
    *  dependencies between the [[Sut]] instances, as they might be used
    *  in parallel by ScalaCheck. [[Sut]] instances are created by
-   *  [[newSutInstance]] and destroyed by
-   *  [[destroySutInstance]]. [[newSutInstance]] and
-   *  [[destroySutInstance]] might be called at any time by
+   *  [[newSut]] and destroyed by
+   *  [[destroySut]]. [[newSut]] and
+   *  [[destroySut]] might be called at any time by
    *  ScalaCheck, as long as [[canCreateNewSut]] isn't violated. */
   type Sut
 
@@ -59,7 +59,7 @@ trait Commands {
    *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 10000. */
   def maxParComb: Int = 10000
 
-  /** Decides if [[newSutInstance]] should be allowed to be called
+  /** Decides if [[newSut]] should be allowed to be called
    *  with the specified state instance. This can be used to limit the number
    *  of co-existing [[Sut]] instances. The list of existing states represents
    *  the initial states (not the current states) for all [[Sut]] instances
@@ -84,13 +84,13 @@ trait Commands {
   /** Create a new [[Sut]] instance with an internal state that
    *  corresponds to the provided abstract state instance. The provided state
    *  is guaranteed to fulfill [[initialPreCondition]], and
-   *  [[newSutInstance]] will never be called if
+   *  [[newSut]] will never be called if
    *  [[canCreateNewSut]] is not true for the given state. */
-  def newSutInstance(state: State): Sut
+  def newSut(state: State): Sut
 
   /** Destroy the system represented by the given [[Sut]]
    *  instance, and release any resources related to it. */
-  def destroySutInstance(sut: Sut): Unit
+  def destroySut(sut: Sut): Unit
 
   /** The precondition for the initial state, when no commands yet have
    *  run. This is used by ScalaCheck when command sequences are shrinked
@@ -99,7 +99,7 @@ trait Commands {
   def initialPreCondition(state: State): Boolean
 
   /** A generator that should produce an initial [[State]] instance that is
-   *  usable by [[newSutInstance]] to create a new system under test.
+   *  usable by [[newSut]] to create a new system under test.
    *  The state returned by this generator is always checked with the
    *  [[initialPreCondition]] method before it is used. */
   def genInitialState: Gen[State]
@@ -190,7 +190,7 @@ trait Commands {
       }
       sutId match {
         case Some(id) =>
-          val sut = newSutInstance(as.s)
+          val sut = newSut(as.s)
           val doRun = suts.synchronized {
             if (suts.contains(id)) {
               suts += (id -> (as.s,Some(sut)))
@@ -200,7 +200,7 @@ trait Commands {
           try if (doRun) runActions(sut,as) else Prop.undecided
           finally suts.synchronized {
             suts -= id
-            destroySutInstance(sut)
+            destroySut(sut)
           }
         case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
           println("NOT IMPL")

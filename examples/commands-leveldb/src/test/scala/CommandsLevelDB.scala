@@ -39,9 +39,9 @@ object LevelDBSpec extends Commands {
     !runningSuts.exists(_.name == newState.name)
   }
 
-  def newSutInstance(state: State): Sut = Sut(state.name, null)
+  def newSut(state: State): Sut = Sut(state.name, null)
 
-  def destroySutInstance(sut: Sut) = if(sut.db != null) sut.db.close
+  def destroySut(sut: Sut) = if(sut.db != null) sut.db.close
 
   def initialPreCondition(state: State) = !state.open
 
