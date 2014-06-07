@@ -119,10 +119,10 @@ trait Commands {
 
     /** Wraps the run and postCondition methods in order not to leak the
      *  dependant Result type. */
-    private[Commands] def runPC(sut: Sut): (String, State => Prop) = {
+    private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
       import Prop.BooleanOperators
       val r = Try(run(sut))
-      (r.toString, s => preCondition(s) ==> postCondition(s,r))
+      (r.map(_.toString), s => preCondition(s) ==> postCondition(s,r))
     }
   }
 
@@ -229,14 +229,14 @@ trait Commands {
   }
 
   private def runSeqCmds(sut: Sut, s0: State, cs: Commands
-  ): (Prop, State, List[String]) =
-    cs.foldLeft((Prop.proved,s0,List[String]())) { case ((p,s,rs),c) =>
+  ): (Prop, State, List[Try[String]]) =
+    cs.foldLeft((Prop.proved,s0,List[Try[String]]())) { case ((p,s,rs),c) =>
       val (r,pf) = c.runPC(sut)
       (p && pf(s), c.nextState(s), rs :+ r)
     }
 
   private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]
-  ): (Prop, List[List[(Command,String)]]) = {
+  ): (Prop, List[List[(Command,Try[String])]]) = {
     import concurrent.{Future, ExecutionContext, Await}
     implicit val ec = ExecutionContext.fromExecutor(
       java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
@@ -277,8 +277,14 @@ trait Commands {
   }
 
   /** Formats a list of commands with corresponding results */
-  private def prettyCmdsRes(rs: List[(Command,String)]) =
-      (rs.map { case (c,r) => s"$c => $r" }).mkString("(","; ",")")
+  private def prettyCmdsRes(rs: List[(Command,Try[String])]) = {
+    val cs = rs.map {
+      case (c, Success("()")) => c.toString
+      case (c, Success(r)) => s"$c => $r"
+      case (c,r) => s"$c => $r"
+    }
+    cs.mkString("(","; ",")")
+  }
 
   /** A property that runs the given actions in the given SUT */
   private def runActions(sut: Sut, as: Actions): Prop = {
