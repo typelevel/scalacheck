@@ -175,8 +175,8 @@ trait Commands {
    *  However, the number of possible end states grows rapidly with increasing
    *  values of [[threadCount]]. Therefore, the lengths of the parallel command
    *  sequences are limited so that the number of possible end states don't
-   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 100000. */
-  final def property(threadCount: Int = 1, maxParComb: Int = 100000): Prop = {
+   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 1000000. */
+  final def property(threadCount: Int = 1, maxParComb: Int = 1000000): Prop = {
     val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
 
     Prop.forAll(actions(threadCount, maxParComb)) { as =>
