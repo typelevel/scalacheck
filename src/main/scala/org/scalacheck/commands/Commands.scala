@@ -136,9 +136,9 @@ trait Commands {
       }
   }
 
-  /** A command that doesn't return a result, only passes or fails. */
+  /** A command that doesn't return a result, only succeeds or fails. */
   trait UnitCommand extends Command {
-    type Result = Unit
+    final type Result = Unit
     def postCondition(state: State, success: Boolean): Prop
     final override def postCondition(state: State, result: Try[Unit]) =
       postCondition(state, result.isSuccess)
@@ -334,8 +334,11 @@ trait Commands {
       def seqs(n: Long, m: Long): Long =
         if(n == 1) 1 else math.round(math.pow(n,m)) * seqs(n-1,m)
 
-      if (threadCount < 2) 0
-      else Stream.from(1).filter(seqs(threadCount,_) > maxParComb).head - 1
+      if (threadCount < 2) 0 else {
+        var parSz = 1
+        while (seqs(threadCount, parSz) < maxParComb) parSz += 1
+        parSz
+      }
     }
 
     val g = for {
