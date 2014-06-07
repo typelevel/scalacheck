@@ -13,7 +13,7 @@ import org.scalacheck._
 
 object CommandsSpecification extends Properties("Commands") {
 
-  property("commands") = TestCommands.property
+  property("commands") = TestCommands.property()
 
   object TestCommands extends Commands {
     case class Counter(var n: Int) {

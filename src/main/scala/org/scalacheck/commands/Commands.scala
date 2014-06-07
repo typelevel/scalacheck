@@ -37,28 +37,6 @@ trait Commands {
    *  ScalaCheck, as long as [[canCreateNewSut]] isn't violated. */
   type Sut
 
-  /** The number of commands that might be executed in parallel. Defaults to
-   *  one, which means the commands will only be run serially for the same
-   *  [[Sut]] instance. Distinct [[Sut]] instances might still receive
-   *  commands in parallel, if the [[Test.Parameters.workers]] parameter is
-   *  larger than one. Setting [[threadCount]] higher than one enables
-   *  ScalaCheck to reveal thread-related issues in your system under test. */
-  def threadCount: Int = 1
-
-  /** When setting [[threadCount]] larger than one, ScalaCheck must evaluate
-   *  all possible command interleavings (and the end [[State]] instances
-   *  they produce), since parallel command execution is non-deterministic.
-   *  ScalaCheck tries out all possible end states with the
-   *  [[Command.postCondition]] function of the very last command executed
-   *  (there is always exactly one command executed after all parallel command
-   *  executions). If it fails to find an end state that satisfies the
-   *  postcondition, the test fails.
-   *  However, the number of possible end states grows rapidly with increasing
-   *  values of [[threadCount]]. Therefore, the lengths of the parallel command
-   *  sequences are limited so that the number of possible end states don't
-   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 10000. */
-  def maxParComb: Int = 10000
-
   /** Decides if [[newSut]] should be allowed to be called
    *  with the specified state instance. This can be used to limit the number
    *  of co-existing [[Sut]] instances. The list of existing states represents
@@ -176,48 +154,69 @@ trait Commands {
   }
 
   /** A property that can be used to test this [[Commands]]
-   *  specification. */
-  lazy val property: Prop = Prop.forAll(actions) { as =>
-    try {
-      val sutId = suts.synchronized {
-        val initSuts = for((state,None) <- suts.values) yield state
-        val runningSuts = for((_,Some(sut)) <- suts.values) yield sut
-        if (canCreateNewSut(as.s, initSuts, runningSuts)) {
-          val sutId = new AnyRef
-          suts += (sutId -> (as.s,None))
-          Some(sutId)
-        } else None
+   *  specification.
+   *
+   *  The parameter [[threadCount]] specifies the number of commands that might
+   *  be executed in parallel. Defaults to one, which means the commands will
+   *  only be run serially for the same [[Sut]] instance. Distinct [[Sut]]
+   *  instances might still receive commands in parallel, if the
+   *  [[Test.Parameters.workers]] parameter is larger than one. Setting
+   *  [[threadCount]] higher than one enables ScalaCheck to reveal
+   *  thread-related issues in your system under test.
+   *
+   *  When setting [[threadCount]] larger than one, ScalaCheck must evaluate
+   *  all possible command interleavings (and the end [[State]] instances
+   *  they produce), since parallel command execution is non-deterministic.
+   *  ScalaCheck tries out all possible end states with the
+   *  [[Command.postCondition]] function of the very last command executed
+   *  (there is always exactly one command executed after all parallel command
+   *  executions). If it fails to find an end state that satisfies the
+   *  postcondition, the test fails.
+   *  However, the number of possible end states grows rapidly with increasing
+   *  values of [[threadCount]]. Therefore, the lengths of the parallel command
+   *  sequences are limited so that the number of possible end states don't
+   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 100000. */
+  final def property(threadCount: Int = 1, maxParComb: Int = 100000): Prop = {
+    val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
+
+    Prop.forAll(actions(threadCount, maxParComb)) { as =>
+      try {
+        val sutId = suts.synchronized {
+          val initSuts = for((state,None) <- suts.values) yield state
+          val runningSuts = for((_,Some(sut)) <- suts.values) yield sut
+          if (canCreateNewSut(as.s, initSuts, runningSuts)) {
+            val sutId = new AnyRef
+            suts += (sutId -> (as.s,None))
+            Some(sutId)
+          } else None
+        }
+        sutId match {
+          case Some(id) =>
+            val sut = newSut(as.s)
+            val doRun = suts.synchronized {
+              if (suts.contains(id)) {
+                suts += (id -> (as.s,Some(sut)))
+                true
+              } else false
+            }
+            try if (doRun) runActions(sut,as) else Prop.undecided
+            finally suts.synchronized {
+              suts -= id
+              destroySut(sut)
+            }
+          case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
+            println("NOT IMPL")
+            Prop.undecided
+        }
+      } catch { case e: Throwable =>
+        suts.synchronized { suts.clear }
+        throw e
       }
-      sutId match {
-        case Some(id) =>
-          val sut = newSut(as.s)
-          val doRun = suts.synchronized {
-            if (suts.contains(id)) {
-              suts += (id -> (as.s,Some(sut)))
-              true
-            } else false
-          }
-          try if (doRun) runActions(sut,as) else Prop.undecided
-          finally suts.synchronized {
-            suts -= id
-            destroySut(sut)
-          }
-        case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
-          println("NOT IMPL")
-          Prop.undecided
-      }
-    } catch { case e: Throwable =>
-      suts.synchronized { suts.clear }
-      throw e
     }
   }
 
 
   // Private methods //
-
-  /** Active SUTs (SUT ID mapped to start state and sut instance) */
-  private val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
-
   private type Commands = List[Command]
 
   private case class Actions(
@@ -294,7 +293,7 @@ trait Commands {
   }
 
   /** [[Actions]] generator */
-  private lazy val actions: Gen[Actions] = {
+  private def actions(threadCount: Int, maxParComb: Int): Gen[Actions] = {
     import Gen.{const, listOfN, choose, sized}
 
     def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] =
