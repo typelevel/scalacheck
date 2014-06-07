@@ -18,16 +18,10 @@ object CommandsSpecification extends Properties("Commands") {
   object TestCommands extends Commands {
     case class Counter(var n: Int) {
       val lock = new concurrent.Lock
-      //def inc = { lock.acquire; n = n + 1; val r = n; lock.release; r }
-      //def dec = { lock.acquire; n = n - 1; val r = n; lock.release; r }
-      def inc = {
-        n += 1
-        n
-      }
-      def dec = {
-        n -= 1
-        n
-      }
+      def inc = { lock.acquire; n += 1; lock.release; n }
+      def dec = { lock.acquire; n -= 1; lock.release; n }
+      //def inc = { n += 1; n }
+      //def dec = { n -= 1; n }
       def get = n
     }
 
