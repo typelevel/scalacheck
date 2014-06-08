@@ -288,11 +288,11 @@ trait Commands {
   /** A property that runs the given actions in the given SUT */
   private def runActions(sut: Sut, as: Actions): Prop = {
     val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
-    val l1 = s"seqcmds = (state = ${as.s}) ${prettyCmdsRes(as.seqCmds zip rs1)}"
+    val l1 = s"initialstate = ${as.s}\nseqcmds = ${prettyCmdsRes(as.seqCmds zip rs1)}"
     if(as.parCmds.isEmpty) p1 :| l1
     else propAnd(p1 :| l1, {
       val (p2, rs2) = runParCmds(sut, s, as.parCmds)
-      val l2 = rs2.map(prettyCmdsRes).mkString("(",", ",")")
+      val l2 = rs2.map(prettyCmdsRes).mkString("(",",\n",")")
       p2 :| l1 :| s"parcmds = (state = ${s}) $l2"
     })
   }
