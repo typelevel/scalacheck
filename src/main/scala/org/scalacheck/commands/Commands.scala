@@ -261,13 +261,12 @@ trait Commands {
       }
     }
 
-    val states = Future(endStates(s, pcmds))
+    val states = endStates(s, pcmds)
 
     def runCmds(cs: Commands) =
       if(cs.isEmpty) Future((Prop.proved,Nil)) else for {
         (rs,(r,pf)) <- Future((cs.init.map(_.runPC(sut)._1),cs.last.runPC(sut)))
-        ss <- states
-      } yield (Prop.atLeastOne(ss.map(pf): _*), cs.zip(rs :+ r))
+      } yield (Prop.atLeastOne(states.map(pf): _*), cs.zip(rs :+ r))
 
     val res = for {
       (ps,rs) <- Future.traverse(pcmds)(runCmds).map(_.unzip)
