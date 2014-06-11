@@ -279,13 +279,14 @@ object Gen {
         gen(chDbl(low,high)).map(_.toFloat).suchThat(x => x >= low && x <= high)
     }
 
-    /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic types
-     *  whose relationship is described by the provided transformation functions.
-     *  (exponential functor map) */
-    def xmap[T, U](from: T => U, to: U => T)(implicit c: Choose[T]): Choose[U] = new Choose[U] {
-      def choose(low: U, high: U) =
-        c.choose(to(low), to(high)).map(from)
-    }
+    /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
+     *  types whose relationship is described by the provided transformation
+     *  functions. (exponential functor map) */
+    def xmap[T, U](from: T => U, to: U => T)(implicit c: Choose[T]): Choose[U] =
+      new Choose[U] {
+        def choose(low: U, high: U) =
+          c.choose(to(low), to(high)).map(from)
+      }
   }
 
 
