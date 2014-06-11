@@ -301,11 +301,15 @@ trait Commands {
   private def actions(threadCount: Int, maxParComb: Int): Gen[Actions] = {
     import Gen.{const, listOfN, choose, sized}
 
-    def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] =
-      if (sz <= 0) (s,Nil) else for {
-        c <- genCommand(s) suchThat (_.preCondition(s))
-        (s1,cs) <- sizedCmds(c.nextState(s))(sz-1)
-      } yield (s1,(c::cs))
+    def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] = {
+      val l: List[Unit] = List.fill(sz)(())
+      l.foldLeft(const((s,Nil:Commands))) { case (g,()) =>
+        for {
+          (s0,cs) <- g
+          c <- genCommand(s0) suchThat (_.preCondition(s0))
+        } yield (c.nextState(s0), c::cs)
+      }
+    }
 
     def cmdsPrecond(s: State, cmds: Commands): (State,Boolean) = cmds match {
       case Nil => (s,true)
