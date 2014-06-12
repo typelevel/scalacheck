@@ -1,9 +1,14 @@
-with (import <nixpkgs> {});
+{ pkgs ? import <nixpkgs> {} }:
 
-myEnvFun {
+with pkgs;
+
+stdenv.mkDerivation {
   name = "commands-nix";
+
   buildInputs = [ libvirt simpleBuildTool ];
-  extraCmds = ''
+
+  shellHook = ''
+    export NIX_PATH="nixpkgs=${toString <nixpkgs>}"
     export LD_LIBRARY_PATH="${libvirt}/lib:$LD_LIBRARY_PATH"
   '';
 }

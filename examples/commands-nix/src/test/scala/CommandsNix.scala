@@ -1,9 +1,11 @@
 import org.scalacheck.Gen
 import org.scalacheck.commands.Commands
 
+import util.{Try,Success,Failure}
+
 object CommandsNix extends org.scalacheck.Properties("CommandsNix") {
 
-  property("machinespec") = MachineSpec.property
+  property("machinespec") = MachineSpec.property()
 
 }
 
@@ -22,10 +24,7 @@ object MachineSpec extends Commands {
   def toNix(m: Machine): String = raw"""
     let
       ${m.name} = { config, pkgs, ... }: {
-        require = [
-          <nix-qemu/module.nix>
-          <common/env-base.nix>
-        ];
+        imports = [ ./qemu-module.nix ];
         deployment.libvirt = {
           memory = ${m.memory};
           uuid = "${m.uuid}";
@@ -34,10 +33,10 @@ object MachineSpec extends Commands {
             mac = "$$MAC0";
           };
         };
-        users.extraUsers.admin.password = "admin";
+        users.extraUsers.root.password = "root";
         boot.kernelPackages = pkgs.linuxPackages_${m.kernelVer.replace('.','_')};
       };
-    in import <nix-qemu> { network = { inherit ${m.name}; }; }
+    in import ./qemu-network.nix { inherit ${m.name}; }
   """
 
   def toLibvirtXML(m: Machine): String = {
@@ -49,10 +48,7 @@ object MachineSpec extends Commands {
     val logger = ProcessLogger(out.append(_), err.append(_))
     val is = new ByteArrayInputStream(toNix(m).getBytes("UTF-8"))
     val cmd = List(
-      "nix-build",
-      "-I /home/rickard/workspace/nixos/rnlunarc",
-      "-I nix-qemu=/home/rickard/workspace/nixlab/nix-qemu",
-      "--no-out-link", "-"
+      "nix-build", "--no-out-link", "-"
     ).mkString(" ")
     cmd #< is ! logger
     val f = s"${out.toString.trim}/${m.name}.xml"
@@ -69,7 +65,9 @@ object MachineSpec extends Commands {
   type State = Machine
   type Sut = org.libvirt.Domain
 
-  def canCreateNewSut(newState: State, initStates: Traversable[State]) = true
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]
+  ): Boolean = true
 
   def newSut(state: State): Sut = {
     println(s"Creating SUT: ${state.name}")
@@ -95,7 +93,7 @@ object MachineSpec extends Commands {
     uuid <- Gen.uuid
     name <- Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
     memory <- Gen.choose(96, 256)
-    kernel <- Gen.oneOf("3.11", "3.10")
+    kernel <- Gen.oneOf("3.14", "3.13", "3.12", "3.10")
   } yield Machine (name, uuid, kernel, memory, false)
 
   def genCommand(state: State): Gen[Command] =
@@ -110,7 +108,8 @@ object MachineSpec extends Commands {
     }
     def nextState(state: State) = state.copy(running = true)
     def preCondition(state: State) = !state.running
-    def postCondition(state: State, result: Result) = result
+    def postCondition(state: State, result: Try[Boolean]) =
+      result == Success(true)
   }
 
 }
