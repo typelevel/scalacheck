@@ -88,7 +88,7 @@ trait Prop {
    *  as an application that checks itself on execution */
   def main(args: Array[String]): Unit = {
     val code = mainRunner(args)
-    if (mainCallsExit)
+    if (mainCallsExit && code != 0)
       System exit code
   }
 
