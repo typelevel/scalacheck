@@ -307,7 +307,7 @@ trait Commands {
         for {
           (s0,cs) <- g
           c <- genCommand(s0) suchThat (_.preCondition(s0))
-        } yield (c.nextState(s0), c::cs)
+        } yield (c.nextState(s0), cs :+ c)
       }
     }
 
