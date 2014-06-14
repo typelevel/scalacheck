@@ -237,11 +237,9 @@ trait Commands {
 
   private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]
   ): (Prop, List[List[(Command,Try[String])]]) = {
-    import concurrent.{Future, ExecutionContext, Await}
-    implicit val ec = ExecutionContext.fromExecutor(
-      java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
-    )
-
+    import concurrent._
+    val tp = java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
+    implicit val ec = ExecutionContext.fromExecutor(tp)
     val memo = collection.mutable.Map.empty[(State,List[Commands]), List[State]]
 
     def endStates(scss: (State, List[Commands])): List[State] = {
@@ -261,18 +259,22 @@ trait Commands {
       }
     }
 
-    val states = endStates(s, pcmds)
+    def run(endStates: List[State], cs: Commands
+    ): Future[(Prop,List[(Command,Try[String])])] = Future {
+      if(cs.isEmpty) (Prop.proved, Nil) else blocking {
+        val rs = cs.init.map(_.runPC(sut)._1)
+        val (r,pf) = cs.last.runPC(sut)
+        (Prop.atLeastOne(endStates.map(pf): _*), cs.zip(rs :+ r))
+      }
+    }
 
-    def runCmds(cs: Commands) =
-      if(cs.isEmpty) Future((Prop.proved,Nil)) else for {
-        (rs,(r,pf)) <- Future((cs.init.map(_.runPC(sut)._1),cs.last.runPC(sut)))
-      } yield (Prop.atLeastOne(states.map(pf): _*), cs.zip(rs :+ r))
-
-    val res = for {
-      (ps,rs) <- Future.traverse(pcmds)(runCmds).map(_.unzip)
-    } yield (Prop.atLeastOne(ps: _*), rs)
-
-    Await.result(res, concurrent.duration.Duration.Inf)
+    try {
+      val res = Future.traverse(pcmds)(run(endStates(s,pcmds), _)) map { l =>
+        val (ps,rs) = l.unzip
+        (Prop.atLeastOne(ps: _*), rs)
+      }
+      Await.result(res, concurrent.duration.Duration.Inf)
+    } finally { tp.shutdown() }
   }
 
   /** Formats a list of commands with corresponding results */
