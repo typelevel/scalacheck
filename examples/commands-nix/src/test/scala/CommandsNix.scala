@@ -14,100 +14,122 @@ object MachineSpec extends Commands {
   val con = new org.libvirt.Connect("qemu:///session")
 
   case class Machine (
-    name: String,
+    id: String,
     uuid: java.util.UUID,
     kernelVer: String,
     memory: Int,
     running: Boolean
   )
 
-  def toNix(m: Machine): String = raw"""
-    let
-      ${m.name} = { config, pkgs, ... }: {
-        imports = [ ./qemu-module.nix ];
-        deployment.libvirt = {
-          memory = ${m.memory};
-          uuid = "${m.uuid}";
-          netdevs.netdev0 = {
-            vdeSocket = "/run/vde0.ctl";
-            mac = "$$MAC0";
-          };
-        };
-        users.extraUsers.root.password = "root";
-        boot.kernelPackages = pkgs.linuxPackages_${m.kernelVer.replace('.','_')};
+  def toNixNetwork(machines: Iterable[Machine]): String = {
+    def mkConf(m: Machine): String = raw"""
+      ${m.id} = { config, pkgs, lib, ... }: {
+        imports = [ ./common.nix ];
+        ${toNixMachine(m)}
       };
-    in import ./qemu-network.nix { inherit ${m.name}; }
+    """
+    s"import ./qemu-network.nix { ${machines.map(mkConf).mkString} }"
+  }
+
+  def toNixMachine(m: Machine): String = raw"""
+    deployment.libvirt = {
+      netdevs.netdev0.mac = "$$MAC0";
+      memory = ${m.memory};
+      uuid = "${m.uuid}";
+    };
+    boot.kernelPackages =
+      pkgs.linuxPackages_${m.kernelVer.replace('.','_')};
   """
 
-  def toLibvirtXML(m: Machine): String = {
-    println(s"Building: ${m.name}...")
+  def toLibvirtXMLs(machines: State): Map[String,String] = {
     import scala.sys.process._
     import java.io.ByteArrayInputStream
+
     val out = new StringBuffer()
     val err = new StringBuffer()
     val logger = ProcessLogger(out.append(_), err.append(_))
-    val is = new ByteArrayInputStream(toNix(m).getBytes("UTF-8"))
-    val cmd = List(
-      "nix-build", "--no-out-link", "-"
-    ).mkString(" ")
-    cmd #< is ! logger
-    val f = s"${out.toString.trim}/${m.name}.xml"
-    val s = if((new java.io.File(f)).canRead) io.Source.fromFile(f).mkString else {
-      throw new Exception(
-        s"No Libvirt XML produced\ncmd = $cmd\n" ++
-        s"out = ${out.toString}\nerr = ${err.toString}"
-      )
+    val is = new ByteArrayInputStream(toNixNetwork(machines.values).getBytes("UTF-8"))
+
+    // Run nix-build and capture stdout and stderr
+    "nix-build --no-out-link -" #< is ! logger
+
+    val xmlFiles = machines.mapValues(m => s"${out.toString.trim}/${m.id}.xml")
+
+    // Check that all expected output files can be read
+    xmlFiles.values foreach { f =>
+      if(!(new java.io.File(f)).canRead) throw new Exception(raw"""
+        No Libvirt XML produced (${f})
+        out = ${out.toString}
+        err = ${err.toString}
+      """)
     }
-    println(s"Built: ${m.name}")
-    s
+
+    xmlFiles.mapValues(io.Source.fromFile(_).mkString)
   }
 
-  type State = Machine
-  type Sut = org.libvirt.Domain
+  // Machine.id mapped to a machine state
+  type State = Map[String,Machine]
 
+  // Machine.id mapped to a LibVirt machine
+  type Sut = Map[String,org.libvirt.Domain]
+
+  // TODO we should check for example total amount of memory used here
   def canCreateNewSut(newState: State, initSuts: Traversable[State],
     runningSuts: Traversable[Sut]
   ): Boolean = true
 
   def newSut(state: State): Sut = {
-    println(s"Creating SUT: ${state.name}")
-    val d = con.domainDefineXML(toLibvirtXML(state))
-    try {
-      if(state.running) d.create()
-      d
-    } catch { case e: Throwable =>
-      destroySut(d)
-      throw e
+    val sut = toLibvirtXMLs(state).mapValues(con.domainDefineXML)
+
+    // Start the machines that should be running
+    sut foreach { case (id,d) =>
+      try if(state(id).running) d.create()
+      catch { case e: Throwable =>
+        destroySut(sut)
+        throw e
+      }
     }
+
+    sut
   }
 
-  def destroySut(sut: Sut) = {
-    println(s"Destroying SUT")
-    if (sut.isActive != 0) sut.destroy()
-    sut.undefine()
+  def destroySut(sut: Sut) = sut.values foreach { d =>
+    if (d.isActive != 0) d.destroy()
+    d.undefine()
   }
 
-  def initialPreCondition(state: State) = true
+  // don't allow duplicate uuids
+  def initialPreCondition(state: State) = {
+    val machines = state.values.toSeq
+    machines.map(_.uuid).distinct.length == machines.length
+  }
 
-  val genInitialState = for {
+  def genMachine(id: String): Gen[Machine] = for {
     uuid <- Gen.uuid
-    name <- Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
     memory <- Gen.choose(96, 256)
     kernel <- Gen.oneOf("3.14", "3.13", "3.12", "3.10")
-  } yield Machine (name, uuid, kernel, memory, false)
+  } yield Machine (id, uuid, kernel, memory, false)
+
+  val genInitialState: Gen[State] = for {
+    machineCount <- Gen.choose(1,4)
+    idGen = Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
+    ids <- Gen.listOfN(machineCount, idGen)
+    machines <- Gen.sequence[List,Machine](ids.map(genMachine))
+  } yield Map(ids zip machines: _*)
 
   def genCommand(state: State): Gen[Command] =
-    if(!state.running) Gen.oneOf(NoOp, Boot)
-    else NoOp
+    if(state.values.forall(_.running)) NoOp
+    else Gen.oneOf(state.values.toSeq.filterNot(_.running).map(Boot))
 
-  case object Boot extends Command {
+  case class Boot(m: Machine) extends Command {
     type Result = Boolean
     def run(sut: Sut) = {
-      sut.create()
-      sut.isActive != 0
+      sut(m.id).create()
+      sut(m.id).isActive != 0
     }
-    def nextState(state: State) = state.copy(running = true)
-    def preCondition(state: State) = !state.running
+    def nextState(state: State) =
+      state + (m.id -> m.copy(running = true))
+    def preCondition(state: State) = !m.running
     def postCondition(state: State, result: Try[Boolean]) =
       result == Success(true)
   }
