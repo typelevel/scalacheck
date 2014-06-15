@@ -13,15 +13,6 @@ object MachineSpec extends Commands {
 
   val con = new org.libvirt.Connect("qemu:///session")
 
-  case class Machine (
-    id: String,
-    uuid: java.util.UUID,
-    ip: String,
-    kernelVer: String,
-    memory: Int,
-    running: Boolean
-  )
-
   def runSshCmd(ip: String, cmd: String): Either[String,String] = {
     import scala.sys.process._
     val err = new StringBuffer()
@@ -93,11 +84,20 @@ object MachineSpec extends Commands {
     xmlFiles.mapValues(io.Source.fromFile(_).mkString)
   }
 
+  case class Machine (
+    id: String,
+    uuid: java.util.UUID,
+    ip: String,
+    kernelVer: String,
+    memory: Int,
+    running: Boolean
+  )
+
   // Machine.id mapped to a machine state
-  type State = Map[String,Machine]
+  type State = Map[String, Machine]
 
   // Machine.id mapped to a LibVirt machine
-  type Sut = Map[String,org.libvirt.Domain]
+  type Sut = Map[String, org.libvirt.Domain]
 
   // TODO we should check for example total amount of memory used here
   def canCreateNewSut(newState: State, initSuts: Traversable[State],
@@ -173,8 +173,7 @@ object MachineSpec extends Commands {
     type Result = Boolean
     def run(sut: Sut) = {
       sut(m.id).create()
-      import scala.sys.process._
-      "sleep 15".!!
+      Thread.sleep(10000) 
       sut(m.id).isActive != 0
     }
     def nextState(state: State) =

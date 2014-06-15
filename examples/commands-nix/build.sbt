@@ -2,15 +2,11 @@ name := "commands-nix"
 
 scalaVersion := "2.11.1"
 
-resolvers ++= Seq(
-  "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases",
-  "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-  "Libvirt Releases" at "http://www.libvirt.org/maven2"
-)
+resolvers += 
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-  "org.scala-sbt" %  "test-interface" % "1.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
+  "org.scalacheck" %% "scalacheck" % "1.12.0-SNAPSHOT",
   "net.java.dev.jna" % "jna" % "4.0.0"
 )
 
