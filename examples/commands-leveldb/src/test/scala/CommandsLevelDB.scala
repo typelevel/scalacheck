@@ -11,13 +11,11 @@ import scala.collection.immutable.Map
 
 object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 
-  property("leveldbspec") = LevelDBSpec.property
+  property("leveldbspec") = LevelDBSpec.property()
 
 }
 
 object LevelDBSpec extends Commands {
-
-  override val threadCount = 1;
 
   case class State(
     open: Boolean,
