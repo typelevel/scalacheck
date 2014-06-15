@@ -100,7 +100,7 @@ object RedisSpec extends Commands {
     } yield Get(key)
 
   def genGetDeleted(state: State): Gen[Get] =
-    if(state.contents.isEmpty) genGet else for {
+    if(state.deleted.isEmpty) genGet else for {
       key <- oneOf(state.deleted.toSeq)
     } yield Get(key)
 
