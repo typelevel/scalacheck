@@ -294,6 +294,7 @@ object Test {
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {
     import params._
+    import concurrent._
 
     assertParams(params)
 
@@ -301,24 +302,10 @@ object Test {
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
     val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
+    val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
+    implicit val ec = ExecutionContext.fromExecutor(tp)
 
-    def worker(workerIdx: Int): () => Result =
-      if (workers < 2) () => workerFun(workerIdx)
-      else spawn {
-        params.customClassLoader.map(Thread.currentThread.setContextClassLoader(_))
-        workerFun(workerIdx)
-      }
-
-    def spawn[A](body: => A): () => A = {
-      import concurrent.{Future, ExecutionContext, Await}
-      implicit val ec = ExecutionContext.fromExecutor(
-        java.util.concurrent.Executors.newFixedThreadPool(workers)
-      )
-      val future = Future(body)
-      () => Await.result(future, concurrent.duration.Duration.Inf)
-    }
-
-    def workerFun(workerIdx: Int) = {
+    def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests
       var d = 0  // discarded tests
       var res: Result = null
@@ -358,29 +345,43 @@ object Test {
       } else res
     }
 
-    def mergeResults(r1: () => Result, r2: () => Result) = {
-      val Result(st1, s1, d1, fm1, _) = r1()
-      val Result(st2, s2, d2, fm2, _) = r2()
+    def mergeResults(r1: Result, r2: Result): Result = {
+      val Result(st1, s1, d1, fm1, _) = r1
+      val Result(st2, s2, d2, fm2, _) = r2
       if (st1 != Passed && st1 != Exhausted)
-        () => Result(st1, s1+s2, d1+d2, fm1++fm2, 0)
+        Result(st1, s1+s2, d1+d2, fm1++fm2, 0)
       else if (st2 != Passed && st2 != Exhausted)
-        () => Result(st2, s1+s2, d1+d2, fm1++fm2, 0)
+        Result(st2, s1+s2, d1+d2, fm1++fm2, 0)
       else {
         if (s1+s2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) >= (d1+d2))
-          () => Result(Passed, s1+s2, d1+d2, fm1++fm2, 0)
+          Result(Passed, s1+s2, d1+d2, fm1++fm2, 0)
         else
-          () => Result(Exhausted, s1+s2, d1+d2, fm1++fm2, 0)
+          Result(Exhausted, s1+s2, d1+d2, fm1++fm2, 0)
       }
     }
 
-    val start = System.currentTimeMillis
-    val results = for(i <- 0 until workers) yield worker(i)
-    val r = results.reduceLeft(mergeResults)()
-    stop = true
-    results foreach (_.apply())
-    val timedRes = r.copy(time = System.currentTimeMillis-start)
-    params.testCallback.onTestResult("", timedRes)
-    timedRes
+    try {
+      val start = System.currentTimeMillis
+      val r =
+        if(workers < 2) workerFun(0)
+        else {
+          val fs = List.range(0,workers) map (idx => Future {
+            params.customClassLoader.map(
+              Thread.currentThread.setContextClassLoader(_)
+            )
+            blocking { workerFun(idx) }
+          })
+          val zeroRes = Result(Passed,0,0,FreqMap.empty[Set[Any]],0)
+          val res = Future.fold(fs)(zeroRes)(mergeResults)
+          Await.result(res, concurrent.duration.Duration.Inf)
+        }
+      val timedRes = r.copy(time = System.currentTimeMillis-start)
+      params.testCallback.onTestResult("", timedRes)
+      timedRes
+    } finally {
+      stop = true
+      tp.shutdown()
+    }
   }
 
   /** Check a set of properties. */
