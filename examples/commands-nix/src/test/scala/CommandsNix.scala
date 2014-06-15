@@ -16,10 +16,31 @@ object MachineSpec extends Commands {
   case class Machine (
     id: String,
     uuid: java.util.UUID,
+    ip: String,
     kernelVer: String,
     memory: Int,
     running: Boolean
   )
+
+  def runSshCmd(ip: String, cmd: String): Either[String,String] = {
+    import scala.sys.process._
+    val err = new StringBuffer()
+    val logger = ProcessLogger(err.append(_))
+
+    val sshcmd =
+      s"ssh -i test-key_rsa -l root -o UserKnownHostsFile=/dev/null " +
+      s"-o StrictHostKeyChecking=no -o ConnectTimeout=1 ${ip}"
+
+    if (s"$sshcmd true" ! logger != 0)
+      throw new Exception(err.toString)
+    else {
+      val out = new StringBuffer()
+      val err = new StringBuffer()
+      val logger = ProcessLogger(out.append(_), err.append(_))
+      if ((s"$sshcmd $cmd" ! logger) == 0) Right(out.toString)
+      else Left(err.toString)
+    }
+  }
 
   def toNixNetwork(machines: Iterable[Machine]): String = {
     def mkConf(m: Machine): String = raw"""
@@ -36,6 +57,11 @@ object MachineSpec extends Commands {
       netdevs.netdev0.mac = "$$MAC0";
       memory = ${m.memory};
       uuid = "${m.uuid}";
+    };
+    networking.hostName = "${m.id}";
+    networking.interfaces.eth0 = {
+      ipAddress = "${m.ip}";
+      prefixLength = 24;
     };
     boot.kernelPackages =
       pkgs.linuxPackages_${m.kernelVer.replace('.','_')};
@@ -98,33 +124,57 @@ object MachineSpec extends Commands {
     d.undefine()
   }
 
-  // don't allow duplicate uuids
   def initialPreCondition(state: State) = {
     val machines = state.values.toSeq
-    machines.map(_.uuid).distinct.length == machines.length
+    !hasDuplicates(machines.map(_.uuid)) &&
+    !hasDuplicates(machines.map(_.ip))
   }
 
-  def genMachine(id: String): Gen[Machine] = for {
+  // generate a 10.x.y subnet
+  val genSubnet: Gen[List[Int]] = for {
+    x <- Gen.choose(0,255)
+    y <- Gen.choose(0,255)
+  } yield List(10,x,y)
+
+  def hasDuplicates(xs: Seq[Any]): Boolean = xs.distinct.length != xs.length
+
+  def genMachine(id: String, subnet: List[Int]): Gen[Machine] = for {
     uuid <- Gen.uuid
+    //ip <- Gen.choose(2,254).map(n => (subnet :+ n).mkString("."))
+    ip <- Gen.choose(2,254).map(n => s"172.16.2.$n")
     memory <- Gen.choose(96, 256)
     kernel <- Gen.oneOf("3.14", "3.13", "3.12", "3.10")
-  } yield Machine (id, uuid, kernel, memory, false)
+  } yield Machine (id, uuid, ip, kernel, memory, false)
 
   val genInitialState: Gen[State] = for {
     machineCount <- Gen.choose(1,4)
     idGen = Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
     ids <- Gen.listOfN(machineCount, idGen)
-    machines <- Gen.sequence[List,Machine](ids.map(genMachine))
+    subnet <- genSubnet
+    machines <- Gen.sequence[List,Machine](ids.map(genMachine(_, subnet)))
   } yield Map(ids zip machines: _*)
 
+  def genPing(state: State): Gen[Ping] = for {
+    from <- Gen.oneOf(state.values.toSeq.filter(_.running))
+    to <- Gen.oneOf(state.values.toSeq)
+  } yield Ping(from, to)
+
+  def genBoot(state: State): Gen[Boot] = Gen.oneOf(
+    state.values.toSeq.filterNot(_.running).map(Boot)
+  )
+
   def genCommand(state: State): Gen[Command] =
-    if(state.values.forall(_.running)) NoOp
-    else Gen.oneOf(state.values.toSeq.filterNot(_.running).map(Boot))
+    if(!state.values.exists(_.running)) genBoot(state)
+    else if(state.values.forall(_.running)) genPing(state)
+    else Gen.oneOf(genBoot(state), genPing(state))
+
 
   case class Boot(m: Machine) extends Command {
     type Result = Boolean
     def run(sut: Sut) = {
       sut(m.id).create()
+      import scala.sys.process._
+      "sleep 15".!!
       sut(m.id).isActive != 0
     }
     def nextState(state: State) =
@@ -132,6 +182,19 @@ object MachineSpec extends Commands {
     def preCondition(state: State) = !m.running
     def postCondition(state: State, result: Try[Boolean]) =
       result == Success(true)
+  }
+
+  case class Ping(from: Machine, to: Machine) extends Command {
+    type Result = Boolean
+    def run(sut: Sut) =
+      runSshCmd(from.ip, s"fping -c 1 ${to.ip}") match {
+        case Right(_) => true
+        case Left(_) => false
+      }
+    def nextState(state: State) = state
+    def preCondition(state: State) = from.running
+    def postCondition(state: State, result: Try[Boolean]) =
+      result == Success(to.running)
   }
 
 }

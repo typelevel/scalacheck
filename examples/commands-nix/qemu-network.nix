@@ -8,10 +8,8 @@ let
 
   hosts = attrNames network;
 
-  sys = name: let cfg = getAttr name network; in import <nixpkgs/nixos> {
-    configuration = attrs: (cfg attrs) // {
-      networking.hostName = name;
-    };
+  sys = name: import <nixpkgs/nixos> {
+    configuration = getAttr name network;
   };
 
   system = name: (sys name).system;

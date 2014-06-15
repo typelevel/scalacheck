@@ -9,5 +9,21 @@ with pkgs.lib;
     netdevs.netdev0.vdeSocket = "/run/vde0.ctl";
   };
 
-  users.extraUsers.root.password = "root";
+  environment.systemPackages = [ pkgs.fping ];
+
+  networking = {
+    usePredictableInterfaceNames = false;
+    firewall.enable = false;
+    useDHCP = false;
+  };
+
+  services.openssh.enable = true;
+
+  users.mutableUsers = false;
+
+  users.extraUsers.root = {
+    password = "root";
+    hashedPassword = null;
+    openssh.authorizedKeys.keyFiles = [ ./test-key_rsa.pub ];
+  };
 }
