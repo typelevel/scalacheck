@@ -19,7 +19,7 @@ object MachineSpec extends Commands {
     val logger = ProcessLogger(err.append(_))
 
     val sshcmd =
-      s"ssh -i test-key_rsa -l root -o UserKnownHostsFile=/dev/null " +
+      s"ssh -q -i test-key_rsa -l root -o UserKnownHostsFile=/dev/null " +
       s"-o StrictHostKeyChecking=no -o ConnectTimeout=1 ${ip}"
 
     if (s"$sshcmd true" ! logger != 0)
@@ -33,7 +33,7 @@ object MachineSpec extends Commands {
     }
   }
 
-  def toNixNetwork(machines: Iterable[Machine]): String = {
+  def toNixNetwork(machines: State): String = {
     def mkConf(m: Machine): String = raw"""
       ${m.id} = { config, pkgs, lib, ... }: {
         imports = [ ./common.nix ];
@@ -65,12 +65,12 @@ object MachineSpec extends Commands {
     val out = new StringBuffer()
     val err = new StringBuffer()
     val logger = ProcessLogger(out.append(_), err.append(_))
-    val is = new ByteArrayInputStream(toNixNetwork(machines.values).getBytes("UTF-8"))
+    val is = new ByteArrayInputStream(toNixNetwork(machines).getBytes("UTF-8"))
 
     // Run nix-build and capture stdout and stderr
     "nix-build --no-out-link -" #< is ! logger
 
-    val xmlFiles = machines.mapValues(m => s"${out.toString.trim}/${m.id}.xml")
+    val xmlFiles = Map(machines.map(m => m.id -> s"${out.toString.trim}/${m.id}.xml"): _*)
 
     // Check that all expected output files can be read
     xmlFiles.values foreach { f =>
@@ -81,7 +81,7 @@ object MachineSpec extends Commands {
       """)
     }
 
-    xmlFiles.mapValues(io.Source.fromFile(_).mkString)
+    xmlFiles map { case (id,f) => id -> io.Source.fromFile(f).mkString }
   }
 
   case class Machine (
@@ -94,7 +94,7 @@ object MachineSpec extends Commands {
   )
 
   // Machine.id mapped to a machine state
-  type State = Map[String, Machine]
+  type State = List[Machine]
 
   // Machine.id mapped to a LibVirt machine
   type Sut = Map[String, org.libvirt.Domain]
@@ -105,18 +105,7 @@ object MachineSpec extends Commands {
   ): Boolean = true
 
   def newSut(state: State): Sut = {
-    val sut = toLibvirtXMLs(state).mapValues(con.domainDefineXML)
-
-    // Start the machines that should be running
-    sut foreach { case (id,d) =>
-      try if(state(id).running) d.create()
-      catch { case e: Throwable =>
-        destroySut(sut)
-        throw e
-      }
-    }
-
-    sut
+    toLibvirtXMLs(state) map { case (id,xml) => id -> con.domainDefineXML(xml) }
   }
 
   def destroySut(sut: Sut) = sut.values foreach { d =>
@@ -125,9 +114,9 @@ object MachineSpec extends Commands {
   }
 
   def initialPreCondition(state: State) = {
-    val machines = state.values.toSeq
-    !hasDuplicates(machines.map(_.uuid)) &&
-    !hasDuplicates(machines.map(_.ip))
+    state.forall(!_.running) &&
+    !hasDuplicates(state.map(_.uuid)) &&
+    !hasDuplicates(state.map(_.ip))
   }
 
   // generate a 10.x.y subnet
@@ -147,38 +136,77 @@ object MachineSpec extends Commands {
   } yield Machine (id, uuid, ip, kernel, memory, false)
 
   val genInitialState: Gen[State] = for {
-    machineCount <- Gen.choose(1,4)
+    machineCount <- Gen.choose(5,5)
     idGen = Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
     ids <- Gen.listOfN(machineCount, idGen)
     subnet <- genSubnet
     machines <- Gen.sequence[List,Machine](ids.map(genMachine(_, subnet)))
-  } yield Map(ids zip machines: _*)
+  } yield machines
 
-  def genPing(state: State): Gen[Ping] = for {
-    from <- Gen.oneOf(state.values.toSeq.filter(_.running))
-    to <- Gen.oneOf(state.values.toSeq)
+  def genPingOffline(state: State): Gen[Ping] = for {
+    from <- Gen.oneOf(state.filter(_.running))
+    to <- Gen.oneOf(state.filter(!_.running))
+  } yield Ping(from, to)
+
+  def genPingOnline(state: State): Gen[Ping] = for {
+    from <- Gen.oneOf(state.filter(_.running))
+    to <- Gen.oneOf(state.filter(_.running))
   } yield Ping(from, to)
 
   def genBoot(state: State): Gen[Boot] = Gen.oneOf(
-    state.values.toSeq.filterNot(_.running).map(Boot)
+    state.filterNot(_.running).map(Boot)
+  )
+
+  def genShutdown(state: State): Gen[Shutdown] = Gen.oneOf(
+    state.filter(_.running).map(Shutdown)
   )
 
   def genCommand(state: State): Gen[Command] =
-    if(!state.values.exists(_.running)) genBoot(state)
-    else if(state.values.forall(_.running)) genPing(state)
-    else Gen.oneOf(genBoot(state), genPing(state))
-
+    if(state.forall(!_.running)) genBoot(state)
+    else if(state.forall(_.running)) Gen.frequency(
+      (1, genShutdown(state)),
+      (4, genPingOnline(state))
+    )
+    else Gen.frequency(
+      (2, genBoot(state)),
+      (1, genShutdown(state)),
+      (4, genPingOnline(state)),
+      (4, genPingOffline(state))
+    )
 
   case class Boot(m: Machine) extends Command {
     type Result = Boolean
     def run(sut: Sut) = {
+      println(s"booting machine ${m.ip}...")
       sut(m.id).create()
-      Thread.sleep(10000) 
-      sut(m.id).isActive != 0
+      var n = 0
+      while (n < 20) {
+        Thread.sleep(500)
+        try {
+          runSshCmd(m.ip, "true")
+          println(s"machine ${m.ip} is up!")
+          n = Int.MaxValue
+        } catch { case e: Throwable => n = n + 1 }
+      }
+      sut(m.id).isActive != 0 && n == Int.MaxValue
     }
     def nextState(state: State) =
-      state + (m.id -> m.copy(running = true))
+      state.filterNot(_.id == m.id) :+ m.copy(running = true)
     def preCondition(state: State) = !m.running
+    def postCondition(state: State, result: Try[Boolean]) =
+      result == Success(true)
+  }
+
+  case class Shutdown(m: Machine) extends Command {
+    type Result = Boolean
+    def run(sut: Sut) = {
+      println(s"shutting down machine ${m.ip}...")
+      sut(m.id).destroy()
+      sut(m.id).isActive == 0
+    }
+    def nextState(state: State) =
+      state.filterNot(_.id == m.id) :+ m.copy(running = false)
+    def preCondition(state: State) = m.running
     def postCondition(state: State, result: Try[Boolean]) =
       result == Success(true)
   }
@@ -187,8 +215,12 @@ object MachineSpec extends Commands {
     type Result = Boolean
     def run(sut: Sut) =
       runSshCmd(from.ip, s"fping -c 1 ${to.ip}") match {
-        case Right(_) => true
-        case Left(_) => false
+        case Right(out) =>
+          println(s"${from.ip} -> $out")
+          true
+        case Left(out) =>
+          println(s"${from.ip} -> $out")
+          false
       }
     def nextState(state: State) = state
     def preCondition(state: State) = from.running

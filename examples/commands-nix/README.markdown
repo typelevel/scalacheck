@@ -87,12 +87,11 @@ case class Machine (
   running: Boolean
 )
 
-type State = Map[String, Machine]
+type State = List[Machine]
 ```
 
-The state is just the current collection of machine states, stored in a map for
-convenience (`Machine.id` is the key). The machine state stores parameters like
-IP number, memory amount and current running status.
+The state is just the current collection of machine states. The machine state
+stores parameters like IP number, memory amount and current running status.
 
 The system under test type (`Commands.Sut`), used for communication with the
 real system looks like this:
@@ -111,14 +110,9 @@ been removed for clarity):
 val con = new org.libvirt.Connect("qemu:///session")
 
 def newSut(state: State): Sut = {
-  val sut = toLibvirtXMLs(state).mapValues(con.domainDefineXML)
-
-  // Start the machines that should be running
-  sut foreach { case (id,d) =>
-    if(state(id).running) d.create()
+  toLibvirtXMLs(state) map { case (id,xml) =>
+    id -> con.domainDefineXML(xml)
   }
-
-  sut
 }
 ```
 
@@ -195,7 +189,7 @@ val genInitialState: Gen[State] = for {
   ids <- Gen.listOfN(machineCount, idGen)
   subnet <- genSubnet
   machines <- Gen.sequence[List,Machine](ids.map(genMachine(_, subnet)))
-} yield Map(ids zip machines: _*)
+} yield machines
 ```
 
 In the example code the IP number is hardcoded to the subnet `172.16.2.0/24`
@@ -204,20 +198,42 @@ because that is how my laptop is setup. We pick a memory amount between 96 and
 
 ### The Commands
 
-Only two commands are supported, `Boot` and `Ping`:
+Only three commands are supported, `Boot`, `Shutdown` and `Ping`:
 
 ```scala
 case class Boot(m: Machine) extends Command {
   type Result = Boolean
   def run(sut: Sut) = {
+    println(s"booting machine ${m.ip}...")
     sut(m.id).create()
-    import scala.sys.process._
-    "sleep 15".!!
-    sut(m.id).isActive != 0
+    var n = 0
+    while (n < 20) {
+      Thread.sleep(500)
+      try {
+        runSshCmd(m.ip, "true")
+        println(s"machine ${m.ip} is up!")
+        n = Int.MaxValue
+      } catch { case e: Throwable => n = n + 1 }
+    }
+    sut(m.id).isActive != 0 && n == Int.MaxValue
   }
   def nextState(state: State) =
-    state + (m.id -> m.copy(running = true))
+    state.filterNot(_.id == m.id) :+ m.copy(running = true)
   def preCondition(state: State) = !m.running
+  def postCondition(state: State, result: Try[Boolean]) =
+    result == Success(true)
+}
+
+case class Shutdown(m: Machine) extends Command {
+  type Result = Boolean
+  def run(sut: Sut) = {
+    println(s"shutting down machine ${m.ip}...")
+    sut(m.id).destroy()
+    sut(m.id).isActive == 0
+  }
+  def nextState(state: State) =
+    state.filterNot(_.id == m.id) :+ m.copy(running = false)
+  def preCondition(state: State) = m.running
   def postCondition(state: State, result: Try[Boolean]) =
     result == Success(true)
 }
@@ -226,8 +242,12 @@ case class Ping(from: Machine, to: Machine) extends Command {
   type Result = Boolean
   def run(sut: Sut) =
     runSshCmd(from.ip, s"fping -c 1 ${to.ip}") match {
-      case Right(_) => true
-      case Left(_) => false
+      case Right(out) =>
+        println(s"${from.ip} -> $out")
+        true
+      case Left(out) =>
+        println(s"${from.ip} -> $out")
+        false
     }
   def nextState(state: State) = state
   def preCondition(state: State) = from.running
@@ -236,31 +256,50 @@ case class Ping(from: Machine, to: Machine) extends Command {
 }
 ```
 
-The `Boot` command simply tells libvirt to start a machine and then waits 15
-seconds for it to come up. The waiting is nothing short of an ugly hack. At the
-very least, it should be separated into a different command so that we first
-can boot up all machines and let them start in parallel.
+The `Boot` command simply tells libvirt to start a machine and then waits until
+the machine is available over ssh. This is a bit of a waste of time, since the
+boot process could be done in parallel for several machines.
 
 The `Ping` command executes the `fping` command through SSH on one machine and
 expects it to succeed if the current state of the `to` machine indicates it is
 running.
 
+The `Shutdown` command destroys a running machine (which can later be booted
+again).
+
 The commands are generated in the following way:
 
 ```scala
-def genPing(state: State): Gen[Ping] = for {
-  from <- Gen.oneOf(state.values.toSeq.filter(_.running))
-  to <- Gen.oneOf(state.values.toSeq)
+def genPingOffline(state: State): Gen[Ping] = for {
+  from <- Gen.oneOf(state.filter(_.running))
+  to <- Gen.oneOf(state.filter(!_.running))
+} yield Ping(from, to)
+
+def genPingOnline(state: State): Gen[Ping] = for {
+  from <- Gen.oneOf(state.filter(_.running))
+  to <- Gen.oneOf(state.filter(_.running))
 } yield Ping(from, to)
 
 def genBoot(state: State): Gen[Boot] = Gen.oneOf(
-  state.values.toSeq.filterNot(_.running).map(Boot)
+  state.filterNot(_.running).map(Boot)
+)
+
+def genShutdown(state: State): Gen[Shutdown] = Gen.oneOf(
+  state.filter(_.running).map(Shutdown)
 )
 
 def genCommand(state: State): Gen[Command] =
-  if(!state.values.exists(_.running)) genBoot(state)
-  else if(state.values.forall(_.running)) genPing(state)
-  else Gen.oneOf(genBoot(state), genPing(state))
+  if(state.forall(!_.running)) genBoot(state)
+  else if(state.forall(_.running)) Gen.frequency(
+    (1, genShutdown(state)),
+    (4, genPingOnline(state))
+  )
+  else Gen.frequency(
+    (2, genBoot(state)),
+    (1, genShutdown(state)),
+    (4, genPingOnline(state)),
+    (4, genPingOffline(state))
+  )
 ```
 
 
