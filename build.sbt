@@ -1,7 +1,4 @@
-import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
-
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
-
 import VersionKeys.scalaParserCombinatorsVersion
 
 name := "scalacheck"
@@ -28,21 +25,22 @@ resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releas
 
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
-libraryDependencies ++= (
-  if((scalaVersion.value startsWith "2.9") || (scalaVersion.value startsWith "2.10")) Seq.empty
-  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
-)
+libraryDependencies ++= {
+  scalaVersion.value match {
+    case v if (v startsWith "2.9") || (v startsWith "2.10") => Seq.empty
+    case _ => Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
+  }
+}
 
-javacOptions ++= Seq("-Xmx1024M")
+javacOptions += "-Xmx1024M"
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
-  if (version.value.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
+                     else ("releases", "service/local/staging/deploy/maven2")
+  Some(name at nexus + path)
 }
 
 publishMavenStyle := true
