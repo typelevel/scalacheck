@@ -59,8 +59,10 @@ class ScalaCheckFramework extends Framework {
         override def onTestResult(n: String, r: Test.Result) = {
           for (l <- loggers) {
             import Pretty._
+            val verbosityOpts = Set("-verbosity", "-v")
+            val verbosity = args.dropWhile(e => verbosityOpts(e)).headOption.map(_.toInt).getOrElse(0)
             l.info(
-              (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(0))
+              (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(verbosity))
             )
           }
           handler.handle(asEvent((n,r)))
