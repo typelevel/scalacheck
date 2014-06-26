@@ -153,19 +153,6 @@ object PropSpecification extends Properties("Prop") {
     else true
   }
 
-  property("within") = forAll(oneOf(10, 100), oneOf(10, 100)) { (timeout: Int, sleep: Int) =>
-    (timeout >= 0 && sleep >= 0) ==> {
-      val q = within(timeout)(passed.map(r => {
-        Thread.sleep(sleep)
-        r
-      }))
-
-      if(sleep < 0.9*timeout) q == passed
-      else if (sleep < 1.1*timeout) passed
-      else q == falsified
-    }
-  }
-
   property("sizedProp") = {
     val g = oneOf(passed,falsified,undecided,exception)
     forAll(g) { p => p == sizedProp(_ => p) }
