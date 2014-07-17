@@ -32,7 +32,7 @@ object Pretty {
 
   val defaultParams = Params(0)
 
-  def apply(f: Params => String) = new Pretty { def apply(p: Params) = f(p) }
+  def apply(f: Params => String): Pretty = new Pretty { def apply(p: Params) = f(p) }
 
   def pretty[T <% Pretty](t: T, prms: Params): String = t(prms)
 

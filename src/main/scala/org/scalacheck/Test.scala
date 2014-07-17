@@ -196,7 +196,7 @@ object Test {
     /** Called whenever a property has finished testing */
     def onTestResult(name: String, result: Result): Unit = ()
 
-    def chain(testCallback: TestCallback) = new TestCallback {
+    def chain(testCallback: TestCallback): TestCallback = new TestCallback {
       override def onPropEval(name: String, threadIdx: Int,
         succeeded: Int, discarded: Int
       ): Unit = {
