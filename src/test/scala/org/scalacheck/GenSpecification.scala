@@ -104,6 +104,14 @@ object GenSpecification extends Properties("Gen") {
     forAll(listOfN(n, arbitrary[Int])) { _.length == n }
   }
 
+  property("setOfN") = forAll(choose(0,100)) { n =>
+    forAll(containerOfN[Set,Int](n, arbitrary[Int])) { _.size <= n }
+  }
+
+  property("mapOfN") = forAll(choose(0,100)) { n =>
+    forAll(mapOfN(n, arbitrary[(Int,Int)])) { _.size <= n }
+  }
+
   property("empty listOfN") = forAll(listOfN(0, arbitrary[Int])) { l =>
     l.length == 0
   }
