@@ -13,7 +13,7 @@ trait FreqMap[T] {
   protected val underlying: scala.collection.immutable.Map[T,Int]
   val total: Int
 
-  def +(t: T) = new FreqMap[T] {
+  def +(t: T): FreqMap[T] = new FreqMap[T] {
     private val n = FreqMap.this.underlying.get(t) match {
       case None => 1
       case Some(n) => n+1
@@ -22,7 +22,7 @@ trait FreqMap[T] {
     val total = FreqMap.this.total + 1
   }
 
-  def -(t: T) = new FreqMap[T] {
+  def -(t: T): FreqMap[T] = new FreqMap[T] {
     val underlying = FreqMap.this.underlying.get(t) match {
       case None => FreqMap.this.underlying
       case Some(n) => FreqMap.this.underlying + (t -> (n-1))
@@ -30,7 +30,7 @@ trait FreqMap[T] {
     val total = FreqMap.this.total + 1
   }
 
-  def ++(fm: FreqMap[T]) = new FreqMap[T] {
+  def ++(fm: FreqMap[T]): FreqMap[T] = new FreqMap[T] {
     private val keys = FreqMap.this.underlying.keySet ++ fm.underlying.keySet
     private val mappings = keys.toStream.map { x =>
       (x, fm.getCount(x).getOrElse(0) + FreqMap.this.getCount(x).getOrElse(0))
@@ -39,7 +39,7 @@ trait FreqMap[T] {
     val total = FreqMap.this.total + fm.total
   }
 
-  def --(fm: FreqMap[T]) = new FreqMap[T] {
+  def --(fm: FreqMap[T]): FreqMap[T] = new FreqMap[T] {
     val underlying = FreqMap.this.underlying transform {
       case (x,n) => n - fm.getCount(x).getOrElse(0)
     }
@@ -58,7 +58,7 @@ trait FreqMap[T] {
 }
 
 object FreqMap {
-  def empty[T] = new FreqMap[T] {
+  def empty[T]: FreqMap[T] = new FreqMap[T] {
     val underlying = scala.collection.immutable.Map.empty[T,Int]
     val total = 0
   }

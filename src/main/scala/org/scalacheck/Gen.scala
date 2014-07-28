@@ -107,7 +107,7 @@ sealed trait Gen[+T] {
   }
 
   /** Put a label on the generator to make test reports clearer */
-  def label(l: String) = new Gen[T] {
+  def label(l: String): Gen[T] = new Gen[T] {
     def doApply(p: P) = {
       val r = Gen.this.doApply(p)
       r.copy(l = r.labels + l)
