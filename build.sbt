@@ -3,7 +3,7 @@ import VersionKeys.scalaParserCombinatorsVersion
 
 name := "scalacheck"
 
-version := "1.11.5-SNAPSHOT"
+version := "1.11.5"
 
 organization := "org.scalacheck"
 
