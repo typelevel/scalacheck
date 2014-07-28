@@ -206,10 +206,4 @@ object Shrink {
       shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
     }
 
-  /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
-    *  whose relationship is described by the provided transformation functions.
-    *  (exponential functor map) */
-  def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U ⇒
-    st.shrink(to(u)).map(from)
-  }
 }
