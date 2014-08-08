@@ -1,7 +1,7 @@
 # A simple ScalaCheck sbt project
 
 This is a minimal project with a single test that is meant to be used to
-quickly get started with ScalaCheck.
+quickly get started with ScalaCheck and sbt.
 
 ## Setting up required software
 
@@ -28,23 +28,23 @@ the root directory of the project (the directory where the file `build.sbt` is
 located):
 
     examples/simple-sbt $ sbt test
-    Getting net.java.dev.jna jna 3.2.3 ...
-    Getting org.scala-sbt sbt 0.12.3 ...
+    Getting org.scala-sbt sbt 0.13.5 ...
     ...
     [info] Done updating.
-    [info] Compiling 1 Scala source to .../scala-2.10/test-classes...
-    [info] + Demo.myprop: OK, passed 100 tests.
-    [info] Passed: : Total 1, Failed 0, Errors 0, Passed 1, Skipped 0
-    [success] Total time: 10 s, completed May 23, 2013 8:09:01 AM
+    [info] Compiling 1 Scala source to .../scala-2.11/test-classes...
+    [info] + Demo.myprop: OK, passed 33 tests.
+    [info] Passed: Total 1, Failed 0, Errors 0, Passed 1
+    [success] Total time: 1 s, completed Aug 4, 2014 6:02:27 PM
 
 sbt will automatically download all needed dependencies. The output from the
 above command might look differently if you already have some or all
 dependencies installed or cached.
 
 The last three lines of the output is what you should look for in your own
-output. It tells us that the property `Demo.myprop` passed 100 evaluations, and
+output. It tells us that the property `Demo.myprop` passed 33 evaluations, and
 then gives a summary of the results (in this case, there's only one property,
-so the summary is not that interesting).
+so the summary is not that interesting). The number of evaluations is configured in
+`build.sbt` with `-minSuccessfulTests` parameter.
 
 Now you can go ahead and experiment by modifying the existing property or
 adding new ones. sbt will pick up any Scala file that contains ScalaCheck

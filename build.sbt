@@ -49,7 +49,7 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra := (
+pomExtra := {
   <scm>
     <url>https://github.com/rickynils/scalacheck</url>
     <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
@@ -60,4 +60,4 @@ pomExtra := (
       <name>Rickard Nilsson</name>
     </developer>
   </developers>
-)
+}
