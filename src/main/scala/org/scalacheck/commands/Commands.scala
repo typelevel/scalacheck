@@ -153,18 +153,17 @@ trait Commands {
     def postCondition(state: State, result: Try[Null]) = true
   }
 
-  /** A property that can be used to test this [[Commands]]
-   *  specification.
+  /** A property that can be used to test this [[Commands]] specification.
    *
-   *  The parameter [[threadCount]] specifies the number of commands that might
+   *  The parameter `threadCount` specifies the number of commands that might
    *  be executed in parallel. Defaults to one, which means the commands will
    *  only be run serially for the same [[Sut]] instance. Distinct [[Sut]]
    *  instances might still receive commands in parallel, if the
    *  [[Test.Parameters.workers]] parameter is larger than one. Setting
-   *  [[threadCount]] higher than one enables ScalaCheck to reveal
+   *  `threadCount` higher than one enables ScalaCheck to reveal
    *  thread-related issues in your system under test.
    *
-   *  When setting [[threadCount]] larger than one, ScalaCheck must evaluate
+   *  When setting `threadCount` larger than one, ScalaCheck must evaluate
    *  all possible command interleavings (and the end [[State]] instances
    *  they produce), since parallel command execution is non-deterministic.
    *  ScalaCheck tries out all possible end states with the
@@ -173,9 +172,9 @@ trait Commands {
    *  executions). If it fails to find an end state that satisfies the
    *  postcondition, the test fails.
    *  However, the number of possible end states grows rapidly with increasing
-   *  values of [[threadCount]]. Therefore, the lengths of the parallel command
+   *  values of `threadCount`. Therefore, the lengths of the parallel command
    *  sequences are limited so that the number of possible end states don't
-   *  exceed [[maxParComb]]. The default value of [[maxParComb]] is 1000000. */
+   *  exceed `maxParComb`. The default value of `maxParComb` is 1000000. */
   final def property(threadCount: Int = 1, maxParComb: Int = 1000000): Prop = {
     val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
 
