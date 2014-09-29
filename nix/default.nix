@@ -216,6 +216,18 @@ in rec {
   };
 
   scalacheckVersions = {
+    "1.11.6" = {
+      rev = "229e54afc4700a9ccb70e18ee5527e01a004ee66";
+      sha256 = "02gsb73ajzw17q2n85wyd04vrljgzxz133qf3n4crvy902ablzsw";
+      prebuiltSha256 = {
+        "2.11" = "0mxn075xsk7bk9454a4p83slvh4am2im4azj7zpbb3p3lxbj23cm";
+        "2.10" = "12h1y7kg4cxbbzaf4q7774q3z92rd99kkp5la15br18j0z2pb0iy";
+        "2.9.3" = "11w3lcpxxy2f3agvqsqlp9cfvhj08z4a7h6fa6xphmy8nwcm2q4f";
+      };
+      scalaVersions = {
+        inherit (scalaVersions) "2.11" "2.10" "2.9.3";
+      };
+    };
     "1.11.5" = {
       rev = "229e54afc4700a9ccb70e18ee5527e01a004ee66";
       sha256 = "02gsb73ajzw17q2n85wyd04vrljgzxz133qf3n4crvy902ablzsw";
