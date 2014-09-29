@@ -15,3 +15,6 @@
 /project/project/
 /project/target/
 /project/build/target
+
+/examples/simple-sbt/project/
+/examples/simple-sbt/target/

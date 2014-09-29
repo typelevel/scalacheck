@@ -60,7 +60,7 @@ class ScalaCheckFramework extends Framework {
           for (l <- loggers) {
             import Pretty._
             val verbosityOpts = Set("-verbosity", "-v")
-            val verbosity = args.dropWhile(e => verbosityOpts(e)).headOption.map(_.toInt).getOrElse(0)
+            val verbosity = args.grouped(2).filter(twos => verbosityOpts(twos.head)).toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
             l.info(
               (if (r.passed) "+ " else "! ") + n + ": " + pretty(r, Params(verbosity))
             )
