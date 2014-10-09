@@ -18,6 +18,56 @@ sealed abstract class Arbitrary[T] {
   val arbitrary: Gen[T]
 }
 
+sealed abstract class LowPriorityArbitrary {
+  import Arbitrary.arbitrary
+  import Gen.containerOf
+
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
+   *  (such as lists, arrays, streams, etc). The maximum size of the container
+   *  depends on the size generation parameter. */
+  implicit def arbContainer[C[_],T](implicit
+    a: Arbitrary[T], b: Buildable[T,C], t: C[T] => Traversable[T]
+  ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
+
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container
+   *  (such as maps, etc). The maximum size of the container depends on the size
+   *  generation parameter. */
+  implicit def arbContainer2[C[_,_],T,U](implicit
+    a: Arbitrary[(T,U)], b: Buildable2[T,U,C], t: C[T,U] => Traversable[(T,U)]
+  ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
+
+  /** low priority Arbitrary instance of Function1 */
+  implicit def arbFunction1[T1,R](implicit a: Arbitrary[R]
+  ): Arbitrary[T1 => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1) => r
+  )
+
+  /** low priority Arbitrary instance of Function2 */
+  implicit def arbFunction2[T1,T2,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2) => r
+  )
+
+  /** low priority Arbitrary instance of Function3 */
+  implicit def arbFunction3[T1,T2,T3,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3) => r
+  )
+
+  /** low priority Arbitrary instance of Function4 */
+  implicit def arbFunction4[T1,T2,T3,T4,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4) => r
+  )
+
+  /** low priority Arbitrary instance of Function5 */
+  implicit def arbFunction5[T1,T2,T3,T4,T5,R](implicit a: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4,T5) => R] = Arbitrary(
+    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5) => r
+  )
+
+}
+
 /** Defines implicit [[org.scalacheck.Arbitrary]] instances for common types.
  *  <p>
  *  ScalaCheck
@@ -55,7 +105,7 @@ sealed abstract class Arbitrary[T] {
  *  generators.
  *  </p>
  */
-object Arbitrary {
+object Arbitrary extends LowPriorityArbitrary {
 
   import Gen.{const, choose, sized, frequency, oneOf, containerOf, resize}
   import collection.{immutable, mutable}
@@ -277,51 +327,71 @@ object Arbitrary {
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
-   *  (such as lists, arrays, streams, etc). The maximum size of the container
-   *  depends on the size generation parameter. */
-  implicit def arbContainer[C[_],T](implicit
-    a: Arbitrary[T], b: Buildable[T,C], t: C[T] => Traversable[T]
-  ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
-
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container
-   *  (such as maps, etc). The maximum size of the container depends on the size
-   *  generation parameter. */
-  implicit def arbContainer2[C[_,_],T,U](implicit
-    a: Arbitrary[(T,U)], b: Buildable2[T,U,C], t: C[T,U] => Traversable[(T,U)]
-  ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
-
   // Functions //
+  private def functionArbSize(arity: Int) = math.pow(100000, 1.0 / arity).toInt
+
+  private def arbF1[T1,R](
+    a1: Arbitrary[T1], r: Arbitrary[R], size: Int
+  ): Arbitrary[T1 => R] = Arbitrary{
+    val mapGen = Gen.mapOfN(size, arbTuple2(a1, r).arbitrary)
+    for{
+      map <- mapGen; default <- r.arbitrary
+    } yield map.getOrElse(_, default)
+  }
 
   /** Arbitrary instance of Function1 */
-  implicit def arbFunction1[T1,R](implicit a: Arbitrary[R]
-  ): Arbitrary[T1 => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1) => r
-  )
+  implicit def arbitraryFunction1[T1,R](
+    implicit a1: Arbitrary[T1], r: Arbitrary[R]
+  ): Arbitrary[T1 => R] = arbF1(a1, r, functionArbSize(1))
 
   /** Arbitrary instance of Function2 */
-  implicit def arbFunction2[T1,T2,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2) => r
-  )
+  implicit def arbitraryFunction2[T1,T2,R](
+    implicit a1: Arbitrary[T1], a2: Arbitrary[T2], r: Arbitrary[R]
+  ): Arbitrary[(T1,T2) => R] = {
+    val size = functionArbSize(2)
+    val arb2 = arbF1(a2, r, size)
+    val arb1 = arbF1(a1, arb2, size)
+    Arbitrary(arb1.arbitrary map (f => Function.uncurried(f)))
+  }
 
   /** Arbitrary instance of Function3 */
-  implicit def arbFunction3[T1,T2,T3,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3) => r
-  )
+  implicit def arbitraryFunction3[T1,T2,T3,R](
+    implicit a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    r: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3) => R] = {
+    val size = functionArbSize(3)
+    val arb3 = arbF1(a3, r, size)
+    val arb2 = arbF1(a2, arb3, size)
+    val arb1 = arbF1(a1, arb2, size)
+    Arbitrary(arb1.arbitrary map (f => Function.uncurried(f)))
+  }
 
   /** Arbitrary instance of Function4 */
-  implicit def arbFunction4[T1,T2,T3,T4,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3,T4) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4) => r
-  )
+  implicit def arbitraryFunction4[T1,T2,T3,T4,R](
+    implicit a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], r: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4) => R] = {
+    val size = functionArbSize(4)
+    val arb4 = arbF1(a4, r, size)
+    val arb3 = arbF1(a3, arb4, size)
+    val arb2 = arbF1(a2, arb3, size)
+    val arb1 = arbF1(a1, arb2, size)
+    Arbitrary(arb1.arbitrary map (f => Function.uncurried(f)))
+  }
 
   /** Arbitrary instance of Function5 */
-  implicit def arbFunction5[T1,T2,T3,T4,T5,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3,T4,T5) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5) => r
-  )
+  implicit def arbitraryFunction5[T1,T2,T3,T4,T5,R](implicit
+    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3],
+    a4: Arbitrary[T4], a5: Arbitrary[T5], r: Arbitrary[R]
+  ): Arbitrary[(T1,T2,T3,T4,T5) => R] = {
+    val size = functionArbSize(5)
+    val arb5 = arbF1(a5, r, size)
+    val arb4 = arbF1(a4, arb5, size)
+    val arb3 = arbF1(a3, arb4, size)
+    val arb2 = arbF1(a2, arb3, size)
+    val arb1 = arbF1(a1, arb2, size)
+    Arbitrary(arb1.arbitrary map (f => Function.uncurried(f)))
+  }
 
 
   // Tuples //
