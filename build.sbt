@@ -13,7 +13,7 @@ homepage := Some(url("http://www.scalacheck.org"))
 
 scalaVersion := "2.11.1"
 
-scalaParserCombinatorsVersion := "1.0.1"
+scalaParserCombinatorsVersion := "1.0.2"
 
 crossScalaVersions := Seq("2.10.4", "2.11.1")
 
