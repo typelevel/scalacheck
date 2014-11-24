@@ -11,7 +11,7 @@ package org.scalacheck
 
 import language.higherKinds
 
-import util.{Buildable,Buildable2}
+import util.Buildable
 import scala.collection.{ JavaConversions => jcl }
 
 sealed abstract class Shrink[T] {
@@ -43,7 +43,7 @@ object Shrink {
 
   /** Shrink instance of container */
   implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
-    b: Buildable[T,C]
+    b: Buildable[T,C[T]]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
     val ys = v(xs)
     val zs = ys.toStream
@@ -52,7 +52,7 @@ object Shrink {
 
   /** Shrink instance of container2 */
   implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
-    b: Buildable2[T,U,C]
+    b: Buildable[(T,U),C[T,U]]
   ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
     val ys = v(xs)
     val zs = ys.toStream

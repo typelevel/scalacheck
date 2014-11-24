@@ -18,8 +18,8 @@ import java.util.Date
 object GenSpecification extends Properties("Gen") {
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
-      (someFailing(l) && (sequence[List,Int](l) == fail)) ||
-      (noneFailing(l) && forAll(sequence[List,Int](l)) { _.length == l.length })
+      (someFailing(l) && (sequence[List[Int],Int](l) == fail)) ||
+      (noneFailing(l) && forAll(sequence[List[Int],Int](l)) { _.length == l.length })
     )
 
   property("frequency 1") = {

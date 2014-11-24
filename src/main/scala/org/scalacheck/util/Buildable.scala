@@ -12,19 +12,11 @@ package org.scalacheck.util
 import language.higherKinds
 
 import collection._
+import generic.CanBuildFrom
 
-trait Buildable[T,C[_]] {
-  def builder: mutable.Builder[T,C[T]]
-  def fromIterable(it: Traversable[T]): C[T] = {
-    val b = builder
-    b ++= it
-    b.result()
-  }
-}
-
-trait Buildable2[T,U,C[_,_]] {
-  def builder: mutable.Builder[(T,U),C[T,U]]
-  def fromIterable(it: Traversable[(T,U)]): C[T,U] = {
+trait Buildable[T,C] {
+  def builder: mutable.Builder[T,C]
+  def fromIterable(it: Traversable[T]): C = {
     val b = builder
     b ++= it
     b.result()
@@ -32,15 +24,14 @@ trait Buildable2[T,U,C[_,_]] {
 }
 
 object Buildable {
-  import generic.CanBuildFrom
 
-  implicit def buildableCanBuildFrom[T, C[_]](implicit c: CanBuildFrom[C[_], T, C[T]]) = 
-    new Buildable[T, C] {
+  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]) =
+    new Buildable[T,C] {
       def builder = c.apply
     }
 
   import java.util.ArrayList
-  implicit def buildableArrayList[T] = new Buildable[T,ArrayList] {
+  implicit def buildableArrayList[T] = new Buildable[T,ArrayList[T]] {
     def builder = new mutable.Builder[T,ArrayList[T]] {
       val al = new ArrayList[T]
       def +=(x: T) = {
@@ -53,9 +44,9 @@ object Buildable {
   }
 
 }
-
+/*
 object Buildable2 {
-  
+
   implicit def buildableMutableMap[T,U] = new Buildable2[T,U,mutable.Map] {
     def builder = mutable.Map.newBuilder
   }
@@ -77,3 +68,4 @@ object Buildable2 {
   }
 
 }
+*/

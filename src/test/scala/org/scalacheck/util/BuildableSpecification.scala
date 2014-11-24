@@ -16,7 +16,7 @@ import collection._
 
 object BuildableSpecification {
   def container[C[_]](implicit
-    evb: Buildable[String, C],
+    evb: Buildable[String, C[String]],
     evt: C[String] => Traversable[String]
   ) = Gen.containerOf[C, String](Gen.alphaStr)
 

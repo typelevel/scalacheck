@@ -11,7 +11,7 @@ package org.scalacheck
 
 import language.higherKinds
 
-import util.{FreqMap, Buildable, Buildable2}
+import util.{FreqMap, Buildable}
 
 
 sealed abstract class Arbitrary[T] {
@@ -57,7 +57,7 @@ sealed abstract class Arbitrary[T] {
  */
 object Arbitrary {
 
-  import Gen.{const, choose, sized, frequency, oneOf, containerOf, resize}
+  import Gen.{const, choose, sized, frequency, oneOf, buildableOf, resize}
   import collection.{immutable, mutable}
   import java.util.Date
 
@@ -254,6 +254,14 @@ object Arbitrary {
     }))
 
 
+  // Specialised collections //
+
+  /** Arbitrary instance of [[scala.collection.BitSet]] */
+  implicit lazy val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
+    buildableOf[collection.BitSet,Int](Gen.posNum[Int])
+  )
+
+
   // Higher-order types //
 
   /** Arbitrary instance of [[org.scalacheck.Gen]] */
@@ -281,15 +289,15 @@ object Arbitrary {
    *  (such as lists, arrays, streams, etc). The maximum size of the container
    *  depends on the size generation parameter. */
   implicit def arbContainer[C[_],T](implicit
-    a: Arbitrary[T], b: Buildable[T,C], t: C[T] => Traversable[T]
-  ): Arbitrary[C[T]] = Arbitrary(containerOf[C,T](arbitrary[T]))
+    a: Arbitrary[T], b: Buildable[T,C[T]], t: C[T] => Traversable[T]
+  ): Arbitrary[C[T]] = Arbitrary(buildableOf[C[T],T](arbitrary[T]))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable2]] container
-   *  (such as maps, etc). The maximum size of the container depends on the size
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
+   *  (such as maps). The maximum size of the container depends on the size
    *  generation parameter. */
   implicit def arbContainer2[C[_,_],T,U](implicit
-    a: Arbitrary[(T,U)], b: Buildable2[T,U,C], t: C[T,U] => Traversable[(T,U)]
-  ): Arbitrary[C[T,U]] = Arbitrary(containerOf[C,T,U](arbitrary[(T,U)]))
+    a: Arbitrary[(T,U)], b: Buildable[(T,U),C[T,U]], t: C[T,U] => Traversable[(T,U)]
+  ): Arbitrary[C[T,U]] = Arbitrary(buildableOf[C[T,U],(T,U)](arbitrary[(T,U)]))
 
   // Functions //
 
