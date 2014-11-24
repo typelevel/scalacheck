@@ -18,7 +18,7 @@ import org.scalacheck.Test
 import math.round
 
 
-sealed trait Pretty {
+sealed trait Pretty extends Serializable {
   def apply(prms: Pretty.Params): String
 
   def map(f: String => String) = Pretty(prms => f(Pretty.this(prms)))

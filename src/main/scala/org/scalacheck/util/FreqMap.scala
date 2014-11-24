@@ -9,7 +9,7 @@
 
 package org.scalacheck.util
 
-trait FreqMap[T] {
+sealed trait FreqMap[T] extends Serializable {
   protected val underlying: scala.collection.immutable.Map[T,Int]
   val total: Int
 
