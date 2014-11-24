@@ -17,9 +17,9 @@ object CommandsSpecification extends Properties("Commands") {
 
   object TestCommands extends Commands {
     case class Counter(var n: Int) {
-      val lock = new concurrent.Lock
-      def inc = { lock.acquire; n += 1; lock.release; n }
-      def dec = { lock.acquire; n -= 1; lock.release; n }
+      val lock = new java.util.concurrent.locks.ReentrantLock
+      def inc = { lock.lock; n += 1; lock.unlock; n }
+      def dec = { lock.lock; n -= 1; lock.unlock; n }
       //def inc = { n += 1; n }
       //def dec = { n -= 1; n }
       def get = n
