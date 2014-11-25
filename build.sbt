@@ -1,61 +1,74 @@
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 import VersionKeys.scalaParserCombinatorsVersion
 
-name := "scalacheck"
+lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
-version := "1.12.1-SNAPSHOT"
+  name := "scalacheck",
 
-organization := "org.scalacheck"
+  version := "1.12.1-SNAPSHOT",
 
-licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
+  organization := "org.scalacheck",
 
-homepage := Some(url("http://www.scalacheck.org"))
+  licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
 
-scalaVersion := "2.11.4"
+  homepage := Some(url("http://www.scalacheck.org")),
 
-scalaParserCombinatorsVersion := "1.0.2"
+  scalaVersion := "2.11.4",
 
-crossScalaVersions := Seq("2.10.4", "2.11.4")
+  scalaParserCombinatorsVersion := "1.0.2",
 
-mimaDefaultSettings
+  crossScalaVersions := Seq("2.10.4", "2.11.4"),
 
-previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.0")
+  previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.0"),
 
-resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases"
+  unmanagedSourceDirectories in Compile += baseDirectory.value / "src-shared" / "main" / "scala",
 
-libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
+  unmanagedSourceDirectories in Test += baseDirectory.value / "src-shared" / "test" / "scala",
 
-libraryDependencies ++= {
-  if (scalaVersion.value startsWith "2.10") Seq.empty
-  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
-}
+  resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
-javacOptions += "-Xmx1024M"
+  libraryDependencies ++= {
+    if (scalaVersion.value startsWith "2.10") Seq.empty
+    else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
+  },
 
-scalacOptions ++= Seq("-deprecation", "-feature")
+  javacOptions += "-Xmx1024M",
 
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
-                     else ("releases", "service/local/staging/deploy/maven2")
-  Some(name at nexus + path)
-}
+  scalacOptions ++= Seq("-deprecation", "-feature"),
 
-publishMavenStyle := true
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
+                       else ("releases", "service/local/staging/deploy/maven2")
+    Some(name at nexus + path)
+  },
 
-publishArtifact in Test := false
+  publishMavenStyle := true,
 
-pomIncludeRepository := { _ => false }
+  publishArtifact in Test := false,
 
-pomExtra := {
-  <scm>
-    <url>https://github.com/rickynils/scalacheck</url>
-    <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>rickynils</id>
-      <name>Rickard Nilsson</name>
-    </developer>
-  </developers>
-}
+  pomIncludeRepository := { _ => false },
+
+  pomExtra := {
+    <scm>
+      <url>https://github.com/rickynils/scalacheck</url>
+      <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>rickynils</id>
+        <name>Rickard Nilsson</name>
+      </developer>
+    </developers>
+  }
+)
+
+lazy val js = project.in(file("js"))
+  .settings(sharedSettings: _*)
+  .settings(scalaJSSettings: _*)
+
+lazy val jvm = project.in(file("jvm"))
+  .settings(sharedSettings: _*)
+  .settings(
+    libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
+  )

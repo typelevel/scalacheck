@@ -6,7 +6,7 @@
 /.settings
 /dist
 /.Test.scala.swp
-/target
+target
 /lib_managed
 /src_managed
 
