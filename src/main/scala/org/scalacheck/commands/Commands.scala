@@ -12,6 +12,12 @@ package org.scalacheck.commands
 import org.scalacheck._
 import scala.util.{Try, Success, Failure}
 
+/** An API for stateful testing in ScalaCheck.
+ *
+ *  For an implemtation overview, see the examples in ScalaCheck's source tree.
+ *
+ *  @since 1.12.0
+ */
 trait Commands {
 
   /** The abstract state type. Must be immutable.
