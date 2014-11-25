@@ -31,6 +31,9 @@ What's new in version 1.12.0?
 The big news in ScalaCheck 1.12.0 is a new implementation of the Commands API,
 introduced at ScalaDays 2014 in Berlin.
 
+Support for Scala 2.9 has been dropped in ScalaCheck 1.12.0. Only Scala 2.10
+and 2.11 are supported now.
+
 Other than that there has been minor fixes and improvements since 1.11.6. Also,
 all methods and classes that were deprecated in 1.11.6 have now been removed
 from ScalaCheck. So you might experience build errors if your code was out of
