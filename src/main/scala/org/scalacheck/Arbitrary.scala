@@ -94,20 +94,20 @@ object Arbitrary {
 
   /** Arbitrary instance of Float */
   implicit lazy val arbFloat: Arbitrary[Float] = Arbitrary(
-    Gen.chooseNum(
-      Float.MinValue, Float.MaxValue
-      // I find that including these by default is a little TOO testy.
-      // Float.Epsilon, Float.NaN, Float.PositiveInfinity, Float.NegativeInfinity
-    )
+    for {
+      s <- choose(0, 1)
+      e <- choose(0, 0xfe)
+      m <- choose(0, 0x7fffff)
+    } yield java.lang.Float.intBitsToFloat((s << 31) | (e << 23) | m)
   )
 
   /** Arbitrary instance of Double */
   implicit lazy val arbDouble: Arbitrary[Double] = Arbitrary(
-    Gen.chooseNum(
-      Double.MinValue / 2, Double.MaxValue / 2
-      // As above.  Perhaps behind some option?
-      // Double.Epsilon, Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity
-    )
+    for {
+      s <- choose(0L, 1L)
+      e <- choose(0L, 0x7feL)
+      m <- choose(0L, 0xfffffffffffffL)
+    } yield java.lang.Double.longBitsToDouble((s << 63) | (e << 52) | m)
   )
 
   /** Arbitrary instance of Char */
