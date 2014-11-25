@@ -36,6 +36,12 @@ all methods and classes that were deprecated in 1.11.6 have now been removed
 from ScalaCheck. So you might experience build errors if your code was out of
 date with 1.11.6.
 
+The type signature of Gen.sequence has been slightly changed (generalised), and
+the Gen.containerOf[C[_,_],T]-methods have been removed. It you used them you
+should now use one of the more general Gen.buildableOf-methods. The
+Gen.containerOf[C[_],T]-methods have been kept as a convenience.
+
+
 ScalaCheck links:
 
   * Official documentation, downloads etc: http://www.scalacheck.org
