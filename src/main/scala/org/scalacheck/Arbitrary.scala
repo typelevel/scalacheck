@@ -256,7 +256,7 @@ object Arbitrary {
 
   // Specialised collections //
 
-  /** Arbitrary instance of [[scala.collection.BitSet]] */
+  /** Arbitrary instance of scala.collection.BitSet */
   implicit lazy val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
     buildableOf[collection.BitSet,Int](sized(sz => choose(0,sz)))
   )
