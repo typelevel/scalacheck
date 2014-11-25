@@ -294,7 +294,6 @@ object Test {
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {
     import params._
-    import concurrent._
 
     assertParams(params)
 
@@ -302,8 +301,6 @@ object Test {
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
     val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
-    val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
-    implicit val ec = ExecutionContext.fromExecutor(tp)
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests
@@ -360,11 +357,15 @@ object Test {
       }
     }
 
-    try {
-      val start = System.currentTimeMillis
-      val r =
-        if(workers < 2) workerFun(0)
-        else {
+    val start = System.currentTimeMillis
+
+    val r =
+      if(workers < 2) workerFun(0)
+      else {
+        import concurrent._
+        val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
+        implicit val ec = ExecutionContext.fromExecutor(tp)
+        try {
           val fs = List.range(0,workers) map (idx => Future {
             params.customClassLoader.map(
               Thread.currentThread.setContextClassLoader(_)
@@ -374,14 +375,15 @@ object Test {
           val zeroRes = Result(Passed,0,0,FreqMap.empty[Set[Any]],0)
           val res = Future.fold(fs)(zeroRes)(mergeResults)
           Await.result(res, concurrent.duration.Duration.Inf)
+        } finally {
+          stop = true
+          tp.shutdown()
         }
-      val timedRes = r.copy(time = System.currentTimeMillis-start)
-      params.testCallback.onTestResult("", timedRes)
-      timedRes
-    } finally {
-      stop = true
-      tp.shutdown()
-    }
+      }
+
+    val timedRes = r.copy(time = System.currentTimeMillis-start)
+    params.testCallback.onTestResult("", timedRes)
+    timedRes
   }
 
   /** Check a set of properties. */
