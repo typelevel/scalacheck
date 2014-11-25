@@ -26,10 +26,8 @@ resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releas
 libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
 
 libraryDependencies ++= {
-  scalaVersion.value match {
-    case v if (v startsWith "2.9") || (v startsWith "2.10") => Seq.empty
-    case _ => Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
-  }
+  if (scalaVersion.value startsWith "2.10") Seq.empty
+  else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
 }
 
 javacOptions += "-Xmx1024M"
