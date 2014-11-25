@@ -258,7 +258,7 @@ object Arbitrary {
 
   /** Arbitrary instance of [[scala.collection.BitSet]] */
   implicit lazy val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
-    buildableOf[collection.BitSet,Int](Gen.posNum[Int])
+    buildableOf[collection.BitSet,Int](sized(sz => choose(0,sz)))
   )
 
 
