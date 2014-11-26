@@ -1,6 +1,9 @@
 language: scala
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test
+  - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile $PLATFORM/test
+env:
+  - PLATFORM=jvm
+  - PLATFORM=js
 scala:
   - 2.10.4
   - 2.11.4
