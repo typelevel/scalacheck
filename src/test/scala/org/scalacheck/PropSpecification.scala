@@ -148,9 +148,9 @@ object PropSpecification extends Properties("Prop") {
     atLeastOne(l:_*)
   }
 
-  property("throws") = forAll { n: Int =>
-    if (n == 0) throws(classOf[ArithmeticException]) { 1/0 }
-    else true
+  property("throws") = throws(classOf[java.lang.Exception]) {
+    val s: String = null
+    s.length
   }
 
   property("sizedProp") = {

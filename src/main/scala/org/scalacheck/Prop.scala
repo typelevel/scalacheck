@@ -12,10 +12,10 @@ package org.scalacheck
 import language.implicitConversions
 import language.reflectiveCalls
 
-import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
+import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
 import scala.annotation.tailrec
 
-trait Prop {
+trait Prop extends Testable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
