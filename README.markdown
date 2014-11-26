@@ -1,5 +1,7 @@
 # ScalaCheck
 
+[![Build Status](https://secure.travis-ci.org/rickynils/scalacheck.png?branch=master)](http://travis-ci.org/rickynils/scalacheck)
+
 ScalaCheck is a library written in [Scala](http://www.scala-lang.org/) and 
 used for automated property-based testing of Scala or Java programs.
 ScalaCheck was originally inspired by the Haskell library
