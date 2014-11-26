@@ -1,5 +1,4 @@
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
-import VersionKeys.scalaParserCombinatorsVersion
 
 lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
@@ -15,8 +14,6 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   scalaVersion := "2.11.4",
 
-  scalaParserCombinatorsVersion := "1.0.2",
-
   crossScalaVersions := Seq("2.10.4", "2.11.4"),
 
   previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.0"),
@@ -29,7 +26,7 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   libraryDependencies ++= {
     if (scalaVersion.value startsWith "2.10") Seq.empty
-    else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % scalaParserCombinatorsVersion.value)
+    else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.2")
   },
 
   javacOptions += "-Xmx1024M",
