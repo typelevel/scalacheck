@@ -19,6 +19,8 @@ The following is what you need to add to your `build.sbt` file to make the
 ScalaCheck test runner work:
 
 ```
+resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
 libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.12.1-SNAPSHOT" % "test"
 
 ScalaJSKeys.scalaJSTestFramework := "org.scalacheck.ScalaCheckFramework"
