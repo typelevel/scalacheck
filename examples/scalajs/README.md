@@ -1,6 +1,6 @@
 # Using ScalaCheck with Scala.js
 
-ScalaCheck has experimental support for [Scala.js](https://www.scala-js.org/).
+ScalaCheck has experimental support for [Scala.js](http://www.scala-js.org/).
 The current master branch of ScalaCheck has been ported to work with Scala.js,
 and a snapshot version has been released. Not all parts of ScalaCheck works
 yet, but around 40% of ScalaCheck's own test suite runs fine under Scala.js.
