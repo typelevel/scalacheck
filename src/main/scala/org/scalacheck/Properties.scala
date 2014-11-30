@@ -71,9 +71,14 @@ class Properties(val name: String) extends Prop {
     }
   }
 
-  /** Adds all properties from another property collection to this one.
-   *  An optional prefix can be prepended to each included property's name. */
-  def include(ps: Properties, prefix: String = "") = for((n,p) <- ps.properties) property(prefix + n) = p
+  /** Adds all properties from another property collection to this one */
+  def include(ps: Properties): Unit =
+    include(ps, prefix = "")
+
+  /** Adds all properties from another property collection to this one
+   *  with a prefix this is prepended to each included property's name. */
+  def include(ps: Properties, prefix: String): Unit =
+    for((n,p) <- ps.properties) property(prefix + n) = p
 
   /** Used for specifying properties. Usage:
    *  {{{
