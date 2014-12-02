@@ -4,7 +4,7 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   name := "scalacheck",
 
-  version := "1.12.1-SNAPSHOT",
+  version := "1.12.1",
 
   organization := "org.scalacheck",
 
