@@ -21,7 +21,7 @@ ScalaCheck test runner work:
 ```
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.12.1-SNAPSHOT" % "test"
+libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.12.2-SNAPSHOT" % "test"
 
 ScalaJSKeys.scalaJSTestFramework := "org.scalacheck.ScalaCheckFramework"
 ```
