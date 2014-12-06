@@ -53,9 +53,27 @@ object Pretty {
   def format(s: String, lead: String, trail: String, width: Int) =
     s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
 
+  private[this] def escapeControlChars(s: String): String = {
+    val builder = new StringBuilder
+    @annotation.tailrec
+    def loop(i: Int): Unit = {
+      if(i < s.length){
+        val c = s.codePointAt(i)
+        if(Character.isISOControl(c)){
+          builder.append("\\u%04x".format(c))
+        }else{
+          builder.append(s.charAt(i))
+        }
+        loop(i + 1)
+      }
+    }
+    loop(0)
+    builder.result()
+  }
+
   implicit def prettyAny(t: Any) = Pretty { p => t.toString }
 
-  implicit def prettyString(t: String) = Pretty { p => "\""++t++"\"" }
+  implicit def prettyString(t: String) = Pretty { p => "\""++escapeControlChars(t)++"\"" }
 
   implicit def prettyList(l: List[Any]) = Pretty { p =>
     l.map("\""+_+"\"").mkString("List(", ", ", ")")
