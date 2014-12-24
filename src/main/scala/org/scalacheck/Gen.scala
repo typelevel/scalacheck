@@ -122,10 +122,10 @@ sealed trait Gen[+T] {
   def |:(l: String) = label(l)
 
   /** Put a label on the generator to make test reports clearer */
-  def :|(l: Symbol) = label(l.toString.drop(1))
+  def :|(l: Symbol) = label(l.name)
 
   /** Put a label on the generator to make test reports clearer */
-  def |:(l: Symbol) = label(l.toString.drop(1))
+  def |:(l: Symbol) = label(l.name)
 
 }
 

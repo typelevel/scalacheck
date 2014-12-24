@@ -137,10 +137,10 @@ trait Prop extends Testable {
   def |:(l: String) = label(l)
 
   /** Put a label on the property to make test reports clearer */
-  def :|(l: Symbol) = label(l.toString.drop(1))
+  def :|(l: Symbol) = label(l.name)
 
   /** Put a label on the property to make test reports clearer */
-  def |:(l: Symbol) = label(l.toString.drop(1))
+  def |:(l: Symbol) = label(l.name)
 
 }
 
