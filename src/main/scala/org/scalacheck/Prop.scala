@@ -244,7 +244,6 @@ object Prop {
       case (True, _) => r
 
       case (False, _) => this
-      case (_, False) => r
     }
 
     def ==>(r: Result) = (this.status, r.status) match {
