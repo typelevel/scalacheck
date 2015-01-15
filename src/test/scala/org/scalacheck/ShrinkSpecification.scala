@@ -20,7 +20,27 @@ object ShrinkSpecification extends Properties("Shrink") {
     else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
+  property("byte") = forAll { n: Byte =>
+    !shrink(n).contains(n)
+  }
+
+  property("short") = forAll { n: Short =>
+    !shrink(n).contains(n)
+  }
+
   property("int") = forAll { n: Int =>
+    !shrink(n).contains(n)
+  }
+
+  property("long") = forAll { n: Long =>
+    !shrink(n).contains(n)
+  }
+
+  property("float") = forAll { n: Float =>
+    !shrink(n).contains(n)
+  }
+
+  property("double") = forAll { n: Double =>
     !shrink(n).contains(n)
   }
 
@@ -28,8 +48,28 @@ object ShrinkSpecification extends Properties("Shrink") {
     !shrink(l).contains(l)
   }
 
+  property("non-zero byte") = forAll { n: Byte =>
+    (n != 0) ==> shrinkClosure(n).contains(0)
+  }
+
+  property("non-zero short") = forAll { n: Short =>
+    (n != 0) ==> shrinkClosure(n).contains(0)
+  }
+
   property("non-zero int") = forAll { n: Int =>
     (n != 0) ==> shrinkClosure(n).contains(0)
+  }
+
+  property("non-zero long") = forAll { n: Long =>
+    (n != 0) ==> shrinkClosure(n).contains(0)
+  }
+
+  property("non-zero float") = forAll { n: Float =>
+    (math.abs(n) > 0.000001f) ==> shrinkClosure(n).contains(0)
+  }
+
+  property("non-zero double") = forAll { n: Double =>
+    (math.abs(n) > 0.000001d) ==> shrinkClosure(n).contains(0)
   }
 
   property("non-empty list") = forAll { l: List[Int] =>
