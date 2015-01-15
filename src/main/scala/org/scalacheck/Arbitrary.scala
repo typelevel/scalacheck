@@ -55,7 +55,7 @@ sealed abstract class Arbitrary[T] {
  *  generators.
  *  </p>
  */
-object Arbitrary {
+object Arbitrary extends ArbitraryFromFunction {
 
   import Gen.{const, choose, sized, frequency, oneOf, buildableOf, resize}
   import collection.{immutable, mutable}
