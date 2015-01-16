@@ -46,4 +46,18 @@ object ShrinkSpecification extends Properties("Shrink") {
       Vector(vs: _*).toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
     }
   }
+
+  property("either shrinks") = forAll { e: Either[Int, Long] ⇒
+    !shrink(e).contains(e)
+  }
+
+  property("either left") = forAll { i: Int ⇒
+    val e: Either[Int, Long] = Left(i)
+    shrink(e).forall(_.isLeft)
+  }
+
+  property("either right") = forAll { i: Int ⇒
+    val e: Either[Long, Int] = Right(i)
+    shrink(e).forall(_.isRight)
+  }
 }

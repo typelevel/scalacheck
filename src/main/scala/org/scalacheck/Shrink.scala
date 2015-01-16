@@ -208,6 +208,11 @@ object Shrink {
       shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
     }
 
+  implicit def shrinkEither[T1:Shrink, T2:Shrink]: Shrink[Either[T1, T2]] =
+    Shrink { x =>
+      x.fold(shrink(_).map(Left(_)), shrink(_).map(Right(_)))
+    }
+
   /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
     *  whose relationship is described by the provided transformation functions.
     *  (exponential functor map) */
