@@ -26,6 +26,9 @@ import util.ConsoleReporter
  *  }
  *  }}}
  */
+import scala.scalajs.js.annotation.JSExportDescendentClasses
+
+@JSExportDescendentClasses
 class Properties(val name: String) extends Prop {
 
   import Test.cmdLineParser.{Success, NoSuccess}
