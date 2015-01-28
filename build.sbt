@@ -12,9 +12,9 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   homepage := Some(url("http://www.scalacheck.org")),
 
-  scalaVersion := "2.11.4",
+  scalaVersion := "2.11.5",
 
-  crossScalaVersions := Seq("2.10.4", "2.11.4"),
+  crossScalaVersions := Seq("2.10.4", "2.11.5"),
 
   previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.1"),
 
@@ -62,14 +62,14 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
-  .settings(scalaJSSettings: _*)
   .settings(
-    libraryDependencies += "org.scala-lang.modules.scalajs" %% "scalajs-test-bridge" % scalaJSVersion,
-    ScalaJSKeys.scalaJSTestFramework in Test := "org.scalacheck.ScalaCheckFramework"
-  )
+    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
+    testFrameworks := Seq(new TestFramework("org.scalacheck.ScalaCheckFramework"))
+  ).enablePlugins(ScalaJSPlugin)
 
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
-  )
+    libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0",
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % scalaJSVersion % "provided"
+)

@@ -1,11 +1,13 @@
 package org.scalacheck
+import scala.scalajs.js.annotation.JSExport
 
+@JSExport
 class PropClass extends Prop {
   // TODO: Give prop name when #90 is implemented
   def apply(prms: Gen.Parameters) = Prop.proved(prms)
 }
 
-class PropObject extends Prop {
+object PropObject extends Prop {
   // TODO: Give prop name when #90 is implemented
   def apply(prms: Gen.Parameters) = Prop.proved(prms)
 }

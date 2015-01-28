@@ -12,8 +12,12 @@ To get started, open `sbt` in this example project, and execute the task
 `test`. This should execute the ScalaCheck properties found in the `src/test` directory.
 
 You will find that test execution is very slow, but you can speed it up
-considerably by installing [Node.js](http://nodejs.org/), and running the sbt
-tast `fastOptStage::test` instead of `test`.
+considerably by installing [Node.js](http://nodejs.org/), and setting the sbt setting `scalaJSStage` to `FastOptStage`.
+For example, for a project `js` this can be set on the command line with:
+
+```
+set scalaJSStage in js := FastOptStage
+```
 
 The following is what you need to add to your `build.sbt` file to make the
 ScalaCheck test runner work:

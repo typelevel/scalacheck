@@ -2,7 +2,7 @@ Tests temporarily disabled for JS:
 
  * ArbitrarySpecification (failure)
  * commands/CommandsSpecification (exceptions)
- * examples/IntMapSpec (exceptions)
- * examples/StringUtils (failure)
+ * examples/IntMapSpec (compilation error (Requires BigInt, not in Scalajs https://github.com/scala-js/scala-js/issues/373))
+ * examples/StringUtils (one property only - failure)
  * GenSpecification (compilation error)
- * TestSpecification (exceptions)
+ * TestSpecification (two properties only - exceptions)

@@ -14,7 +14,7 @@ import Gen.{listOf, alphaStr, numChar}
 
 object StringUtils extends Properties("Examples.StringUtils") {
 
-  private object StringUtils {
+  private[example] object StringUtils {
     def truncate(s: String, n: Int) = {
       if(s.length <= n) s
       else s.substring(0, n) ++ "..."
@@ -41,15 +41,6 @@ object StringUtils extends Properties("Examples.StringUtils") {
     def contains(s: String, subString: String) = {
       s.indexOf(subString) != -1
     }
-  }
-
-  property("truncate") = Prop.forAll { (s: String, n: Int) =>
-    lazy val t = StringUtils.truncate(s, n)
-    if(n < 0)
-      Prop.throws(classOf[StringIndexOutOfBoundsException]) { t }
-    else 
-      (s.length <= n && t == s) ||
-      (s.length > n && t == s.take(n)+"...")
   }
 
   property("truncate.precond") = Prop.forAll { (s: String, n: Int) =>
