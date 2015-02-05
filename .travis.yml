@@ -6,7 +6,7 @@ env:
   - PLATFORM=js
 scala:
   - 2.10.4
-  - 2.11.4
+  - 2.11.5
 jdk:
   - openjdk7
 notifications:
