@@ -62,11 +62,10 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
-  .settings(scalaJSSettings: _*)
   .settings(
-    libraryDependencies += "org.scala-lang.modules.scalajs" %% "scalajs-test-bridge" % scalaJSVersion,
-    ScalaJSKeys.scalaJSTestFramework in Test := "org.scalacheck.ScalaCheckFramework"
+    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
+  .enablePlugins(ScalaJSPlugin)
 
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)

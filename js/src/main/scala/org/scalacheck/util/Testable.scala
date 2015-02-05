@@ -1,4 +1,8 @@
 package org.scalacheck.util
 
+import scala.scalajs.js.annotation._
+
 /** Marks a type as testable */
-trait Testable extends scalajs.test.Test { }
+@JSExportDescendentClasses
+@JSExportDescendentObjects
+trait Testable { }

@@ -15,6 +15,12 @@ import language.reflectiveCalls
 import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
 import scala.annotation.tailrec
 
+/** Helper class to satisfy ScalaJS compilation. Do not use this directly,
+ *  use [[Prop.apply]] instead. */
+class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
+  def apply(prms: Gen.Parameters) = f(prms)
+}
+
 trait Prop extends Testable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
@@ -282,11 +288,11 @@ object Prop {
   }
 
   /** Create a new property from the given function. */
-  def apply(f: Parameters => Result): Prop = new Prop {
-    def apply(prms: Parameters) = try f(prms) catch {
+  def apply(f: Parameters => Result): Prop = new PropFromFun(prms =>
+    try f(prms) catch {
       case e: Throwable => Result(status = Exception(e))
     }
-  }
+  )
 
   /** Create a property that returns the given result */
   def apply(r: Result): Prop = Prop.apply(prms => r)
@@ -917,8 +923,8 @@ object Prop {
 
   /** Ensures that the property expression passed in completes within the given
    *  space of time. */
-  def within(maximumMs: Long)(wrappedProp: => Prop): Prop = new Prop {
-    @tailrec private def attempt(prms: Parameters, endTime: Long): Result = {
+  def within(maximumMs: Long)(wrappedProp: => Prop): Prop = {
+    @tailrec def attempt(prms: Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
         (if(result.failure) result else Result(status = False)).label("Timeout")
@@ -927,6 +933,6 @@ object Prop {
         else attempt(prms, endTime)
       }
     }
-    def apply(prms: Parameters) = attempt(prms, System.currentTimeMillis + maximumMs)
+    Prop.apply(prms => attempt(prms, System.currentTimeMillis + maximumMs))
   }
 }
