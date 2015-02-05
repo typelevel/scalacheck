@@ -12,9 +12,9 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   homepage := Some(url("http://www.scalacheck.org")),
 
-  scalaVersion := "2.11.4",
+  scalaVersion := "2.11.5",
 
-  crossScalaVersions := Seq("2.10.4", "2.11.4"),
+  crossScalaVersions := Seq("2.10.4", "2.11.5"),
 
   previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.1"),
 
