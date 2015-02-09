@@ -160,11 +160,11 @@ trait Commands {
   }
   
    /** A command sequence that is executed completely even if some commands fail. */
-  def commandSequense(head: Command, tail: Command*) = new CommandSequense(head +: tail)
+  def commandSequence(head: Command, tail: Command*) = new CommandSequence(head +: tail)
 
-  case class CommandSequense(commands: Seq[Command]) extends SuccessCommand {
+  case class CommandSequence(commands: Seq[Command]) extends SuccessCommand {
     lazy val headCommand: Command = if (commands.isEmpty) NoOp else commands.head
-    lazy val tailCommands: Command = if (commands.size <= 1) NoOp else new CommandSequense(commands.tail)
+    lazy val tailCommands: Command = if (commands.size <= 1) NoOp else new CommandSequence(commands.tail)
     type Result = (Try[headCommand.Result], tailCommands.Result)
     def run(sut: Sut): Result = {
       val headResult: Try[headCommand.Result] = try {
