@@ -167,11 +167,10 @@ trait Commands {
     lazy val tailCommands: Command = if (commands.size <= 1) NoOp else new CommandSequense(commands.tail)
     type Result = (Try[headCommand.Result], tailCommands.Result)
     def run(sut: Sut): Result = {
-      var headResult: Try[headCommand.Result] = null
-      try {
-        headResult = Success(headCommand.run(sut))
+      val headResult: Try[headCommand.Result] = try {
+        Success(headCommand.run(sut))
       } catch {
-        case e: Exception => headResult = Failure(e)
+        case e: Exception => Failure(e)
       }
       (headResult, tailCommands.run(sut))
     }
