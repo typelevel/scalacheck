@@ -2,7 +2,7 @@
 
 This example project tests the [Redis](http://redis.io) database with
 ScalaCheck's `Commands`
-[API](http://www.scalacheck.org/files/scalacheck_2.11-1.12.0-SNAPSHOT-api/org/scalacheck/commands/Commands.html)
+[API](http://scalacheck.org/files/scalacheck_2.11-1.12.2-api/index.html#org.scalacheck.commands.Commands)
 for property-based stateful testing.
 
 ## Running the tests

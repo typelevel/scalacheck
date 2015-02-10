@@ -1,7 +1,7 @@
 # Testing Stateful Server Networks with ScalaCheck
 
 This example project demonstrates how ScalaCheck's `Commands`
-[API](http://www.scalacheck.org/files/scalacheck_2.11-1.12.0-SNAPSHOT-api/org/scalacheck/commands/Commands.html)
+[API](http://scalacheck.org/files/scalacheck_2.11-1.12.2-api/index.html#org.scalacheck.commands.Commands)
 can be combined with [NixOS](http://nixos.org) in order to test entire server
 networks in an automated, property-based fashion.
 

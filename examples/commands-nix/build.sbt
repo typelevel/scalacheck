@@ -1,12 +1,9 @@
 name := "commands-nix"
 
-scalaVersion := "2.11.1"
-
-resolvers += 
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+scalaVersion := "2.11.5"
 
 libraryDependencies ++= Seq(
-  "org.scalacheck" %% "scalacheck" % "1.12.0-SNAPSHOT",
+  "org.scalacheck" %% "scalacheck" % "1.12.2",
   "net.java.dev.jna" % "jna" % "4.0.0"
 )
 
