@@ -9,15 +9,10 @@
 
 package org.scalacheck.util
 
-import scala.util.parsing.combinator.Parsers
-import scala.util.parsing.input.Reader
-import scala.util.parsing.input.Position
 import scala.collection.Set
 import org.scalacheck.Test
 
-private[scalacheck] trait CmdLineParser extends Parsers {
-
-  type Elem = String
+private[scalacheck] trait CmdLineParser {
 
   trait Opt[+T] {
     val default: T
@@ -29,65 +24,31 @@ private[scalacheck] trait CmdLineParser extends Parsers {
   trait FloatOpt extends Opt[Float]
   trait StrOpt extends Opt[String]
 
-  class OptMap {
-    private val opts = new collection.mutable.HashMap[Opt[_], Any]
+  class OptMap(private val opts: Map[Opt[_],Any] = Map.empty) {
     def apply(flag: Flag): Boolean = opts.contains(flag)
     def apply[T](opt: Opt[T]): T = opts.get(opt) match {
       case None => opt.default
       case Some(v) => v.asInstanceOf[T]
     }
-    def update[T](opt: Opt[T], optVal: T) = opts.update(opt, optVal)
+    def set[T](o: (Opt[T], T)) = new OptMap(opts + o)
   }
 
   val opts: Set[Opt[_]]
-
-  private class ArgsReader(args: Array[String], i: Int) extends Reader[String] {
-    val pos = new Position {
-      val column = (args take i).foldLeft(1)(_ + _.length + 1)
-      val line = 1
-      val lineContents = args.mkString(" ")
-    }
-    val atEnd = i >= args.length
-    def first = if(atEnd) null else args(i)
-    def rest = if(atEnd) this else new ArgsReader(args, i+1)
-  }
 
   private def getOpt(s: String) = {
     if(s == null || s.length == 0 || s.charAt(0) != '-') None
     else opts.find(_.names.contains(s.drop(1)))
   }
 
-  private val opt: Parser[Opt[Any]] = accept("option name", {
-    case s if getOpt(s).isDefined => getOpt(s).get
-  })
+  private def getStr(s: String) = Some(s)
 
-  private val strVal: Parser[String] = accept("string", {
-    case s if s != null => s
-  })
+  private def getInt(s: String) =
+    if (s != null && s.length > 0 && s.forall(_.isDigit)) Some(s.toInt)
+    else None
 
-  private val intVal: Parser[Int] = accept("integer", {
-    case s if s != null && s.length > 0 && s.forall(_.isDigit) => s.toInt
-  })
-
-  private val floatVal: Parser[Float] = accept("float", {
-    case s if s != null && s.matches("[0987654321]+\\.?[0987654321]*")
-      => s.toFloat
-  })
-
-  private case class OptVal[T](o: Opt[T], v: T)
-
-  private val optVal: Parser[OptVal[Any]] = opt into {
-    case o: Flag => success(OptVal(o, ()))
-    case o: IntOpt => intVal ^^ (v => OptVal(o, v))
-    case o: FloatOpt => floatVal ^^ (v => OptVal(o, v))
-    case o: StrOpt => strVal ^^ (v => OptVal(o, v))
-  }
-
-  val options: Parser[OptMap] = rep(optVal) ^^ { xs =>
-    val map = new OptMap
-    xs.foreach { case OptVal(o,v) => map(o) = v }
-    map
-  }
+  private def getFloat(s: String) =
+    if (s != null && s.matches("[0987654321]+\\.?[0987654321]*")) Some(s.toFloat)
+    else None
 
   def printHelp = {
     println("Available options:")
@@ -96,6 +57,22 @@ private[scalacheck] trait CmdLineParser extends Parsers {
     }
   }
 
-  def parseArgs[T](args: Array[String])(f: OptMap => T) =
-    phrase(options map f)(new ArgsReader(args,0))
+  def parseArgs[T](args: Array[String])(f: OptMap => T) = {
+    def parseOptVal[U](o: Opt[U], f: String => Option[U], as: List[String]): Option[OptMap] = for {
+      v <- as.headOption.flatMap(f)
+      om <- parse(as.drop(1))
+    } yield om.set((o,v))
+
+    def parse(as: List[String]): Option[OptMap] = as match {
+      case Nil => Some(new OptMap)
+      case a::as => getOpt(a) flatMap {
+        case o: Flag => parse(as).map(_.set((o,())))
+        case o: IntOpt => parseOptVal(o, getInt, as)
+        case o: FloatOpt => parseOptVal(o, getFloat, as)
+        case o: StrOpt => parseOptVal(o, getStr, as)
+      }
+    }
+
+    parse(args.toList).map(f)
+  }
 }

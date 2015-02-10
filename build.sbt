@@ -24,11 +24,6 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
-  libraryDependencies ++= {
-    if (scalaVersion.value startsWith "2.10") Seq.empty
-    else Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.2")
-  },
-
   javacOptions += "-Xmx1024M",
 
   scalacOptions ++= Seq("-deprecation", "-feature"),

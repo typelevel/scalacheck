@@ -25,7 +25,6 @@ trait Prop extends Testable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
-  import Test.cmdLineParser.{Success, NoSuccess}
   import Gen.Parameters
 
   def apply(prms: Parameters): Result
@@ -76,11 +75,11 @@ trait Prop extends Testable {
    */
   def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) =>
+      case Some(params) =>
         if (Test.check(params, this).passed) 0
         else 1
-      case e: NoSuccess =>
-        println("Incorrect options:"+"\n"+e+"\n")
+      case None =>
+        println(s"Incorrect options")
         Test.cmdLineParser.printHelp
         -1
     }

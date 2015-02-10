@@ -28,8 +28,6 @@ import util.ConsoleReporter
  */
 class Properties(val name: String) extends Prop {
 
-  import Test.cmdLineParser.{Success, NoSuccess}
-
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
   /** Returns one property which holds if and only if all of the
@@ -60,12 +58,12 @@ class Properties(val name: String) extends Prop {
    */
   override def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Success(params, _) =>
+      case Some(params) =>
         val res = Test.checkProperties(params, this)
         val failed = res.filter(!_._2.passed).size
         failed
-      case e: NoSuccess =>
-        println("Incorrect options:"+"\n"+e+"\n")
+      case None =>
+        println(s"Incorrect options")
         Test.cmdLineParser.printHelp
         -1
     }
