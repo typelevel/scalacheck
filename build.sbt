@@ -65,5 +65,6 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
+    libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0",
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % scalaJSVersion % "provided"
   )

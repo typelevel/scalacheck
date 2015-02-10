@@ -265,7 +265,7 @@ object Test {
       OptMaxSize, OptWorkers, OptVerbosity
     )
 
-    def parseParams(args: Array[String]) = parseArgs(args) {
+    def parseParams(args: Array[String]): Option[Parameters] = parseArgs(args) {
       optMap => Parameters.default
         .withMinSuccessfulTests(optMap(OptMinSuccess): Int)
         .withMaxDiscardRatio(optMap(OptMaxDiscardRatio): Float)

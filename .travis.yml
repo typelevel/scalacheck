@@ -1,9 +1,10 @@
 language: scala
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile $PLATFORM/test
+  - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile "$PLATFORM/testOnly * -- -s $TESTS -w $WORKERS"
 env:
-  - PLATFORM=jvm
-  - PLATFORM=js
+  - PLATFORM=jvm TESTS=1000 WORKERS=1
+  - PLATFORM=jvm TESTS=1000 WORKERS=4
+  - PLATFORM=js TESTS=20 WORKERS=1
 scala:
   - 2.10.4
   - 2.11.5
