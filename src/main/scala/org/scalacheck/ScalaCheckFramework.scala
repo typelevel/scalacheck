@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import sbt.testing._
-import org.scalajs.testinterface.TestUtils
+import org.scalajs.testinterface.TestUtils.{loadModule, newInstance}
 import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -30,36 +30,59 @@ private abstract class ScalaCheckRunner(
     case None => throw new Exception(s"Invalid ScalaCheck args")
   }
 
-  def deserializeTask(task: String, deserializer: String => TaskDef) =
-    ScalaCheckTask(deserializer(task))
+  def deserializeTask(task: String, deserializer: String => TaskDef) = {
+    val taskDef = deserializer(task)
+    val countTestSelectors = taskDef.selectors.toSeq.count {
+      case _:TestSelector => true
+      case _ => false
+    }
+    if (countTestSelectors == 0) rootTask(taskDef)
+    else checkPropTask(taskDef)
+  }
 
   def serializeTask(task: Task, serializer: TaskDef => String) =
     serializer(task.taskDef)
 
-  def tasks(taskDefs: Array[TaskDef]): Array[Task] =
-    taskDefs.map(ScalaCheckTask)
+  def tasks(taskDefs: Array[TaskDef]): Array[Task] = taskDefs.map(rootTask)
 
-  case class ScalaCheckTask(taskDef: TaskDef) extends Task {
+  abstract class BaseTask(override val taskDef: TaskDef) extends Task {
     val tags: Array[String] = Array()
 
-    val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
-
-    val obj =
-      if (fp.isModule) TestUtils.loadModule(taskDef.fullyQualifiedName,loader)
-      else TestUtils.newInstance(taskDef.fullyQualifiedName, loader)(Seq())
-
-    val props = obj match {
-      case props: Properties => props.properties.toArray
-      case prop: Prop => Array("<no name>" -> prop)
+    val props: Map[String,Prop] = {
+      val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
+      val obj = if (fp.isModule) loadModule(taskDef.fullyQualifiedName,loader)
+                else newInstance(taskDef.fullyQualifiedName, loader)(Seq())
+      obj match {
+        case props: Properties => Map(props.properties: _*)
+        case prop: Prop => Map("" -> prop)
+      }
     }
 
     def execute(handler: EventHandler, loggers: Array[Logger],
       continuation: Array[Task] => Unit
     ): Unit  = continuation(execute(handler,loggers))
+  }
+
+  def rootTask(td: TaskDef) = new BaseTask(td) {
+    def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
+      props.toArray map { case (name,_) =>
+        checkPropTask(new TaskDef(td.fullyQualifiedName, td.fingerprint,
+          td.explicitlySpecified, Array(new TestSelector(name)))
+        )
+      }
+  }
+
+  def checkPropTask(taskDef: TaskDef) = new BaseTask(taskDef) {
+    val names = taskDef.selectors flatMap {
+      case ts: TestSelector => Array(ts.testName)
+      case _ => Array.empty[String]
+    }
 
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
-      props flatMap { case (name,prop) =>
+      names flatMap { name =>
         import util.Pretty.{pretty, Params}
+
+        val prop = props(name)
         val result = Test.check(params.withCustomClassLoader(Some(loader)), prop)
 
         val event = new Event {
@@ -100,12 +123,12 @@ private abstract class ScalaCheckRunner(
           args.grouped(2).filter(twos => verbosityOpts(twos.head))
           .toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
         val s = if (result.passed) "+" else "!"
-        val logMsg = s"$s $name: ${pretty(result, Params(verbosity))}"
+        val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
+        val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
         loggers.foreach(l => l.info(logMsg))
 
         Array.empty[Task]
       }
-
   }
 
 }
