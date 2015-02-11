@@ -298,6 +298,13 @@ object Gen {
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = gen(_ => r(None)).suchThat(_ => false)
 
+  /** A generator that fails if the provided option value is undefined,
+   *  otherwise just returns the value. */
+  def fromOption[T](o: Option[T]): Gen[T] = o match {
+    case Some(t) => const(t)
+    case None => fail
+  }
+
   /** A generator that generates a random value in the given (inclusive)
    *  range. If the range is invalid, the generator will not generate
    *  any value. */

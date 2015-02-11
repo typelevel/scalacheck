@@ -46,6 +46,13 @@ object GenSpecification extends Properties("Gen") {
 
   property("fail") = forAll((prms: Parameters) => fail(prms) == None)
 
+  property("fromOption") = forAll { (prms: Parameters, o: Option[Int]) =>
+    o match {
+      case Some(x) => fromOption(o)(prms) == Some(x)
+      case None => fromOption(o)(prms) == None
+    }
+  }
+
   property("choose-int") = forAll { (l: Int, h: Int) =>
     if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
