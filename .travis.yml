@@ -4,7 +4,8 @@ script:
 env:
   - PLATFORM=jvm TESTS=1000 WORKERS=1
   - PLATFORM=jvm TESTS=1000 WORKERS=4
-  - PLATFORM=js TESTS=20 WORKERS=1
+# Temporarily disabled due to PermGen exceptions
+#  - PLATFORM=js TESTS=20 WORKERS=1
 scala:
   - 2.10.4
   - 2.11.5
