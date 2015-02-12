@@ -55,7 +55,8 @@ sealed trait Gen[+T] {
 
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
-   *  the generator fails (returns None). */
+   *  the generator fails (returns None). Also, make sure that the provided
+   *  test property is side-effect free, eg it should not use external vars. */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
   /** Creates a non-strict filtered version of this generator. */
@@ -63,8 +64,9 @@ sealed trait Gen[+T] {
 
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
-   *  the generator fails (returns None). This method is identical to
-   *  [Gen.filter]. */
+   *  the generator fails (returns None). Also, make sure that the provided 
+   *  test property is side-effect free, eg it should not use external vars.
+   *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P) = {
       val res = Gen.this.doApply(p)
@@ -78,7 +80,8 @@ sealed trait Gen[+T] {
   /** Create a generator that calls this generator repeatedly until
    *  the given condition is fulfilled. The generated value is then
    *  returned. Use this combinator with care, since it may result
-   *  in infinite loops. */
+   *  in infinite loops. Also, make sure that the provided test property
+   *  is side-effect free, eg it should not use external vars. */
   def retryUntil(p: T => Boolean): Gen[T] = flatMap { t =>
     if (p(t)) Gen.const(t).suchThat(p) else retryUntil(p)
   }
