@@ -52,6 +52,13 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
         <name>Rickard Nilsson</name>
       </developer>
     </developers>
+  },
+
+  sourceGenerators in Compile += task{
+    val dir = (sourceManaged in Compile).value
+    val source = dir / "ArbitraryFromFunction.scala"
+    IO.write(source, CodeGenerator.code)
+    Seq(source)
   }
 )
 
