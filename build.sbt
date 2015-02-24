@@ -1,5 +1,7 @@
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 
+sourceDirectory := file("dummy source directory")
+
 lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   name := "scalacheck",
@@ -18,9 +20,9 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.1"),
 
-  unmanagedSourceDirectories in Compile += baseDirectory.value / "src-shared" / "main" / "scala",
+  unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
-  unmanagedSourceDirectories in Test += baseDirectory.value / "src-shared" / "test" / "scala",
+  unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
