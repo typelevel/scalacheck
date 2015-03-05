@@ -55,8 +55,10 @@ sealed abstract class Arbitrary[T] {
  *  generators.
  *  </p>
  */
-object Arbitrary {
+object Arbitrary extends ArbitraryLowPriority with ArbitraryArities
 
+/** separate trait to have same priority as ArbitraryArities */
+private[scalacheck] sealed trait ArbitraryLowPriority{
   import Gen.{const, choose, sized, frequency, oneOf, buildableOf, resize}
   import collection.{immutable, mutable}
   import java.util.Date
@@ -298,146 +300,4 @@ object Arbitrary {
   implicit def arbContainer2[C[_,_],T,U](implicit
     a: Arbitrary[(T,U)], b: Buildable[(T,U),C[T,U]], t: C[T,U] => Traversable[(T,U)]
   ): Arbitrary[C[T,U]] = Arbitrary(buildableOf[C[T,U],(T,U)](arbitrary[(T,U)]))
-
-  // Functions //
-
-  /** Arbitrary instance of Function1 */
-  implicit def arbFunction1[T1,R](implicit a: Arbitrary[R]
-  ): Arbitrary[T1 => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1) => r
-  )
-
-  /** Arbitrary instance of Function2 */
-  implicit def arbFunction2[T1,T2,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2) => r
-  )
-
-  /** Arbitrary instance of Function3 */
-  implicit def arbFunction3[T1,T2,T3,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3) => r
-  )
-
-  /** Arbitrary instance of Function4 */
-  implicit def arbFunction4[T1,T2,T3,T4,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3,T4) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4) => r
-  )
-
-  /** Arbitrary instance of Function5 */
-  implicit def arbFunction5[T1,T2,T3,T4,T5,R](implicit a: Arbitrary[R]
-  ): Arbitrary[(T1,T2,T3,T4,T5) => R] = Arbitrary(
-    for(r <- arbitrary[R]) yield (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5) => r
-  )
-
-
-  // Tuples //
-
-  /** Arbitrary instance of 2-tuple */
-  implicit def arbTuple2[T1,T2](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2]
-  ): Arbitrary[(T1,T2)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-    } yield (t1,t2))
-
-  /** Arbitrary instance of 3-tuple */
-  implicit def arbTuple3[T1,T2,T3](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3]
-  ): Arbitrary[(T1,T2,T3)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-    } yield (t1,t2,t3))
-
-  /** Arbitrary instance of 4-tuple */
-  implicit def arbTuple4[T1,T2,T3,T4](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4]
-  ): Arbitrary[(T1,T2,T3,T4)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-    } yield (t1,t2,t3,t4))
-
-  /** Arbitrary instance of 5-tuple */
-  implicit def arbTuple5[T1,T2,T3,T4,T5](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
-    a5: Arbitrary[T5]
-  ): Arbitrary[(T1,T2,T3,T4,T5)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-      t5 <- arbitrary[T5]
-    } yield (t1,t2,t3,t4,t5))
-
-  /** Arbitrary instance of 6-tuple */
-  implicit def arbTuple6[T1,T2,T3,T4,T5,T6](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
-    a5: Arbitrary[T5], a6: Arbitrary[T6]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-      t5 <- arbitrary[T5]
-      t6 <- arbitrary[T6]
-    } yield (t1,t2,t3,t4,t5,t6))
-
-  /** Arbitrary instance of 7-tuple */
-  implicit def arbTuple7[T1,T2,T3,T4,T5,T6,T7](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
-    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-      t5 <- arbitrary[T5]
-      t6 <- arbitrary[T6]
-      t7 <- arbitrary[T7]
-    } yield (t1,t2,t3,t4,t5,t6,t7))
-
-  /** Arbitrary instance of 8-tuple */
-  implicit def arbTuple8[T1,T2,T3,T4,T5,T6,T7,T8](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
-    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-      t5 <- arbitrary[T5]
-      t6 <- arbitrary[T6]
-      t7 <- arbitrary[T7]
-      t8 <- arbitrary[T8]
-    } yield (t1,t2,t3,t4,t5,t6,t7,t8))
-
-  /** Arbitrary instance of 9-tuple */
-  implicit def arbTuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
-    a1: Arbitrary[T1], a2: Arbitrary[T2], a3: Arbitrary[T3], a4: Arbitrary[T4],
-    a5: Arbitrary[T5], a6: Arbitrary[T6], a7: Arbitrary[T7], a8: Arbitrary[T8],
-    a9: Arbitrary[T9]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9)] =
-    Arbitrary(for {
-      t1 <- arbitrary[T1]
-      t2 <- arbitrary[T2]
-      t3 <- arbitrary[T3]
-      t4 <- arbitrary[T4]
-      t5 <- arbitrary[T5]
-      t6 <- arbitrary[T6]
-      t7 <- arbitrary[T7]
-      t8 <- arbitrary[T8]
-      t9 <- arbitrary[T9]
-    } yield (t1,t2,t3,t4,t5,t6,t7,t8,t9))
-
 }
