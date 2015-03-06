@@ -132,7 +132,7 @@ sealed trait Gen[+T] {
 
 }
 
-object Gen extends GenArities{
+object Gen extends GenArities with GenTree{
 
   //// Private interface ////
 

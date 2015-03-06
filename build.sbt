@@ -18,6 +18,24 @@ lazy val sharedSettings = mimaDefaultSettings ++ Seq(
 
   crossScalaVersions := Seq("2.10.4", "2.11.5"),
 
+  libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+
+  unmanagedSourceDirectories in Compile += {
+    if (scalaVersion.value.startsWith("2.11."))
+      (baseDirectory in LocalRootProject).value / "src" / "main" / "scala-2.11"
+    else if (scalaVersion.value.startsWith("2.10."))
+      (baseDirectory in LocalRootProject).value / "src" / "main" / "scala-2.10"
+    else ???
+  },
+
+  unmanagedSourceDirectories in Test ++= {
+    if (scalaVersion.value.startsWith("2.11."))
+      Seq((baseDirectory in LocalRootProject).value / "src" / "test" / "scala-2.11")
+    else if (scalaVersion.value.startsWith("2.10."))
+      Seq()
+    else ???
+  },
+
   previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.1"),
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
