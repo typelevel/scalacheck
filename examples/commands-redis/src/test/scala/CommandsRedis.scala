@@ -1,5 +1,5 @@
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{someOf, oneOf, const, resultOf, nonEmptyListOf,
+import org.scalacheck.Gen.{someOf, oneOf, const, nonEmptyListOf,
   identifier, frequency}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.commands.Commands
