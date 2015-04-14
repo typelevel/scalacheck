@@ -59,6 +59,12 @@ sealed trait Gen[+T] {
    *  test property is side-effect free, eg it should not use external vars. */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
+  /** Create a new generator that fails if the specified partial function
+   *  is undefined for this generator's value, otherwise returns the result
+   *  of the partial function applied to this generator's value. */
+  def collect[U](pf: PartialFunction[T,U]): Gen[U] =
+    flatMap { t => Gen.fromOption(pf.lift(t)) }
+
   /** Creates a non-strict filtered version of this generator. */
   def withFilter(p: T => Boolean): WithFilter = new WithFilter(p)
 

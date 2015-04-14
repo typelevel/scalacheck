@@ -53,6 +53,14 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("collect") = forAll { (prms: Parameters, o: Option[Int]) =>
+    val g = const(o).collect { case Some(n) => n }
+    o match {
+      case Some(x) => g(prms) == Some(x)
+      case None => g(prms) == None
+    }
+  }
+
   property("choose-int") = forAll { (l: Int, h: Int) =>
     if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
