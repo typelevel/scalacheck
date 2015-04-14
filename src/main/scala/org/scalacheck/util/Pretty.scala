@@ -34,9 +34,15 @@ object Pretty {
 
   def apply(f: Params => String): Pretty = new Pretty { def apply(p: Params) = f(p) }
 
-  def pretty[T <% Pretty](t: T, prms: Params): String = t(prms)
+  def pretty[T <% Pretty](t: T, prms: Params): String = {
+    val p = (t: Pretty) match {
+      case null => prettyAny(null)
+      case p => p
+    }
+    p(prms)
+  }
 
-  def pretty[T <% Pretty](t: T): String = t(defaultParams)
+  def pretty[T <% Pretty](t: T): String = pretty(t, defaultParams)
 
   implicit def strBreak(s1: String) = new {
     def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2
@@ -52,6 +58,8 @@ object Pretty {
 
   def format(s: String, lead: String, trail: String, width: Int) =
     s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
+
+  private def toStrOrNull(s: Any) = if (s == null) "null" else s.toString
 
   private[this] def escapeControlChars(s: String): String = {
     val builder = new StringBuilder
@@ -71,7 +79,7 @@ object Pretty {
     builder.result()
   }
 
-  implicit def prettyAny(t: Any) = Pretty { p => t.toString }
+  implicit def prettyAny(t: Any) = Pretty { p => toStrOrNull(t) }
 
   implicit def prettyString(t: String) = Pretty { p => "\""++escapeControlChars(t)++"\"" }
 
