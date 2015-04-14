@@ -95,7 +95,8 @@ object Test {
     )
 
     // private since we can't guarantee binary compatibility for this one
-    private case class cp(
+    private val cp = TestParams
+    private[scalacheck] case class TestParams(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
       maxSize: Int = maxSize,

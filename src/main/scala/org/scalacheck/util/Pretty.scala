@@ -144,4 +144,8 @@ object Pretty {
     if(min <= 0) "%.3f sec ".format(sec)
     else "%d min %.3f sec ".format(min, sec)
   }
+
+  implicit def prettyTestParams(prms: Test.Parameters) = Pretty { p =>
+    prms.TestParams().toString
+  }
 }
