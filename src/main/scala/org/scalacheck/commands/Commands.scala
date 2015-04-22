@@ -305,7 +305,7 @@ trait Commands {
     val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
     val l1 = s"initialstate = ${as.s}\nseqcmds = ${prettyCmdsRes(as.seqCmds zip rs1)}"
     if(as.parCmds.isEmpty) p1 :| l1
-    else propAnd(p1 :| l1, {
+    else propAnd(p1.flatMap{r => if(!r.success) finalize; Prop(prms => r)} :| l1, {
       try{
       val (p2, rs2) = runParCmds(sut, s, as.parCmds)
       val l2 = rs2.map(prettyCmdsRes).mkString("(",",\n",")")
