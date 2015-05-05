@@ -308,6 +308,13 @@ object Test {
       var d = 0  // discarded tests
       var res: Result = null
       var fm = FreqMap.empty[Set[Any]]
+
+      // The below condition is kind of hacky. We have to have
+      // some margin, otherwise workers might stop testing too
+      // early because they have been exhausted, but the overall
+      // test has not.
+      def isExhausted = n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d
+
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
         val propRes = p(genPrms.withSize(size.round.toInt))
@@ -316,12 +323,7 @@ object Test {
           case Prop.Undecided =>
             d += 1
             testCallback.onPropEval("", workerIdx, n, d)
-            // The below condition is kind of hacky. We have to have
-            // some margin, otherwise workers might stop testing too
-            // early because they have been exhausted, but the overall
-            // test has not.
-            if (n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d)
-              res = Result(Exhausted, n, d, fm)
+            if (isExhausted) res = Result(Exhausted, n, d, fm)
           case Prop.True =>
             n += 1
             testCallback.onPropEval("", workerIdx, n, d)
@@ -338,8 +340,8 @@ object Test {
         }
       }
       if (res == null) {
-        if (maxDiscardRatio*n > d) Result(Passed, n, d, fm)
-        else Result(Exhausted, n, d, fm)
+        if (isExhausted) Result(Exhausted, n, d, fm)
+        else Result(Passed, n, d, fm)
       } else res
     }
 
