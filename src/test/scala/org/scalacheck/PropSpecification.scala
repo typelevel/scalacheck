@@ -12,7 +12,7 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, within, throws, BooleanOperators
+  Exception, Proof, within, throws, BooleanOperators, secure, delay
 }
 import Gen.{
   const, fail, frequency, oneOf, choose, listOf, listOfN,
@@ -173,4 +173,10 @@ object PropSpecification extends Properties("Prop") {
       noneFailing(gs) || gs.exists(!_.sample.isDefined)
     }
   }
+
+  property("secure") = forAll { (prms: Parameters, e: Throwable) =>
+    secure(throw e).apply(prms).status == Exception(e)
+  }
+
+  property("delay") = { delay(???); proved }
 }

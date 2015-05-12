@@ -452,9 +452,23 @@ object Prop {
   def classify(c: => Boolean, ifTrue: Any, ifFalse: Any)(prop: Prop): Prop =
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
-  /** Wraps and protects a property */
+  /**
+   * Wraps and protects a property, turning exceptions thrown
+   * by the property into test failures.
+   */
   def secure[P <% Prop](p: => P): Prop =
     try (p: Prop) catch { case e: Throwable => exception(e) }
+
+  /** Wraps a property to delay its evaluation. */
+  def delay(p: => Prop): Prop =
+    Prop(params => p(params))
+
+  /**
+   * Wraps and protects a property, delaying its evaluation
+   * and turning exceptions into test failures.
+   */
+  def protect(p: => Prop): Prop =
+    delay(secure(p))
 
   /** Existential quantifier for an explicit generator. */
   def exists[A,P](f: A => P)(implicit
