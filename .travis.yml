@@ -1,6 +1,6 @@
 language: scala
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile "$PLATFORM/testOnly * -- -s $TESTS -w $WORKERS"
+  - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile "$PLATFORM/testOnly * -- -s $TESTS -w $WORKERS" $PLATFORM/mimaReportBinaryIssues
 env:
   - PLATFORM=jvm TESTS=1000 WORKERS=1
   - PLATFORM=jvm TESTS=1000 WORKERS=4
