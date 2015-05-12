@@ -12,7 +12,7 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, within, throws, BooleanOperators, secure, delay
+  Exception, Proof, within, throws, BooleanOperators, secure, delay, lzy
 }
 import Gen.{
   const, fail, frequency, oneOf, choose, listOf, listOfN,
@@ -179,4 +179,6 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("delay") = { delay(???); proved }
+
+  property("lzy") = { lzy(???); proved }
 }

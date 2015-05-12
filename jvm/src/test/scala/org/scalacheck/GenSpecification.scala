@@ -40,6 +40,8 @@ object GenSpecification extends Properties("Gen") {
 
   property("wrap") = forAll((g: Gen[Int]) => wrap(g) == g)
 
+  property("delay") = forAll((g: Gen[Int]) => delay(g) == g)
+
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
   property("const") = forAll((x:Int, prms:Parameters) => const(x)(prms) == Some(x))

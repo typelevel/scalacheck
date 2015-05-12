@@ -452,21 +452,25 @@ object Prop {
   def classify(c: => Boolean, ifTrue: Any, ifFalse: Any)(prop: Prop): Prop =
     if(c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
-  /**
-   * Wraps and protects a property, turning exceptions thrown
-   * by the property into test failures.
-   */
+  /** Wraps and protects a property, turning exceptions thrown
+   *  by the property into test failures. */
   def secure[P <% Prop](p: => P): Prop =
     try (p: Prop) catch { case e: Throwable => exception(e) }
 
-  /** Wraps a property to delay its evaluation. */
+  /** Wraps a property to delay its evaluation. The given parameter is
+   *  evaluated each time the wrapper property is evaluated. */
   def delay(p: => Prop): Prop =
     Prop(params => p(params))
 
-  /**
-   * Wraps and protects a property, delaying its evaluation
-   * and turning exceptions into test failures.
-   */
+  /** Wraps a property lazily. The given parameter is only evaluated once,
+   *  and not until the wrapper property is evaluated. */
+  def lzy(p: => Prop): Prop = {
+    lazy val q = p
+    Prop(params => q(params))
+  }
+
+  /** Wraps and protects a property, delaying its evaluation
+   *  and turning exceptions into test failures. */
   def protect(p: => Prop): Prop =
     delay(secure(p))
 
