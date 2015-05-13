@@ -56,9 +56,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
-    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
-    // Unfortunately, so far not everything links, although every runs fine
-    scalaJSOptimizerOptions ~= { _.withBypassLinkingErrors(true) }
+    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
   .enablePlugins(ScalaJSPlugin)
 
