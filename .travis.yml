@@ -10,6 +10,10 @@ scala:
   - 2.11.6
 jdk:
   - openjdk7
+branches:
+  only:
+    - master
+    - scalacheck2
 notifications:
   email:
     - adriaan.moors@typesafe.com
