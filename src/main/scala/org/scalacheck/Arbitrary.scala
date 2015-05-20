@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import language.higherKinds
+import concurrent.Future
 
 import util.{FreqMap, Buildable}
 
@@ -286,6 +287,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority{
   /** Arbitrary instance of the Either type */
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
     Arbitrary(oneOf(arbitrary[T].map(Left(_)), arbitrary[U].map(Right(_))))
+
+  /** Arbitrary instance of the Future type */
+  implicit def arbFuture[T](implicit a: Arbitrary[T]): Arbitrary[Future[T]] =
+    Arbitrary(Gen.oneOf(arbitrary[T].map(Future.successful), arbitrary[Throwable].map(Future.failed)))
 
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
    *  (such as lists, arrays, streams, etc). The maximum size of the container
