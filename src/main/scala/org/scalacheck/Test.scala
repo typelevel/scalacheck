@@ -95,8 +95,8 @@ object Test {
     )
 
     // private since we can't guarantee binary compatibility for this one
-    private val cp = TestParams
-    private[scalacheck] case class TestParams(
+    private lazy val cp = TestParams
+    private case class TestParams(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
       maxSize: Int = maxSize,
@@ -106,6 +106,8 @@ object Test {
       maxDiscardRatio: Float = maxDiscardRatio,
       customClassLoader: Option[ClassLoader] = customClassLoader
     ) extends Parameters
+
+    override def toString = cp.toString
   }
 
   /** Test parameters used by the check methods. Default

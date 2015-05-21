@@ -154,6 +154,6 @@ object Pretty {
   }
 
   implicit def prettyTestParams(prms: Test.Parameters) = Pretty { p =>
-    prms.TestParams().toString
+    prms.toString
   }
 }
