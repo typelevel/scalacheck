@@ -27,7 +27,7 @@ private abstract class ScalaCheckRunner(
 
   val params = Test.cmdLineParser.parseParams(args) match {
     case Some(p) => p.withTestCallback(new Test.TestCallback {})
-    case None => throw new Exception(s"Invalid ScalaCheck args")
+    case None => throw new Exception(s"Invalid ScalaCheck args: ${args.toList}")
   }
 
   def deserializeTask(task: String, deserializer: String => TaskDef) = {
