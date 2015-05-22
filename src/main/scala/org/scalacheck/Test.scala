@@ -95,8 +95,7 @@ object Test {
     )
 
     // private since we can't guarantee binary compatibility for this one
-    private lazy val cp = TestParams
-    private case class TestParams(
+    private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
       maxSize: Int = maxSize,
@@ -107,7 +106,7 @@ object Test {
       customClassLoader: Option[ClassLoader] = customClassLoader
     ) extends Parameters
 
-    override def toString = cp.toString
+    override def toString = s"Parameters${cp.toString.substring(2)}"
   }
 
   /** Test parameters used by the check methods. Default

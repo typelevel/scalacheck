@@ -12,7 +12,7 @@ package org.scalacheck
 import language.implicitConversions
 import language.reflectiveCalls
 
-import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
+import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
 import scala.annotation.tailrec
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
@@ -23,7 +23,7 @@ class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 
 @scala.scalajs.js.annotation.JSExportDescendentClasses
 @scala.scalajs.js.annotation.JSExportDescendentObjects
-trait Prop {
+trait Prop extends Testable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
