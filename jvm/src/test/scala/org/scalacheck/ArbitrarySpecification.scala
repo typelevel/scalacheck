@@ -11,6 +11,7 @@ package org.scalacheck
 
 import Prop._
 import Arbitrary._
+import java.util.concurrent.TimeUnit
 
 object ArbitrarySpecification extends Properties("Arbitrary") {
   private[this] val genOptionUnits =
@@ -21,4 +22,8 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
 
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
+
+  property("arbEnum") = {
+    Gen.listOfN(100, arbitrary[TimeUnit]).sample.get.toSet == TimeUnit.values.toSet
+  }
 }
