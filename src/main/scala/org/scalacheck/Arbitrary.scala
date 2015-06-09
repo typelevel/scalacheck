@@ -305,4 +305,9 @@ private[scalacheck] sealed trait ArbitraryLowPriority{
   implicit def arbContainer2[C[_,_],T,U](implicit
     a: Arbitrary[(T,U)], b: Buildable[(T,U),C[T,U]], t: C[T,U] => Traversable[(T,U)]
   ): Arbitrary[C[T,U]] = Arbitrary(buildableOf[C[T,U],(T,U)](arbitrary[(T,U)]))
+
+  implicit def arbEnum[A <: java.lang.Enum[A]](implicit A: reflect.ClassTag[A]): Arbitrary[A] = {
+    val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]
+    Arbitrary(Gen.oneOf(values))
+  }
 }
