@@ -81,6 +81,7 @@ import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
+    scalaJSStage in Global := FastOptStage,
     previousArtifact := Some("org.scalacheck" % "scalacheck_sjs0.6_2.11" % "1.12.4"),
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
