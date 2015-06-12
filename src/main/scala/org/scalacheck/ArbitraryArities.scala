@@ -8,158 +8,92 @@ private[scalacheck] trait ArbitraryArities{
   // Functions //
   
   /** Arbitrary instance of Function1 */
-  implicit def arbFunction1[T1,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1) => r
-      )
+  implicit def arbFunction1[T1,Z](implicit g: Arbitrary[Z], co1: Cogen[T1]): Arbitrary[(T1) => Z] =
+    Arbitrary(Gen.function1(g.arbitrary))
   
   /** Arbitrary instance of Function2 */
-  implicit def arbFunction2[T1,T2,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2) => r
-      )
+  implicit def arbFunction2[T1,T2,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2]): Arbitrary[(T1,T2) => Z] =
+    Arbitrary(Gen.function2(g.arbitrary))
   
   /** Arbitrary instance of Function3 */
-  implicit def arbFunction3[T1,T2,T3,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3) => r
-      )
+  implicit def arbFunction3[T1,T2,T3,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3]): Arbitrary[(T1,T2,T3) => Z] =
+    Arbitrary(Gen.function3(g.arbitrary))
   
   /** Arbitrary instance of Function4 */
-  implicit def arbFunction4[T1,T2,T3,T4,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4) => r
-      )
+  implicit def arbFunction4[T1,T2,T3,T4,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4]): Arbitrary[(T1,T2,T3,T4) => Z] =
+    Arbitrary(Gen.function4(g.arbitrary))
   
   /** Arbitrary instance of Function5 */
-  implicit def arbFunction5[T1,T2,T3,T4,T5,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5) => r
-      )
+  implicit def arbFunction5[T1,T2,T3,T4,T5,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5]): Arbitrary[(T1,T2,T3,T4,T5) => Z] =
+    Arbitrary(Gen.function5(g.arbitrary))
   
   /** Arbitrary instance of Function6 */
-  implicit def arbFunction6[T1,T2,T3,T4,T5,T6,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6) => r
-      )
+  implicit def arbFunction6[T1,T2,T3,T4,T5,T6,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6]): Arbitrary[(T1,T2,T3,T4,T5,T6) => Z] =
+    Arbitrary(Gen.function6(g.arbitrary))
   
   /** Arbitrary instance of Function7 */
-  implicit def arbFunction7[T1,T2,T3,T4,T5,T6,T7,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7) => r
-      )
+  implicit def arbFunction7[T1,T2,T3,T4,T5,T6,T7,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7) => Z] =
+    Arbitrary(Gen.function7(g.arbitrary))
   
   /** Arbitrary instance of Function8 */
-  implicit def arbFunction8[T1,T2,T3,T4,T5,T6,T7,T8,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8) => r
-      )
+  implicit def arbFunction8[T1,T2,T3,T4,T5,T6,T7,T8,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8) => Z] =
+    Arbitrary(Gen.function8(g.arbitrary))
   
   /** Arbitrary instance of Function9 */
-  implicit def arbFunction9[T1,T2,T3,T4,T5,T6,T7,T8,T9,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9) => r
-      )
+  implicit def arbFunction9[T1,T2,T3,T4,T5,T6,T7,T8,T9,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9) => Z] =
+    Arbitrary(Gen.function9(g.arbitrary))
   
   /** Arbitrary instance of Function10 */
-  implicit def arbFunction10[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10) => r
-      )
+  implicit def arbFunction10[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10) => Z] =
+    Arbitrary(Gen.function10(g.arbitrary))
   
   /** Arbitrary instance of Function11 */
-  implicit def arbFunction11[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11) => r
-      )
+  implicit def arbFunction11[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11) => Z] =
+    Arbitrary(Gen.function11(g.arbitrary))
   
   /** Arbitrary instance of Function12 */
-  implicit def arbFunction12[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12) => r
-      )
+  implicit def arbFunction12[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12) => Z] =
+    Arbitrary(Gen.function12(g.arbitrary))
   
   /** Arbitrary instance of Function13 */
-  implicit def arbFunction13[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13) => r
-      )
+  implicit def arbFunction13[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13) => Z] =
+    Arbitrary(Gen.function13(g.arbitrary))
   
   /** Arbitrary instance of Function14 */
-  implicit def arbFunction14[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14) => r
-      )
+  implicit def arbFunction14[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14) => Z] =
+    Arbitrary(Gen.function14(g.arbitrary))
   
   /** Arbitrary instance of Function15 */
-  implicit def arbFunction15[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15) => r
-      )
+  implicit def arbFunction15[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15) => Z] =
+    Arbitrary(Gen.function15(g.arbitrary))
   
   /** Arbitrary instance of Function16 */
-  implicit def arbFunction16[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16) => r
-      )
+  implicit def arbFunction16[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16) => Z] =
+    Arbitrary(Gen.function16(g.arbitrary))
   
   /** Arbitrary instance of Function17 */
-  implicit def arbFunction17[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17) => r
-      )
+  implicit def arbFunction17[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17) => Z] =
+    Arbitrary(Gen.function17(g.arbitrary))
   
   /** Arbitrary instance of Function18 */
-  implicit def arbFunction18[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17,t18:T18) => r
-      )
+  implicit def arbFunction18[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18) => Z] =
+    Arbitrary(Gen.function18(g.arbitrary))
   
   /** Arbitrary instance of Function19 */
-  implicit def arbFunction19[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17,t18:T18,t19:T19) => r
-      )
+  implicit def arbFunction19[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19) => Z] =
+    Arbitrary(Gen.function19(g.arbitrary))
   
   /** Arbitrary instance of Function20 */
-  implicit def arbFunction20[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17,t18:T18,t19:T19,t20:T20) => r
-      )
+  implicit def arbFunction20[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20) => Z] =
+    Arbitrary(Gen.function20(g.arbitrary))
   
   /** Arbitrary instance of Function21 */
-  implicit def arbFunction21[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17,t18:T18,t19:T19,t20:T20,t21:T21) => r
-      )
+  implicit def arbFunction21[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20],co21: Cogen[T21]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21) => Z] =
+    Arbitrary(Gen.function21(g.arbitrary))
   
   /** Arbitrary instance of Function22 */
-  implicit def arbFunction22[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,R]
-    (implicit a: Arbitrary[R]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22) => R]
-    = Arbitrary(
-        for(r <- a.arbitrary) yield (t1:T1,t2:T2,t3:T3,t4:T4,t5:T5,t6:T6,t7:T7,t8:T8,t9:T9,t10:T10,t11:T11,t12:T12,t13:T13,t14:T14,t15:T15,t16:T16,t17:T17,t18:T18,t19:T19,t20:T20,t21:T21,t22:T22) => r
-      )
+  implicit def arbFunction22[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,Z](implicit g: Arbitrary[Z], co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20],co21: Cogen[T21],co22: Cogen[T22]): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22) => Z] =
+    Arbitrary(Gen.function22(g.arbitrary))
   
 
   // Tuples //
