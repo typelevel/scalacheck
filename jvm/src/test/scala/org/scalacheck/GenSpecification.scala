@@ -44,22 +44,26 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
-  property("const") = forAll((x:Int, prms:Parameters) => const(x)(prms) == Some(x))
+  property("const") = forAll { (x:Int, prms:Parameters, seed: Long) =>
+    const(x)(prms, seed) == Some(x)
+  }
 
-  property("fail") = forAll((prms: Parameters) => fail(prms) == None)
+  property("fail") = forAll { (prms: Parameters, seed: Long) =>
+    fail(prms, seed) == None
+  }
 
-  property("fromOption") = forAll { (prms: Parameters, o: Option[Int]) =>
+  property("fromOption") = forAll { (prms: Parameters, seed: Long, o: Option[Int]) =>
     o match {
-      case Some(x) => fromOption(o)(prms) == Some(x)
-      case None => fromOption(o)(prms) == None
+      case Some(x) => fromOption(o)(prms, seed) == Some(x)
+      case None => fromOption(o)(prms, seed) == None
     }
   }
 
-  property("collect") = forAll { (prms: Parameters, o: Option[Int]) =>
+  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Long) =>
     val g = const(o).collect { case Some(n) => n }
     o match {
-      case Some(x) => g(prms) == Some(x)
-      case None => g(prms) == None
+      case Some(x) => g(prms, seed) == Some(x)
+      case None => g(prms, seed) == None
     }
   }
 
