@@ -98,3 +98,5 @@ lazy val jvm = project.in(file("jvm"))
     crossScalaVersions += "2.12.0-M1",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
+
+scalaJSStage in Global := FastOptStage
