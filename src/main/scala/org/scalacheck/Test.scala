@@ -46,15 +46,6 @@ object Test {
       maxSize = maxSize
     )
 
-    /** The random number generator used. */
-    val rng: scala.util.Random
-
-    /** Create a copy of this [[Test.Parameters]] instance with
-     *  [[Test.Parameters.rng]] set to the specified value. */
-    def withRng(rng: scala.util.Random): Parameters = cp(
-      rng = rng
-    )
-
     /** The number of tests to run in parallel. */
     val workers: Int
 
@@ -99,7 +90,6 @@ object Test {
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
       maxSize: Int = maxSize,
-      rng: scala.util.Random = rng,
       workers: Int = workers,
       testCallback: TestCallback = testCallback,
       maxDiscardRatio: Float = maxDiscardRatio,
@@ -135,7 +125,6 @@ object Test {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
       val maxSize: Int = Gen.Parameters.default.size
-      val rng: scala.util.Random = Gen.Parameters.default.rng
       val workers: Int = 1
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
@@ -302,7 +291,7 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
-    val genPrms = new Gen.Parameters.Default { override val rng = params.rng }
+    val genPrms = new Gen.Parameters.Default {}
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests

@@ -1,11 +1,11 @@
 /*-------------------------------------------------------------------------*\
-**  ScalaCheck                                                             **
-**  Copyright (c) 2007-2015 Rickard Nilsson. All rights reserved.          **
-**  http://www.scalacheck.org                                              **
-**                                                                         **
-**  This software is released under the terms of the Revised BSD License.  **
-**  There is NO WARRANTY. See the file LICENSE for the full text.          **
-\*------------------------------------------------------------------------ */
+ **  ScalaCheck                                                             **
+ **  Copyright (c) 2007-2015 Rickard Nilsson. All rights reserved.          **
+ **  http://www.scalacheck.org                                              **
+ **                                                                         **
+ **  This software is released under the terms of the Revised BSD License.  **
+ **  There is NO WARRANTY. See the file LICENSE for the full text.          **
+ \*------------------------------------------------------------------------ */
 
 package org.scalacheck
 
@@ -30,7 +30,7 @@ sealed trait Gen[+T] {
    *  called with a value of exactly type T, it is OK. */
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
-  private[scalacheck] def doApply(p: P): R[T]
+  private[scalacheck] def doApply(p: P, seed: Long): R[T]
 
 
   //// Public interface ////
@@ -43,14 +43,16 @@ sealed trait Gen[+T] {
   }
 
   /** Evaluate this generator with the given parameters */
-  def apply(p: Gen.Parameters): Option[T] = doApply(p).retrieve
+  def apply(p: Gen.Parameters, seed: Long = Rng.randomSeed): Option[T] =
+    doApply(p, seed).retrieve
 
   /** Create a new generator by mapping the result of this generator */
-  def map[U](f: T => U): Gen[U] = gen { p => doApply(p).map(f) }
+  def map[U](f: T => U): Gen[U] = gen { (p, seed) => doApply(p, seed).map(f) }
 
   /** Create a new generator by flat-mapping the result of this generator */
-  def flatMap[U](f: T => Gen[U]): Gen[U] = gen { p =>
-    doApply(p).flatMap(t => f(t).doApply(p))
+  def flatMap[U](f: T => Gen[U]): Gen[U] = gen { (p, seed) =>
+    val rt = doApply(p, seed)
+    rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
   /** Create a new generator that uses this generator to produce a value
@@ -74,8 +76,8 @@ sealed trait Gen[+T] {
    *  test property is side-effect free, eg it should not use external vars.
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P) = {
-      val res = Gen.this.doApply(p)
+    def doApply(p: P, seed: Long) = {
+      val res = Gen.this.doApply(p, seed)
       res.copy(s = { x:T => res.sieve(x) && f(x) })
     }
     override def sieveCopy(x: Any) =
@@ -92,13 +94,15 @@ sealed trait Gen[+T] {
     if (p(t)) Gen.const(t).suchThat(p) else retryUntil(p)
   }
 
-  def sample: Option[T] = doApply(Gen.Parameters.default).retrieve
+  def sample: Option[T] =
+    doApply(Gen.Parameters.default, Rng.randomSeed()).retrieve
 
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
   def ==[U](g: Gen[U]) = Prop { prms =>
-    (doApply(prms).retrieve, g.doApply(prms).retrieve) match {
+    val seed = Rng.randomSeed() //xyz
+    (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
       case _ => Prop.falsified(prms)
@@ -108,7 +112,8 @@ sealed trait Gen[+T] {
   def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
 
   def !==[U](g: Gen[U]) = Prop { prms =>
-    (doApply(prms).retrieve, g.doApply(prms).retrieve) match {
+    val seed = Rng.randomSeed() //xyz
+    (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.falsified(prms)
       case _ => Prop.proved(prms)
@@ -117,8 +122,8 @@ sealed trait Gen[+T] {
 
   /** Put a label on the generator to make test reports clearer */
   def label(l: String): Gen[T] = new Gen[T] {
-    def doApply(p: P) = {
-      val r = Gen.this.doApply(p)
+    def doApply(p: P, seed: Long) = {
+      val r = Gen.this.doApply(p, seed)
       r.copy(l = r.labels + l)
     }
     override def sieveCopy(x: Any) = Gen.this.sieveCopy(x)
@@ -151,39 +156,44 @@ object Gen extends GenArities{
     def labels: Set[String] = Set()
     def sieve[U >: T]: U => Boolean = _ => true
     protected def result: Option[T]
+    def seed: Long
 
     def retrieve = result.filter(sieve)
 
     def copy[U >: T](
       l: Set[String] = this.labels,
       s: U => Boolean = this.sieve,
-      r: Option[U] = this.result
+      r: Option[U] = this.result,
+      sd: Long = this.seed
     ): R[U] = new R[U] {
       override val labels = l
       override def sieve[V >: U] = { x:Any =>
         try s(x.asInstanceOf[U])
         catch { case _: java.lang.ClassCastException => false }
       }
+      val seed = sd
       val result = r
     }
 
-    def map[U](f: T => U): R[U] = r(retrieve.map(f)).copy(l = labels)
+    def map[U](f: T => U): R[U] = r(retrieve.map(f), seed).copy(l = labels)
 
     def flatMap[U](f: T => R[U]): R[U] = retrieve match {
-      case None => r(None).copy(l = labels)
+      case None => r(None, seed).copy(l = labels)
       case Some(t) =>
         val r = f(t)
-        r.copy(l = labels ++ r.labels)
+        r.copy(l = labels ++ r.labels, sd = seed)
     }
   }
 
-  private[scalacheck] def r[T](r: Option[T]): R[T] = new R[T] {
+  //private[scalacheck] def r[T](r: Option[T]): R[T] = new R[T] {
+  private[scalacheck] def r[T](r: Option[T], sd: Long): R[T] = new R[T] {
     val result = r
+    val seed = sd
   }
 
   /** Generator factory method */
-  private[scalacheck] def gen[T](f: P => R[T]): Gen[T] = new Gen[T] {
-    def doApply(p: P) = f(p)
+  private[scalacheck] def gen[T](f: (P, Long) => R[T]): Gen[T] = new Gen[T] {
+    def doApply(p: P, seed: Long) = f(p, seed)
   }
 
   //// Public interface ////
@@ -201,28 +211,15 @@ object Gen extends GenArities{
      *  [[Gen.Parameters.size]] set to the specified value. */
     def withSize(size: Int): Parameters = cp(size = size)
 
-    /** The random number generator used. */
-    val rng: scala.util.Random
-
-    /** Create a copy of this [[Gen.Parameters]] instance with
-     *  [[Gen.Parameters.rng]] set to the specified value. */
-    def withRng(rng: scala.util.Random): Parameters = cp(rng = rng)
-
     // private since we can't guarantee binary compatibility for this one
-    private case class cp(
-      size: Int = size,
-      rng: scala.util.Random = rng
-    ) extends Parameters
+    private case class cp(size: Int = size) extends Parameters
   }
 
   /** Provides methods for creating [[org.scalacheck.Gen.Parameters]] values */
   object Parameters {
     /** Default generator parameters trait. This can be overriden if you
      *  need to tweak the parameters. */
-    trait Default extends Parameters {
-      val size: Int = 100
-      val rng: scala.util.Random = scala.util.Random
-    }
+    trait Default extends Parameters { val size: Int = 100 }
 
     /** Default generator parameters instance. */
     val default: Parameters = new Default {}
@@ -237,26 +234,27 @@ object Gen extends GenArities{
   /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
   object Choose {
 
-    private def chLng(l: Long, h: Long)(p: P): R[Long] = {
-      if (h < l) r(None) else {
+    private def chLng(l: Long, h: Long)(p: P, seed: Long): R[Long] = {
+      if (h < l) r(None, seed) else {
         val d = h - l + 1
         if (d <= 0) {
-          var n = p.rng.nextLong
+          var n = seed
           while (n < l || n > h) {
-            n = p.rng.nextLong
+            n = Rng.next(n)
           }
-          r(Some(n))
+          r(Some(n), Rng.next(n))
         } else {
-          r(Some(l + math.abs(p.rng.nextLong % d)))
+          val n = Rng.next(seed)
+          r(Some(l + math.abs(n % d)), Rng.next(n))
         }
       }
     }
 
-    private def chDbl(l: Double, h: Double)(p: P): R[Double] = {
+    private def chDbl(l: Double, h: Double)(p: P, seed: Long): R[Double] = {
       val d = h-l
-      if (d < 0 || d > Double.MaxValue) r(None)
-      else if (d == 0) r(Some(l))
-      else r(Some(p.rng.nextDouble * (h-l) + l))
+      if (d < 0 || d > Double.MaxValue) r(None, seed)
+      else if (d == 0) r(Some(l), seed)
+      else r(Some(Rng.double(seed) * (h-l) + l), Rng.next(seed))
     }
 
     implicit val chooseLong: Choose[Long] = new Choose[Long] {
@@ -302,10 +300,10 @@ object Gen extends GenArities{
   //// Various Generator Combinators ////
 
   /** A generator that always generates the given value */
-  implicit def const[T](x: T): Gen[T] = gen(_ => r(Some(x))).suchThat(_ == x)
+  implicit def const[T](x: T): Gen[T] = gen((p, seed) => r(Some(x), seed)).suchThat(_ == x)
 
   /** A generator that never generates a value */
-  def fail[T]: Gen[T] = gen(_ => r(None)).suchThat(_ => false)
+  def fail[T]: Gen[T] = gen((p, seed) => r(None, seed)).suchThat(_ => false)
 
   /** A generator that fails if the provided option value is undefined,
    *  otherwise just returns the value. */
@@ -323,9 +321,9 @@ object Gen extends GenArities{
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
   def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
-    val g = gen { p =>
-      gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]))) {
-        case (rs,g) => g.doApply(p).flatMap(r => rs.map(_ :+ r))
+    val g = gen { (p, seed) =>
+      gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]), seed)) {
+        case (rs,g) => g.doApply(p, rs.seed).flatMap(r => rs.map(_ :+ r))
       }
     }
     g.map(b.fromIterable)
@@ -335,7 +333,7 @@ object Gen extends GenArities{
    *  and not until the wrapper generator is evaluated. */
   def lzy[T](g: => Gen[T]): Gen[T] = {
     lazy val h = g
-    gen { p => h.doApply(p) }
+    gen { (p, seed) => h.doApply(p, seed) }
   }
 
   /** Wraps a generator for later evaluation. The given parameter is
@@ -345,19 +343,19 @@ object Gen extends GenArities{
 
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
-  def delay[T](g: => Gen[T]) = gen { p => g.doApply(p) }
+  def delay[T](g: => Gen[T]) = gen { (p, seed) => g.doApply(p, seed) }
 
   /** Creates a generator that can access its generation parameters */
-  def parameterized[T](f: Parameters => Gen[T]) = gen { p => f(p).doApply(p) }
+  def parameterized[T](f: Parameters => Gen[T]) = gen { (p, seed) => f(p).doApply(p, seed) }
 
   /** Creates a generator that can access its generation size */
-  def sized[T](f: Int => Gen[T]) = gen { p => f(p.size).doApply(p) }
+  def sized[T](f: Int => Gen[T]) = gen { (p, seed) => f(p.size).doApply(p, seed) }
 
   /** A generator that returns the current generation size */
   lazy val size: Gen[Int] = sized { sz => sz }
 
   /** Creates a resized version of a generator */
-  def resize[T](s: Int, g: Gen[T]) = gen(p => g.doApply(p.withSize(s)))
+  def resize[T](s: Int, g: Gen[T]) = gen((p, seed) => g.doApply(p.withSize(s), seed))
 
   /** Picks a random value from a list */
   def oneOf[T](xs: Seq[T]): Gen[T] =
@@ -499,11 +497,17 @@ object Gen extends GenArities{
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] =
     if(n > l.size || n < 0) fail
-    else (gen { p =>
+    else (gen { (p, seed0) =>
       val b = new collection.mutable.ListBuffer[T]
       b ++= l
-      while(b.length > n) b.remove(choose(0, b.length-1).doApply(p).retrieve.get)
-      r(Some(b))
+      var seed = seed0
+      while(b.length > n) {
+        val c0 = choose(0, b.length-1)
+        val rt: R[Int] = c0.doApply(p, seed)
+        seed = rt.seed
+        b.remove(rt.retrieve.get)
+      }
+      r(Some(b), seed)
     }).suchThat(_.forall(x => l.exists(x == _)))
 
   /** A generator that picks a given number of elements from a list, randomly */
