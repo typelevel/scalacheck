@@ -43,7 +43,7 @@ sealed trait Gen[+T] {
   }
 
   /** Evaluate this generator with the given parameters */
-  def apply(p: Gen.Parameters, seed: Long = Rng.randomSeed): Option[T] =
+  def apply(p: Gen.Parameters, seed: Long): Option[T] =
     doApply(p, seed).retrieve
 
   /** Create a new generator by mapping the result of this generator */
@@ -101,7 +101,8 @@ sealed trait Gen[+T] {
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
   def ==[U](g: Gen[U]) = Prop { prms =>
-    val seed = Rng.randomSeed() //xyz
+    // test equality using a random seed
+    val seed = Rng.randomSeed()
     (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
@@ -112,7 +113,8 @@ sealed trait Gen[+T] {
   def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
 
   def !==[U](g: Gen[U]) = Prop { prms =>
-    val seed = Rng.randomSeed() //xyz
+    // test inequality using a random seed
+    val seed = Rng.randomSeed()
     (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.falsified(prms)
@@ -141,6 +143,8 @@ sealed trait Gen[+T] {
   /** Put a label on the generator to make test reports clearer */
   def |:(l: Symbol) = label(l.name)
 
+  def variant(n: Long): Gen[T] =
+    Gen.gen { (p, seed) => this.doApply(p, Rng.next(seed ^ n)) }
 }
 
 object Gen extends GenArities{
