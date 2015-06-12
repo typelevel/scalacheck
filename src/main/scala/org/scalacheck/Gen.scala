@@ -32,7 +32,6 @@ sealed trait Gen[+T] {
 
   private[scalacheck] def doApply(p: P, seed: Long): R[T]
 
-
   //// Public interface ////
 
   /** A class supporting filtered operations. */
@@ -143,8 +142,9 @@ sealed trait Gen[+T] {
   /** Put a label on the generator to make test reports clearer */
   def |:(l: Symbol) = label(l.name)
 
-  def variant(n: Long): Gen[T] =
-    Gen.gen { (p, seed) => this.doApply(p, Rng.next(seed ^ n)) }
+  /** Perform some RNG perturbation before generating */
+  def withPerturb(f: Long => Long): Gen[T] =
+    Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
 object Gen extends GenArities{
@@ -607,4 +607,21 @@ object Gen extends GenArities{
    *  parameters. */
   def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R] =
     arbitrary[T] map f
+
+
+  /** Creates a Function1 generator using Cogen to perturb
+   *  the RNG. This produces arbitrary non-constant functions. */
+  def function1[A, B](co0: Cogen[A], g: Gen[B]): Gen[A => B] =
+    Gen.gen { (p, seed) =>
+      val f = (a: A) => g.doApply(p, co0.perturb(seed, a)).retrieve.get
+      r(Some(f), seed)
+    }
+
+  /** Creates a Function2 generator using Cogen to perturb
+   *  the RNG. This produces arbitrary non-constant functions. */
+  def function2[A, B, C](co0: Cogen[A], co1: Cogen[B], g: Gen[C]): Gen[(A, B) => C] =
+    Gen.gen { (p, seed) =>
+      val f = (a: A, b: B) => g.doApply(p, co1.perturb(co0.perturb(seed, a), b)).retrieve.get
+      r(Some(f), seed)
+    }
 }
