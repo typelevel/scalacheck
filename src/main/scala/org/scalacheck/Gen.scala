@@ -608,20 +608,7 @@ object Gen extends GenArities{
   def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R] =
     arbitrary[T] map f
 
-
-  /** Creates a Function1 generator using Cogen to perturb
-   *  the RNG. This produces arbitrary non-constant functions. */
-  def function1[A, B](co0: Cogen[A], g: Gen[B]): Gen[A => B] =
-    Gen.gen { (p, seed) =>
-      val f = (a: A) => g.doApply(p, co0.perturb(seed, a)).retrieve.get
-      r(Some(f), seed)
-    }
-
-  /** Creates a Function2 generator using Cogen to perturb
-   *  the RNG. This produces arbitrary non-constant functions. */
-  def function2[A, B, C](co0: Cogen[A], co1: Cogen[B], g: Gen[C]): Gen[(A, B) => C] =
-    Gen.gen { (p, seed) =>
-      val f = (a: A, b: B) => g.doApply(p, co1.perturb(co0.perturb(seed, a), b)).retrieve.get
-      r(Some(f), seed)
-    }
+  /** Creates a Function0 generator. */
+  def function0[A](g: Gen[A]): Gen[() => A] =
+    g.map(a => () => a)
 }
