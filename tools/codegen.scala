@@ -48,7 +48,7 @@ def genfn(i: Int) = s"""
         (${fnArgs(i)}) => g.doApply(p, ${nestedPerturbs(i)}).retrieve.get
       new Gen.R[${fntype(i)}] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   """

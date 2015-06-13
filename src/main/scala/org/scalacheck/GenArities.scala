@@ -15,7 +15,7 @@ private[scalacheck] trait GenArities{
         (t1: T1) => g.doApply(p, co1.perturb(seed0, t1)).retrieve.get
       new Gen.R[(T1) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -26,7 +26,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2) => g.doApply(p, co2.perturb(co1.perturb(seed0, t1), t2)).retrieve.get
       new Gen.R[(T1,T2) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -37,7 +37,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3) => g.doApply(p, co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3)).retrieve.get
       new Gen.R[(T1,T2,T3) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -48,7 +48,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4) => g.doApply(p, co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4)).retrieve.get
       new Gen.R[(T1,T2,T3,T4) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -59,7 +59,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5) => g.doApply(p, co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -70,7 +70,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6) => g.doApply(p, co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -81,7 +81,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7) => g.doApply(p, co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -92,7 +92,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8) => g.doApply(p, co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -103,7 +103,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9) => g.doApply(p, co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -114,7 +114,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10) => g.doApply(p, co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -125,7 +125,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11) => g.doApply(p, co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -136,7 +136,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12) => g.doApply(p, co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -147,7 +147,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13) => g.doApply(p, co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -158,7 +158,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14) => g.doApply(p, co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -169,7 +169,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15) => g.doApply(p, co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -180,7 +180,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16) => g.doApply(p, co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -191,7 +191,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17) => g.doApply(p, co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -202,7 +202,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18) => g.doApply(p, co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -213,7 +213,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19) => g.doApply(p, co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -224,7 +224,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20) => g.doApply(p, co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -235,7 +235,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20,t21: T21) => g.doApply(p, co21.perturb(co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20), t21)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
@@ -246,7 +246,7 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20,t21: T21,t22: T22) => g.doApply(p, co22.perturb(co21.perturb(co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20), t21), t22)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22) => Z] {
         val result = Some(f)
-        val seed = seed0
+        val seed = Rng.next(seed0)
       }
     }
   
