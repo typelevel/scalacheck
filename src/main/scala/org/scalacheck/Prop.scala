@@ -21,8 +21,8 @@ class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
   def apply(prms: Gen.Parameters) = f(prms)
 }
 
-@scala.scalajs.js.annotation.JSExportDescendentClasses
-@scala.scalajs.js.annotation.JSExportDescendentObjects
+@Platform.JSExportDescendentClasses
+@Platform.JSExportDescendentObjects
 trait Prop extends Testable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,

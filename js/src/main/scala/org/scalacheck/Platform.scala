@@ -21,4 +21,13 @@ private[scalacheck] object Platform {
     workerFun(0)
   }
 
+  def loadModule(name: String, loader: ClassLoader): AnyRef =
+    org.scalajs.testinterface.TestUtils.loadModule(name, loader)
+
+  def newInstance(name: String, loader: ClassLoader)(args: Seq[AnyRef]): AnyRef =
+    org.scalajs.testinterface.TestUtils.newInstance(name, loader)(args)
+
+  type JSExportDescendentObjects = scala.scalajs.js.annotation.JSExportDescendentObjects
+
+  type JSExportDescendentClasses = scala.scalajs.js.annotation.JSExportDescendentClasses
 }

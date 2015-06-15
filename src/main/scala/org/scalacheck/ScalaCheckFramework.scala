@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import sbt.testing._
-import org.scalajs.testinterface.TestUtils.{loadModule, newInstance}
 import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -50,8 +49,8 @@ private abstract class ScalaCheckRunner(
 
     val props: Seq[(String,Prop)] = {
       val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
-      val obj = if (fp.isModule) loadModule(taskDef.fullyQualifiedName,loader)
-                else newInstance(taskDef.fullyQualifiedName, loader)(Seq())
+      val obj = if (fp.isModule) Platform.loadModule(taskDef.fullyQualifiedName,loader)
+                else Platform.newInstance(taskDef.fullyQualifiedName, loader)(Seq())
       obj match {
         case props: Properties => props.properties
         case prop: Prop => Seq("" -> prop)

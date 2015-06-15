@@ -59,4 +59,22 @@ private[scalacheck] object Platform {
     }
   }
 
+  def newInstance(name: String, loader: ClassLoader)(args: Seq[AnyRef]): AnyRef =
+    if(!args.isEmpty) ???
+    else Class.forName(name, true, loader).newInstance.asInstanceOf[AnyRef]
+
+  def loadModule(name: String, loader: ClassLoader): AnyRef =
+    Class.forName(name + "$", true, loader).getField("MODULE$").get(null)
+
+  import scala.annotation.Annotation
+
+  class JSExportDescendentObjects(ignoreInvalidDescendants: Boolean)
+      extends scala.annotation.Annotation {
+    def this() = this(false)
+  }
+
+  class JSExportDescendentClasses(ignoreInvalidDescendants: Boolean)
+      extends scala.annotation.Annotation {
+    def this() = this(false)
+  }
 }
