@@ -5,9 +5,8 @@ sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
   TESTS=200
-  sbt_cmd+=("set scalaJSStage in Global := FastOptStage")
 else
-  TESTS=5000
+  TESTS=1000
 fi
 
 sbt_cmd+=("set parallelExecution in ThisBuild := $SBT_PARALLEL")
