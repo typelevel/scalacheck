@@ -62,6 +62,8 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   // Travis should only publish snapshots
   publishArtifact := !(isRelease && travisCommit.isDefined),
 
+  publishArtifact in Test := false,
+
   pomIncludeRepository := { _ => false },
 
   pomExtra := {
