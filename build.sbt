@@ -11,8 +11,10 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   name := "scalacheck",
 
   version := {
-    val suffix = travisCommit.map(_.take(7)).getOrElse("SNAPSHOT")
-    versionNumber + (if (isRelease) "" else "-"+suffix)
+    val suffix =
+      if (isRelease) ""
+      else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
+    versionNumber + suffix
   },
 
   isSnapshot := !isRelease,
