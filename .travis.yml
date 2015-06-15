@@ -3,12 +3,11 @@ script: ./tools/travis-script.sh
 global:
   - TESTS=1000
 env:
-  - WORKERS=1
-  - WORKERS=4
-  - SBT_PARALLEL=yes
-  - SBT_PARALLEL=no
-  - PLATFORM=jvm
-  - PLATFORM=js
+  - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=1
+  - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=4
+  - PLATFORM=jvm SBT_PARALLEL=no  WORKERS=1
+  - PLATFORM=jvm SBT_PARALLEL=no  WORKERS=4
+  - PLATFORM=js  SBT_PARALLEL=yes WORKERS=1
 scala:
   - 2.10.5
   - 2.11.6
