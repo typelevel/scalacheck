@@ -1,13 +1,10 @@
 language: scala
 script: ./tools/travis-script.sh
 env:
-  global:
-    - TESTS=1000
-  matrix:
-    - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=1
-    - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=4
-    - PLATFORM=jvm SBT_PARALLEL=no  WORKERS=4
-    - PLATFORM=js  SBT_PARALLEL=yes WORKERS=1
+  - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=1 TESTS=1000
+  - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=4 TESTS=1000
+  - PLATFORM=jvm SBT_PARALLEL=no  WORKERS=4 TESTS=1000
+  - PLATFORM=js  SBT_PARALLEL=yes WORKERS=1 TESTS=100
 scala:
   - 2.10.5
   - 2.11.6
@@ -15,7 +12,7 @@ scala:
 matrix:
   exclude:
     - scala: "2.12.0-M1"
-      env: PLATFORM=js SBT_PARALLEL=yes WORKERS=1
+      env: PLATFORM=js SBT_PARALLEL=yes WORKERS=1 TESTS=100
 jdk:
   - openjdk7
 branches:
