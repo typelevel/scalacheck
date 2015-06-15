@@ -48,13 +48,13 @@ private abstract class ScalaCheckRunner(
   abstract class BaseTask(override val taskDef: TaskDef) extends Task {
     val tags: Array[String] = Array()
 
-    val props: Map[String,Prop] = {
+    val props: Seq[(String,Prop)] = {
       val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
       val obj = if (fp.isModule) loadModule(taskDef.fullyQualifiedName,loader)
                 else newInstance(taskDef.fullyQualifiedName, loader)(Seq())
       obj match {
-        case props: Properties => Map(props.properties: _*)
-        case prop: Prop => Map("" -> prop)
+        case props: Properties => props.properties
+        case prop: Prop => Seq("" -> prop)
       }
     }
 
@@ -65,7 +65,7 @@ private abstract class ScalaCheckRunner(
 
   def rootTask(td: TaskDef) = new BaseTask(td) {
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
-      props.toArray map { case (name,_) =>
+      props.map(_._1).toSet.toArray map { name =>
         checkPropTask(new TaskDef(td.fullyQualifiedName, td.fingerprint,
           td.explicitlySpecified, Array(new TestSelector(name)))
         )
@@ -82,50 +82,51 @@ private abstract class ScalaCheckRunner(
       names flatMap { name =>
         import util.Pretty.{pretty, Params}
 
-        val prop = props(name)
-        val result = Test.check(params.withCustomClassLoader(Some(loader)), prop)
+        for ((`name`, prop) <- props) {
+          val result = Test.check(params.withCustomClassLoader(Some(loader)), prop)
 
-        val event = new Event {
-          val status = result.status match {
-            case Test.Passed => Status.Success
-            case _:Test.Proved => Status.Success
-            case _:Test.Failed => Status.Failure
-            case Test.Exhausted => Status.Failure
-            case _:Test.PropException => Status.Error
+          val event = new Event {
+            val status = result.status match {
+              case Test.Passed => Status.Success
+              case _:Test.Proved => Status.Success
+              case _:Test.Failed => Status.Failure
+              case Test.Exhausted => Status.Failure
+              case _:Test.PropException => Status.Error
+            }
+            val throwable = result.status match {
+              case Test.PropException(_, e, _) => new OptionalThrowable(e)
+              case _:Test.Failed => new OptionalThrowable(
+                new Exception(pretty(result, Params(0)))
+              )
+              case _ => new OptionalThrowable()
+            }
+            val fullyQualifiedName = taskDef.fullyQualifiedName
+            val selector = new TestSelector(name)
+            val fingerprint = taskDef.fingerprint
+            val duration = -1L
           }
-          val throwable = result.status match {
-            case Test.PropException(_, e, _) => new OptionalThrowable(e)
-            case _:Test.Failed => new OptionalThrowable(
-              new Exception(pretty(result, Params(0)))
-            )
-            case _ => new OptionalThrowable()
+
+          handler.handle(event)
+
+          event.status match {
+            case Status.Success => successCount.incrementAndGet()
+            case Status.Error => errorCount.incrementAndGet()
+            case Status.Skipped => errorCount.incrementAndGet()
+            case Status.Failure => failureCount.incrementAndGet()
+            case _ => failureCount.incrementAndGet()
           }
-          val fullyQualifiedName = taskDef.fullyQualifiedName
-          val selector = new TestSelector(name)
-          val fingerprint = taskDef.fingerprint
-          val duration = -1L
+          testCount.incrementAndGet()
+
+          // TODO Stack traces should be reported through event
+          val verbosityOpts = Set("-verbosity", "-v")
+          val verbosity =
+            args.grouped(2).filter(twos => verbosityOpts(twos.head))
+            .toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
+          val s = if (result.passed) "+" else "!"
+          val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
+          val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
+          loggers.foreach(l => l.info(logMsg))
         }
-
-        handler.handle(event)
-
-        event.status match {
-          case Status.Success => successCount.incrementAndGet()
-          case Status.Error => errorCount.incrementAndGet()
-          case Status.Skipped => errorCount.incrementAndGet()
-          case Status.Failure => failureCount.incrementAndGet()
-          case _ => failureCount.incrementAndGet()
-        }
-        testCount.incrementAndGet()
-
-        // TODO Stack traces should be reported through event
-        val verbosityOpts = Set("-verbosity", "-v")
-        val verbosity =
-          args.grouped(2).filter(twos => verbosityOpts(twos.head))
-          .toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
-        val s = if (result.passed) "+" else "!"
-        val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
-        val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
-        loggers.foreach(l => l.info(logMsg))
 
         Array.empty[Task]
       }
