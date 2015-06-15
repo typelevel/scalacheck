@@ -17,8 +17,8 @@ jdk:
   - openjdk7
 env:
   global:
-    - secure: WmeKoBcM77w2J87BQuK35wzvGssMITFy3IsEF/KvwkYRipfp3rllODo/oubYL4XDqPNXKJJ6yYeie+x2jZfdyesnEg4nHcv217kifc1+zgdASsxsmWtNv5UT2zmxzXl7fEzV9MQR3idwbakj7CXvn4KZQUZKE/Xvw+ej9I5bhfc=
-    - secure: c/PKfNvFZl9xoXxcToD1zadpkcKcpmCLirDekiWWhIBd60QudA9fC+71aNeeFobM8iR4zTeCcNCmDr/+r7S9Sc4QmnZ1bcMZRVFTvtm/UGJeWQlRRCf1tr8O/I7GF278Za2YO+gtw3bGsjjb//K3CJ7ZfTsbTJ6q6hwKeFJGNWg=
+    - secure: PwIb1un8vuuyoidnjHaKO81FD49n5ZTVEnf6hVKkMRe3hipr+WGWv19m92yE/n34ROFo1BM9DmfYxaexlE0pI2o/a5MV1i3kNSwUk+Yt8uU6F4+nyQKROQUe76UtAtXmsYgLqXaWSW0+EVidMyhSktkXXxiU5wCGLdKkPu3Vj9w=
+    - secure: KeZRD91oE4UzwhSJfjllkwNXnerDGQJSIOuRLVtbLCq0JJnAfj6B7fvI2KyZqQwuhYrUyYOSbSLd6BAi75bBYMb3D1yNdyPA5gHDg5aj96ALojrOuU60+/dOQ0Rg6Pf2UiTlFAXzz1mud8+Q3svaeKX4JDVxj329T3ReBspjyBY=
   matrix:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
