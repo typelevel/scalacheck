@@ -1,16 +1,36 @@
 sourceDirectory := file("dummy source directory")
 
+lazy val versionNumber = "1.12.5"
+
+lazy val isRelease = false
+
+lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
+
 lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   name := "scalacheck",
 
-  version := "1.12.5-SNAPSHOT",
+  version := {
+    val suffix = travisCommit.map(_.take(7)).getOrElse("SNAPSHOT")
+    versionNumber + (if (isRelease) "" else "-"+suffix)
+  },
+
+  isSnapshot := !isRelease,
 
   organization := "org.scalacheck",
 
   licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
 
   homepage := Some(url("http://www.scalacheck.org")),
+
+  credentials ++= (for {
+    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
+    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+  } yield Credentials(
+    "Sonatype Nexus Repository Manager",
+    "oss.sonatype.org",
+    username, password
+  )).toSeq,
 
   scalaVersion := "2.11.6",
 
@@ -37,7 +57,8 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   publishMavenStyle := true,
 
-  publishArtifact in Test := false,
+  // Travis should only publish snapshots
+  publishArtifact := !(isRelease && travisCommit.isDefined),
 
   pomIncludeRepository := { _ => false },
 

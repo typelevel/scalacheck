@@ -1,5 +1,6 @@
 language: scala
 script: ./tools/travis-script.sh
+after_success: ./tools/travis-deploy.sh
 branches:
   only:
     - master
@@ -15,12 +16,16 @@ scala:
 jdk:
   - openjdk7
 env:
-  - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1
-  - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4
-  - PLATFORM=jvm SBT_PARALLEL=false WORKERS=4
-  - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1
+  global:
+    - secure: WmeKoBcM77w2J87BQuK35wzvGssMITFy3IsEF/KvwkYRipfp3rllODo/oubYL4XDqPNXKJJ6yYeie+x2jZfdyesnEg4nHcv217kifc1+zgdASsxsmWtNv5UT2zmxzXl7fEzV9MQR3idwbakj7CXvn4KZQUZKE/Xvw+ej9I5bhfc=
+    - secure: c/PKfNvFZl9xoXxcToD1zadpkcKcpmCLirDekiWWhIBd60QudA9fC+71aNeeFobM8iR4zTeCcNCmDr/+r7S9Sc4QmnZ1bcMZRVFTvtm/UGJeWQlRRCf1tr8O/I7GF278Za2YO+gtw3bGsjjb//K3CJ7ZfTsbTJ6q6hwKeFJGNWg=
+  matrix:
+    - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
+    - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
+    - PLATFORM=jvm SBT_PARALLEL=false WORKERS=4 DEPLOY=false
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
 matrix:
   include:
     - scala: 2.12.0-M1
       jdk: openjdk7
-      env: PLATFORM=jvm SBT_PARALLEL=true WORKERS=4
+      env: PLATFORM=jvm SBT_PARALLEL=true WORKERS=4 DEPLOY=true
