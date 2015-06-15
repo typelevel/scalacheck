@@ -16,7 +16,7 @@ import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
 import scala.annotation.tailrec
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
- *  use [[Prop.apply]] instead. */
+ *  use `Prop.apply` instead. */
 class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
   def apply(prms: Gen.Parameters) = f(prms)
 }

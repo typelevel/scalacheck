@@ -24,7 +24,9 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
-  scalacOptions ++= Seq("-deprecation", "-feature"),
+  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
+
+  scalacOptions in (Compile,doc) += "-Xfatal-warnings",
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
