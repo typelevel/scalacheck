@@ -106,7 +106,8 @@ trait Commands {
     /** Executes the command in the system under test, and returns a
      *  representation of the result of the command run. The result value
      *  is later used for verifying that the command behaved according
-     *  to the specification, by the [[postCondition]] method. */
+     *  to the specification, by the [[Command!.postCondition* postCondition]]
+     *  method. */
     def run(sut: Sut): Result
 
     /** Returns a new [[State]] instance that represents the
