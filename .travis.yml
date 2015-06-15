@@ -15,7 +15,7 @@ scala:
 matrix:
   exclude:
     - scala: "2.12.0-M1"
-      env: PLATFORM=js SBT_PARALLEL=yes WORKERS=1 TESTS=1000
+      env: PLATFORM=js SBT_PARALLEL=yes WORKERS=1
 jdk:
   - openjdk7
 branches:
