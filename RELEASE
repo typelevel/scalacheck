@@ -1,4 +1,4 @@
-ScalaCheck 1.12.3 Release Notes
+ScalaCheck 1.12.4 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -26,13 +26,15 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and specs2.
 
-What's new in version 1.12.3?
+What's new in version 1.12.4?
 
-1.12.3 fixes a number of bugs since last version, and adds some new API
-methods. The SBT build definition has also been cleaned up so that more (all)
-code is shared between the JVM and JS builds. The SBT test runner has been
-improved to take advantage of more SBT-specific features. The JS support has
-been updated for Scala.JS 0.6.3.
+1.12.4 should be identical to 1.12.3, but a few incompatibilities introduced by
+mistake in 1.12.3 have been corrected. See the following issues for details:
+
+  * https://github.com/rickynils/scalacheck/issues/165
+  * https://github.com/rickynils/scalacheck/issues/166
+
+Also, ScalaCheck 1.12.4 has been released for Scala 1.12.0-M1.
 
 ScalaCheck links:
 
@@ -50,7 +52,7 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.12.3" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
     )
 
   * Maven dependency
@@ -73,5 +75,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.11</artifactId>
-      <version>1.12.3</version>
+      <version>1.12.4</version>
     </dependency>
