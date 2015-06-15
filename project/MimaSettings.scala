@@ -8,7 +8,6 @@ object MimaSettings {
   import mima.plugin.MimaPlugin.mimaDefaultSettings
 
   lazy val settings = mimaDefaultSettings ++ Seq(
-    previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.12.4"),
     binaryIssueFilters :=
       removedPrivateMethods.map(exclude[MissingMethodProblem](_)) ++
       newMethods.map(exclude[MissingMethodProblem](_)) ++
