@@ -1,13 +1,22 @@
 language: scala
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION "set scalaJSStage in Global := FastOptStage" $PLATFORM/clean $PLATFORM/update $PLATFORM/compile "$PLATFORM/testOnly * -- -s $TESTS -w $WORKERS" $PLATFORM/mimaReportBinaryIssues $PLATFORM/doc
+script: ./tools/travis-script.sh
+global:
+  - TESTS=1000
 env:
-  - PLATFORM=jvm TESTS=1000 WORKERS=1
-  - PLATFORM=jvm TESTS=1000 WORKERS=4
-  - PLATFORM=js TESTS=100 WORKERS=1
+  - WORKERS=1
+  - WORKERS=4
+  - SBT_PARALLEL=yes
+  - SBT_PARALLEL=no
+  - PLATFORM=jvm
+  - PLATFORM=js
 scala:
   - 2.10.5
   - 2.11.6
+  - 2.12.0-M1
+matrix:
+  exclude:
+  - scala: 2.12.0-M1
+            env: PLATFORM=js
 jdk:
   - openjdk7
 branches:
@@ -18,6 +27,3 @@ notifications:
   email:
     - adriaan.moors@typesafe.com
     - rickynils@gmail.com
-
-# if we get weird timeouts, see https://github.com/spray/spray/pull/233
-# 'set concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)'
