@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import rng.Seed
+
 import Gen._
 import Prop.{forAll, someFailing, noneFailing, sizedProp}
 import Arbitrary._
@@ -16,6 +18,12 @@ import Shrink._
 import java.util.Date
 
 object GenSpecification extends Properties("Gen") {
+
+  val g: Gen[Int] = arbitrary[Int]
+  implicit val arbSeed: Arbitrary[Seed] =
+    Arbitrary(for { a <- g; b <- g; c <- g; d <- g } yield new Seed(a, b, c, d))
+    //Arbitrary(arbitrary[Long].map(Seed(_)))
+
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
       (someFailing(l) && (sequence[List[Int],Int](l) == fail)) ||
@@ -44,22 +52,22 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
-  property("const") = forAll { (x:Int, prms:Parameters, seed: Long) =>
+  property("const") = forAll { (x:Int, prms:Parameters, seed: Seed) =>
     const(x)(prms, seed) == Some(x)
   }
 
-  property("fail") = forAll { (prms: Parameters, seed: Long) =>
+  property("fail") = forAll { (prms: Parameters, seed: Seed) =>
     fail(prms, seed) == None
   }
 
-  property("fromOption") = forAll { (prms: Parameters, seed: Long, o: Option[Int]) =>
+  property("fromOption") = forAll { (prms: Parameters, seed: Seed, o: Option[Int]) =>
     o match {
       case Some(x) => fromOption(o)(prms, seed) == Some(x)
       case None => fromOption(o)(prms, seed) == None
     }
   }
 
-  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Long) =>
+  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Seed) =>
     val g = const(o).collect { case Some(n) => n }
     o match {
       case Some(x) => g(prms, seed) == Some(x)

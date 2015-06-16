@@ -12,9 +12,11 @@ package org.scalacheck
 import language.higherKinds
 import language.implicitConversions
 
+import rng.Seed
+
 sealed trait Cogen[-T] {
 
-  def perturb(seed: Long, t: T): Long
+  def perturb(seed: Seed, t: T): Seed
 
   def cogen[A](t: T, g: Gen[A]): Gen[A] =
     Gen.gen((p, seed) => g.doApply(p, perturb(seed, t)))
@@ -29,25 +31,30 @@ object Cogen {
 
   def apply[T](f: T => Long): Cogen[T] =
     new Cogen[T] {
-      def perturb(seed: Long, t: T): Long = Rng.next(seed ^ f(t))
+      def perturb(seed: Seed, t: T): Seed = seed.reseed(f(t))
     }
 
-  def apply[T](f: (Long, T) => Long): Cogen[T] =
+  def apply[T](f: (Seed, T) => Seed): Cogen[T] =
     new Cogen[T] {
-      def perturb(seed: Long, t: T): Long = Rng.next(f(seed, t))
+      def perturb(seed: Seed, t: T): Seed = f(seed, t).next
     }
 
   def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
     new Cogen[T] {
-      def perturb(seed: Long, t: T): Long =
-        Rng.next(f(t).foldLeft(seed)(U.perturb))
+      def perturb(seed: Seed, t: T): Seed =
+        f(t).foldLeft(seed)(U.perturb).next
     }
 
-  def perturb[A](seed: Long, a: A)(implicit A: Cogen[A]): Long =
+  def perturb[A](seed: Seed, a: A)(implicit A: Cogen[A]): Seed =
     A.perturb(seed, a)
 
-  implicit lazy val cogenUnit: Cogen[Unit] = Cogen(_ => 0L)
-  implicit lazy val cogenBoolean: Cogen[Boolean] = Cogen(b => if (b) 1L else 0L)
+  implicit lazy val cogenUnit: Cogen[Unit] =
+    Cogen(_ => 0L)
+
+  // implicit lazy val cogenBoolean: Cogen[Boolean] =
+  //   Cogen((seed, b) => if (b) seed.next else seed)
+  implicit lazy val cogenBoolean: Cogen[Boolean] =
+    Cogen(b => if (b) 1L else 0L)
 
   implicit lazy val cogenByte: Cogen[Byte] = Cogen(_.toLong)
   implicit lazy val cogenShort: Cogen[Short] = Cogen(_.toLong)
@@ -62,10 +69,10 @@ object Cogen {
     Cogen(n => java.lang.Double.doubleToRawLongBits(n))
 
   implicit def cogenOption[A](implicit A: Cogen[A]): Cogen[Option[A]] =
-    Cogen((seed, o) => o.fold(seed)(a => A.perturb(seed, a) ^ 1L))
+    Cogen((seed, o) => o.fold(seed)(a => A.perturb(seed.next, a)))
 
   implicit def cogenEither[A, B](implicit A: Cogen[A], B: Cogen[B]): Cogen[Either[A, B]] =
-    Cogen((seed, e) => e.fold(a => A.perturb(seed, a), b => B.perturb(seed, b) ^ 1L))
+    Cogen((seed, e) => e.fold(a => A.perturb(seed, a), b => B.perturb(seed.next, b)))
 
   implicit def cogenTuple2[A, B](implicit A: Cogen[A], B: Cogen[B]): Cogen[(A, B)] =
     Cogen((seed, ab) => perturbPair(seed, ab))
@@ -88,16 +95,13 @@ object Cogen {
   implicit def cogenMap[K: Cogen: Ordering, V: Cogen: Ordering]: Cogen[Map[K, V]] =
     Cogen.it(_.toVector.sorted.iterator)
 
-  def perturbPair[A, B](seed: Long, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Long =
+  def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)
 
-  def perturbArray[A](seed: Long, as: Array[A])(implicit A: Cogen[A]): Long = {
-    var n = seed
+  def perturbArray[A](seed: Seed, as: Array[A])(implicit A: Cogen[A]): Seed = {
+    var s = seed
     var i = 0
-    while (i < as.length) {
-      n = A.perturb(n, as(i))
-      i += 1
-    }
-    Rng.next(n)
+    while (i < as.length) { s = A.perturb(s, as(i)); i += 1 }
+    s.next
   }
 }

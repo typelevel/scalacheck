@@ -12,6 +12,7 @@ package org.scalacheck
 import language.higherKinds
 import language.implicitConversions
 
+import rng.{ Rng, Seed }
 import util.Buildable
 import scala.collection.immutable.TreeMap
 
@@ -30,7 +31,7 @@ sealed trait Gen[+T] {
    *  called with a value of exactly type T, it is OK. */
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
-  private[scalacheck] def doApply(p: P, seed: Long): R[T]
+  private[scalacheck] def doApply(p: P, seed: Seed): R[T]
 
   //// Public interface ////
 
@@ -42,7 +43,7 @@ sealed trait Gen[+T] {
   }
 
   /** Evaluate this generator with the given parameters */
-  def apply(p: Gen.Parameters, seed: Long): Option[T] =
+  def apply(p: Gen.Parameters, seed: Seed): Option[T] =
     doApply(p, seed).retrieve
 
   /** Create a new generator by mapping the result of this generator */
@@ -75,7 +76,7 @@ sealed trait Gen[+T] {
    *  test property is side-effect free, eg it should not use external vars.
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Long) = {
+    def doApply(p: P, seed: Seed) = {
       val res = Gen.this.doApply(p, seed)
       res.copy(s = { x:T => res.sieve(x) && f(x) })
     }
@@ -123,7 +124,7 @@ sealed trait Gen[+T] {
 
   /** Put a label on the generator to make test reports clearer */
   def label(l: String): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Long) = {
+    def doApply(p: P, seed: Seed) = {
       val r = Gen.this.doApply(p, seed)
       r.copy(l = r.labels + l)
     }
@@ -143,7 +144,7 @@ sealed trait Gen[+T] {
   def |:(l: Symbol) = label(l.name)
 
   /** Perform some RNG perturbation before generating */
-  def withPerturb(f: Long => Long): Gen[T] =
+  def withPerturb(f: Seed => Seed): Gen[T] =
     Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
@@ -160,7 +161,7 @@ object Gen extends GenArities{
     def labels: Set[String] = Set()
     def sieve[U >: T]: U => Boolean = _ => true
     protected def result: Option[T]
-    def seed: Long
+    def seed: Seed
 
     def retrieve = result.filter(sieve)
 
@@ -168,7 +169,7 @@ object Gen extends GenArities{
       l: Set[String] = this.labels,
       s: U => Boolean = this.sieve,
       r: Option[U] = this.result,
-      sd: Long = this.seed
+      sd: Seed = this.seed
     ): R[U] = new R[U] {
       override val labels = l
       override def sieve[V >: U] = { x:Any =>
@@ -185,19 +186,18 @@ object Gen extends GenArities{
       case None => r(None, seed).copy(l = labels)
       case Some(t) =>
         val r = f(t)
-        r.copy(l = labels ++ r.labels, sd = seed)
+        r.copy(l = labels ++ r.labels, sd = r.seed)
     }
   }
 
-  //private[scalacheck] def r[T](r: Option[T]): R[T] = new R[T] {
-  private[scalacheck] def r[T](r: Option[T], sd: Long): R[T] = new R[T] {
+  private[scalacheck] def r[T](r: Option[T], sd: Seed): R[T] = new R[T] {
     val result = r
     val seed = sd
   }
 
   /** Generator factory method */
-  private[scalacheck] def gen[T](f: (P, Long) => R[T]): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Long) = f(p, seed)
+  private[scalacheck] def gen[T](f: (P, Seed) => R[T]): Gen[T] = new Gen[T] {
+    def doApply(p: P, seed: Seed) = f(p, seed)
   }
 
   //// Public interface ////
@@ -238,27 +238,34 @@ object Gen extends GenArities{
   /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
   object Choose {
 
-    private def chLng(l: Long, h: Long)(p: P, seed: Long): R[Long] = {
+    private def chLng(l: Long, h: Long)(p: P, seed: Seed): R[Long] = {
       if (h < l) r(None, seed) else {
         val d = h - l + 1
         if (d <= 0) {
-          var n = seed
+          var tpl = Rng.long(seed)
+          var n = tpl._1
+          var s = tpl._2
           while (n < l || n > h) {
-            n = Rng.next(n)
+            tpl = Rng.long(s)
+            n = tpl._1
+            s = tpl._2
           }
-          r(Some(n), Rng.next(n))
+          r(Some(n), s)
         } else {
-          val n = Rng.next(seed)
-          r(Some(l + math.abs(n % d)), Rng.next(n))
+          val (n, s) = Rng.long(seed)
+          r(Some(l + (n & 0x7fffffffffffffffL) % d), s)
         }
       }
     }
 
-    private def chDbl(l: Double, h: Double)(p: P, seed: Long): R[Double] = {
+    private def chDbl(l: Double, h: Double)(p: P, seed: Seed): R[Double] = {
       val d = h-l
       if (d < 0 || d > Double.MaxValue) r(None, seed)
       else if (d == 0) r(Some(l), seed)
-      else r(Some(Rng.double(seed) * (h-l) + l), Rng.next(seed))
+      else {
+        val (n, s) = Rng.double(seed)
+        r(Some(n * (h-l) + l), s)
+      }
     }
 
     implicit val chooseLong: Choose[Long] = new Choose[Long] {
@@ -326,8 +333,10 @@ object Gen extends GenArities{
    *  resulting generator will also fail. */
   def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
     val g = gen { (p, seed) =>
-      gs.foldLeft(r(Some(collection.immutable.Vector.empty[T]), seed)) {
-        case (rs,g) => g.doApply(p, rs.seed).flatMap(r => rs.map(_ :+ r))
+      gs.foldLeft(r(Some(Vector.empty[T]), seed)) {
+        case (rs,g) =>
+          val rt = g.doApply(p, rs.seed)
+          rt.flatMap(t => rs.map(_ :+ t)).copy(sd = rt.seed)
       }
     }
     g.map(b.fromIterable)

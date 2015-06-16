@@ -12,6 +12,7 @@ package org.scalacheck
 import language.implicitConversions
 import language.reflectiveCalls
 
+import rng.{ Rng, Seed }
 import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
 import scala.annotation.tailrec
 

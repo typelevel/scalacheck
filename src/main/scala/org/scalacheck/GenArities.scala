@@ -7,7 +7,7 @@ package org.scalacheck
 private[scalacheck] trait GenArities{
 
   // genfn //
-  
+
   /** Gen creator for Function1 */
   def function1[T1,Z](g: Gen[Z])(implicit co1: Cogen[T1]): Gen[(T1) => Z] =
     Gen.gen { (p, seed0) =>
@@ -15,10 +15,10 @@ private[scalacheck] trait GenArities{
         (t1: T1) => g.doApply(p, co1.perturb(seed0, t1)).retrieve.get
       new Gen.R[(T1) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function2 */
   def function2[T1,T2,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2]): Gen[(T1,T2) => Z] =
     Gen.gen { (p, seed0) =>
@@ -26,10 +26,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2) => g.doApply(p, co2.perturb(co1.perturb(seed0, t1), t2)).retrieve.get
       new Gen.R[(T1,T2) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function3 */
   def function3[T1,T2,T3,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3]): Gen[(T1,T2,T3) => Z] =
     Gen.gen { (p, seed0) =>
@@ -37,10 +37,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3) => g.doApply(p, co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3)).retrieve.get
       new Gen.R[(T1,T2,T3) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function4 */
   def function4[T1,T2,T3,T4,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4]): Gen[(T1,T2,T3,T4) => Z] =
     Gen.gen { (p, seed0) =>
@@ -48,10 +48,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4) => g.doApply(p, co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4)).retrieve.get
       new Gen.R[(T1,T2,T3,T4) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function5 */
   def function5[T1,T2,T3,T4,T5,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5]): Gen[(T1,T2,T3,T4,T5) => Z] =
     Gen.gen { (p, seed0) =>
@@ -59,10 +59,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5) => g.doApply(p, co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function6 */
   def function6[T1,T2,T3,T4,T5,T6,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6]): Gen[(T1,T2,T3,T4,T5,T6) => Z] =
     Gen.gen { (p, seed0) =>
@@ -70,10 +70,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6) => g.doApply(p, co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function7 */
   def function7[T1,T2,T3,T4,T5,T6,T7,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7]): Gen[(T1,T2,T3,T4,T5,T6,T7) => Z] =
     Gen.gen { (p, seed0) =>
@@ -81,10 +81,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7) => g.doApply(p, co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function8 */
   def function8[T1,T2,T3,T4,T5,T6,T7,T8,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8) => Z] =
     Gen.gen { (p, seed0) =>
@@ -92,10 +92,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8) => g.doApply(p, co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function9 */
   def function9[T1,T2,T3,T4,T5,T6,T7,T8,T9,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9) => Z] =
     Gen.gen { (p, seed0) =>
@@ -103,10 +103,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9) => g.doApply(p, co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function10 */
   def function10[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10) => Z] =
     Gen.gen { (p, seed0) =>
@@ -114,10 +114,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10) => g.doApply(p, co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function11 */
   def function11[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11) => Z] =
     Gen.gen { (p, seed0) =>
@@ -125,10 +125,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11) => g.doApply(p, co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function12 */
   def function12[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12) => Z] =
     Gen.gen { (p, seed0) =>
@@ -136,10 +136,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12) => g.doApply(p, co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function13 */
   def function13[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13) => Z] =
     Gen.gen { (p, seed0) =>
@@ -147,10 +147,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13) => g.doApply(p, co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function14 */
   def function14[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14) => Z] =
     Gen.gen { (p, seed0) =>
@@ -158,10 +158,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14) => g.doApply(p, co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function15 */
   def function15[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15) => Z] =
     Gen.gen { (p, seed0) =>
@@ -169,10 +169,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15) => g.doApply(p, co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function16 */
   def function16[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16) => Z] =
     Gen.gen { (p, seed0) =>
@@ -180,10 +180,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16) => g.doApply(p, co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function17 */
   def function17[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17) => Z] =
     Gen.gen { (p, seed0) =>
@@ -191,10 +191,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17) => g.doApply(p, co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function18 */
   def function18[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18) => Z] =
     Gen.gen { (p, seed0) =>
@@ -202,10 +202,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18) => g.doApply(p, co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function19 */
   def function19[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19) => Z] =
     Gen.gen { (p, seed0) =>
@@ -213,10 +213,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19) => g.doApply(p, co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function20 */
   def function20[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20) => Z] =
     Gen.gen { (p, seed0) =>
@@ -224,10 +224,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20) => g.doApply(p, co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function21 */
   def function21[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20],co21: Cogen[T21]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21) => Z] =
     Gen.gen { (p, seed0) =>
@@ -235,10 +235,10 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20,t21: T21) => g.doApply(p, co21.perturb(co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20), t21)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
   /** Gen creator for Function22 */
   def function22[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,Z](g: Gen[Z])(implicit co1: Cogen[T1],co2: Cogen[T2],co3: Cogen[T3],co4: Cogen[T4],co5: Cogen[T5],co6: Cogen[T6],co7: Cogen[T7],co8: Cogen[T8],co9: Cogen[T9],co10: Cogen[T10],co11: Cogen[T11],co12: Cogen[T12],co13: Cogen[T13],co14: Cogen[T14],co15: Cogen[T15],co16: Cogen[T16],co17: Cogen[T17],co18: Cogen[T18],co19: Cogen[T19],co20: Cogen[T20],co21: Cogen[T21],co22: Cogen[T22]): Gen[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22) => Z] =
     Gen.gen { (p, seed0) =>
@@ -246,13 +246,13 @@ private[scalacheck] trait GenArities{
         (t1: T1,t2: T2,t3: T3,t4: T4,t5: T5,t6: T6,t7: T7,t8: T8,t9: T9,t10: T10,t11: T11,t12: T12,t13: T13,t14: T14,t15: T15,t16: T16,t17: T17,t18: T18,t19: T19,t20: T20,t21: T21,t22: T22) => g.doApply(p, co22.perturb(co21.perturb(co20.perturb(co19.perturb(co18.perturb(co17.perturb(co16.perturb(co15.perturb(co14.perturb(co13.perturb(co12.perturb(co11.perturb(co10.perturb(co9.perturb(co8.perturb(co7.perturb(co6.perturb(co5.perturb(co4.perturb(co3.perturb(co2.perturb(co1.perturb(seed0, t1), t2), t3), t4), t5), t6), t7), t8), t9), t10), t11), t12), t13), t14), t15), t16), t17), t18), t19), t20), t21), t22)).retrieve.get
       new Gen.R[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22) => Z] {
         val result = Some(f)
-        val seed = Rng.next(seed0)
+        val seed = seed0.next
       }
     }
-  
+
 
   // zip //
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1](
@@ -266,7 +266,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2](
@@ -280,7 +280,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3](
@@ -294,7 +294,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4](
@@ -308,7 +308,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5](
@@ -322,7 +322,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6](
@@ -336,7 +336,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7](
@@ -350,7 +350,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8](
@@ -364,7 +364,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9](
@@ -378,7 +378,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10](
@@ -392,7 +392,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11](
@@ -406,7 +406,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12](
@@ -420,7 +420,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13](
@@ -434,7 +434,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14](
@@ -448,7 +448,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15](
@@ -462,7 +462,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16](
@@ -476,7 +476,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17](
@@ -490,7 +490,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18](
@@ -504,7 +504,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17) && g18.sieveCopy(t18)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19](
@@ -518,7 +518,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17) && g18.sieveCopy(t18) && g19.sieveCopy(t19)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20](
@@ -532,7 +532,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17) && g18.sieveCopy(t18) && g19.sieveCopy(t19) && g20.sieveCopy(t20)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21](
@@ -546,7 +546,7 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17) && g18.sieveCopy(t18) && g19.sieveCopy(t19) && g20.sieveCopy(t20) && g21.sieveCopy(t21)
     }
   }
-  
+
   /** Combines the given generators into one generator that produces a
    *  tuple of their generated values. */
   def zip[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22](
@@ -560,12 +560,12 @@ private[scalacheck] trait GenArities{
         g1.sieveCopy(t1) && g2.sieveCopy(t2) && g3.sieveCopy(t3) && g4.sieveCopy(t4) && g5.sieveCopy(t5) && g6.sieveCopy(t6) && g7.sieveCopy(t7) && g8.sieveCopy(t8) && g9.sieveCopy(t9) && g10.sieveCopy(t10) && g11.sieveCopy(t11) && g12.sieveCopy(t12) && g13.sieveCopy(t13) && g14.sieveCopy(t14) && g15.sieveCopy(t15) && g16.sieveCopy(t16) && g17.sieveCopy(t17) && g18.sieveCopy(t18) && g19.sieveCopy(t19) && g20.sieveCopy(t20) && g21.sieveCopy(t21) && g22.sieveCopy(t22)
     }
   }
-  
+
 
   // resultOf //
   import Arbitrary.arbitrary
   def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R]
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -576,7 +576,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -587,7 +587,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -598,7 +598,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -609,7 +609,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -620,7 +620,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -631,7 +631,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -642,7 +642,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -653,7 +653,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -664,7 +664,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -675,7 +675,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -686,7 +686,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -697,7 +697,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -708,7 +708,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -719,7 +719,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -730,7 +730,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -741,7 +741,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -752,7 +752,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17,_:T18))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -763,7 +763,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17,_:T18,_:T19))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -774,7 +774,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17,_:T18,_:T19,_:T20))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -785,7 +785,7 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17,_:T18,_:T19,_:T20,_:T21))
     }
-  
+
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
@@ -796,5 +796,5 @@ private[scalacheck] trait GenArities{
     ): Gen[R] = arbitrary[T1] flatMap {
       t => resultOf(f(t,_:T2,_:T3,_:T4,_:T5,_:T6,_:T7,_:T8,_:T9,_:T10,_:T11,_:T12,_:T13,_:T14,_:T15,_:T16,_:T17,_:T18,_:T19,_:T20,_:T21,_:T22))
     }
-  
+
 }
