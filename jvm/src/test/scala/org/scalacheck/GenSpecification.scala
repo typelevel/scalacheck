@@ -22,7 +22,6 @@ object GenSpecification extends Properties("Gen") {
   val g: Gen[Int] = arbitrary[Int]
   implicit val arbSeed: Arbitrary[Seed] =
     Arbitrary(for { a <- g; b <- g; c <- g; d <- g } yield new Seed(a, b, c, d))
-    //Arbitrary(arbitrary[Long].map(Seed(_)))
 
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
