@@ -248,4 +248,23 @@ object GenSpecification extends Properties("Gen") {
   property("22 field case class works") = forAll(Gen.resultOf(Full22.tupled)){
     Full22.unapply(_).get.isInstanceOf[Tuple22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]]
   }
+
+  type Trilean = Either[Unit, Boolean]
+
+  val tf: List[Boolean] = List(true, false)
+  val utf: List[Trilean] = List(Left(()), Right(true), Right(false))
+
+  def exhaust[A: Cogen, B: Arbitrary](n: Int, as: List[A], bs: List[B]): Boolean = {
+    val fs = listOfN(n, arbitrary[A => B]).sample.get
+    val outcomes = for { f <- fs; a <- as } yield (a, f(a))
+    val expected = for { a <- as; b <- bs } yield (a, b)
+    outcomes.toSet == expected.toSet
+  }
+
+  // none of these should fail more than 1 in 100000000 runs.
+  val N = 150
+  property("random (Boolean => Boolean) functions") = exhaust(N, tf, tf)
+  property("random (Boolean => Trilean) functions") = exhaust(N, tf, utf)
+  property("random (Trilean => Boolean) functions") = exhaust(N, utf, tf)
+  property("random (Trilean => Trilean) functions") = exhaust(N, utf, utf)
 }
