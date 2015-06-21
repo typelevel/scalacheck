@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import rng.Seed
+
 import Gen._
 import Prop.{forAll, someFailing, noneFailing, sizedProp}
 import Arbitrary._
@@ -16,6 +18,11 @@ import Shrink._
 import java.util.Date
 
 object GenSpecification extends Properties("Gen") {
+
+  val g: Gen[Int] = arbitrary[Int]
+  implicit val arbSeed: Arbitrary[Seed] =
+    Arbitrary(for { a <- g; b <- g; c <- g; d <- g } yield new Seed(a, b, c, d))
+
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
       (someFailing(l) && (sequence[List[Int],Int](l) == fail)) ||
@@ -44,22 +51,26 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
-  property("const") = forAll((x:Int, prms:Parameters) => const(x)(prms) == Some(x))
+  property("const") = forAll { (x:Int, prms:Parameters, seed: Seed) =>
+    const(x)(prms, seed) == Some(x)
+  }
 
-  property("fail") = forAll((prms: Parameters) => fail(prms) == None)
+  property("fail") = forAll { (prms: Parameters, seed: Seed) =>
+    fail(prms, seed) == None
+  }
 
-  property("fromOption") = forAll { (prms: Parameters, o: Option[Int]) =>
+  property("fromOption") = forAll { (prms: Parameters, seed: Seed, o: Option[Int]) =>
     o match {
-      case Some(x) => fromOption(o)(prms) == Some(x)
-      case None => fromOption(o)(prms) == None
+      case Some(x) => fromOption(o)(prms, seed) == Some(x)
+      case None => fromOption(o)(prms, seed) == None
     }
   }
 
-  property("collect") = forAll { (prms: Parameters, o: Option[Int]) =>
+  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Seed) =>
     val g = const(o).collect { case Some(n) => n }
     o match {
-      case Some(x) => g(prms) == Some(x)
-      case None => g(prms) == None
+      case Some(x) => g(prms, seed) == Some(x)
+      case None => g(prms, seed) == None
     }
   }
 
@@ -236,4 +247,23 @@ object GenSpecification extends Properties("Gen") {
   property("22 field case class works") = forAll(Gen.resultOf(Full22.tupled)){
     Full22.unapply(_).get.isInstanceOf[Tuple22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]]
   }
+
+  type Trilean = Either[Unit, Boolean]
+
+  val tf: List[Boolean] = List(true, false)
+  val utf: List[Trilean] = List(Left(()), Right(true), Right(false))
+
+  def exhaust[A: Cogen, B: Arbitrary](n: Int, as: List[A], bs: List[B]): Boolean = {
+    val fs = listOfN(n, arbitrary[A => B]).sample.get
+    val outcomes = for { f <- fs; a <- as } yield (a, f(a))
+    val expected = for { a <- as; b <- bs } yield (a, b)
+    outcomes.toSet == expected.toSet
+  }
+
+  // none of these should fail more than 1 in 100000000 runs.
+  val N = 150
+  property("random (Boolean => Boolean) functions") = exhaust(N, tf, tf)
+  property("random (Boolean => Trilean) functions") = exhaust(N, tf, utf)
+  property("random (Trilean => Boolean) functions") = exhaust(N, utf, tf)
+  property("random (Trilean => Trilean) functions") = exhaust(N, utf, utf)
 }
