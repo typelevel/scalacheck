@@ -59,7 +59,7 @@ sealed abstract class Arbitrary[T] {
 object Arbitrary extends ArbitraryLowPriority with ArbitraryArities
 
 /** separate trait to have same priority as ArbitraryArities */
-private[scalacheck] sealed trait ArbitraryLowPriority{
+private[scalacheck] sealed trait ArbitraryLowPriority {
   import Gen.{const, choose, sized, frequency, oneOf, buildableOf, resize}
   import collection.{immutable, mutable}
   import java.util.Date

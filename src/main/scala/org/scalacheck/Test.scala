@@ -16,8 +16,8 @@ object Test {
   import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
   /** Test parameters used by the check methods. Default
-   *  parameters are defined by [[Test.Parameters.Default]]. */
-  trait Parameters {
+   *  parameters are defined by [[Test.Parameters.default]]. */
+  sealed abstract class Parameters {
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
     val minSuccessfulTests: Int
@@ -125,7 +125,7 @@ object Test {
   }
 
   /** Test statistics */
-  case class Result(
+  final case class Result(
     status: Status,
     succeeded: Int,
     discarded: Int,

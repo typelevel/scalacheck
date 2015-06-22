@@ -26,38 +26,30 @@ import util.ConsoleReporter
  *  }
  *  }}}
  */
-class Properties(val name: String) extends Prop {
+@Platform.JSExportDescendentClasses
+@Platform.JSExportDescendentObjects
+class Properties(val name: String) {
 
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
-
-  /** Returns one property which holds if and only if all of the
-   *  properties in this property collection hold */
-  private def oneProperty: Prop = Prop.all((properties map (_._2)):_*)
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
   def properties: Seq[(String,Prop)] = props
 
-  def apply(p: Gen.Parameters) = oneProperty(p)
-
   /** Convenience method that checks the properties with the given parameters
+   *  (or default parameters, if not specified)
    *  and reports the result on the console. If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
-  override def check(prms: Test.Parameters): Unit = Test.checkProperties(
+  def check(prms: Test.Parameters = Test.Parameters.default): Unit = Test.checkProperties(
     prms.withTestCallback(ConsoleReporter(1) chain prms.testCallback), this
   )
 
-  /** Convenience method that checks the properties and reports the
-   *  result on the console. If you need to get the results from the test use
-   *  the `check` methods in [[org.scalacheck.Test]] instead. */
-  override def check: Unit = check(Test.Parameters.default)
-
-  /** The logic for main, separated out to make it easier to
-   *  avoid System.exit calls.  Returns exit code.
-   */
-  override def mainRunner(args: Array[String]): Int = {
-    Test.cmdLineParser.parseParams(args) match {
+  /** Convenience method that makes it possible to use this property collection
+   *  as an application that checks itself on execution. Calls [[System.exit]]
+   *  with the exit code set to the number of failed properties. */
+  def main(args: Array[String]): Unit = {
+    val ret = Test.cmdLineParser.parseParams(args) match {
       case Some(params) =>
         val res = Test.checkProperties(params, this)
         val failed = res.filter(!_._2.passed).size
@@ -67,6 +59,7 @@ class Properties(val name: String) extends Prop {
         Test.cmdLineParser.printHelp
         -1
     }
+    if (ret != 0) System.exit(ret)
   }
 
   /** Adds all properties from another property collection to this one */
@@ -83,7 +76,7 @@ class Properties(val name: String) extends Prop {
    *  property("myProp") = ...
    *  }}}
    */
-  class PropertySpecifier() {
+  sealed class PropertySpecifier() {
     def update(propName: String, p: Prop) = props += ((name+"."+propName, p))
   }
 

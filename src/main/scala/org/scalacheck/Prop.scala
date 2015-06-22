@@ -13,12 +13,12 @@ import language.implicitConversions
 import language.reflectiveCalls
 
 import rng.{ Rng, Seed }
-import util.{Pretty, FreqMap, Buildable, ConsoleReporter, Testable}
+import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
 import scala.annotation.tailrec
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
  *  use `Prop.apply` instead. */
-class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
+sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
   def apply(prms: Gen.Parameters) = f(prms)
 }
 
@@ -71,11 +71,11 @@ sealed abstract class Prop {
     paramFun(Test.Parameters.default)
   )
 
-  /** The logic for main, separated out to make it easier to
-   *  avoid System.exit calls.  Returns exit code.
-   */
-  def mainRunner(args: Array[String]): Int = {
-    Test.cmdLineParser.parseParams(args) match {
+  /** Convenience method that makes it possible to use this property
+   *  as an application that checks itself on execution. Calls [[System.exit]]
+   *  with a non-zero exit code if the property check fails. */
+  def main(args: Array[String]): Unit = {
+    val ret = Test.cmdLineParser.parseParams(args) match {
       case Some(params) =>
         if (Test.check(params, this).passed) 0
         else 1
@@ -84,18 +84,7 @@ sealed abstract class Prop {
         Test.cmdLineParser.printHelp
         -1
     }
-  }
-
-  /** Whether main should call System.exit with an exit code.
-   *  Defaults to true; override to change. */
-  def mainCallsExit = true
-
-  /** Convenience method that makes it possible to use this property
-   *  as an application that checks itself on execution */
-  def main(args: Array[String]): Unit = {
-    val code = mainRunner(args)
-    if (mainCallsExit && code != 0)
-      System exit code
+    if (ret != 0) System.exit(ret)
   }
 
   /** Returns a new property that holds if and only if both this

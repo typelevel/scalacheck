@@ -16,7 +16,7 @@ import rng.{ Rng, Seed }
 import util.Buildable
 import scala.collection.immutable.TreeMap
 
-sealed trait Gen[+T] {
+sealed abstract class Gen[+T] {
 
   //// Private interface ////
 
@@ -72,7 +72,7 @@ sealed trait Gen[+T] {
 
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
-   *  the generator fails (returns None). Also, make sure that the provided 
+   *  the generator fails (returns None). Also, make sure that the provided
    *  test property is side-effect free, eg it should not use external vars.
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
@@ -203,7 +203,7 @@ object Gen extends GenArities{
   //// Public interface ////
 
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
-  trait Parameters {
+  sealed abstract class Parameters {
 
     /** The size of the generated value. Generator implementations are allowed
      *  to freely interpret (or ignore) this value. During test execution, the
