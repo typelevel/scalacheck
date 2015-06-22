@@ -100,28 +100,17 @@ object Test {
   }
 
   /** Test parameters used by the check methods. Default
-   *  parameters are defined by [[Test.Parameters.Default]]. */
+   *  parameters are defined by [[Test.Parameters.default]]. */
   object Parameters {
-    /** Default test parameters trait. This can be overriden if you need to
+    /** Default test parameters. Can be overriden if you need to
      *  tweak the parameters:
-     *
-     *  {{{
-     *  val myParams = new Parameters.Default {
-     *    override val minSuccesfulTests = 600
-     *    override val maxDiscardRatio = 8
-     *  }
-     *  }}}
-     *
-     *  You can also use the withXXX-methods in
-     *  [[org.scalacheck.Test.Parameters]] to achieve
-     *  the same thing:
      *
      *  {{{
      *  val myParams = Parameters.default
      *    .withMinSuccessfulTests(600)
      *    .withMaxDiscardRatio(8)
      *  }}} */
-    trait Default extends Parameters {
+    val default: Parameters = new Parameters {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
       val maxSize: Int = Gen.Parameters.default.size
@@ -131,13 +120,8 @@ object Test {
       val customClassLoader: Option[ClassLoader] = None
     }
 
-    /** Default test parameters instance. */
-    val default: Parameters = new Default {}
-
     /** Verbose console reporter test parameters instance. */
-    val defaultVerbose: Parameters = new Default {
-      override val testCallback = ConsoleReporter(2)
-    }
+    val defaultVerbose: Parameters = default.withTestCallback(ConsoleReporter(2))
   }
 
   /** Test statistics */
@@ -291,7 +275,7 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
-    val genPrms = new Gen.Parameters.Default {}
+    val genPrms = Gen.Parameters.default
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests

@@ -240,21 +240,19 @@ private[scalacheck] sealed trait ArbitraryLowPriority{
       sizeDiff <- choose(0,500)
       _maxSize <- choose(_minSize, _minSize + sizeDiff)
       _workers <- choose(1,4)
-    } yield new Test.Parameters.Default {
-      override val minSuccessfulTests = _minSuccTests
-      override val maxDiscardRatio = _maxDiscardRatio
-      override val minSize = _minSize
-      override val maxSize = _maxSize
-      override val workers = _workers
-    })
+    } yield Test.Parameters.default
+        .withMinSuccessfulTests(_minSuccTests)
+        .withMaxDiscardRatio(_maxDiscardRatio)
+        .withMinSize(_minSize)
+        .withMaxSize(_maxSize)
+        .withWorkers(_workers)
+    )
 
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Parameters] =
     Arbitrary(for {
       sz <- arbitrary[Int] suchThat (_ >= 0)
-    } yield (new Gen.Parameters.Default {
-      override val size = sz
-    }))
+    } yield Gen.Parameters.default.withSize(sz))
 
 
   // Specialised collections //

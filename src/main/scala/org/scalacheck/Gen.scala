@@ -221,12 +221,10 @@ object Gen extends GenArities{
 
   /** Provides methods for creating [[org.scalacheck.Gen.Parameters]] values */
   object Parameters {
-    /** Default generator parameters trait. This can be overriden if you
-     *  need to tweak the parameters. */
-    trait Default extends Parameters { val size: Int = 100 }
-
     /** Default generator parameters instance. */
-    val default: Parameters = new Default {}
+    val default: Parameters = new Parameters {
+      val size: Int = 100
+    }
   }
 
   /** A wrapper type for range types */
