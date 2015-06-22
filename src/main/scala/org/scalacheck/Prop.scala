@@ -24,7 +24,7 @@ class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 
 @Platform.JSExportDescendentClasses
 @Platform.JSExportDescendentObjects
-trait Prop extends Testable {
+sealed abstract class Prop {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
@@ -36,9 +36,7 @@ trait Prop extends Testable {
 
   def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
 
-  // TODO In 1.12.0, make p call-by-name, and remove the calls to secure()
-  // in the methods that use combine()
-  def combine(p: Prop)(f: (Result, Result) => Result) =
+  def combine(p: => Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   /** Convenience method that checks this property with the given parameters
@@ -103,17 +101,17 @@ trait Prop extends Testable {
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate false.  */
-  def &&(p: => Prop) = combine(secure(p))(_ && _)
+  def &&(p: => Prop) = combine(p)(_ && _)
 
   /** Returns a new property that holds if either this
    *  or the given property (or both) hold.  */
-  def ||(p: => Prop) = combine(secure(p))(_ || _)
+  def ||(p: => Prop) = combine(p)(_ || _)
 
   /** Returns a new property that holds if and only if both this
    *  and the given property hold. If one of the properties doesn't
    *  generate a result, the new property will generate the same result
    *  as the other property.  */
-  def ++(p: => Prop): Prop = combine(secure(p))(_ ++ _)
+  def ++(p: => Prop): Prop = combine(p)(_ ++ _)
 
   /** Combines two properties through implication */
   def ==>(p: => Prop): Prop = flatMap { r1 =>
