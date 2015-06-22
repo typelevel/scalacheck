@@ -72,7 +72,7 @@ sealed abstract class Prop {
   )
 
   /** Convenience method that makes it possible to use this property
-   *  as an application that checks itself on execution. Calls [[System.exit]]
+   *  as an application that checks itself on execution. Calls `System.exit`
    *  with a non-zero exit code if the property check fails. */
   def main(args: Array[String]): Unit = {
     val ret = Test.cmdLineParser.parseParams(args) match {

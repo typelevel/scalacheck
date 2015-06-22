@@ -46,7 +46,7 @@ class Properties(val name: String) {
   )
 
   /** Convenience method that makes it possible to use this property collection
-   *  as an application that checks itself on execution. Calls [[System.exit]]
+   *  as an application that checks itself on execution. Calls `System.exit`
    *  with the exit code set to the number of failed properties. */
   def main(args: Array[String]): Unit = {
     val ret = Test.cmdLineParser.parseParams(args) match {
