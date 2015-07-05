@@ -25,7 +25,7 @@ sealed trait Cogen[-T] {
     Cogen((seed, s) => perturb(seed, f(s)))
 }
 
-object Cogen {
+object Cogen extends CogenArities {
 
   def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
 
@@ -73,9 +73,6 @@ object Cogen {
 
   implicit def cogenEither[A, B](implicit A: Cogen[A], B: Cogen[B]): Cogen[Either[A, B]] =
     Cogen((seed, e) => e.fold(a => A.perturb(seed, a), b => B.perturb(seed.next, b)))
-
-  implicit def cogenTuple2[A, B](implicit A: Cogen[A], B: Cogen[B]): Cogen[(A, B)] =
-    Cogen((seed, ab) => perturbPair(seed, ab))
 
   implicit def cogenArray[A](implicit A: Cogen[A]): Cogen[Array[A]] =
     Cogen((seed, as) => perturbArray(seed, as))
