@@ -11,6 +11,7 @@ package org.scalacheck
 
 import language.higherKinds
 import concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 import util.{FreqMap, Buildable}
 
@@ -289,6 +290,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Arbitrary instance of the Future type */
   implicit def arbFuture[T](implicit a: Arbitrary[T]): Arbitrary[Future[T]] =
     Arbitrary(Gen.oneOf(arbitrary[T].map(Future.successful), arbitrary[Throwable].map(Future.failed)))
+
+  /** Arbitrary instance of the Try type */
+  implicit def arbTry[T](implicit a: Arbitrary[T]): Arbitrary[Try[T]] =
+    Arbitrary(Gen.oneOf(arbitrary[T].map(Success(_)), arbitrary[Throwable].map(Failure(_))))
 
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
    *  (such as lists, arrays, streams, etc). The maximum size of the container
