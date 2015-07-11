@@ -126,7 +126,7 @@ private abstract class ScalaCheckRunner(
           val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
           loggers.foreach(l =>
             if(l.ansiCodesSupported) 
-              l.info((if(result.passed) Console.GREEN else Console.RED) + logMsg + Console.RESET)
+              l.info((if (result.passed) Console.GREEN else Console.RED) + logMsg + Console.RESET)
             else
               l.info(logMsg))
         }
