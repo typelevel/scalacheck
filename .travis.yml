@@ -29,3 +29,4 @@ matrix:
     - scala: 2.12.0-M1
       jdk: openjdk7
       env: PLATFORM=jvm SBT_PARALLEL=true WORKERS=4 DEPLOY=true
+sudo: false
