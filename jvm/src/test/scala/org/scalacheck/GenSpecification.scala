@@ -12,7 +12,7 @@ package org.scalacheck
 import rng.Seed
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing, sizedProp}
+import Prop.{forAll, someFailing, noneFailing, sizedProp, secure}
 import Arbitrary._
 import Shrink._
 import java.util.Date
@@ -266,4 +266,9 @@ object GenSpecification extends Properties("Gen") {
   property("random (Boolean => Trilean) functions") = exhaust(N, tf, utf)
   property("random (Trilean => Boolean) functions") = exhaust(N, utf, tf)
   property("random (Trilean => Trilean) functions") = exhaust(N, utf, utf)
+
+  property("oneOf with Buildable supports null in first or 2nd position") = secure {
+    Gen.oneOf(Gen.const(null), Arbitrary.arbitrary[Array[Byte]]).sample.isDefined &&
+    Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
+  }
 }
