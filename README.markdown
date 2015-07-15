@@ -9,7 +9,7 @@ ScalaCheck was originally inspired by the Haskell library
 ventured into its own.
 
 ScalaCheck has no external dependencies other than the Scala runtime, and 
-[works](/download.html#sbt) great with [sbt](http://www.scala-sbt.org/), the 
+[works](http://www.scalacheck.org/download.html#sbt) great with [sbt](http://www.scala-sbt.org/), the 
 Scala build tool. It is also fully integrated in the test frameworks
 [ScalaTest](http://www.scalatest.org/) and 
 [specs2](http://etorreborre.github.com/specs2/). You can of course also use 
