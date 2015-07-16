@@ -1,4 +1,8 @@
 language: scala
+branches:
+  only:
+    - master
+    - scalacheck2
 script: ./tools/travis-script.sh
 env:
   - PLATFORM=jvm SBT_PARALLEL=yes WORKERS=1 TESTS=1000
