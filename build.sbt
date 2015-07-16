@@ -12,7 +12,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   homepage := Some(url("http://www.scalacheck.org")),
 
-  scalaVersion := "2.11.6",
+  scalaVersion := "2.12.0-M2",
 
   crossScalaVersions := Seq("2.10.5", "2.11.6"),
 
@@ -65,6 +65,6 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    crossScalaVersions += "2.12.0-M1",
+    crossScalaVersions += "2.12.0-M2",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
