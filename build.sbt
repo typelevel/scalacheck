@@ -95,6 +95,6 @@ lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
     previousArtifact := None,
-    crossScalaVersions += "2.12.0-M1",
+    crossScalaVersions += "2.12.0-M2",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )

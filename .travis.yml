@@ -14,7 +14,7 @@ scala:
   - 2.10.5
   - 2.11.6
 jdk:
-  - openjdk7
+  - openjdk8
 env:
   global:
     - secure: PwIb1un8vuuyoidnjHaKO81FD49n5ZTVEnf6hVKkMRe3hipr+WGWv19m92yE/n34ROFo1BM9DmfYxaexlE0pI2o/a5MV1i3kNSwUk+Yt8uU6F4+nyQKROQUe76UtAtXmsYgLqXaWSW0+EVidMyhSktkXXxiU5wCGLdKkPu3Vj9w=
@@ -26,7 +26,7 @@ env:
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
 matrix:
   include:
-    - scala: 2.12.0-M1
-      jdk: openjdk7
+    - scala: 2.12.0-M2
+      jdk: openjdk8
       env: PLATFORM=jvm SBT_PARALLEL=true WORKERS=4 DEPLOY=true
 sudo: false
