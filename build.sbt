@@ -12,6 +12,15 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   homepage := Some(url("http://www.scalacheck.org")),
 
+  credentials ++= (for {
+    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
+    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+  } yield Credentials(
+    "Sonatype Nexus Repository Manager",
+    "oss.sonatype.org",
+    username, password
+  )).toSeq,
+
   scalaVersion := "2.12.0-M2",
 
   crossScalaVersions := Seq("2.10.5", "2.11.6"),
