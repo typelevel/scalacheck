@@ -38,7 +38,10 @@ class Properties(val name: String) {
 
   /** Convenience method that checks the properties with the given parameters
    *  (or default parameters, if not specified)
-   *  and reports the result on the console. If you need to get the results
+   *  and reports the result on the console. Should only be used when running
+   *  tests interactively within the Scala REPL.
+   *
+   *  If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
   def check(prms: Test.Parameters = Test.Parameters.default): Unit = Test.checkProperties(

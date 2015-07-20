@@ -43,20 +43,27 @@ sealed abstract class Prop {
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. */
+   *  and reports the result on the console. Should only be used when running 
+   *  tests interactively within the Scala REPL.*/
   def check(prms: Test.Parameters): Unit = Test.check(
     if(prms.testCallback.isInstanceOf[ConsoleReporter]) prms
     else prms.withTestCallback(prms.testCallback.chain(ConsoleReporter(1))),
     this
   )
 
-  /** Convenience method that checks this property and reports the
-   *  result on the console. The default test parameters
+  /** Convenience method that checks this property with the given parameters
+   *  and reports the result on the console. Should only be used when running 
+   *  tests interactively within the Scala REPL. 
+   *
+   *  The default test parameters
    *  ([[Test.Parameters.default]]) are used for the check. */
   def check: Unit = check(Test.Parameters.default)
 
   /** Convenience method that checks this property and reports the result
-   *  on the console. The provided argument should be a function that takes
+   *  on the console. Should only be used when running 
+   *  tests interactively within the Scala REPL. 
+   *
+   *  The provided argument should be a function that takes
    *  the default test parameters ([[Test.Parameters.default]])
    *  as input and outputs a modified [[Test.Parameters]] instance that
    *  Example use:
