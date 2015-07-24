@@ -439,8 +439,9 @@ object Gen extends GenArities{
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0,s).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
-      c.forall(g.sieveCopy)
+    sized(s => choose(0,s).flatMap(buildableOfN[C,T](_,g))) suchThat {
+      case c@null => g.sieveCopy(c)
+      case c => c.forall(g.sieveCopy)
     }
 
   /** Generates a non-empty container of any Traversable type for which there
