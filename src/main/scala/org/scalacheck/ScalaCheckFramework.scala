@@ -124,7 +124,11 @@ private abstract class ScalaCheckRunner(
           val s = if (result.passed) "+" else "!"
           val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
           val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
-          loggers.foreach(l => l.info(logMsg))
+          loggers.foreach(l =>
+            if(l.ansiCodesSupported) 
+              l.info((if (result.passed) Console.GREEN else Console.RED) + logMsg + Console.RESET)
+            else
+              l.info(logMsg))
         }
 
         Array.empty[Task]
