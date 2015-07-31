@@ -12,7 +12,7 @@ package org.scalacheck
 import language.higherKinds
 import language.implicitConversions
 
-import rng.{ Rng, Seed }
+import rng.Seed
 import util.Buildable
 import scala.collection.immutable.TreeMap
 
@@ -95,14 +95,14 @@ sealed abstract class Gen[+T] {
   }
 
   def sample: Option[T] =
-    doApply(Gen.Parameters.default, Rng.randomSeed()).retrieve
+    doApply(Gen.Parameters.default, Seed.random()).retrieve
 
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
   def ==[U](g: Gen[U]) = Prop { prms =>
     // test equality using a random seed
-    val seed = Rng.randomSeed()
+    val seed = Seed.random()
     (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.proved(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
@@ -114,7 +114,7 @@ sealed abstract class Gen[+T] {
 
   def !==[U](g: Gen[U]) = Prop { prms =>
     // test inequality using a random seed
-    val seed = Rng.randomSeed()
+    val seed = Seed.random()
     (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
       case (None,None) => Prop.falsified(prms)
       case (Some(r1),Some(r2)) if r1 == r2 => Prop.falsified(prms)
@@ -240,17 +240,17 @@ object Gen extends GenArities{
       if (h < l) r(None, seed) else {
         val d = h - l + 1
         if (d <= 0) {
-          var tpl = Rng.long(seed)
+          var tpl = seed.long
           var n = tpl._1
           var s = tpl._2
           while (n < l || n > h) {
-            tpl = Rng.long(s)
+            tpl = s.long
             n = tpl._1
             s = tpl._2
           }
           r(Some(n), s)
         } else {
-          val (n, s) = Rng.long(seed)
+          val (n, s) = seed.long
           r(Some(l + (n & 0x7fffffffffffffffL) % d), s)
         }
       }
@@ -261,7 +261,7 @@ object Gen extends GenArities{
       if (d < 0 || d > Double.MaxValue) r(None, seed)
       else if (d == 0) r(Some(l), seed)
       else {
-        val (n, s) = Rng.double(seed)
+        val (n, s) = seed.double
         r(Some(n * (h-l) + l), s)
       }
     }
