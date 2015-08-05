@@ -327,15 +327,17 @@ object Test {
   }
 
   /** Check a set of properties. */
-  def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] =
+  def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
+    val params = ps.overrideParameters(prms)
     ps.properties.map { case (name,p) =>
       val testCallback = new TestCallback {
         override def onPropEval(n: String, t: Int, s: Int, d: Int) =
-          prms.testCallback.onPropEval(name,t,s,d)
+          params.testCallback.onPropEval(name,t,s,d)
         override def onTestResult(n: String, r: Result) =
-          prms.testCallback.onTestResult(name,r)
+          params.testCallback.onTestResult(name,r)
       }
-      val res = check(prms.withTestCallback(testCallback), p)
+      val res = check(params.withTestCallback(testCallback), p)
       (name,res)
     }
+  }
 }
