@@ -77,11 +77,11 @@ trait Prop extends Testable {
    */
   def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Some(params) =>
+      case (params, Nil) =>
         if (Test.check(params, this).passed) 0
         else 1
-      case None =>
-        println(s"Incorrect options")
+      case (_, os) =>
+        println(s"Incorrect options: $os")
         Test.cmdLineParser.printHelp
         -1
     }

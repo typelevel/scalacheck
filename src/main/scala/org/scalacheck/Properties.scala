@@ -58,12 +58,12 @@ class Properties(val name: String) extends Prop {
    */
   override def mainRunner(args: Array[String]): Int = {
     Test.cmdLineParser.parseParams(args) match {
-      case Some(params) =>
+      case (params, Nil) =>
         val res = Test.checkProperties(params, this)
         val failed = res.filter(!_._2.passed).size
         failed
-      case None =>
-        println(s"Incorrect options")
+      case (_, os) =>
+        println(s"Incorrect options: $os")
         Test.cmdLineParser.printHelp
         -1
     }

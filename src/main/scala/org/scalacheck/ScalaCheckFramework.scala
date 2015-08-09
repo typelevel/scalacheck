@@ -13,21 +13,16 @@ import sbt.testing._
 import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
-private abstract class ScalaCheckRunner(
-  val args: Array[String],
-  val remoteArgs: Array[String],
+private abstract class ScalaCheckRunner extends Runner {
+
+  val args: Array[String]
   val loader: ClassLoader
-) extends Runner {
+  val params: Test.Parameters
 
   val successCount = new AtomicInteger(0)
   val failureCount = new AtomicInteger(0)
   val errorCount = new AtomicInteger(0)
   val testCount = new AtomicInteger(0)
-
-  val params = Test.cmdLineParser.parseParams(args) match {
-    case Some(p) => p.withTestCallback(new Test.TestCallback {})
-    case None => throw new Exception(s"Invalid ScalaCheck args: ${args.toList}")
-  }
 
   def deserializeTask(task: String, deserializer: String => TaskDef) = {
     val taskDef = deserializer(task)
@@ -57,6 +52,14 @@ private abstract class ScalaCheckRunner(
       }
     }
 
+    def log(loggers: Array[Logger], ok: Boolean, msg: String) =
+      loggers foreach { l =>
+        val logstr =
+          if(!l.ansiCodesSupported) msg
+          else s"${if (ok) Console.GREEN else Console.RED}$msg${Console.RESET}"
+        l.info(logstr)
+      }
+
     def execute(handler: EventHandler, loggers: Array[Logger],
       continuation: Array[Task] => Unit
     ): Unit  = continuation(execute(handler,loggers))
@@ -82,7 +85,7 @@ private abstract class ScalaCheckRunner(
         import util.Pretty.{pretty, Params}
 
         for ((`name`, prop) <- props) {
-          val result = Test.check(params.withCustomClassLoader(Some(loader)), prop)
+          val result = Test.check(params, prop)
 
           val event = new Event {
             val status = result.status match {
@@ -124,11 +127,7 @@ private abstract class ScalaCheckRunner(
           val s = if (result.passed) "+" else "!"
           val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
           val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
-          loggers.foreach(l =>
-            if(l.ansiCodesSupported) 
-              l.info((if (result.passed) Console.GREEN else Console.RED) + logMsg + Console.RESET)
-            else
-              l.info(logMsg))
+          log(loggers, result.passed, logMsg)
         }
 
         Array.empty[Task]
@@ -155,9 +154,16 @@ final class ScalaCheckFramework extends Framework {
     mkFP(true, "org.scalacheck.Prop")
   )
 
-  def runner(args: Array[String], remoteArgs: Array[String],
-    loader: ClassLoader
-  ): Runner = new ScalaCheckRunner(args, remoteArgs, loader) {
+  def runner(_args: Array[String], _remoteArgs: Array[String],
+    _loader: ClassLoader
+  ): Runner = new ScalaCheckRunner {
+
+    val args = _args
+    val remoteArgs = _remoteArgs
+    val loader = _loader
+    val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
+    val params = prms.withTestCallback(new Test.TestCallback {})
+                     .withCustomClassLoader(Some(loader))
 
     def receiveMessage(msg: String): Option[String] = msg(0) match {
       case 'd' =>
@@ -171,14 +177,23 @@ final class ScalaCheckFramework extends Framework {
 
     def done = {
       val heading = if (testCount.get == successCount.get) "Passed" else "Failed"
-      s"$heading: Total $testCount, Failed $failureCount, Errors $errorCount, Passed $successCount"
+      s"$heading: Total $testCount, " +
+      s"Failed $failureCount, Errors $errorCount, Passed $successCount" +
+      (if(unknownArgs.isEmpty) "" else
+      s"\nWarning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
     }
 
   }
 
-  def slaveRunner(args: Array[String], remoteArgs: Array[String],
-    loader: ClassLoader, send: String => Unit
-  ): Runner = new ScalaCheckRunner(args, remoteArgs, loader) {
+  def slaveRunner(_args: Array[String], _remoteArgs: Array[String],
+    _loader: ClassLoader, send: String => Unit
+  ): Runner = new ScalaCheckRunner {
+    val args = _args
+    val remoteArgs = _remoteArgs
+    val loader = _loader
+    val params = Test.cmdLineParser.parseParams(args)._1
+                   .withTestCallback(new Test.TestCallback {})
+                   .withCustomClassLoader(Some(loader))
 
     def receiveMessage(msg: String) = None
 

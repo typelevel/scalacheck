@@ -57,22 +57,26 @@ private[scalacheck] trait CmdLineParser {
     }
   }
 
-  def parseArgs[T](args: Array[String])(f: OptMap => T) = {
-    def parseOptVal[U](o: Opt[U], f: String => Option[U], as: List[String]): Option[OptMap] = for {
-      v <- as.headOption.flatMap(f)
-      om <- parse(as.drop(1))
-    } yield om.set((o,v))
+  /** Parses a command line and returns a tuple of the parsed options,
+   *  and any unrecognized strings */
+  def parseArgs[T](args: Array[String]): (OptMap, List[String]) = {
 
-    def parse(as: List[String]): Option[OptMap] = as match {
-      case Nil => Some(new OptMap)
-      case a::as => getOpt(a) flatMap {
-        case o: Flag => parse(as).map(_.set((o,())))
-        case o: IntOpt => parseOptVal(o, getInt, as)
-        case o: FloatOpt => parseOptVal(o, getFloat, as)
-        case o: StrOpt => parseOptVal(o, getStr, as)
+    def parse(
+      as: List[String], om: OptMap, us: List[String]
+    ): (OptMap, List[String]) = as match {
+      case Nil => (om, us)
+      case a::Nil => getOpt(a) match {
+        case Some(o: Flag) => parse(Nil, om.set((o,())), us)
+        case _ => (om, us :+ a)
       }
+      case a1::a2::as => (getOpt(a1) match {
+        case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
+        case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
+        case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
+        case _ => None
+      }).getOrElse(parse(a2::as, om, us :+ a1))
     }
 
-    parse(args.toList).map(f)
+    parse(args.toList, new OptMap(), Nil)
   }
 }
