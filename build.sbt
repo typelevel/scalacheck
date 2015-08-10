@@ -34,9 +34,9 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
     username, password
   )).toSeq,
 
-  scalaVersion := "2.11.6",
+  scalaVersion := "2.11.7",
 
-  crossScalaVersions := Seq("2.10.5", "2.11.6"),
+  crossScalaVersions := Seq("2.10.5", "2.11.7", "2.12.0-M2"),
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
@@ -95,6 +95,5 @@ lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
     previousArtifact := None,
-    crossScalaVersions += "2.12.0-M2",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
