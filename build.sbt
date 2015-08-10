@@ -1,10 +1,23 @@
 sourceDirectory := file("dummy source directory")
 
+lazy val versionNumber = "1.12.5"
+
+lazy val isRelease = false
+
+lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
+
 lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   name := "scalacheck",
 
-  version := "1.12.5-SNAPSHOT",
+  version := {
+    val suffix =
+      if (isRelease) ""
+      else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
+    versionNumber + suffix
+  },
+
+  isSnapshot := !isRelease,
 
   organization := "org.scalacheck",
 
@@ -46,6 +59,9 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   publishMavenStyle := true,
 
+  // Travis should only publish snapshots
+  publishArtifact := !(isRelease && travisCommit.isDefined),
+
   publishArtifact in Test := false,
 
   pomIncludeRepository := { _ => false },
@@ -64,9 +80,13 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   }
 )
 
+import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
+
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
+    scalaJSStage in Global := FastOptStage,
+    previousArtifact := None,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
   .enablePlugins(ScalaJSPlugin)
@@ -74,6 +94,7 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
+    previousArtifact := None,
     crossScalaVersions += "2.12.0-M2",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
