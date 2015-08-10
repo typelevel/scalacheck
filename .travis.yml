@@ -5,6 +5,7 @@ branches:
   only:
     - master
     - scalacheck2
+    - 1.12.x
 notifications:
   email:
     - adriaan.moors@typesafe.com
