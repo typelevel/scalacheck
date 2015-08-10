@@ -4,14 +4,14 @@ set -evu
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
-  sbt_cmd+=("set scalaJSStage in Global := FastOptStage")
+  TESTS=200
+else
+  TESTS=1000
 fi
 
-if [[ "$SBT_PARALLEL" == "no" ]]; then
-  sbt_cmd+=("set parallelExecution in ThisBuild := false")
-fi
+sbt_cmd+=("set parallelExecution in ThisBuild := $SBT_PARALLEL")
 
-for t in clean update compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues doc; do
+for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues doc; do
   sbt_cmd+=("$PLATFORM/$t")
 done
 
