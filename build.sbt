@@ -4,7 +4,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   name := "scalacheck",
 
-  version := "1.12.4",
+  version := "1.12.5-SNAPSHOT",
 
   organization := "org.scalacheck",
 
@@ -21,7 +21,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
     username, password
   )).toSeq,
 
-  scalaVersion := "2.12.0-M2",
+  scalaVersion := "2.11.6",
 
   crossScalaVersions := Seq("2.10.5", "2.11.6"),
 
