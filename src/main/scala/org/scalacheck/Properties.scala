@@ -32,6 +32,12 @@ class Properties(val name: String) {
 
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
+  /**
+   * Changes to the test parameters that are specific to this class.
+   * Can be used to set custom parameter values for this test.
+   */
+  def overrideParameters(p: Test.Parameters): Test.Parameters = p
+
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
   def properties: Seq[(String,Prop)] = props
@@ -44,9 +50,12 @@ class Properties(val name: String) {
    *  If you need to get the results
    *  from the test use the `check` methods in [[org.scalacheck.Test]]
    *  instead. */
-  def check(prms: Test.Parameters = Test.Parameters.default): Unit = Test.checkProperties(
-    prms.withTestCallback(ConsoleReporter(1) chain prms.testCallback), this
-  )
+  def check(prms: Test.Parameters = Test.Parameters.default): Unit = {
+    val params = overrideParameters(prms)
+    Test.checkProperties(
+      params.withTestCallback(ConsoleReporter(1) chain params.testCallback), this
+    )
+  }
 
   /** Convenience method that makes it possible to use this property collection
    *  as an application that checks itself on execution. Calls `System.exit`
