@@ -65,8 +65,10 @@ object Test {
     )
 
     /** The maximum ratio between discarded and passed tests allowed before
-     *  ScalaCheck gives up and discards the property. At least
-     *  `minSuccesfulTests` will always be run, though. */
+     *  ScalaCheck gives up and discards the whole property (with status
+     *  [[Test.Exhausted]]). Additionally, ScalaCheck will always allow
+     *  at least `minSuccessfulTests * maxDiscardRatio` discarded tests, so the
+     *  resulting discard ratio might be higher than `maxDiscardRatio`. */
     val maxDiscardRatio: Float
 
     /** Create a copy of this [[Test.Parameters]] instance with
@@ -285,11 +287,7 @@ object Test {
       var res: Result = null
       var fm = FreqMap.empty[Set[Any]]
 
-      // The below condition is kind of hacky. We have to have
-      // some margin, otherwise workers might stop testing too
-      // early because they have been exhausted, but the overall
-      // test has not.
-      def isExhausted = n+d > minSuccessfulTests && 1+workers*maxDiscardRatio*n < d
+      def isExhausted = d > minSuccessfulTests * maxDiscardRatio
 
       while(!stop && res == null && n < iterations) {
         val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))

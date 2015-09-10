@@ -55,22 +55,24 @@ object TestSpecification extends Properties("Test") {
   private def resultInvariant(f: (Test.Parameters, Test.Result) => Boolean): Prop =
     forAll { (prms: Test.Parameters, p: Prop) =>
       val r = Test.check(prms, p)
-      s"${r.status}, s=${r.succeeded}, d=${r.discarded}" |: f(prms,r)
+      s"${r.status}, s=${r.succeeded}, d=${r.discarded}, " +
+      s"minSuccessful=${prms.minSuccessfulTests}, " +
+      s"maxDiscardRatio=${prms.maxDiscardRatio}, " +
+      s"actualDiscardRatio=${r.discarded.toFloat / r.succeeded}, " +
+      s"workers=${prms.workers}" |: f(prms,r)
     }
 
-  property("minSuccessfulTests") = resultInvariant { (prms, r) =>
+  property("stopCondition") = resultInvariant { (prms, r) =>
     r.status match {
-      case Passed => r.succeeded >= prms.minSuccessfulTests
-      case Exhausted => r.succeeded + r.discarded >= prms.minSuccessfulTests
-      case _ => r.succeeded < prms.minSuccessfulTests
-    }
-  }
-
-  property("maxDiscardRatio") = resultInvariant { (prms, r) =>
-    r.status match {
-      case Passed => r.discarded <= prms.maxDiscardRatio*r.succeeded
-      case Exhausted => r.discarded > prms.maxDiscardRatio*r.succeeded
-      case _ => true
+      case Passed =>
+        (r.succeeded >= prms.minSuccessfulTests) &&
+        (r.discarded <= prms.maxDiscardRatio*r.succeeded)
+      case Exhausted =>
+        (r.discarded > r.succeeded * prms.maxDiscardRatio) &&
+        (r.discarded >= prms.minSuccessfulTests * prms.maxDiscardRatio)
+      case _ =>
+        (r.succeeded < prms.minSuccessfulTests) &&
+        (r.discarded <= prms.maxDiscardRatio*r.succeeded)
     }
   }
 
