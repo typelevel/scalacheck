@@ -349,7 +349,8 @@ object Gen extends GenArities{
 
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated.
-   *  This method will be deprecated in favor of [[org.scalacheck.Gen.delay]]. */
+   *  This has been deprecated in favor of [[org.scalacheck.Gen.delay]]. */
+  @deprecated("Replaced with delay()", "1.13.0")
   def wrap[T](g: => Gen[T]) = delay(g)
 
   /** Wraps a generator for later evaluation. The given parameter is
