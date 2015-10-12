@@ -11,7 +11,7 @@ package org.scalacheck
 
 import rng.Seed
 
-import Gen._
+import org.scalacheck.Gen._
 import Prop.{forAll, someFailing, noneFailing, sizedProp, secure}
 import Arbitrary._
 import Shrink._
@@ -26,7 +26,7 @@ object GenSpecification extends Properties("Gen") {
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
       (someFailing(l) && (sequence[List[Int],Int](l) == fail)) ||
-      (noneFailing(l) && forAll(sequence[List[Int],Int](l)) { _.length == l.length })
+        (noneFailing(l) && forAll(sequence[List[Int],Int](l)) { _.length == l.length })
     )
 
   property("frequency 1") = {
@@ -85,7 +85,7 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-double") = forAll { (l: Double, h: Double) =>
-    if(l > h || h-l > Double.MaxValue) choose(l,h) == fail
+    if(l > h) choose(l,h) == fail
     else forAll(choose(l,h)) { x => x >= l && x <= h }
   }
 
@@ -171,7 +171,7 @@ object GenSpecification extends Properties("Gen") {
 
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
-    s.forall(_.isLetterOrDigit)
+      s.forall(_.isLetterOrDigit)
   }
 
   // BigDecimal generation is tricky; just ensure that the generator gives
@@ -213,6 +213,10 @@ object GenSpecification extends Properties("Gen") {
     _ == (1,2,3,4,5,6,7,8,9)
   }
 
+  property("issue#186") = {
+    forAll(choose(Double.MinValue, Double.MaxValue)) { x => x >= Double.MinValue && x <= Double.MaxValue }
+  }
+
   //// See https://github.com/rickynils/scalacheck/issues/79
   property("issue #79") = {
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
@@ -239,10 +243,10 @@ object GenSpecification extends Properties("Gen") {
   ////
 
   case class Full22(
-    i1:Int,i2:Int,i3:Int,i4:Int,i5:Int,i6:Int,i7:Int,i8:Int,i9:Int,i10:Int,
-    i11:Int,i12:Int,i13:Int,i14:Int,i15:Int,i16:Int,i17:Int,i18:Int,i19:Int,i20:Int,
-    i21:Int,i22:Int
-  )
+                     i1:Int,i2:Int,i3:Int,i4:Int,i5:Int,i6:Int,i7:Int,i8:Int,i9:Int,i10:Int,
+                     i11:Int,i12:Int,i13:Int,i14:Int,i15:Int,i16:Int,i17:Int,i18:Int,i19:Int,i20:Int,
+                     i21:Int,i22:Int
+                     )
 
   property("22 field case class works") = forAll(Gen.resultOf(Full22.tupled)){
     Full22.unapply(_).get.isInstanceOf[Tuple22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]]
@@ -269,6 +273,6 @@ object GenSpecification extends Properties("Gen") {
 
   property("oneOf with Buildable supports null in first or 2nd position") = secure {
     Gen.oneOf(Gen.const(null), Arbitrary.arbitrary[Array[Byte]]).sample.isDefined &&
-    Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
+      Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
   }
 }
