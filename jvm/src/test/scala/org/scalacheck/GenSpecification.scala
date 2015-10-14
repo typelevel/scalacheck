@@ -199,6 +199,13 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("some") = forAll { n: Int =>
+    forAll(some(n)) {
+      case Some(m) if m == n => true
+      case _ => false
+    }
+  }
+
   property("uuid version 4") = forAll(uuid) { _.version == 4 }
 
   property("uuid unique") = forAll(uuid, uuid) {

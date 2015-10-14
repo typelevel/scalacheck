@@ -384,7 +384,11 @@ object Gen extends GenArities{
 
   /** Makes a generator result optional. Either `Some(T)` or `None` will be provided. */
   def option[T](g: Gen[T]): Gen[Option[T]] =
-    oneOf[Option[T]](g.map(Some.apply), None)
+    oneOf[Option[T]](some(g), None)
+
+  /** A generator that returns `Some(T)` */
+  def some[T](g: Gen[T]): Gen[Option[T]] =
+    g.map(Some.apply)
 
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
