@@ -36,13 +36,18 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   scalaVersion := "2.11.7",
 
-  crossScalaVersions := Seq("2.10.5", "2.11.7", "2.12.0-M2"),
+  crossScalaVersions := Seq("2.10.5", "2.11.7", "2.12.0-M3"),
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
   unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
-  resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
+  resolvers ++= Seq(
+    "Scala 2.12.0-M3 Core" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1272/",
+    "Scala 2.12.0-M3 Modules" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1273/",
+    "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
+    "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  ),
 
   javacOptions += "-Xmx1024M",
 
