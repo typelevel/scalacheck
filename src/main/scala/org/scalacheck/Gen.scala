@@ -55,6 +55,9 @@ sealed abstract class Gen[+T] {
     rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
+  def flatten[U](implicit asOption: T => Option[U]): Gen[U] =
+    map(asOption).collect{ case Some(t) => t }
+
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
