@@ -211,12 +211,12 @@ trait Commands {
                 true
               } else false
             }
-            if (doRun) runActions(sut,as, removeSut) 
+            if (doRun) runActions(sut,as, removeSut)
             else {
             	removeSut
             	Prop.undecided
             }
-            
+
           case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
             println("NOT IMPL")
             Prop.undecided
