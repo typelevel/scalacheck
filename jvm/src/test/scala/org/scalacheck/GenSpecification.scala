@@ -85,8 +85,11 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-double") = forAll { (l: Double, h: Double) =>
-    if(l > h || h-l > Double.MaxValue) choose(l,h) == fail
-    else forAll(choose(l,h)) { x => x >= l && x <= h }
+    forAll(choose(l,h)) { x => x >= l && x <= h }
+  }
+
+  property("choose-large-double") = forAll(choose(Double.MinValue, Double.MaxValue)) { x =>
+    x >= Double.MinValue && x <= Double.MaxValue
   }
 
   property("choose-xmap") = {
