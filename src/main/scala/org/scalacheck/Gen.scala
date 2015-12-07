@@ -26,7 +26,7 @@ sealed abstract class Gen[+T] {
   private type P = Gen.Parameters
 
   /** Should be a copy of R.sieve. Used internally in Gen when some generators
-   *  with suchThat-claues are created (when R is not available). This method
+   *  with suchThat-clause are created (when R is not available). This method
    *  actually breaks covariance, but since this method will only ever be
    *  called with a value of exactly type T, it is OK. */
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
@@ -261,7 +261,8 @@ object Gen extends GenArities{
 
     private def chDbl(l: Double, h: Double)(p: P, seed: Seed): R[Double] = {
       val d = h-l
-      if (d < 0 || d > Double.MaxValue) r(None, seed)
+      if (d < 0) r(None, seed)
+      else if (d > Double.MaxValue) r(oneOf(choose(l, 0d), choose(0d, h)).apply(p, seed), seed.next)
       else if (d == 0) r(Some(l), seed)
       else {
         val (n, s) = seed.double
