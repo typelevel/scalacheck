@@ -39,7 +39,8 @@ object CommandsSpecification extends Properties("Commands") {
 
     val genInitialState = Gen.choose(0,100)
 
-    def genCommand(state: State): Gen[Command] = Gen.oneOf(Get, Inc, Dec)
+    def genCommand(state: State): Gen[Command] =
+      Gen.oneOf(Get, Inc, Dec, commandSequence(Inc, Dec))
 
     case object Get extends SuccessCommand {
       type Result = Int
