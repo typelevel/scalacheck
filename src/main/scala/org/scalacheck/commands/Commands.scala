@@ -162,7 +162,10 @@ trait Commands {
 
   /** A command that runs a sequence of other commands.
    *  All commands (and their post conditions) are executed even if some
-   *  command fails. */
+   *  command fails. Note that you probably can't use this method if you're
+   *  testing in parallel (`threadCount` larger than 1). This is because
+   *  ScalaCheck regards each command as atomic, even if the command
+   *  is a sequence of other commands. */
   def commandSequence(head: Command, snd: Command, rest: Command*): Command =
     CommandSequence(head, snd, rest: _*)
 
