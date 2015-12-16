@@ -38,6 +38,11 @@ object Shrink {
   /** Shrink a value */
   def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
 
+  /** Shrink a value, but also return the original value as the first element in
+   *  the resulting stream */
+  def shrinkWithOrig[T](x: T)(implicit s: Shrink[T]): Stream[T] =
+    cons(x, s.shrink(x))
+
   /** Default shrink instance */
   implicit def shrinkAny[T]: Shrink[T] = Shrink(x => empty)
 
