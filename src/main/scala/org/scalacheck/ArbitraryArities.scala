@@ -98,7 +98,15 @@ private[scalacheck] trait ArbitraryArities{
 
 
   // Tuples //
-  
+
+  /** Arbitrary instance of 1-Tuple */
+  implicit def arbTuple1[T1](implicit
+    a1:Arbitrary[T1]
+  ): Arbitrary[Tuple1[T1]]
+    = Arbitrary(for {
+        t1<-a1.arbitrary
+      } yield Tuple1(t1))
+
   /** Arbitrary instance of 2-Tuple */
   implicit def arbTuple2[T1,T2](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2]
