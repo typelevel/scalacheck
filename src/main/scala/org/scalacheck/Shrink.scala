@@ -18,7 +18,12 @@ sealed abstract class Shrink[T] {
   def shrink(x: T): Stream[T]
 }
 
-object Shrink {
+trait LowPriorityShrinks {
+  /** Default shrink instance */
+  implicit def shrinkAny[T]: Shrink[T] = Shrink(_ => Stream.empty)
+}
+
+object Shrink extends LowPriorityShrinks {
 
   import Stream.{cons, empty}
   import scala.collection._
@@ -37,9 +42,6 @@ object Shrink {
 
   /** Shrink a value */
   def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
-
-  /** Default shrink instance */
-  implicit def shrinkAny[T]: Shrink[T] = Shrink(x => empty)
 
   /** Shrink instance of container */
   implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
@@ -83,15 +85,41 @@ object Shrink {
       shrink(x).map(cons(_,xs)).append(shrinkOne(xs).map(cons(x,_)))
     }
 
-  /** Shrink instance of integer */
-  implicit lazy val shrinkInt: Shrink[Int] = Shrink { n =>
+  /** Shrink instances of any numeric data type */
+  implicit def shrinkFractional[T](implicit num: Fractional[T]): Shrink[T] = shrinkNumeric[T](num)
+  implicit def shrinkIntegral[T](implicit num: Integral[T]): Shrink[T] = shrinkNumeric[T](num)
 
-    def halfs(n: Int): Stream[Int] =
-      if(n == 0) empty else cons(n, halfs(n/2))
+  private def shrinkNumeric[T](num: Numeric[T]): Shrink[T] = Shrink[T] { x: T ⇒
+    val minusOne = num.fromInt(-1)
+    val two = num.fromInt(2)
+    val minShrink = num.fromInt(100000)
 
-    if(n == 0) empty else {
-      val ns = halfs(n/2).map(n - _)
-      cons(0, interleave(ns, ns.map(-1 * _)))
+    def half(n: T): T = num match {
+      case fractional: Fractional[T] ⇒ fractional.div(n, two)
+      case integral: Integral[T]     ⇒ integral.quot(n, two)
+      case _                         ⇒ sys.error("Undivisable number")
+    }
+
+    def isZeroOrVeryClose(n: T): Boolean = {
+      // If ((n * minShrink) < 1)) then n ~= 0 (for Fractional data types)
+      val multiple = num.times(n, minShrink)
+
+      if (num.equiv(n, num.zero)) true
+      else if (num.equiv(multiple, num.zero)) false //Protect from overflows; for instance if n is -9223372036854775808L
+      else num.lt(num.abs(multiple), num.one)
+    }
+
+    def halves(n: T): Stream[T] = {
+      val halfN = half(n)
+
+      if (isZeroOrVeryClose(n) || num.lteq(num.abs(n), num.abs(halfN))) Stream.empty
+      else cons(n, halves(halfN))
+    }
+
+    if (isZeroOrVeryClose(x)) Stream.empty[T]
+    else {
+      val xs = halves(half(x)).map(num.minus(x, _))
+      Stream.cons[T](num.zero, interleave(xs, xs.map(num.times(minusOne, _))))
     }
   }
 
