@@ -235,15 +235,15 @@ object GenSpecification extends Properties("Gen") {
     .suchThat(!_.isEmpty)
     .suchThat(!_.contains(','))
 
-  property("suchThat combined") = forAll(suchThatGen) { str: String =>
+  property("suchThat combined #98") = forAll(suchThatGen) { str: String =>
     !(str.isEmpty || str.contains(','))
   }
 
-  property("suchThat 1") = forAll(suchThatGen) { str: String =>
+  property("suchThat 1 #98") = forAll(suchThatGen) { str: String =>
     !str.isEmpty
   }
 
-  property("suchThat 2") = forAll(suchThatGen) { str: String =>
+  property("suchThat 2 #98") = forAll(suchThatGen) { str: String =>
     !str.contains(',')
   }
   ////
@@ -283,7 +283,7 @@ object GenSpecification extends Properties("Gen") {
   }
 
   //// See https://github.com/rickynils/scalacheck/issues/209
-  property("uniform double") = Prop.forAll(Gen.choose(10000, 100000)) { n =>
+  property("uniform double #209") = Prop.forAll(Gen.choose(10000, 100000)) { n =>
     val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
       case ((s1, nums), _) =>
         val (d, s2) = s1.double
