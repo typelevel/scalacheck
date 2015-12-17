@@ -65,11 +65,11 @@ object ShrinkSpecification extends Properties("Shrink") {
   }
 
   property("non-zero float") = forAll { n: Float =>
-    (math.abs(n) > 0.000001f) ==> shrinkClosure(n).contains(0)
+    (math.abs(n) > 1E-5f) ==> shrinkClosure(n).contains(0)
   }
 
   property("non-zero double") = forAll { n: Double =>
-    (math.abs(n) > 0.000001d) ==> shrinkClosure(n).contains(0)
+    (math.abs(n) > 1E-5d) ==> shrinkClosure(n).contains(0)
   }
 
   property("non-empty list") = forAll { l: List[Int] =>
@@ -80,23 +80,24 @@ object ShrinkSpecification extends Properties("Shrink") {
   }
 
   implicit def vectorShrink[A: Shrink] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
-  property("xmap vector from list") = forAll { v: Vector[Int] ⇒
+
+  property("xmap vector from list") = forAll { v: Vector[Int] =>
     (!v.isEmpty && v != Vector(0)) ==> {
       val vs = shrinkClosure(v)
       Vector(vs: _*).toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
     }
   }
 
-  property("either shrinks") = forAll { e: Either[Int, Long] ⇒
+  property("either shrinks") = forAll { e: Either[Int, Long] =>
     !shrink(e).contains(e)
   }
 
-  property("either left") = forAll { i: Int ⇒
+  property("either left") = forAll { i: Int =>
     val e: Either[Int, Long] = Left(i)
     shrink(e).forall(_.isLeft)
   }
 
-  property("either right") = forAll { i: Int ⇒
+  property("either right") = forAll { i: Int =>
     val e: Either[Long, Int] = Right(i)
     shrink(e).forall(_.isRight)
   }

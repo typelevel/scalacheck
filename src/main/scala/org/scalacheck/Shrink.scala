@@ -94,36 +94,33 @@ object Shrink extends ShrinkLowPriority {
   implicit def shrinkFractional[T](implicit num: Fractional[T]): Shrink[T] = shrinkNumeric[T](num)
   implicit def shrinkIntegral[T](implicit num: Integral[T]): Shrink[T] = shrinkNumeric[T](num)
 
-  private def shrinkNumeric[T](num: Numeric[T]): Shrink[T] = Shrink[T] { x: T ⇒
+  private def shrinkNumeric[T](num: Numeric[T]): Shrink[T] = Shrink[T] { x: T =>
     val minusOne = num.fromInt(-1)
     val two = num.fromInt(2)
-    val minShrink = num.fromInt(100000)
+
+    def isZeroOrVeryClose(n: T): Boolean = num match {
+      case _: Integral[T] => num.equiv(n, num.zero)
+      case _ => num.equiv(n, num.zero) || {
+        val multiple = num.times(n, num.fromInt(100000))
+        num.lt(num.abs(multiple), num.one) && !num.equiv(multiple, num.zero)
+      }
+    }
 
     def half(n: T): T = num match {
-      case fractional: Fractional[T] ⇒ fractional.div(n, two)
-      case integral: Integral[T]     ⇒ integral.quot(n, two)
-      case _                         ⇒ sys.error("Undivisable number")
+      case fractional: Fractional[T] => fractional.div(n, two)
+      case integral: Integral[T] => integral.quot(n, two)
+      case _ => sys.error("Undivisable number")
     }
 
-    def isZeroOrVeryClose(n: T): Boolean = {
-      // If ((n * minShrink) < 1)) then n ~= 0 (for Fractional data types)
-      val multiple = num.times(n, minShrink)
-
-      if (num.equiv(n, num.zero)) true
-      else if (num.equiv(multiple, num.zero)) false //Protect from overflows; for instance if n is -9223372036854775808L
-      else num.lt(num.abs(multiple), num.one)
+    def upperHalves(sub: T): Stream[T] = {
+      val halfSub = half(sub)
+      val y = num.minus(x,sub)
+      if (isZeroOrVeryClose(sub) || num.equiv(x,y) || num.lteq(num.abs(sub), num.abs(halfSub))) Stream.empty
+      else cons(y, upperHalves(halfSub))
     }
 
-    def halves(n: T): Stream[T] = {
-      val halfN = half(n)
-
-      if (isZeroOrVeryClose(n) || num.lteq(num.abs(n), num.abs(halfN))) Stream.empty
-      else cons(n, halves(halfN))
-    }
-
-    if (isZeroOrVeryClose(x)) Stream.empty[T]
-    else {
-      val xs = halves(half(x)).map(num.minus(x, _))
+    if (isZeroOrVeryClose(x)) Stream.empty[T] else {
+      val xs = upperHalves(half(x))
       Stream.cons[T](num.zero, interleave(xs, xs.map(num.times(minusOne, _))))
     }
   }
@@ -249,7 +246,7 @@ object Shrink extends ShrinkLowPriority {
   /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
     *  whose relationship is described by the provided transformation functions.
     *  (exponential functor map) */
-  def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U ⇒
+  def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U =>
     st.shrink(to(u)).map(from)
   }
 }
