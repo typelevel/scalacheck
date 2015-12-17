@@ -12,7 +12,7 @@ package org.scalacheck
 import rng.Seed
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing, sizedProp, secure}
+import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
 import java.util.Date
@@ -281,4 +281,16 @@ object GenSpecification extends Properties("Gen") {
     Gen.oneOf(Gen.const(null), Arbitrary.arbitrary[Array[Byte]]).sample.isDefined &&
     Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
   }
+
+  //// See https://github.com/rickynils/scalacheck/issues/209
+  property("uniform double") = Prop.forAll(Gen.choose(10000, 100000)) { n =>
+    val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
+      case ((s1, nums), _) =>
+        val (d, s2) = s1.double
+        (s2, nums :+ d)
+    }
+    val avg = numbers.sum / numbers.size
+    s"average = $avg" |: avg >= 0.4 && avg <= 0.6
+  }
+  ////
 }
