@@ -244,8 +244,8 @@ trait Commands {
             }
             if (doRun) runActions(sut,as, removeSut)
             else {
-            	removeSut
-            	Prop.undecided
+                removeSut
+                Prop.undecided
             }
 
           case None => // NOT IMPLEMENTED Block until canCreateNewSut is true
@@ -259,6 +259,9 @@ trait Commands {
     }
   }
 
+  /** Override this to provide a custom Shrinker for your internal
+    * [[State]].  By default no shrinking is done for [[State]]. */
+  def shrinkState: Shrink[State] = implicitly
 
   // Private methods //
   private type Commands = List[Command]
@@ -268,8 +271,15 @@ trait Commands {
   )
 
   private implicit val shrinkActions = Shrink[Actions] { as =>
-    Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
-    Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
+    def shrinkedState: Stream[State] = shrinkState.shrink(as.s)
+
+    val shrinkedCmds: Stream[Actions] =
+      Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
+      Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
+
+    Shrink.shrinkWithOrig[State](as.s)(shrinkState) flatMap { state =>
+      shrinkedCmds.map(_.copy(s = state))
+    }
   }
 
   private def runSeqCmds(sut: Sut, s0: State, cs: Commands

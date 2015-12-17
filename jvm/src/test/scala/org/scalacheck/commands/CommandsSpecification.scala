@@ -28,6 +28,8 @@ object CommandsSpecification extends Properties("Commands") {
     type Sut = Counter
     type State = Int
 
+    override def shrinkState: Shrink[Int] = implicitly
+
     def canCreateNewSut(newState: State, initSuts: Traversable[State],
       runningSuts: Traversable[Sut]) = true
 
