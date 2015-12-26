@@ -19,9 +19,9 @@ import java.util.Date
 
 object GenSpecification extends Properties("Gen") {
 
-  val g: Gen[Int] = arbitrary[Int]
-  implicit val arbSeed: Arbitrary[Seed] =
-    Arbitrary(for { a <- g; b <- g; c <- g; d <- g } yield new Seed(a, b, c, d))
+  implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
+    arbitrary[Long] flatMap Seed.apply
+  )
 
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
@@ -284,27 +284,34 @@ object GenSpecification extends Properties("Gen") {
 
   //// See https://github.com/rickynils/scalacheck/issues/209
   property("uniform double #209") =
-    Prop.forAllNoShrink(Gen.choose(10000, 100000)) { n =>
-      val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
-        case ((s1, nums), _) =>
-          val (d, s2) = s1.double
-          (s2, nums :+ d)
+    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+      var i = 0
+      var sum = 0d
+      var seed = rng.Seed(n)
+      while (i < n) {
+        val (d,s1) = seed.double
+        sum += d
+        i += 1
+        seed = s1
       }
-      val avg = numbers.sum / numbers.size
-      s"average = $avg" |: avg >= 0.4 && avg <= 0.6
+      val avg = sum / n
+      s"average = $avg" |: avg >= 0.49 && avg <= 0.51
     }
 
   property("uniform long #209") = {
     val scale = 1d / Long.MaxValue
-    Prop.forAllNoShrink(Gen.choose(10000, 100000)) { n =>
-      val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
-        case ((s1, nums), _) =>
-          val (l, s2) = s1.long
-          val d = if (l == Long.MinValue) 1d else math.abs(l).toDouble * scale
-          (s2, nums :+ d)
+    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+      var i = 0
+      var sum = 0d
+      var seed = rng.Seed(n)
+      while (i < n) {
+        val (l,s1) = seed.long
+        sum += math.abs(l).toDouble * scale
+        i += 1
+        seed = s1
       }
-      val avg = numbers.sum / numbers.size
-      s"average = $avg" |: avg >= 0.4 && avg <= 0.6
+      val avg = sum / n
+      s"average = $avg" |: avg >= 0.49 && avg <= 0.51
     }
   }
   ////
