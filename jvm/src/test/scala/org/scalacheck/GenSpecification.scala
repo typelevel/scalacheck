@@ -283,14 +283,29 @@ object GenSpecification extends Properties("Gen") {
   }
 
   //// See https://github.com/rickynils/scalacheck/issues/209
-  property("uniform double #209") = Prop.forAll(Gen.choose(10000, 100000)) { n =>
-    val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
-      case ((s1, nums), _) =>
-        val (d, s2) = s1.double
-        (s2, nums :+ d)
+  property("uniform double #209") =
+    Prop.forAllNoShrink(Gen.choose(10000, 100000)) { n =>
+      val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
+        case ((s1, nums), _) =>
+          val (d, s2) = s1.double
+          (s2, nums :+ d)
+      }
+      val avg = numbers.sum / numbers.size
+      s"average = $avg" |: avg >= 0.4 && avg <= 0.6
     }
-    val avg = numbers.sum / numbers.size
-    s"average = $avg" |: avg >= 0.4 && avg <= 0.6
+
+  property("uniform long #209") = {
+    val scale = 1d / Long.MaxValue
+    Prop.forAllNoShrink(Gen.choose(10000, 100000)) { n =>
+      val (seed, numbers) = 1.to(n).foldLeft((rng.Seed(n), Vector[Double]())) {
+        case ((s1, nums), _) =>
+          val (l, s2) = s1.long
+          val d = if (l == Long.MinValue) 1d else math.abs(l).toDouble * scale
+          (s2, nums :+ d)
+      }
+      val avg = numbers.sum / numbers.size
+      s"average = $avg" |: avg >= 0.4 && avg <= 0.6
+    }
   }
   ////
 }
