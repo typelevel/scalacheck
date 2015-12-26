@@ -175,13 +175,13 @@ final class ScalaCheckFramework extends Framework {
         None
     }
 
-    def done = {
+    def done = if (testCount.get > 0) {
       val heading = if (testCount.get == successCount.get) "Passed" else "Failed"
       s"$heading: Total $testCount, " +
       s"Failed $failureCount, Errors $errorCount, Passed $successCount" +
       (if(unknownArgs.isEmpty) "" else
       s"\nWarning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
-    }
+    } else ""
 
   }
 
