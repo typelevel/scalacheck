@@ -29,30 +29,26 @@ object Cogen extends CogenArities {
 
   def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
 
-  def apply[T](f: T => Long): Cogen[T] =
-    new Cogen[T] {
-      def perturb(seed: Seed, t: T): Seed = seed.reseed(f(t))
-    }
+  def apply[T](f: T => Long): Cogen[T] = new Cogen[T] {
+    def perturb(seed: Seed, t: T): Seed = seed.reseed(f(t))
+  }
 
   def apply[T](f: (Seed, T) => Seed): Cogen[T] =
     new Cogen[T] {
       def perturb(seed: Seed, t: T): Seed = f(seed, t).next
     }
 
-  def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
+  private def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
     new Cogen[T] {
       def perturb(seed: Seed, t: T): Seed =
         f(t).foldLeft(seed)(U.perturb).next
     }
 
-  def perturb[A](seed: Seed, a: A)(implicit A: Cogen[A]): Seed =
-    A.perturb(seed, a)
+  def perturb[T](seed: Seed, t: T)(implicit cg: Cogen[T]): Seed =
+    cg.perturb(seed, t)
 
-  implicit lazy val cogenUnit: Cogen[Unit] =
-    Cogen(_ => 0L)
+  implicit lazy val cogenUnit: Cogen[Unit] = Cogen(_ => 0L)
 
-  // implicit lazy val cogenBoolean: Cogen[Boolean] =
-  //   Cogen((seed, b) => if (b) seed.next else seed)
   implicit lazy val cogenBoolean: Cogen[Boolean] =
     Cogen(b => if (b) 1L else 0L)
 
