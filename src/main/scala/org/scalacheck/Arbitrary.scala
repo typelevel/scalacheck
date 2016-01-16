@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import java.util.Calendar
+
 import language.higherKinds
 import concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -142,10 +144,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     Arbitrary(arbitrary[List[Char]] map (_.mkString))
 
   /** Arbitrary instance of Date */
-  implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(for {
-    l <- arbitrary[Long]
-    d = new Date
-  } yield new Date(d.getTime + l))
+  implicit lazy val arbDate: Arbitrary[Date] = Arbitrary(Gen.CalendarGen.default.map(_.getTime))
+
+  /** Arbirtrary instance of Calendar */
+  implicit lazy val arbCalendar: Arbitrary[Calendar] = Arbitrary(Gen.CalendarGen.default)
 
   /** Arbitrary instance of Throwable */
   implicit lazy val arbThrowable: Arbitrary[Throwable] =

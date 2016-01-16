@@ -160,6 +160,11 @@ object GenSpecification extends Properties("Gen") {
 
   property("numChar") = forAll(numChar)(_.isDigit)
 
+  property("calendar") = forAll(CalendarGen.default) { cal =>
+    cal.setLenient(false) // will cause getTime to throw if invalid
+    cal.getTime != null
+  }
+
   property("alphaUpperChar") = forAll(alphaUpperChar) { c =>
     c.isLetter && c.isUpper
   }
