@@ -13,35 +13,49 @@ any missed cases.
 
 Fire up the Scala interpreter, with ScalaCheck in the classpath.
 ```bash
-    $ scala -cp scalacheck.jar
+$ scala -cp scalacheck.jar
 ```
 Import the `forAll` method, which creates universally quantified properties. We
 will dig into the different property methods later on, but `forAll` is probably
 the one you will use the most.
 
-    scala> import org.scalacheck.Prop.forAll
+```
+scala> import org.scalacheck.Prop.forAll
+```
 
 Define a property.
 
-    scala> val propConcatLists = forAll { (l1: List[Int], l2: List[Int]) =>
-      l1.size + l2.size == (l1 ::: l2).size }
+```
+scala> val propConcatLists = forAll { (l1: List[Int], l2: List[Int]) =>
+  l1.size + l2.size == (l1 ::: l2).size }
+```
 
 Check the property!
 
-    scala> propConcatLists.check
-    + OK, passed 100 tests.
+```
+scala> propConcatLists.check
++ OK, passed 100 tests.
+```
 
 OK, that seemed alright. Now define another property.
 
-    scala> val propSqrt = forAll { (n: Int) => scala.math.sqrt(n*n) == n }
+```
+scala> val propSqrt = forAll { (n: Int) => scala.math.sqrt(n*n) == n }
+```
 
 Check it!
 
-    scala> propSqrt.check
-    ! Falsified after 1 passed tests:
-    > -1
+```
+scala> propSqrt.check
+! Falsified after 2 passed tests.
+> ARG_0: -1
+> ARG_0_ORIGINAL: -488187735
+```
 
 Not surprisingly, the property doesn't hold. The argument `-1` falsifies it.
+You can also see that the argument `-488187735` falsifies the property. That
+was the first argument ScalaCheck found, and it was then simplified to `-1`.
+You'll read more about this later on.
 
 ## Concepts
 
@@ -68,14 +82,15 @@ This will be described in a later section.
 
 Here are some examples of properties defined with help of the
 `org.scalacheck.Prop.forAll` method.
+
 ```scala
-    import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop.forAll
 
-    val propReverseList = forAll { l: List[String] => l.reverse.reverse == l }
+val propReverseList = forAll { l: List[String] => l.reverse.reverse == l }
 
-    val propConcatString = forAll { (s1: String, s2: String) =>
-      (s1 + s2).endsWith(s2)
-    }
+val propConcatString = forAll { (s1: String, s2: String) =>
+  (s1 + s2).endsWith(s2)
+}
 ```
 When you run `check` on the properties, ScalaCheck generates random
 instances of the function parameters and evaluates the results, reporting any
@@ -83,13 +98,17 @@ failing cases.
 
 You can also give `forAll` a specific data generator. See the following
 example:
+
 ```scala
-    import org.scalacheck._
+import org.scalacheck._
 
-    val smallInteger = Gen.choose(0,100)
+val smallInteger = Gen.choose(0,100)
 
-    val propSmallInteger = Prop.forAll(smallInteger)(n => n >= 0 && n <= 100)
+val propSmallInteger = Prop.forAll(smallInteger) { n =>
+  n >= 0 && n <= 100
+}
 ```
+
 `smallInteger` defines a *generator* that generates integers between 0 and 100,
 inclusively. Generators will be described closer in a later section.
 `propSmallInteger` simply specifies that each integer generated should be in
@@ -102,13 +121,15 @@ that should be used, and not rely on a default generator for the given type.
 
 Sometimes, a specification takes the form of an implication. In ScalaCheck,
 you can use the implication operator `==>`:
-```scala
-    import org.scalacheck.Prop.{forAll, BooleanOperators}
 
-    val propMakeList = forAll { n: Int =>
-      (n >= 0 && n < 10000) ==> (List.fill(n)("").length == n)
-    }
+```scala
+import org.scalacheck.Prop.{forAll, BooleanOperators}
+
+val propMakeList = forAll { n: Int =>
+  (n >= 0 && n < 10000) ==> (List.fill(n)("").length == n)
+}
 ```
+
 Now ScalaCheck will only care for the cases when `n` is not negative. We
 also filter out large numbers, since we don't want to generate huge lists.
 
@@ -117,12 +138,16 @@ fulfill, ScalaCheck might not find enough passing test cases to state that the
 property holds. In the following trivial example, all cases where `n` is
 non-zero will be thrown away:
 
-    scala> import org.scalacheck.Prop.{forAll, BooleanOperators}
+```
+scala> import org.scalacheck.Prop.{forAll, BooleanOperators}
 
-    scala> val propTrivial = forAll( (n: Int) => (n == 0) ==> (n == 0) )
+scala> val propTrivial = forAll { n: Int =>
+     |  (n == 0) ==> (n == 0)
+     | }
 
-    scala> propTrivial.check
-    ! Gave up after only 4 passed tests. 500 tests were discarded.
+scala> propTrivial.check
+! Gave up after only 4 passed tests. 500 tests were discarded.
+```
 
 It is possible to tell ScalaCheck to try harder when it generates test cases,
 but generally you should try to refactor your property specification instead of
@@ -137,21 +162,23 @@ will be described in more detail.
 **Combining Properties**
 
 A third way of creating properties, is to combine existing properties into new ones.
+
 ```scala
-    val p1 = forAll(...)
+val p1 = forAll(...)
 
-    val p2 = forAll(...)
+val p2 = forAll(...)
 
-    val p3 = p1 && p2
+val p3 = p1 && p2
 
-    val p4 = p1 || p2
+val p4 = p1 || p2
 
-    val p5 = p1 == p2
+val p5 = p1 == p2
 
-    val p6 = all(p1, p2) // same as p1 && p2
+val p6 = all(p1, p2) // same as p1 && p2
 
-    val p7 = atLeastOne(p1, p2) // same as p1 || p2
+val p7 = atLeastOne(p1, p2) // same as p1 || p2
 ```
+
 Here, `p3` will hold if and only if both `p1` and `p2` hold, `p4` will hold if
 either `p1` or `p2` holds, and `p5` will hold if `p1` holds exactly when `p2`
 holds and vice versa.
@@ -163,40 +190,43 @@ Often you want to specify several related properties, perhaps for all methods
 in a class. ScalaCheck provides a simple way of doing this, through the
 `Properties` trait. Look at the following specifications of some of the
 methods in the `java.lang.String` class:
+
 ```scala
-    import org.scalacheck._
+import org.scalacheck._
 
-    object StringSpecification extends Properties("String") {
-      import Prop.forAll
+object StringSpecification extends Properties("String") {
+  import Prop.forAll
 
-      property("startsWith") = forAll { (a: String, b: String) =>
-        (a+b).startsWith(a)
-      }
+  property("startsWith") = forAll { (a: String, b: String) =>
+    (a+b).startsWith(a)
+  }
 
-      property("endsWith") = forAll { (a: String, b: String) =>
-        (a+b).endsWith(b)
-      }
+  property("endsWith") = forAll { (a: String, b: String) =>
+    (a+b).endsWith(b)
+  }
 
-      property("substring") = forAll { (a: String, b: String) =>
-        (a+b).substring(a.length) == b
-      }
+  property("substring") = forAll { (a: String, b: String) =>
+    (a+b).substring(a.length) == b
+  }
 
-      property("substring") = forAll { (a: String, b: String, c: String) =>
-        (a+b+c).substring(a.length, a.length+b.length) == b
-      }
-    }
+  property("substring") = forAll { (a: String, b: String, c: String) =>
+    (a+b+c).substring(a.length, a.length+b.length) == b
+  }
+}
 ```
 The `Properties` class contains a `main` method that can be used for simple
 execution of the property tests. Compile and run the tests in the
 following way:
 
-    $ scalac -cp scalacheck.jar StringSpecification.scala
+```bash
+$ scalac -cp scalacheck.jar StringSpecification.scala
 
-    $ scala -cp scalacheck.jar:. StringSpecification
-    + String.startsWith: OK, passed 100 tests.
-    + String.endsWith: OK, passed 100 tests.
-    + String.substring: OK, passed 100 tests.
-    + String.substring: OK, passed 100 tests.
+$ scala -cp scalacheck.jar:. StringSpecification
++ String.startsWith: OK, passed 100 tests.
++ String.endsWith: OK, passed 100 tests.
++ String.substring: OK, passed 100 tests.
++ String.substring: OK, passed 100 tests.
+```
 
 You can also use the `check` method of the `Properties` class to
 check all specified properties, just like for simple `Prop` instances.
@@ -208,13 +238,15 @@ There is a `Properties.include` method you can use if you want to
 group several different property collections into a single one. You
 could for example create one property collection for your application
 that consists of all the property collections of your individual classes:
+
 ```scala
-    object MyAppSpecification extends Properties("MyApp") {
-      include(StringSpecification)
-      include(...)
-      include(...)
-    }
+object MyAppSpecification extends Properties("MyApp") {
+  include(StringSpecification)
+  include(...)
+  include(...)
+}
 ```
+
 **Labeling Properties**
 
 Sometimes it can be difficult to decide exactly what is wrong when a property
@@ -222,58 +254,66 @@ fails, especially if the property is complex, with many conditions. In such
 cases, you can label the different parts of the property, so ScalaCheck can
 tell you exactly what part is failing. Look at the following example, where
 the different conditions of the property have been labeled differently:
-```scala
-    import org.scalacheck.Prop.{forAll, BooleanOperators}
 
-    val complexProp = forAll { (m: Int, n: Int) =>
-      val res = myMagicFunction(n, m)
-      (res >= m)    :| "result > #1" &&
-      (res >= n)    :| "result > #2" &&
-      (res < m + n) :| "result not sum"
-    }
+```scala
+import org.scalacheck.Prop.{forAll, BooleanOperators}
+
+val complexProp = forAll { (m: Int, n: Int) =>
+  val res = myMagicFunction(n, m)
+  (res >= m)    :| "result > #1" &&
+  (res >= n)    :| "result > #2" &&
+  (res < m + n) :| "result not sum"
+}
 ```
+
 We can see the label if we define `myMagicFunction` incorrectly and then
 check the property:
 
-    scala> def myMagicFunction(n: Int, m: Int) = n + m
-    myMagicFunction: (Int,Int)Int
+```
+scala> def myMagicFunction(n: Int, m: Int) = n + m
+myMagicFunction: (Int,Int)Int
 
-    scala> complexProp.check
-    ! Falsified after 0 passed tests.
-    > Label of failing property: "result not sum"
-    > ARG_0: "0"
-    > ARG_1: "0"
+scala> complexProp.check
+! Falsified after 0 passed tests.
+> Label of failing property: "result not sum"
+> ARG_0: "0"
+> ARG_1: "0"
+```
 
 It is also possible to write the label before the conditions like this:
-```scala
-    import org.scalacheck.Prop.{forAll, BooleanOperators}
 
-    val complexProp = forAll { (m: Int, n: Int) =>
-      val res = myMagicFunction(n, m)
-      ("result > #1"    |: res >= m) &&
-      ("result > #2"    |: res >= n) &&
-      ("result not sum" |: res < m + n)
-    }
+```scala
+import org.scalacheck.Prop.{forAll, BooleanOperators}
+
+val complexProp = forAll { (m: Int, n: Int) =>
+  val res = myMagicFunction(n, m)
+  ("result > #1"    |: res >= m) &&
+  ("result > #2"    |: res >= n) &&
+  ("result not sum" |: res < m + n)
+}
 ```
+
 The labeling operator can also be used to inspect intermediate values
 used in the properties, which can be very useful when trying to understand
 why a property fails. ScalaCheck always presents the generated property
 arguments (`ARG_0`, `ARG_1`, etc), but sometimes you need to quickly see
 the value of an intermediate calculation. See the following example, which
 tries to specify multiplication in a somewhat naive way:
-```scala
-    import org.scalacheck.Prop.{forAll, BooleanOperators, all}
 
-    val propMul = forAll { (n: Int, m: Int) =>
-      val res = n*m
-      ("evidence = " + res) |: all(
-        "div1" |: m != 0 ==> (res / m == n),
-        "div2" |: n != 0 ==> (res / n == m),
-        "lt1"  |: res > m,
-        "lt2"  |: res > n
-      )
-    }
+```scala
+import org.scalacheck.Prop.{forAll, BooleanOperators, all}
+
+val propMul = forAll { (n: Int, m: Int) =>
+  val res = n*m
+  ("evidence = " + res) |: all(
+    "div1" |: m != 0 ==> (res / m == n),
+    "div2" |: n != 0 ==> (res / n == m),
+    "lt1"  |: res > m,
+    "lt2"  |: res > n
+  )
+}
 ```
+
 Here we have four different conditions, each with its own label. Instead
 of using the `&&` operator the conditions are combined in an equivalent
 way by using the `Prop.all` method. The implication operators are used to
@@ -281,13 +321,15 @@ protect us from zero-divisions. A fifth label is added to the combined
 property to record the result of the multiplication. When we check the
 property, ScalaCheck tells us the following:
 
-    scala> propMul.check
-    ! Falsified after 0 passed tests.
-    > Labels of failing property:
-    "lt1"
-    "evidence = 0"
-    > ARG_0: "0"
-    > ARG_1: "0"
+```
+scala> propMul.check
+! Falsified after 0 passed tests.
+> Labels of failing property:
+"lt1"
+"evidence = 0"
+> ARG_0: "0"
+> ARG_1: "0"
+```
 
 As you can see, you can add as many labels as you want to your property,
 ScalaCheck will present them all if the property fails.
@@ -317,34 +359,40 @@ generator combinators that exist in the `org.scalacheck.Gen` module. These can
 be combined using a for-comprehension. Suppose you need a generator which
 generates a tuple that contains two random integer values, one of them being at
 least twice as big as the other. The following definition does this:
+
 ```scala
-    val myGen = for {
-      n <- Gen.choose(10,20)
-      m <- Gen.choose(2*n, 500)
-    } yield (n,m)
+val myGen = for {
+  n <- Gen.choose(10,20)
+  m <- Gen.choose(2*n, 500)
+} yield (n,m)
 ```
+
 You can create generators that picks one value out of a selection of values.
 The following generator generates a vowel:
-```scala
-    val vowel = Gen.oneOf('A', 'E', 'I', 'O', 'U', 'Y')
 
-    val vowel: Gen[Char] = 'A' | 'E' | 'I' | 'O' | 'U' | 'Y'
+```scala
+val vowel = Gen.oneOf('A', 'E', 'I', 'O', 'U', 'Y')
 ```
+
 The `oneOf` method creates a generator that randomly picks one of its
-parameters each time it generates a value. You can also use the `|` operator of the `Gen` class to achieve the same thing. Notice that plain values are implicitly converted to generators (which always generates that value) if needed. (Note: starting with version 1.11.0, the `Gen` class doesn't contain the `|` method anymore)
+parameters each time it generates a value. Notice that plain values are
+implicitly converted to generators (which always generates that value) if
+needed.
 
-The distribution is uniform, but if
-you want to control it you can use the `frequency` combinator:
+The distribution is uniform, but if you want to control it you can use the
+`frequency` combinator:
+
 ```scala
-    val vowel = Gen.frequency(
-      (3, 'A'),
-      (4, 'E'),
-      (2, 'I'),
-      (3, 'O'),
-      (1, 'U'),
-      (1, 'Y')
-    )
+val vowel = Gen.frequency(
+  (3, 'A'),
+  (4, 'E'),
+  (2, 'I'),
+  (3, 'O'),
+  (1, 'U'),
+  (1, 'Y')
+)
 ```
+
 Now, the `vowel` generator will generate E:s more often than Y:s. Roughly, 4/14
 of the values generated will be E:s, and 1/14 of them will be Y:s.
 
@@ -352,29 +400,33 @@ of the values generated will be E:s, and 1/14 of them will be Y:s.
 
 It is very simple to generate random instances of case classes in ScalaCheck.
 Consider the following example where a binary integer tree is generated:
+
 ```scala
-    sealed abstract class Tree
-    case class Node(left: Tree, right: Tree, v: Int) extends Tree
-    case object Leaf extends Tree
+sealed abstract class Tree
+case class Node(left: Tree, right: Tree, v: Int) extends Tree
+case object Leaf extends Tree
 
-    import org.scalacheck._
-    import Gen._
-    import Arbitrary.arbitrary
+import org.scalacheck._
+import Gen._
+import Arbitrary.arbitrary
 
-    val genLeaf = const(Leaf)
+val genLeaf = const(Leaf)
 
-    val genNode = for {
-      v <- arbitrary[Int]
-      left <- genTree
-      right <- genTree
-    } yield Node(left, right, v)
+val genNode = for {
+  v <- arbitrary[Int]
+  left <- genTree
+  right <- genTree
+} yield Node(left, right, v)
 
-    def genTree: Gen[Tree] = oneOf(genLeaf, genNode)
+def genTree: Gen[Tree] = oneOf(genLeaf, genNode)
 ```
+
 We can now generate a sample tree:
 
-    scala> genTree.sample
-       res0: Option[Tree] = Some(Node(Leaf,Node(Node(Node(Node(Node(Node(Leaf,Leaf,-71),Node(Leaf,Leaf,-49),17),Leaf,-20),Leaf,-7),Node(Node(Leaf,Leaf,26),Leaf,-3),49),Leaf,84),-29))
+```
+scala> genTree.sample
+res0: Option[Tree] = Some(Node(Leaf,Node(Node(Node(Node(Node(Node(Leaf,Leaf,-71),Node(Leaf,Leaf,-49),17),Leaf,-20),Leaf,-7),Node(Node(Leaf,Leaf,26),Leaf,-3),49),Leaf,84),-29))
+```
 
 **Sized Generators**
 
@@ -382,12 +434,14 @@ When ScalaCheck uses a generator to generate a value, it feeds it with some
 parameters. One of the parameters the generator is given, is a *size* value,
 which some generators use to generate their values. If you want to use the size
 parameter in your own generator, you can use the `Gen.sized` method:
+
 ```scala
-    def matrix[T](g: Gen[T]): Gen[Seq[Seq[T]]] = Gen.sized { size =>
-      val side = scala.math.sqrt(size).asInstanceOf[Int]
-      Gen.listOfN(side, Gen.listOfN(side, g))
-    }
+def matrix[T](g: Gen[T]): Gen[Seq[Seq[T]]] = Gen.sized { size =>
+  val side = scala.math.sqrt(size).asInstanceOf[Int]
+  Gen.listOfN(side, Gen.listOfN(side, g))
+}
 ```
+
 The `matrix` generator will use a given generator and create a matrix which
 side is based on the generator size parameter. It uses the `Gen.listOfN` which
 creates a sequence of given length filled with values obtained from the given
@@ -397,9 +451,11 @@ generator.
 
 Conditional generators can be defined using `Gen.suchThat` in the following
 way:
+
 ```scala
-    val smallEvenInteger = Gen.choose(0,200) suchThat (_ % 2 == 0)
+val smallEvenInteger = Gen.choose(0,200) suchThat (_ % 2 == 0)
 ```
+
 Conditional generators works just like conditional properties, in the sense
 that if the condition is too hard, ScalaCheck might not be able to generate
 enough values, and it might report a property test as undecided. The
@@ -413,13 +469,15 @@ There is a special generator, `Gen.containerOf`, that generates containers such
 as lists and arrays. They take another generator as argument, that is
 responsible for generating the individual items. You can use it in the
 following way:
+
 ```scala
-    val genIntList      = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
+val genIntList      = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
 
-    val genStringStream = Gen.containerOf[Stream,String](Gen.alphaStr)
+val genStringStream = Gen.containerOf[Stream,String](Gen.alphaStr)
 
-    val genBoolArray    = Gen.containerOf[Array,Boolean](true)
+val genBoolArray    = Gen.containerOf[Array,Boolean](true)
 ```
+
 By default, ScalaCheck supports generation of `List`, `Stream`, `Set`, `Array`,
 and `ArrayList` (from `java.util`). You can add support for additional
 containers by adding implicit `Buildable` instances. See `Buildable.scala` for
@@ -432,13 +490,15 @@ There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 
 There is a special generator, `org.scalacheck.Arbitrary.arbitrary`, which
 generates arbitrary values of any supported type.
-```scala
-    val evenInteger = Arbitrary.arbitrary[Int] suchThat (_ % 2 == 0)
 
-    val squares = for {
-      xs <- Arbitrary.arbitrary[List[Int]]
-    } yield xs.map(x => x*x)
+```scala
+val evenInteger = Arbitrary.arbitrary[Int] suchThat (_ % 2 == 0)
+
+val squares = for {
+  xs <- Arbitrary.arbitrary[List[Int]]
+} yield xs.map(x => x*x)
 ```
+
 The `arbitrary` generator is the generator used by ScalaCheck when it generates
 values for property parameters. Most of the times, you have to supply the type
 of the value to `arbitrary`, like above, since Scala often can't infer the type
@@ -447,9 +507,11 @@ automatically. You can use `arbitrary` for any type that has an implicit
 common types, but it is also possible to define your own implicit `Arbitrary`
 instances for unsupported types. See the following implicit `Arbitrary`
 definition for booleans, that comes from the ScalaCheck implementation.
+
 ```scala
-    implicit lazy val arbBool: Arbitrary[Boolean] = Arbitrary(oneOf(true, false))
+implicit lazy val arbBool: Arbitrary[Boolean] = Arbitrary(oneOf(true, false))
 ```
+
 To get support for your own type `T` you need to define an implicit `def` or
 `val` of type `Arbitrary[T]`. Use the factory method `Arbitrary(...)` to create
 the `Arbitrary` instance. This method takes one parameter of type `Gen[T]` and
@@ -457,48 +519,53 @@ returns an instance of `Arbitrary[T]`.
 
 Now, lets say you have a custom type `Tree[T]` that you want to use as a
 parameter in your properties:
+
 ```scala
-    abstract sealed class Tree[T] {
-      def merge(t: Tree[T]) = Internal(List(this, t))
+abstract sealed class Tree[T] {
+  def merge(t: Tree[T]) = Internal(List(this, t))
 
-      def size: Int = this match {
-        case Leaf(_) => 1
-        case Internal(children) => (children :\ 0) (_.size + _)
-      }
-    }
+  def size: Int = this match {
+    case Leaf(_) => 1
+    case Internal(children) => (children :\ 0) (_.size + _)
+  }
+}
 
-    case class Internal[T](children: Seq[Tree[T]]) extends Tree[T]
+case class Internal[T](children: Seq[Tree[T]]) extends Tree[T]
 
-    case class Leaf[T](elem: T) extends Tree[T]
+case class Leaf[T](elem: T) extends Tree[T]
 ```
 
 When you specify an implicit generator for your type `Tree[T]`, you also have
 to assume that there exists an implicit generator for the type `T`. You do this
 by specifying an implicit parameter of type `Arbitrary[T]`, so you can use the
 generator `arbitrary[T]`.
+
 ```scala
-    implicit def arbTree[T](implicit a: Arbitrary[T]): Arbitrary[Tree[T]] =
-      Arbitrary {
-        val genLeaf = for(e <- Arbitrary.arbitrary[T]) yield Leaf(e)
+plicit def arbTree[T](implicit a: Arbitrary[T]): Arbitrary[Tree[T]] =
+Arbitrary {
+  val genLeaf = for(e <- Arbitrary.arbitrary[T]) yield Leaf(e)
 
-        def genInternal(sz: Int): Gen[Tree[T]] = for {
-          n <- Gen.choose(sz/3, sz/2)
-          c <- Gen.listOfN(n, sizedTree(sz/2))
-        } yield Internal(c)
+  def genInternal(sz: Int): Gen[Tree[T]] = for {
+    n <- Gen.choose(sz/3, sz/2)
+    c <- Gen.listOfN(n, sizedTree(sz/2))
+  } yield Internal(c)
 
-        def sizedTree(sz: Int) =
-          if(sz <= 0) genLeaf
-          else Gen.frequency((1, genLeaf), (3, genInternal(sz)))
+  def sizedTree(sz: Int) =
+    if(sz <= 0) genLeaf
+    else Gen.frequency((1, genLeaf), (3, genInternal(sz)))
 
-        Gen.sized(sz => sizedTree(sz))
-      }
+  Gen.sized(sz => sizedTree(sz))
+}
 ```
+
 As long as the implicit `arbTree` function is in scope, you can now write
 properties like this:
+
 ```scala
-    val propMergeTree = forAll( (t1: Tree[Int], t2: Tree[Int]) =>
-      t1.size + t2.size == t1.merge(t2).size
+val propMergeTree = forAll( (t1: Tree[Int], t2: Tree[Int]) =>
+  t1.size + t2.size == t1.merge(t2).size
 ```
+
 **Collecting Generated Test Data**
 
 It is possible to collect statistics about what kind of test data that has been
@@ -510,32 +577,38 @@ For example, you might have a method that operates on lists, and which behaves
 differently if the list is sorted or not. Then it is crucial to know if
 ScalaCheck tests the method with both sorted and unsorted lists. Let us first
 define an `ordered` method to help us state the property.
+
 ```scala
-    def ordered(l: List[Int]) = l == l.sort(_ > _)
+def ordered(l: List[Int]) = l == l.sorted
 ```
+
 Now state the property, using `Prop.classify` to collect interesting
 information on the generated data. The property itself is not very exciting in
 this example, we just state that a double reverse should return the original
 list.
-```scala
-    import org.scalacheck.Prop._
 
-    val myProp = forAll { l: List[Int] =>
-      classify(ordered(l), "ordered") {
-        classify(l.length > 5, "large", "small") {
-          l.reverse.reverse == l
-        }
-      }
+```scala
+import org.scalacheck.Prop._
+
+val myProp = forAll { l: List[Int] =>
+  classify(ordered(l), "ordered") {
+    classify(l.length > 5, "large", "small") {
+      l.reverse.reverse == l
     }
+  }
+}
 ```
+
 Check the property, and watch the statistics printed by ScalaCheck:
 
-    scala> myProp.check
-    + OK, passed 100 tests.
-    > Collected test data:
-    78% large
-    16% small, ordered
-    6% small
+```
+scala> myProp.check
++ OK, passed 100 tests.
+> Collected test data:
+78% large
+16% small, ordered
+6% small
+```
 
 Here ScalaCheck tells us that the property hasn't been tested with any large
 and ordered list (which is no surprise, since the lists are randomised).
@@ -548,25 +621,27 @@ We can also collect data directly, using the `Prop.collect` method. In this
 dummy property we just want to see if ScalaCheck distributes the generated
 data evenly:
 
-    val dummyProp = forAll(Gen.choose(1,10)) { n =>
-      collect(n) {
-        n == n
-      }
-    }
+```
+val dummyProp = forAll(Gen.choose(1,10)) { n =>
+  collect(n) {
+    n == n
+  }
+}
 
-    scala> dummyProp.check
-    + OK, passed 100 tests.
-    > Collected test data:
-    13% 7
-    13% 5
-    12% 1
-    12% 6
-    11% 2
-    9% 9
-    9% 3
-    8% 10
-    7% 8
-    6% 4
+scala> dummyProp.check
++ OK, passed 100 tests.
+> Collected test data:
+13% 7
+13% 5
+12% 1
+12% 6
+11% 2
+9% 9
+9% 3
+8% 10
+7% 8
+6% 4
+```
 
 As we can see, the frequency for each number is around 10%, which seems
 reasonable.
@@ -585,40 +660,46 @@ If it doesn't manage to find a failing test case after a certain number of
 tests, it reports a property as passed.
 
 The `check` method looks like this:
+
 ```scala
-    def check(params: Test.Parameters, p: Prop): Test.Result
+def check(params: Test.Parameters, p: Prop): Test.Result
 ```
+
 `Test.Parameters` is a trait that encapsulates testing parameters such as the
 number of times a property should be tested, the size bounds of the test data,
-and how many times ScalaCheck should try if it fails to generate arguments. There are also field for callbacks in the `Parameters` record, if you need to get feedback from the test runner programmatically.
+and how many times ScalaCheck should try if it fails to generate arguments.
+There are also field for callbacks in the `Parameters` record, if you need to
+get feedback from the test runner programmatically.
 
 The `check` method returns an instance of `Test.Result` which encapsulates
 the result and some statistics of the property test. `Test.Result.status` is of
 the type `Test.Status` and can have the following values:
+
 ```scala
-      /** ScalaCheck found enough cases for which the property holds, so the
-       *  property is considered correct. (It is not proved correct, though). */
-      case object Passed extends Status
+/** ScalaCheck found enough cases for which the property holds, so the
+ *  property is considered correct. (It is not proved correct, though). */
+case object Passed extends Status
 
-      /** ScalaCheck managed to prove the property correct */
-      sealed case class Proved(args: List[Arg]) extends Status
+/** ScalaCheck managed to prove the property correct */
+sealed case class Proved(args: List[Arg]) extends Status
 
-      /** The property was proved wrong with the given concrete arguments.  */
-      sealed case class Failed(args: List[Arg], label: String) extends Status
+/** The property was proved wrong with the given concrete arguments.  */
+sealed case class Failed(args: List[Arg], label: String) extends Status
 
-      /** The property test was exhausted, it wasn't possible to generate enough
-       *  concrete arguments satisfying the preconditions to get enough passing
-       *  property evaluations. */
-      case object Exhausted extends Status
+/** The property test was exhausted, it wasn't possible to generate enough
+ *  concrete arguments satisfying the preconditions to get enough passing
+ *  property evaluations. */
+case object Exhausted extends Status
 
-      /** An exception was raised when trying to evaluate the property with the
-       *  given concrete arguments. */
-      sealed case class PropException(args: List[Arg], e: Throwable, label: String) extends Status
+/** An exception was raised when trying to evaluate the property with the
+ *  given concrete arguments. */
+sealed case class PropException(args: List[Arg], e: Throwable, label: String) extends Status
 
-      /** An exception was raised when trying to generate concrete arguments
-       *  for evaluating the property. */
-      sealed case class GenException(e: Throwable) extends Status
+/** An exception was raised when trying to generate concrete arguments
+ *  for evaluating the property. */
+sealed case class GenException(e: Throwable) extends Status
 ```
+
 The `checkProperties` returns test statistics for each property in the tested
 property collection, as a list. See the API documentation for more details.
 
@@ -627,20 +708,22 @@ property and property collection actually has a main method that can parse the
 test parameters given to it. If you provide the argument `-h`, you will get a
 list of possible arguments:
 
-    $ scala -cp scalacheck.jar MyProp -h
-    Incorrect options:
-    [1.1] failure: option name expected
-    
-    -h
-    ^
-    
-    Available options:
-      -workers, -w: Number of threads to execute in parallel for testing
-      -minSize, -n: Minimum data generation size
-      -verbosity, -v: Verbosity level
-      -minSuccessfulTests, -s: Number of tests that must succeed in order to pass a property
-      -maxDiscardRatio, -r: The maximum ratio between discarded and succeeded tests allowed before ScalaCheck stops testing a property. At least minSuccessfulTests will always be tested, though.
-      -maxSize, -x: Maximum data generation size
+```
+$ scala -cp scalacheck.jar MyProp -h
+Incorrect options:
+[1.1] failure: option name expected
+
+-h
+^
+
+Available options:
+  -workers, -w: Number of threads to execute in parallel for testing
+  -minSize, -n: Minimum data generation size
+  -verbosity, -v: Verbosity level
+  -minSuccessfulTests, -s: Number of tests that must succeed in order to pass a property
+  -maxDiscardRatio, -r: The maximum ratio between discarded and succeeded tests allowed before ScalaCheck stops testing a property. At least minSuccessfulTests will always be tested, though.
+  -maxSize, -x: Maximum data generation size
+```
 
 These command line arguments can also be used in SBT to tweak ScalaCheck's
 testing parameters when you run ScalaCheck tests through SBT. See SBT's
@@ -655,29 +738,33 @@ reported. This is done automatically when you use the `Prop.property` and
 `Prop.forAllNoShrink`. Let's look at the difference between these methods, by
 specifying a property that says that no list has duplicate elements in it. This
 is of course not true, but we want to see the test case minimisation in action!
+
 ```scala
-    import org.scalacheck.Arbitrary.arbitrary
-    import org.scalacheck.Prop.{forAll, forAllNoShrink}
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Prop.{forAll, forAllNoShrink}
 
-    val p1 = forAllNoShrink(arbitrary[List[Int]])(l => l == l.distinct)
+val p1 = forAllNoShrink(arbitrary[List[Int]])(l => l == l.distinct)
 
-    val p2 = forAll(arbitrary[List[Int]])(l => l == l.distinct)
+val p2 = forAll(arbitrary[List[Int]])(l => l == l.distinct)
 
-    val p3 = forAll( (l: List[Int]) => l == l.distinct )
+val p3 = forAll( (l: List[Int]) => l == l.distinct )
 ```
+
 Now, run the tests:
 
-    scala> p1.check
-    ! Falsified after 11 passed tests:
-    > ARG_0 = "List(8, 0, -1, -3, -8, 8, 2, -10, 9, 1, -8)"
+```
+scala> p1.check
+! Falsified after 11 passed tests:
+> ARG_0 = "List(8, 0, -1, -3, -8, 8, 2, -10, 9, 1, -8)"
 
-    scala> p2.check
-    ! Falsified after 4 passed tests:
-    > ARG_0 = "List(-1, -1)" (2 shrinks)
+scala> p2.check
+! Falsified after 4 passed tests:
+> ARG_0 = "List(-1, -1)" (2 shrinks)
 
-    scala> p3.check
-    ! Falsified after 7 passed tests:
-    > ARG_0 = "List(-5, -5)" (3 shrinks)
+scala> p3.check
+! Falsified after 7 passed tests:
+> ARG_0 = "List(-5, -5)" (3 shrinks)
+```
 
 In all cases, ScalaCheck found a list with duplicate elements that falsified
 the property. However, in the two second cases the list was shrunk into a list
@@ -693,14 +780,16 @@ returns an instance of `Shrink[T]`. In turn, the function should take a value
 of the given type `T`, and return a `Stream` of shrank variants of the given
 value. As an example, look at the implicit `Shrink` instance for a tuple as it
 is defined in ScalaCheck:
+
 ```scala
-    /** Shrink instance of 2-tuple */
-    implicit def shrinkTuple2[T1,T2](implicit s1: Shrink[T1], s2: Shrink[T2]
-    ): Shrink[(T1,T2)] = Shrink { case (t1,t2) =>
-      (for(x1 <- shrink(t1)) yield (x1, t2)) append
-      (for(x2 <- shrink(t2)) yield (t1, x2))
-    }
+/** Shrink instance of 2-tuple */
+implicit def shrinkTuple2[T1,T2](implicit s1: Shrink[T1], s2: Shrink[T2]
+): Shrink[(T1,T2)] = Shrink { case (t1,t2) =>
+  (for(x1 <- shrink(t1)) yield (x1, t2)) append
+  (for(x2 <- shrink(t2)) yield (t1, x2))
+}
 ```
+
 When implementing a shrinking method, one has to be careful to only return
 *smaller* variants of the value, since the shrinking algorithm otherwise could
 loop. ScalaCheck has implicit shrinking methods for common types such as integers
@@ -728,116 +817,126 @@ used just as ordinary ScalaCheck properties, and tested with the
 `org.scalacheck.Test` module.
 
 Let us now assume we want to test the following trivial counter class:
+
 ```scala
-    class Counter {
-      private var n = 0
-      def inc = n += 1
-      def dec = n -= 1
-      def get = n
-      def reset = n = 0
-    }
+class Counter {
+  private var n = 0
+  def inc = n += 1
+  def dec = n -= 1
+  def get = n
+  def reset = n = 0
+}
 ```
+
 We specify the counter's commands by extending the `org.scalacheck.Commands`
 trait. See the comments in the code below for explanations on how `Commands`
 should be used:
+
 ```scala
-    object CounterSpecification extends Commands {
+object CounterSpecification extends Commands {
 
-      // This is our system under test. All commands run against this instance.
-      val counter = new Counter
+  // This is our system under test. All commands run against this instance.
+  val counter = new Counter
 
-      // This is our state type that encodes the abstract state. The abstract state
-      // should model all the features we need from the real state, the system
-      // under test. We should leave out all details that aren't needed for
-      // specifying our pre- and postconditions. The state type must be called
-      // State and be immutable.
-      case class State(n: Int)
+  // This is our state type that encodes the abstract state. The abstract state
+  // should model all the features we need from the real state, the system
+  // under test. We should leave out all details that aren't needed for
+  // specifying our pre- and postconditions. The state type must be called
+  // State and be immutable.
+  case class State(n: Int)
 
-      // initialState should reset the system under test to a well defined
-      // initial state, and return the abstract version of that state.
-      def initialState() = {
-        counter.reset
-        State(counter.get)
-      }
+  // initialState should reset the system under test to a well defined
+  // initial state, and return the abstract version of that state.
+  def initialState() = {
+    counter.reset
+    State(counter.get)
+  }
 
-      // We define our commands as subtypes of the traits Command or SetCommand.
-      // Each command must have a run method and a method that returns the new
-      // abstract state, as it should look after the command has been run.
-      // A command can also define a precondition that states how the current
-      // abstract state must look if the command should be allowed to run.
-      // Finally, we can also define a postcondition which verifies that the
-      // system under test is in a correct state after the command execution.
+  // We define our commands as subtypes of the traits Command or SetCommand.
+  // Each command must have a run method and a method that returns the new
+  // abstract state, as it should look after the command has been run.
+  // A command can also define a precondition that states how the current
+  // abstract state must look if the command should be allowed to run.
+  // Finally, we can also define a postcondition which verifies that the
+  // system under test is in a correct state after the command execution.
 
-      case object Inc extends Command {
-        def run(s: State) = counter.inc
-        def nextState(s: State) = State(s.n + 1)
+  case object Inc extends Command {
+    def run(s: State) = counter.inc
+    def nextState(s: State) = State(s.n + 1)
 
-        // if we want to define a precondition, we add a function that
-        // takes the current abstract state as parameter and returns a boolean
-        // that says if the precondition is fulfilled or not. In this case, we
-        // have no precondition so we just let the function return true. Obviously,
-        // we could have skipped adding the precondition at all.
-        preConditions += (s => true)
-      }
+    // if we want to define a precondition, we add a function that
+    // takes the current abstract state as parameter and returns a boolean
+    // that says if the precondition is fulfilled or not. In this case, we
+    // have no precondition so we just let the function return true. Obviously,
+    // we could have skipped adding the precondition at all.
+    preConditions += (s => true)
+  }
 
-      case object Dec extends Command {
-        def run(s: State) = counter.dec
-        def nextState(s: State) = State(s.n - 1)
-      }
+  case object Dec extends Command {
+    def run(s: State) = counter.dec
+    def nextState(s: State) = State(s.n - 1)
+  }
 
-      case object Get extends Command {
-        def run(s: State) = counter.get
-        def nextState(s: State) = s
+  case object Get extends Command {
+    def run(s: State) = counter.get
+    def nextState(s: State) = s
 
-        // when we define a postcondition, we add a function that
-        // takes three parameters, s0, s1 and r. s0 is the abstract state before
-        // the command was run, s1 is the state after the command was run
-        // and r is the result from the command's run method. The
-        // postcondition function should return a Boolean (or
-        // a Prop instance) that says if the condition holds or not.
-        postConditions += {
-          case (s0, s1, r:Int) => r == s0.n
-          case _ => false
-        }
-      }
-
-      // This is our command generator. Given an abstract state, the generator
-      // should return a command that is allowed to run in that state. Note that
-      // it is still neccessary to define preconditions on the commands if there
-      // are any. The generator is just giving a hint of which commands that are
-      // suitable for a given state, the preconditions will still be checked before
-      // a command runs. Sometimes you maybe want to adjust the distribution of
-      // your command generator according to the state, or do other calculations
-      // based on the state.
-      def genCommand(s: State): Gen[Command] = Gen.oneOf(Inc, Dec, Get)
-
+    // when we define a postcondition, we add a function that
+    // takes three parameters, s0, s1 and r. s0 is the abstract state before
+    // the command was run, s1 is the state after the command was run
+    // and r is the result from the command's run method. The
+    // postcondition function should return a Boolean (or
+    // a Prop instance) that says if the condition holds or not.
+    postConditions += {
+      case (s0, s1, r:Int) => r == s0.n
+      case _ => false
     }
+  }
+
+  // This is our command generator. Given an abstract state, the generator
+  // should return a command that is allowed to run in that state. Note that
+  // it is still neccessary to define preconditions on the commands if there
+  // are any. The generator is just giving a hint of which commands that are
+  // suitable for a given state, the preconditions will still be checked before
+  // a command runs. Sometimes you maybe want to adjust the distribution of
+  // your command generator according to the state, or do other calculations
+  // based on the state.
+  def genCommand(s: State): Gen[Command] = Gen.oneOf(Inc, Dec, Get)
+
+}
 ```
+
 Now we can test our `Counter` implementation. The `Commands` trait extends
 the `Prop` type, so we can use `CounterSpecification` just like a simple
 property.
 
-    scala> CounterSpecification.check
-    + OK, passed 100 tests.
+```
+scala> CounterSpecification.check
++ OK, passed 100 tests.
+```
 
 OK, our implementation seems to work. But let us introduce a bug:
+
 ```scala
-    class Counter {
-      private var n = 0
-      def inc = n += 1
-      def dec = if(n > 10) n -= 2 else n -= 1  // Bug!
-      def get = n
-      def reset = n = 0
-    }
+class Counter {
+  private var n = 0
+  def inc = n += 1
+  def dec = if(n > 10) n -= 2 else n -= 1  // Bug!
+  def get = n
+  def reset = n = 0
+}
 ```
+
 Lets test it again:
 
-    scala> CounterSpecification.check
-    ! Falsified after 37 passed tests.
-    > COMMANDS: Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Dec, Get
-       (orig arg: Inc, Dec, Inc, Dec, Inc, Inc, Get, Inc, Inc, Get, Inc, Inc, I
-      nc, Dec, Inc, Inc, Inc, Get, Dec, Inc, Inc, Inc, Dec, Dec, Inc, Get, Dec,
-       Dec, Get, Inc, Dec, Get, Get, Inc, Inc, Inc, Get)
+```
+scala> CounterSpecification.check
+! Falsified after 37 passed tests.
+> COMMANDS: Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Dec, Get
+   (orig arg: Inc, Dec, Inc, Dec, Inc, Inc, Get, Inc, Inc, Get, Inc, Inc, I
+  nc, Dec, Inc, Inc, Inc, Get, Dec, Inc, Inc, Inc, Dec, Dec, Inc, Get, Dec,
+   Dec, Get, Inc, Dec, Get, Get, Inc, Inc, Inc, Get)
+```
 
 ScalaCheck found a failing command sequence (after testing 25 good ones), and
 then shrank it down. The resulting command sequence is indeed the minimal
