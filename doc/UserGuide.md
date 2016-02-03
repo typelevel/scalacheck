@@ -798,7 +798,7 @@ and lists.
 ### Stateful Testing
 
 We have described how ScalaCheck can be used to state properties about
-isolated parts - units - of your code (usually methods), and how such
+isolated units of your code (usually methods), and how such
 properties can be tested in an automated fashion. However, sometimes you want
 to not only specify how a method should behave on its own, but also how a
 collection of methods should behave together, when used as an interface to a
@@ -810,11 +810,11 @@ requirements such as that the user has to enter the correct PIN code before any
 money could be withdrawn, or that entering an erronous PIN code three times
 would make the machine confiscate the credit card.
 
-Formalising such command sequences using ScalaCheck's property combinators is
-a bit tricky. Instead, there is a small library in `org.scalacheck.Commands`
-for modelling commands and specifying conditions about them, which can then be
-used just as ordinary ScalaCheck properties, and tested with the
-`org.scalacheck.Test` module.
+Formalising such command sequences using ScalaCheck's property combinators is a
+bit tricky. Instead, there is a small library in
+`org.scalacheck.commands.Commands` for modelling commands and specifying
+conditions about them, which can then be used just as ordinary ScalaCheck
+properties, and tested with the `org.scalacheck.Test` module.
 
 Let us now assume we want to test the following trivial counter class:
 
@@ -828,90 +828,146 @@ class Counter {
 }
 ```
 
-We specify the counter's commands by extending the `org.scalacheck.Commands`
-trait. See the comments in the code below for explanations on how `Commands`
-should be used:
+`Counter` is the type of our system under test. ScalaCheck supports testing
+systems in parallel (multiple instances of the system under test), or
+sequentially (a singleton system). In both cases, the system under test is
+representd by the abstract type `Commands.Sut`. In our example, the type `Sut`
+will be set to `Counter`.
+
+We will also need a type encoding the state of the system under test. This is
+represented by the abstract type `Commands.State`. The `State` type should
+describe enough of the actual system's state for us to be able to define
+properties about the various commands. In our case we will set `State = Int`,
+and this actually models the real system state exactly. This is a coincidence
+caused by the simplicity of our `Counter` implementation. A realistic system
+would probably have other internal state that we wouldn't need (or even know
+how) to implement in our abstract representation of the state.
+
+Finally, the commands are modelled by implementing the `Commands.Command` type.
+An example will make it easier to understand. We will model the commands `inc`,
+`dec`, `get` and `reset`. The scaladoc comments are inlined in the example
+below to help you out:
 
 ```scala
+import org.scalacheck.commands.Commands
+import org.scalacheck.Gen
+import org.scalacheck.Prop
+import scala.util.{Try, Success}
+
 object CounterSpecification extends Commands {
 
-  // This is our system under test. All commands run against this instance.
-  val counter = new Counter
+  type State = Int
 
-  // This is our state type that encodes the abstract state. The abstract state
-  // should model all the features we need from the real state, the system
-  // under test. We should leave out all details that aren't needed for
-  // specifying our pre- and postconditions. The state type must be called
-  // State and be immutable.
-  case class State(n: Int)
+  type Sut = Counter
 
-  // initialState should reset the system under test to a well defined
-  // initial state, and return the abstract version of that state.
-  def initialState() = {
-    counter.reset
-    State(counter.get)
+  /** Decides if [[newSut]] should be allowed to be called
+   *  with the specified state instance. This can be used to limit the number
+   *  of co-existing [[Sut]] instances. The list of existing states represents
+   *  the initial states (not the current states) for all [[Sut]] instances
+   *  that are active for the moment. If this method is implemented
+   *  incorrectly, for example if it returns false even if the list of
+   *  existing states is empty, ScalaCheck might hang.
+   *
+   *  If you want to allow only one [[Sut]] instance to exist at any given time
+   *  (a singleton [[Sut]]), implement this method the following way:
+   *
+   *  {{{
+   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
+   *    runningSuts: Traversable[Sut]
+   *  ) = {
+   *    initSuts.isEmpty && runningSuts.isEmpty
+   *  }
+   *  }}}
+   */
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]): Boolean = true
+
+  /** The precondition for the initial state, when no commands yet have
+   *  run. This is used by ScalaCheck when command sequences are shrinked
+   *  and the first state might differ from what is returned from
+   *  [[genInitialState]]. */
+  def initialPreCondition(state: State): Boolean = {
+    // Since the counter implementation doesn't allow initialisation with an
+    // arbitrary number, we can only start from zero
+    state == 0
   }
 
-  // We define our commands as subtypes of the traits Command or SetCommand.
-  // Each command must have a run method and a method that returns the new
-  // abstract state, as it should look after the command has been run.
-  // A command can also define a precondition that states how the current
-  // abstract state must look if the command should be allowed to run.
-  // Finally, we can also define a postcondition which verifies that the
-  // system under test is in a correct state after the command execution.
+  /** Create a new [[Sut]] instance with an internal state that
+   *  corresponds to the provided abstract state instance. The provided state
+   *  is guaranteed to fulfill [[initialPreCondition]], and
+   *  [[newSut]] will never be called if
+   *  [[canCreateNewSut]] is not true for the given state. */
+  def newSut(state: State): Sut = new Counter
 
-  case object Inc extends Command {
-    def run(s: State) = counter.inc
-    def nextState(s: State) = State(s.n + 1)
+  /** Destroy the system represented by the given [[Sut]]
+   *  instance, and release any resources related to it. */
+  def destroySut(sut: Sut): Unit = ()
 
-    // if we want to define a precondition, we add a function that
-    // takes the current abstract state as parameter and returns a boolean
-    // that says if the precondition is fulfilled or not. In this case, we
-    // have no precondition so we just let the function return true. Obviously,
-    // we could have skipped adding the precondition at all.
-    preConditions += (s => true)
+  /** A generator that should produce an initial [[State]] instance that is
+   *  usable by [[newSut]] to create a new system under test.
+   *  The state returned by this generator is always checked with the
+   *  [[initialPreCondition]] method before it is used. */
+  def genInitialState: Gen[State] = Gen.const(0)
+
+  /** A generator that, given the current abstract state, should produce
+   *  a suitable Command instance. */
+  def genCommand(state: State): Gen[Command] = Gen.oneOf(
+    Inc, Get, Dec, Reset
+  )
+
+  // A UnitCommand is a command that doesn't produce a result
+  case object Inc extends UnitCommand {
+    def run(sut: Sut): Unit = sut.inc
+
+    def nextState(state: State): State = state + 1
+
+    // This command has no preconditions
+    def preCondition(state: State): Boolean = true
+
+    // This command should always succeed (never throw an exception)
+    def postCondition(state: State, success: Boolean): Prop = success
   }
 
-  case object Dec extends Command {
-    def run(s: State) = counter.dec
-    def nextState(s: State) = State(s.n - 1)
+  case object Dec extends UnitCommand {
+    def run(sut: Sut): Unit = sut.dec
+    def nextState(state: State): State = state - 1
+    def preCondition(state: State): Boolean = true
+    def postCondition(state: State, success: Boolean): Prop = success
+  }
+
+  case object Reset extends UnitCommand {
+    def run(sut: Sut): Unit = sut.reset
+    def nextState(state: State): State = 0
+    def preCondition(state: State): Boolean = true
+    def postCondition(state: State, success: Boolean): Prop = success
   }
 
   case object Get extends Command {
-    def run(s: State) = counter.get
-    def nextState(s: State) = s
 
-    // when we define a postcondition, we add a function that
-    // takes three parameters, s0, s1 and r. s0 is the abstract state before
-    // the command was run, s1 is the state after the command was run
-    // and r is the result from the command's run method. The
-    // postcondition function should return a Boolean (or
-    // a Prop instance) that says if the condition holds or not.
-    postConditions += {
-      case (s0, s1, r:Int) => r == s0.n
-      case _ => false
+    // The Get command returns an Int
+    type Result = Int
+
+    def run(sut: Sut): Result = sut.get
+
+    def nextState(state: State): State = state
+
+    def preCondition(state: State): Boolean = true
+
+    // The post condition verifies that the result we get back from the
+    // actual system corresponds to our model of the state
+    def postCondition(state: State, result: Try[Result]): Prop = {
+      result == Success(state)
     }
   }
-
-  // This is our command generator. Given an abstract state, the generator
-  // should return a command that is allowed to run in that state. Note that
-  // it is still neccessary to define preconditions on the commands if there
-  // are any. The generator is just giving a hint of which commands that are
-  // suitable for a given state, the preconditions will still be checked before
-  // a command runs. Sometimes you maybe want to adjust the distribution of
-  // your command generator according to the state, or do other calculations
-  // based on the state.
-  def genCommand(s: State): Gen[Command] = Gen.oneOf(Inc, Dec, Get)
-
 }
 ```
 
-Now we can test our `Counter` implementation. The `Commands` trait extends
-the `Prop` type, so we can use `CounterSpecification` just like a simple
-property.
+Now we can test our `Counter` implementation. The `Commands` trait has a method
+called `property` that returns a `Prop` instance that allows us to treat our
+stateful system specification as an ordinary ScalaCheck property.
 
 ```
-scala> CounterSpecification.check
+scala> CounterSpecification.property().check
 + OK, passed 100 tests.
 ```
 
@@ -921,7 +977,7 @@ OK, our implementation seems to work. But let us introduce a bug:
 class Counter {
   private var n = 0
   def inc = n += 1
-  def dec = if(n > 10) n -= 2 else n -= 1  // Bug!
+  def dec = if(n > 3) n -= 2 else n -= 1  // Bug!
   def get = n
   def reset = n = 0
 }
@@ -930,17 +986,30 @@ class Counter {
 Lets test it again:
 
 ```
-scala> CounterSpecification.check
-! Falsified after 37 passed tests.
-> COMMANDS: Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Dec, Get
-   (orig arg: Inc, Dec, Inc, Dec, Inc, Inc, Get, Inc, Inc, Get, Inc, Inc, I
-  nc, Dec, Inc, Inc, Inc, Get, Dec, Inc, Inc, Inc, Dec, Dec, Inc, Get, Dec,
-   Dec, Get, Inc, Dec, Get, Get, Inc, Inc, Inc, Get)
+scala> CounterSpecification.property().check
+! Falsified after 64 passed tests.
+> Labels of failing property:
+initialstate = 0
+seqcmds = (Inc; Inc; Inc; Inc; Dec; Get => 2)
+> ARG_0: Actions(0,List(Inc, Inc, Inc, Inc, Dec, Get),List())
+> ARG_0_ORIGINAL: Actions(0,List(Inc, Dec, Inc, Get, Inc, Inc, Inc, Dec, In
+  c, Get, Dec, Dec, Inc, Dec, Dec, Get, Get, Inc, Dec, Reset, Reset, Dec, D
+  ec, Dec, Get, Inc, Reset, Dec, Get, Dec, Dec, Get, Dec, Get, Inc, Reset,
+  Dec, Inc, Reset, Get, Get, Reset, Inc, Reset, Dec, Inc, Dec, Dec, Get, In
+  c, Inc, Reset, Get, Get, Inc, Dec, Dec, Dec, Reset, Get, Inc, Dec, Dec, I
+  nc),List())
 ```
 
-ScalaCheck found a failing command sequence (after testing 25 good ones), and
+ScalaCheck found a failing command sequence (after testing 64 good ones), and
 then shrank it down. The resulting command sequence is indeed the minimal
 failing one! There is no other less complex command sequence that could have
 discovered the bug. This is a very powerful feature when testing complicated
 command sequences, where bugs may occur after a very specific sequence of
 commands that is hard to come up with when doing manual tests.
+
+You can find more examples of stateful specifications in the
+[examples](https://github.com/rickynils/scalacheck/tree/master/examples)
+directory in the ScalaCheck repository. The
+[slides](http://scalacheck.org/files/scaladays2014/index.html) from the
+ScalaDays 2014 presentation about stateful testing in ScalaCheck are also
+helpful.
