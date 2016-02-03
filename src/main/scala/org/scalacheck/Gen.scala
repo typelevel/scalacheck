@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import java.util.{Date, Calendar}
+
 import language.higherKinds
 import language.implicitConversions
 
@@ -628,4 +630,117 @@ object Gen extends GenArities{
   /** Creates a Function0 generator. */
   def function0[A](g: Gen[A]): Gen[() => A] =
     g.map(a => () => a)
+
+  object CalendarGen {
+
+    private val MinYearForCalendar = {
+      val c = Calendar.getInstance()
+      c.getGreatestMinimum(Calendar.YEAR)
+    }
+
+    private val MaxYearForCalendar = {
+      val c = Calendar.getInstance()
+      c.getLeastMaximum(Calendar.YEAR)
+    }
+
+    private val YearGen = Gen.chooseNum(MinYearForCalendar, MaxYearForCalendar)
+
+    private val basicCalendarGen: Gen[Calendar] = for {
+      l <- Gen.chooseNum(Long.MinValue, Long.MaxValue)
+      now = new Date
+      d = new Date(now.getTime + l)
+      c = Calendar.getInstance()
+    } yield {
+      c.setTimeInMillis(d.getTime)
+      c
+    }
+
+    private val calendarBeginningOfDayGen: Gen[Calendar] = for {
+      c <- basicCalendarGen
+    } yield {
+      c.set(Calendar.HOUR_OF_DAY, 0)
+      c.set(Calendar.MINUTE, 0)
+      c.set(Calendar.SECOND, 0)
+      c.set(Calendar.MILLISECOND, 0)
+      c
+    }
+
+    private val calendarEndOfDayGen: Gen[Calendar] = for {
+      c <- basicCalendarGen
+    } yield {
+      c.set(Calendar.HOUR_OF_DAY, 23)
+      c.set(Calendar.MINUTE, 59)
+      c.set(Calendar.SECOND, 59)
+      c.set(Calendar.MILLISECOND, 59)
+      c
+    }
+
+    val default = {
+      val firstDayOfYearGen = (1, YearGen.map(buildFirstDayOfYear))
+      val lastDayOfYearGen = (1, YearGen.map(buildLastDayOfYear))
+      val closestLeapDateGen = (1,YearGen.map(buildNearestLeapDate))
+      val beginningOfDayGen = (1, calendarBeginningOfDayGen)
+      val endOfDayGen = (1, calendarEndOfDayGen)
+      val lastDayOfMonthGen = (1, basicCalendarGen.map(buildLastDayOfMonth))
+      val firstDayOfMonthGen = (1, basicCalendarGen.map(buildFirstDayOfMonth))
+      val basicsAndSpecials = Seq(
+        firstDayOfYearGen,
+        lastDayOfYearGen,
+        closestLeapDateGen,
+        beginningOfDayGen,
+        endOfDayGen,
+        lastDayOfMonthGen,
+        firstDayOfMonthGen)
+      val allWithFreqs = basicsAndSpecials :+ (basicsAndSpecials.length, basicCalendarGen)
+      Gen.frequency(allWithFreqs:_*)
+    }
+
+    private def buildLastDayOfMonth(c: Calendar): Calendar = {
+      val lastDayOfMonth = c.getActualMaximum(Calendar.DAY_OF_MONTH)
+      c.set(Calendar.DAY_OF_MONTH, lastDayOfMonth)
+      c
+    }
+
+    private def buildFirstDayOfMonth(c: Calendar): Calendar = {
+      c.set(Calendar.DAY_OF_MONTH, 1)
+      c
+    }
+
+    private def buildFirstDayOfYear(year: Int): Calendar = {
+      val c = Calendar.getInstance()
+      c.set(year, 0, 1)
+      c
+    }
+
+    private def buildLastDayOfYear(year: Int): Calendar = {
+      val c = Calendar.getInstance()
+      c.set(year, 11, 31)
+      c
+    }
+
+    private def buildNearestLeapDate(year: Int): Calendar = {
+      val c = Calendar.getInstance()
+      c.set(closestLeapYear(year), 1, 29)
+      c
+    }
+
+    private def closestLeapYear(year: Int): Int = {
+      var currentYear = year match {
+        case y if (y + 4) > MaxYearForCalendar => MaxYearForCalendar - 5
+        case _ => year
+      }
+      while (!isLeapYear(currentYear)) {
+        currentYear += 1
+      }
+      currentYear
+    }
+
+    private def isLeapYear(year: Int): Boolean = {
+      val cal = Calendar.getInstance()
+      cal.set(Calendar.YEAR, year)
+      cal.getActualMaximum(Calendar.DAY_OF_YEAR) > 365
+    }
+
+  }
+
 }
