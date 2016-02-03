@@ -1,4 +1,4 @@
-ScalaCheck 1.12.4 Release Notes
+ScalaCheck 1.13.0 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -26,15 +26,35 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and specs2.
 
-What's new in version 1.12.4?
+What's new in version 1.13.0?
 
-1.12.4 should be identical to 1.12.3, but a few incompatibilities introduced by
-mistake in 1.12.3 have been corrected. See the following issues for details:
+The major new feature in ScalaCheck 1.13.0 is the Cogen implementation done
+by Erik Osheim (non). This implementation enables proper generation of
+functions. It also adds a deterministic RNG that is a step in the direction
+towards reproducible property evaluations.
 
-  * https://github.com/rickynils/scalacheck/issues/165
-  * https://github.com/rickynils/scalacheck/issues/166
+Other highlights:
 
-Also, ScalaCheck 1.12.4 has been released for Scala 1.12.0-M1.
+  * The User Guide has been moved from the GitHub wiki to the main ScalaCheck
+    repository. This makes it easier to contribute in the form of pull
+    requests.
+
+  * The section about stateful testing in the User Guide has been updated
+    to correspond to the current implementation.
+
+  * The arbitrary date generator has been updated to generate more realistic
+    dates and edge cases.
+
+  * The handling of discarded tests has been slightly changed:
+
+    Previously, ScalaCheck only guaranteed `minSuccessfulTests` total number of
+    evaluations. If `maxDiscardRatio` was violated after that, the whole
+    property was declared exhausted. However, when `minSuccessfulTests` is
+    small, this can be annoying (see #192).
+
+    The new implementation allows at least `minSuccessfulTests * maxDiscardRatio`
+    discarded evaluations before stopping.
+
 
 ScalaCheck links:
 
@@ -52,7 +72,7 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.13.0" % "test"
     )
 
   * Maven dependency
@@ -75,5 +95,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.11</artifactId>
-      <version>1.12.4</version>
+      <version>1.13.0</version>
     </dependency>
