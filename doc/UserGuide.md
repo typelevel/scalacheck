@@ -541,7 +541,7 @@ by specifying an implicit parameter of type `Arbitrary[T]`, so you can use the
 generator `arbitrary[T]`.
 
 ```scala
-plicit def arbTree[T](implicit a: Arbitrary[T]): Arbitrary[Tree[T]] =
+implicit def arbTree[T](implicit a: Arbitrary[T]): Arbitrary[Tree[T]] =
 Arbitrary {
   val genLeaf = for(e <- Arbitrary.arbitrary[T]) yield Leaf(e)
 
