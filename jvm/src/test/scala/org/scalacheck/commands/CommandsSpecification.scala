@@ -46,24 +46,24 @@ object CommandsSpecification extends Properties("Commands") {
 
     case object Get extends SuccessCommand {
       type Result = Int
-      def run(sut: Sut) = sut.get
-      def nextState(state: State) = state
+      def run(sut: Sut, state: State) = sut.get
+      def nextState(state: State, v:Term[Result]) = state
       def preCondition(state: State) = true
       def postCondition(state: State, result: Result) = result == state
     }
 
     case object Inc extends SuccessCommand {
       type Result = Int
-      def run(sut: Sut) = sut.inc
-      def nextState(state: State) = state+1
+      def run(sut: Sut, state: State) = sut.inc
+      def nextState(state: State, v:Term[Result]) = state+1
       def preCondition(state: State) = true
       def postCondition(state: State, result: Result) = result == (state+1)
     }
 
     case object Dec extends SuccessCommand {
       type Result = Int
-      def run(sut: Sut) = sut.dec
-      def nextState(state: State) = state-1
+      def run(sut: Sut, state: State) = sut.dec
+      def nextState(state: State, v:Term[Result]) = state-1
       def preCondition(state: State) = true
       def postCondition(state: State, result: Result) = result == (state-1)
     }
