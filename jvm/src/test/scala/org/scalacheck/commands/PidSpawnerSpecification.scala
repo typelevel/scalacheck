@@ -174,17 +174,11 @@ object PidRegistrationSpecification extends Commands{
 
     override def nextState(s: State, v:Term[Result]) = s
 
-    // If there is a registration for name, we expect to get a UUID back equal to it.
-    // If there is not, we expect to get no UUID back.
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      // TODO:
-      result map { opt =>  
-        s.regs.get(name) match {
-          case Some(DynVar(_,Success(v))) if Option(v) == opt => true
-          case None => opt.isEmpty
-          case _ => false
-        }
-      } getOrElse[Boolean] false
+      result match {
+        case Success(opt) => opt == s.regs.find(_._1 == name).map(_._2).valueOpt
+        case Failure(e) => Prop.exception(e)
+      }
     }
 
     override def run(sut: Sut, s: State): Result = {
@@ -204,7 +198,6 @@ object PidRegistrationSpecification extends Commands{
       else s
     }
 
-    // We expect true only if there was a registration with that name.
     override def postCondition(s: State, result: Try[Result]): Prop = {
       if(result.isSuccess) prep(s)
       else !prep(s)

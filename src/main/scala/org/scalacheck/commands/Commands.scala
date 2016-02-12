@@ -75,6 +75,7 @@ trait Commands {
       if(isEmpty) alternative else Some(this.get.get)
   }
   
+  
    /**
    * A Binding is a (per SUT) unique identifier, basically a wrapped int with a nicer name. This helps clarify
    * intent, if you need to keep track of term bindings in your State, e.g. a Map[String, Binding]
@@ -314,7 +315,7 @@ trait Commands {
   // Private methods //
   private type Commands = List[Command]
 
-  private case class Actions(
+  case class Actions(
     s: State, seqCmds: Commands, parCmds: List[Commands]
   )
 

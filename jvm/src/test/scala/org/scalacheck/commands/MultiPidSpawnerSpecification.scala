@@ -205,10 +205,14 @@ object MultiPidRegistrationSpecification extends Commands {
     }
 
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      s.regs.find(_._1 == name) map { case (_, idx) =>
+      val reg = s.regs.find(_._1 == name) flatMap { case (_, idx) =>
           val pids = s.pids.valueOrElse(Seq())
-          pids.lift(idx) map ( _ => result.isSuccess ) getOrElse result.isFailure
-      } getOrElse[Boolean] result.isFailure
+          pids.lift(idx)// map ( _ => result.isSuccess ) getOrElse result.isFailure
+      }
+      reg match {
+        case None => result.isFailure
+        case Some(x) => result.isSuccess
+      }
     }
 
     override def run(sut: Sut, s: State): Result = {
