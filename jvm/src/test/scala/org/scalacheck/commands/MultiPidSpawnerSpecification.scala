@@ -143,31 +143,12 @@ object MultiPidRegistrationSpecification extends Commands {
     override type Result = Unit
     override def preCondition(state: State) = state.pids.isDefined
     override def run(sut: Sut, s: State): Result = {
-      // Option 0: Map Option into Term into Seq[String] 
       {
         for {
           pids <- s.pids.flatMap(_.map(identity))
           pid <- pids.lift(pidIdx)
         } yield sut.register(pid, name)
       } getOrElse sut.register("Invalid pid", name)
-      /*
-      // Option 1: Bind term, then getOrElse term value.
-      {
-        for {
-          pids <- s.pids
-          pid <- pids.getOrElse(Seq()).lift(pidIdx)
-        } yield sut.register(pid, name)
-      } getOrElse sut.register("Invalid pid", name)
-      
-      // Option 2: Bind term, then bind term value.
-      {
-        for {
-          term <- s.pids
-          pids <- term
-          pid <- pids.lift(pidIdx)
-        } yield sut.register(pid, name)
-      } getOrElse sut.register("Invalid pid", name)
-      */
     }
     
     // Success is expected if: There are pids, the registration isn't taken and the index is valid.
