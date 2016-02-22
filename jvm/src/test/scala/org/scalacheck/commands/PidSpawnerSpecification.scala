@@ -162,8 +162,10 @@ object PidRegistrationSpecification extends Commands{
     }
     
     override def run(sut: Sut, s: State): Result = {
-      val pid = findPid(s).valueOrElse("Invalid PID")
-      sut.register(pid, name)
+      for {
+        term <- s.pids.find(_.binding == bind)
+        pid <- term
+      } yield sut.register(pid, name)
     }
   }
 
@@ -176,7 +178,7 @@ object PidRegistrationSpecification extends Commands{
 
     override def postCondition(s: State, result: Try[Result]): Prop = {
       result match {
-        case Success(opt) => opt == s.regs.find(_._1 == name).map(_._2).valueOpt
+        case Success(opt) => opt == s.regs.get(name).flatMap(_.map(identity))
         case Failure(e) => Prop.exception(e)
       }
     }

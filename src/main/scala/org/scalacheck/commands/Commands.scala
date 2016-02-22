@@ -20,6 +20,7 @@ import scala.language.implicitConversions
  *  @since 1.12.0
  */
 trait Commands {
+  
 /**
     *  The [[Term]] type models a (per test) unique binding, and a possible
     *  value. Symbolic terms are meant for use during test generation, and
@@ -27,7 +28,7 @@ trait Commands {
     *  results of a command into SymbolicTerm's during test generation, and DynamicTerm's
     *  during runtime.
     */
-  sealed abstract class Term[A](val binding: Binding) {
+  sealed abstract class Term[+A](val binding: Binding) {
     def get: Try[A]
     def isEmpty: Boolean
     def isDefined: Boolean = !isEmpty
@@ -71,10 +72,9 @@ trait Commands {
     final def collect[B](pf: PartialFunction[A, B]): Option[B] =
       if(!isEmpty) pf.lift(this.get.get) else None
       
-    final def orElse[B >: A](alternative: => Option[B]): Option[B] =
-      if(isEmpty) alternative else Some(this.get.get)
+    final def orElse[B >: A](alternative: => B): B =
+      if(isEmpty) alternative else this.get.get
   }
-  
   
    /**
    * A Binding is a (per SUT) unique identifier, basically a wrapped int with a nicer name. This helps clarify
@@ -93,13 +93,7 @@ trait Commands {
     override def isEmpty = get.isFailure
     override def get = value
   }
-
-  class OptionTerm[A](opt: Option[Term[A]]) {
-    def valueOrElse[B >: A](a: B): B = valueOpt getOrElse a
-    def valueOpt: Option[A] = opt flatMap { term => term map { v => v } }
-  }
-
-  implicit def optionToTermOption[A](o: Option[Term[A]]) = new OptionTerm[A](o)
+  
   /** The abstract state type. Must be immutable.
    *  The [[State]] type should model the state of the system under
    *  test (SUT). It should only contain details needed for specifying

@@ -137,33 +137,57 @@ object MultiPidRegistrationSpecification extends Commands {
       sut.listPids()
     }
   }
-
-  // RegisterIdx is constructed with a random index, which may or may not
-  // turn out to be valid. Fortunately, at runtime we will know whether
-  // it is valid or not, and can react accordingly.
+  
   case class RegisterIdx(pidIdx: Int, name: String) extends Command {
+    def regTaken(s: State) = s.regs.exists(r => r._1 == name || r._2 == pidIdx)
     override type Result = Unit
-    
     override def preCondition(state: State) = state.pids.isDefined
-    
     override def run(sut: Sut, s: State): Result = {
-      val pids = s.pids.valueOrElse(Seq())
-      val pid  = pids.lift(pidIdx) getOrElse "Invalid PID"
-      sut.register(pid, name)
+      // Option 0: Map Option into Term into Seq[String] 
+      {
+        for {
+          pids <- s.pids.flatMap(_.map(identity))
+          pid <- pids.lift(pidIdx)
+        } yield sut.register(pid, name)
+      } getOrElse sut.register("Invalid pid", name)
+      /*
+      // Option 1: Bind term, then getOrElse term value.
+      {
+        for {
+          pids <- s.pids
+          pid <- pids.getOrElse(Seq()).lift(pidIdx)
+        } yield sut.register(pid, name)
+      } getOrElse sut.register("Invalid pid", name)
+      
+      // Option 2: Bind term, then bind term value.
+      {
+        for {
+          term <- s.pids
+          pids <- term
+          pid <- pids.lift(pidIdx)
+        } yield sut.register(pid, name)
+      } getOrElse sut.register("Invalid pid", name)
+      */
     }
     
-    // Success is expected if there was no registration, and the list index is valid.
+    // Success is expected if: There are pids, the registration isn't taken and the index is valid.
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      val pids  = s.pids.valueOrElse(Seq())
-      if(!s.regs.exists(r => r._1 == name || r._2 == pidIdx) && pids.isDefinedAt(pidIdx)) {
-        result.isSuccess
-      } else {
-        result.isFailure
-      }
+     {
+        for {
+          term <- s.pids
+          pids <- term
+        } yield {
+          if(regTaken(s) || !pids.isDefinedAt(pidIdx)) {
+            result.isFailure
+          } else {
+            result.isSuccess
+          }
+        }
+      } getOrElse[Boolean] false
     }
     
     override def nextState(s: State, v:Term[Result]) = {
-      if(s.regs.exists(r => r._1 == name || r._2 == pidIdx)) {
+      if(regTaken(s)) {
         s
       } else {
         s.copy(regs = s.regs ++ Map(name -> pidIdx))
@@ -179,14 +203,18 @@ object MultiPidRegistrationSpecification extends Commands {
     override def nextState(s: State, v:Term[Result]) = s
     
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      val uuid1 = result map { case v => v } getOrElse (None)
-      
-      val uuid2 = s.regs.find(_._1 == name) flatMap { case (_, idx) =>
-          val pids = s.pids.valueOrElse(Seq())
-          pids.lift(idx)
+      result match {
+        case Failure(e) => Prop.exception(e)
+        
+        case Success(uuid1) => {
+          val uuid2 = s.regs.find(_._1 == name) flatMap { case (_, idx) =>
+            for {
+              pids <- s.pids.flatMap(_.map(identity))
+            } yield pids.lift(idx)
+          }
+          uuid1 == uuid2.flatten
+        }
       }
-      
-      uuid1 == uuid2
     }
 
     override def run(sut: Sut, s: State): Result = {
@@ -205,14 +233,11 @@ object MultiPidRegistrationSpecification extends Commands {
     }
 
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      val reg = s.regs.find(_._1 == name) flatMap { case (_, idx) =>
-          val pids = s.pids.valueOrElse(Seq())
-          pids.lift(idx)// map ( _ => result.isSuccess ) getOrElse result.isFailure
-      }
-      reg match {
-        case None => result.isFailure
-        case Some(x) => result.isSuccess
-      }
+      s.regs.find(_._1 == name) map { case (_, idx) =>
+        val pids = s.pids.flatMap(_.map(identity)) getOrElse(Seq())
+        pids.lift(idx) map ( _ => result.isSuccess ) getOrElse result.isFailure
+      } getOrElse[Boolean] result.isFailure
+      
     }
 
     override def run(sut: Sut, s: State): Result = {
