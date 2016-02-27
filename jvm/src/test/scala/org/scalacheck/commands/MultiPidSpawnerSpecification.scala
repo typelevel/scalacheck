@@ -153,8 +153,7 @@ object MultiPidRegistrationSpecification extends Commands {
     
     // Success is expected if: There are pids, the registration isn't taken and the index is valid.
     override def postCondition(s: State, result: Try[Result]): Prop = {
-     {
-        for {
+     val ok = for {
           term <- s.pids
           pids <- term
         } yield {
@@ -164,7 +163,10 @@ object MultiPidRegistrationSpecification extends Commands {
             result.isSuccess
           }
         }
-      } getOrElse[Boolean] false
+      ok match {
+        case Some(v) => v
+        case None => false
+      }
     }
     
     override def nextState(s: State, v:Term[Result]) = {
@@ -214,10 +216,14 @@ object MultiPidRegistrationSpecification extends Commands {
     }
 
     override def postCondition(s: State, result: Try[Result]): Prop = {
-      s.regs.find(_._1 == name) map { case (_, idx) =>
+      var ok = s.regs.find(_._1 == name) map { case (_, idx) =>
         val pids = s.pids.flatMap(_.map(identity)) getOrElse(Seq())
         pids.lift(idx) map ( _ => result.isSuccess ) getOrElse result.isFailure
-      } getOrElse[Boolean] result.isFailure
+      }
+      ok match {
+        case Some(v) => v
+        case None => result.isFailure
+      }
       
     }
 
