@@ -45,9 +45,9 @@ def genfn(i: Int) = s"""
   def function${i}[${types(i)},Z](g: Gen[Z])(implicit ${coImplicits(i)}): Gen[${fntype(i)}] =
     Gen.gen { (p, seed0) =>
       val f: ${fntype(i)} =
-        (${fnArgs(i)}) => g.doApply(p, ${nestedPerturbs(i)}).retrieve.get
+        (${fnArgs(i)}) => g.pureApply(p, ${nestedPerturbs(i)})
       new Gen.R[${fntype(i)}] {
-        val result = Some(f)
+        val result = f
         val seed = seed0.next
       }
     }

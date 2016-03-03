@@ -31,17 +31,19 @@ object Shrink extends ShrinkLowPriority {
 
   /** Interleaves two streams */
   private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
-    if(xs.isEmpty) ys
-    else if(ys.isEmpty) xs
+    if (xs.isEmpty) ys
+    else if (ys.isEmpty) xs
     else cons(xs.head, cons(ys.head, interleave(xs.tail, ys.tail)))
 
   /** Shrink instance factory */
-  def apply[T](s: T => Stream[T]): Shrink[T] = new Shrink[T] {
-    override def shrink(x: T) = s(x)
-  }
+  def apply[T](s: T => Stream[T]): Shrink[T] =
+    new Shrink[T] {
+      override def shrink(x: T) = s(x)
+    }
 
   /** Shrink a value */
-  def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
+  def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] =
+    s.shrink(x)
 
   /** Shrink a value, but also return the original value as the first element in
    *  the resulting stream */
@@ -49,13 +51,12 @@ object Shrink extends ShrinkLowPriority {
     cons(x, s.shrink(x))
 
   /** Shrink instance of container */
-  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
-    b: Buildable[T,C[T]]
-  ): Shrink[C[T]] = Shrink { xs: C[T] =>
-    val ys = v(xs)
-    val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
-  }
+  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T], b: Buildable[T,C[T]]): Shrink[C[T]] =
+    Shrink { (xs: C[T]) =>
+      val ys = v(xs)
+      val zs = ys.toStream
+      removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+    }
 
   /** Shrink instance of container2 */
   implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
@@ -82,7 +83,7 @@ object Shrink extends ShrinkLowPriority {
       cons(xs1, cons(xs2, interleave(xs3, xs4)))
     }
 
-  private def shrinkOne[T : Shrink](zs: Stream[T]): Stream[Stream[T]] =
+  private def shrinkOne[T: Shrink](zs: Stream[T]): Stream[Stream[T]] =
     if (zs.isEmpty) empty
     else {
       val x = zs.head
@@ -91,56 +92,28 @@ object Shrink extends ShrinkLowPriority {
     }
 
   /** Shrink instances of any numeric data type */
-  implicit def shrinkFractional[T](implicit num: Fractional[T]): Shrink[T] = shrinkNumeric[T](num)
-  implicit def shrinkIntegral[T](implicit num: Integral[T]): Shrink[T] = shrinkNumeric[T](num)
+  implicit def shrinkFractional[T: Fractional]: Shrink[T] =
+    new ShrinkFractional[T]
 
-  private def shrinkNumeric[T](num: Numeric[T]): Shrink[T] = Shrink[T] { x: T =>
-    val minusOne = num.fromInt(-1)
-    val two = num.fromInt(2)
-
-    def isZeroOrVeryClose(n: T): Boolean = num match {
-      case _: Integral[T] => num.equiv(n, num.zero)
-      case _ => num.equiv(n, num.zero) || {
-        val multiple = num.times(n, num.fromInt(100000))
-        num.lt(num.abs(multiple), num.one) && !num.equiv(multiple, num.zero)
-      }
-    }
-
-    def half(n: T): T = num match {
-      case fractional: Fractional[T] => fractional.div(n, two)
-      case integral: Integral[T] => integral.quot(n, two)
-      case _ => sys.error("Undivisable number")
-    }
-
-    def upperHalves(sub: T): Stream[T] = {
-      val halfSub = half(sub)
-      val y = num.minus(x,sub)
-      if (isZeroOrVeryClose(sub) || num.equiv(x,y) || num.lteq(num.abs(sub), num.abs(halfSub))) Stream.empty
-      else cons(y, upperHalves(halfSub))
-    }
-
-    if (isZeroOrVeryClose(x)) Stream.empty[T] else {
-      val xs = upperHalves(half(x))
-      Stream.cons[T](num.zero, interleave(xs, xs.map(num.times(minusOne, _))))
-    }
-  }
+  implicit def shrinkIntegral[T: Integral]: Shrink[T] =
+    new ShrinkIntegral[T]
 
   /** Shrink instance of String */
-  implicit lazy val shrinkString: Shrink[String] = Shrink { s =>
-    shrinkContainer[List,Char].shrink(s.toList).map(_.mkString)
-  }
+  implicit lazy val shrinkString: Shrink[String] =
+    Shrink(s => shrinkContainer[List, Char].shrink(s.toList).map(_.mkString))
 
   /** Shrink instance of Option */
-  implicit def shrinkOption[T : Shrink]: Shrink[Option[T]] = Shrink {
-    case None => empty
-    case Some(x) => cons(None, for(y <- shrink(x)) yield Some(y))
-  }
+  implicit def shrinkOption[T : Shrink]: Shrink[Option[T]] =
+    Shrink {
+      case None => empty
+      case Some(x) => cons(None, shrink(x).map(Some(_)))
+    }
 
   /** Shrink instance of 2-tuple */
   implicit def shrinkTuple2[
     T1:Shrink, T2:Shrink
   ]: Shrink[(T1,T2)] =
-    Shrink { case (t1,t2) =>
+    Shrink { case (t1, t2) =>
       shrink(t1).map((_,t2)) append
       shrink(t2).map((t1,_))
     }
@@ -238,15 +211,52 @@ object Shrink extends ShrinkLowPriority {
       shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
     }
 
-  implicit def shrinkEither[T1:Shrink, T2:Shrink]: Shrink[Either[T1, T2]] =
-    Shrink { x =>
-      x.fold(shrink(_).map(Left(_)), shrink(_).map(Right(_)))
-    }
+  implicit def shrinkEither[T1: Shrink, T2: Shrink]: Shrink[Either[T1, T2]] =
+    Shrink(x => x.fold(shrink(_).map(Left(_)), shrink(_).map(Right(_))))
 
-  /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
-    *  whose relationship is described by the provided transformation functions.
-    *  (exponential functor map) */
+  /**
+   * Transform a Shrink[T] to a Shrink[U] where T and U are two
+   * isomorphic types whose relationship is described by the provided
+   * transformation functions. (exponential functor map)
+   */
   def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U =>
     st.shrink(to(u)).map(from)
   }
+}
+
+final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
+  import ev.{ equiv, fromInt, zero, minus, times, quot }
+  val minusOne = fromInt(-1)
+  val two = fromInt(2)
+
+  // assumes x is non-zero
+  private def halves(x: T): Stream[T] = {
+    val q = quot(x, two)
+    if (equiv(q, zero)) Stream(zero)
+    else q #:: times(q, minusOne) #:: halves(q)
+  }
+
+  def shrink(x: T): Stream[T] =
+    if (equiv(x, zero)) Stream.empty[T] else halves(x)
+}
+
+final class ShrinkFractional[T](implicit ev: Fractional[T]) extends Shrink[T] {
+  import ev.{ fromInt, abs, zero, one, minus, times, div, lt }
+
+  val minusOne = fromInt(-1)
+  val two = fromInt(2)
+  val hundredK = fromInt(100000)
+
+  def closeToZero(x: T): Boolean =
+    lt(abs(times(x, hundredK)), one)
+
+  // assumes x is not close to zero
+  private def halves(x: T): Stream[T] = {
+    val q = div(x, two)
+    if (closeToZero(q)) Stream(zero)
+    else q #:: times(q, minusOne) #:: halves(q)
+  }
+
+  def shrink(x: T): Stream[T] =
+    if (closeToZero(x)) Stream.empty[T] else halves(x)
 }
