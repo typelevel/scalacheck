@@ -114,12 +114,18 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   )
 
   /** Arbitrary instance of Char */
-  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary(
-    Gen.frequency(
-      (0xD800-Char.MinValue, Gen.choose[Char](Char.MinValue,0xD800-1)),
-      (Char.MaxValue-0xDFFF, Gen.choose[Char](0xDFFF+1,Char.MaxValue))
+  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary {
+    // exclude 0xFFFE due to this bug: http://bit.ly/1QryQZy
+    val validRangesInclusive = List[(Char, Char)](
+      (0x0000, 0xD7FF),
+      (0xE000, 0xFFFD),
+      (0xFFFF, 0xFFFF)
     )
-  )
+
+    Gen.frequency(validRangesInclusive.map {
+      case (first, last) => (last + 1 - first, Gen.choose[Char](first, last))
+    }: _*)
+  }
 
   /** Arbitrary instance of Byte */
   implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(
