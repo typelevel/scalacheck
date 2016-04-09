@@ -86,7 +86,8 @@ sealed abstract class Prop {
    *  with a non-zero exit code if the property check fails. */
   def main(args: Array[String]): Unit = {
     val ret = Test.cmdLineParser.parseParams(args) match {
-      case (params, Nil) =>
+      case (applyCmdParams, Nil) =>
+        val params = applyCmdParams(Test.Parameters.default)
         if (Test.check(params, this).passed) 0
         else 1
       case (_, os) =>
