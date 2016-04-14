@@ -98,7 +98,7 @@ private[scalacheck] trait ArbitraryArities{
 
 
   // Tuples //
-
+  
   /** Arbitrary instance of 1-Tuple */
   implicit def arbTuple1[T1](implicit
     a1:Arbitrary[T1]
@@ -110,169 +110,169 @@ private[scalacheck] trait ArbitraryArities{
   /** Arbitrary instance of 2-Tuple */
   implicit def arbTuple2[T1,T2](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2]
-  ): Arbitrary[(T1,T2)]
+  ): Arbitrary[Tuple2[T1,T2]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary
-      } yield (t1, t2))
+      } yield Tuple2(t1, t2))
 
   /** Arbitrary instance of 3-Tuple */
   implicit def arbTuple3[T1,T2,T3](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3]
-  ): Arbitrary[(T1,T2,T3)]
+  ): Arbitrary[Tuple3[T1,T2,T3]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary
-      } yield (t1, t2, t3))
+      } yield Tuple3(t1, t2, t3))
 
   /** Arbitrary instance of 4-Tuple */
   implicit def arbTuple4[T1,T2,T3,T4](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4]
-  ): Arbitrary[(T1,T2,T3,T4)]
+  ): Arbitrary[Tuple4[T1,T2,T3,T4]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary
-      } yield (t1, t2, t3, t4))
+      } yield Tuple4(t1, t2, t3, t4))
 
   /** Arbitrary instance of 5-Tuple */
   implicit def arbTuple5[T1,T2,T3,T4,T5](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5]
-  ): Arbitrary[(T1,T2,T3,T4,T5)]
+  ): Arbitrary[Tuple5[T1,T2,T3,T4,T5]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary
-      } yield (t1, t2, t3, t4, t5))
+      } yield Tuple5(t1, t2, t3, t4, t5))
 
   /** Arbitrary instance of 6-Tuple */
   implicit def arbTuple6[T1,T2,T3,T4,T5,T6](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6)]
+  ): Arbitrary[Tuple6[T1,T2,T3,T4,T5,T6]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6))
+      } yield Tuple6(t1, t2, t3, t4, t5, t6))
 
   /** Arbitrary instance of 7-Tuple */
   implicit def arbTuple7[T1,T2,T3,T4,T5,T6,T7](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7)]
+  ): Arbitrary[Tuple7[T1,T2,T3,T4,T5,T6,T7]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7))
+      } yield Tuple7(t1, t2, t3, t4, t5, t6, t7))
 
   /** Arbitrary instance of 8-Tuple */
   implicit def arbTuple8[T1,T2,T3,T4,T5,T6,T7,T8](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8)]
+  ): Arbitrary[Tuple8[T1,T2,T3,T4,T5,T6,T7,T8]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8))
+      } yield Tuple8(t1, t2, t3, t4, t5, t6, t7, t8))
 
   /** Arbitrary instance of 9-Tuple */
   implicit def arbTuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9)]
+  ): Arbitrary[Tuple9[T1,T2,T3,T4,T5,T6,T7,T8,T9]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9))
+      } yield Tuple9(t1, t2, t3, t4, t5, t6, t7, t8, t9))
 
   /** Arbitrary instance of 10-Tuple */
   implicit def arbTuple10[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10)]
+  ): Arbitrary[Tuple10[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10))
+      } yield Tuple10(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10))
 
   /** Arbitrary instance of 11-Tuple */
   implicit def arbTuple11[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)]
+  ): Arbitrary[Tuple11[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11))
+      } yield Tuple11(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11))
 
   /** Arbitrary instance of 12-Tuple */
   implicit def arbTuple12[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)]
+  ): Arbitrary[Tuple12[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12))
+      } yield Tuple12(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12))
 
   /** Arbitrary instance of 13-Tuple */
   implicit def arbTuple13[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)]
+  ): Arbitrary[Tuple13[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13))
+      } yield Tuple13(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13))
 
   /** Arbitrary instance of 14-Tuple */
   implicit def arbTuple14[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)]
+  ): Arbitrary[Tuple14[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14))
+      } yield Tuple14(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14))
 
   /** Arbitrary instance of 15-Tuple */
   implicit def arbTuple15[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)]
+  ): Arbitrary[Tuple15[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15))
+      } yield Tuple15(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15))
 
   /** Arbitrary instance of 16-Tuple */
   implicit def arbTuple16[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16)]
+  ): Arbitrary[Tuple16[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16))
+      } yield Tuple16(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16))
 
   /** Arbitrary instance of 17-Tuple */
   implicit def arbTuple17[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17)]
+  ): Arbitrary[Tuple17[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17))
+      } yield Tuple17(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17))
 
   /** Arbitrary instance of 18-Tuple */
   implicit def arbTuple18[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17], a18:Arbitrary[T18]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18)]
+  ): Arbitrary[Tuple18[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary; t18<-a18.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18))
+      } yield Tuple18(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18))
 
   /** Arbitrary instance of 19-Tuple */
   implicit def arbTuple19[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17], a18:Arbitrary[T18], a19:Arbitrary[T19]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19)]
+  ): Arbitrary[Tuple19[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary; t18<-a18.arbitrary; t19<-a19.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19))
+      } yield Tuple19(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19))
 
   /** Arbitrary instance of 20-Tuple */
   implicit def arbTuple20[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17], a18:Arbitrary[T18], a19:Arbitrary[T19], a20:Arbitrary[T20]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20)]
+  ): Arbitrary[Tuple20[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary; t18<-a18.arbitrary; t19<-a19.arbitrary; t20<-a20.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20))
+      } yield Tuple20(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20))
 
   /** Arbitrary instance of 21-Tuple */
   implicit def arbTuple21[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17], a18:Arbitrary[T18], a19:Arbitrary[T19], a20:Arbitrary[T20], a21:Arbitrary[T21]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21)]
+  ): Arbitrary[Tuple21[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary; t18<-a18.arbitrary; t19<-a19.arbitrary; t20<-a20.arbitrary; t21<-a21.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21))
+      } yield Tuple21(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21))
 
   /** Arbitrary instance of 22-Tuple */
   implicit def arbTuple22[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22](implicit
     a1:Arbitrary[T1], a2:Arbitrary[T2], a3:Arbitrary[T3], a4:Arbitrary[T4], a5:Arbitrary[T5], a6:Arbitrary[T6], a7:Arbitrary[T7], a8:Arbitrary[T8], a9:Arbitrary[T9], a10:Arbitrary[T10], a11:Arbitrary[T11], a12:Arbitrary[T12], a13:Arbitrary[T13], a14:Arbitrary[T14], a15:Arbitrary[T15], a16:Arbitrary[T16], a17:Arbitrary[T17], a18:Arbitrary[T18], a19:Arbitrary[T19], a20:Arbitrary[T20], a21:Arbitrary[T21], a22:Arbitrary[T22]
-  ): Arbitrary[(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22)]
+  ): Arbitrary[Tuple22[T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22]]
     = Arbitrary(for {
         t1<-a1.arbitrary; t2<-a2.arbitrary; t3<-a3.arbitrary; t4<-a4.arbitrary; t5<-a5.arbitrary; t6<-a6.arbitrary; t7<-a7.arbitrary; t8<-a8.arbitrary; t9<-a9.arbitrary; t10<-a10.arbitrary; t11<-a11.arbitrary; t12<-a12.arbitrary; t13<-a13.arbitrary; t14<-a14.arbitrary; t15<-a15.arbitrary; t16<-a16.arbitrary; t17<-a17.arbitrary; t18<-a18.arbitrary; t19<-a19.arbitrary; t20<-a20.arbitrary; t21<-a21.arbitrary; t22<-a22.arbitrary
-      } yield (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22))
+      } yield Tuple22(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22))
 
 }

@@ -62,10 +62,10 @@ def tuple(i: Int) = {
   /** Arbitrary instance of ${i}-Tuple */
   implicit def arbTuple$i[${types(i)}](implicit
     ${wrappedArgs("Arbitrary",i)}
-  ): Arbitrary[(${types(i)})]
+  ): Arbitrary[Tuple$i[${types(i)}]]
     = Arbitrary(for {
         ${gens}
-      } yield (${vals(i)}))
+      } yield Tuple$i(${vals(i)}))
 """
 }
 
@@ -132,7 +132,7 @@ private[scalacheck] trait ArbitraryArities{
   ${1 to 22 map arbfn mkString ""}
 
   // Tuples //
-  ${2 to 22 map tuple mkString ""}
+  ${1 to 22 map tuple mkString ""}
 }"""
 
     case "Gen" =>
