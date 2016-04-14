@@ -22,12 +22,16 @@ sealed trait Cogen[-T] {
     Gen.gen((p, seed) => g.doApply(p, perturb(seed, t)))
 
   def contramap[S](f: S => T): Cogen[S] =
-    Cogen((seed, s) => perturb(seed, f(s)))
+    Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
 object Cogen extends CogenArities {
 
-  def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
+  // See https://github.com/rickynils/scalacheck/issues/230 for dummy expl.
+  def apply[T](implicit ev: Cogen[T], dummy: Cogen[T]): Cogen[T] = ev
+
+  // To remain binary compatible, should be removed in 1.14
+  private[scalacheck] def apply[T](ev: Cogen[T]): Cogen[T] = ev
 
   def apply[T](f: T => Long): Cogen[T] = new Cogen[T] {
     def perturb(seed: Seed, t: T): Seed = seed.reseed(f(t))
@@ -65,13 +69,13 @@ object Cogen extends CogenArities {
     Cogen(n => java.lang.Double.doubleToRawLongBits(n))
 
   implicit def cogenOption[A](implicit A: Cogen[A]): Cogen[Option[A]] =
-    Cogen((seed, o) => o.fold(seed)(a => A.perturb(seed.next, a)))
+    Cogen((seed: Seed, o: Option[A]) => o.fold(seed)(a => A.perturb(seed.next, a)))
 
   implicit def cogenEither[A, B](implicit A: Cogen[A], B: Cogen[B]): Cogen[Either[A, B]] =
-    Cogen((seed, e) => e.fold(a => A.perturb(seed, a), b => B.perturb(seed.next, b)))
+    Cogen((seed: Seed, e: Either[A,B]) => e.fold(a => A.perturb(seed, a), b => B.perturb(seed.next, b)))
 
   implicit def cogenArray[A](implicit A: Cogen[A]): Cogen[Array[A]] =
-    Cogen((seed, as) => perturbArray(seed, as))
+    Cogen((seed: Seed, as: Array[A]) => perturbArray(seed, as))
 
   implicit def cogenString: Cogen[String] =
     Cogen.it(_.iterator)
