@@ -80,13 +80,13 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   }
 )
 
-import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
+import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     scalaJSStage in Global := FastOptStage,
-    previousArtifact := Some("org.scalacheck" % "scalacheck_sjs0.6_2.11" % "1.13.1"),
+    mimaPreviousArtifacts := Set("org.scalacheck" % s"scalacheck_sjs0.6_${scalaBinaryVersion.value}" % "1.13.1"),
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
   .enablePlugins(ScalaJSPlugin)
@@ -94,6 +94,6 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    previousArtifact := Some("org.scalacheck" % "scalacheck_2.11" % "1.13.1"),
+    mimaPreviousArtifacts := Set("org.scalacheck" % s"scalacheck_${scalaBinaryVersion.value}" % "1.13.1"),
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
