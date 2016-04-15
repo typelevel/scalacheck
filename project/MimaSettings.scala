@@ -4,11 +4,11 @@ object MimaSettings {
   import com.typesafe.tools.mima
   import mima.core._
   import ProblemFilters.exclude
-  import mima.plugin.MimaKeys.{binaryIssueFilters, previousArtifact}
+  import mima.plugin.MimaKeys.mimaBinaryIssueFilters
   import mima.plugin.MimaPlugin.mimaDefaultSettings
 
   lazy val settings = mimaDefaultSettings ++ Seq(
-    binaryIssueFilters :=
+    mimaBinaryIssueFilters :=
       removedPrivateMethods.map(exclude[MissingMethodProblem](_)) ++
       newMethods.map(exclude[MissingMethodProblem](_)) ++
       removedPrivateClasses.map(exclude[MissingClassProblem](_)) ++
