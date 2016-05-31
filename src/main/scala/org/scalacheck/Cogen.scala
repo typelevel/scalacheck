@@ -63,10 +63,10 @@ object Cogen extends CogenArities {
   implicit lazy val cogenLong: Cogen[Long] = Cogen(n => n)
 
   implicit lazy val cogenFloat: Cogen[Float] =
-    Cogen(n => java.lang.Float.floatToRawIntBits(n).toLong)
+    Cogen(n => java.lang.Float.floatToIntBits(n).toLong)
 
   implicit lazy val cogenDouble: Cogen[Double] =
-    Cogen(n => java.lang.Double.doubleToRawLongBits(n))
+    Cogen(n => java.lang.Double.doubleToLongBits(n))
 
   implicit def cogenOption[A](implicit A: Cogen[A]): Cogen[Option[A]] =
     Cogen((seed: Seed, o: Option[A]) => o.fold(seed)(a => A.perturb(seed.next, a)))
