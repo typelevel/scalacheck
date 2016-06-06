@@ -831,7 +831,7 @@ class Counter {
 `Counter` is the type of our system under test. ScalaCheck supports testing
 systems in parallel (multiple instances of the system under test), or
 sequentially (a singleton system). In both cases, the system under test is
-representd by the abstract type `Commands.Sut`. In our example, the type `Sut`
+represented by the abstract type `Commands.Sut`. In our example, the type `Sut`
 will be set to `Counter`.
 
 We will also need a type encoding the state of the system under test. This is
