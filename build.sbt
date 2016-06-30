@@ -50,10 +50,12 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   scalacOptions in (Compile,doc) += "-Xfatal-warnings",
 
-  mimaPreviousArtifacts := (CrossVersion partialVersion scalaVersion.value match {
-    case Some((2, 12)) => Set.empty // Ignore while 2.12 is in pre-release
-    case _             => Set("org.scalacheck" %%% "scalacheck" % "1.13.1")
-  }),
+  mimaPreviousArtifacts := (
+    if (CrossVersion isScalaApiCompatible scalaVersion.value)
+      Set("org.scalacheck" %%% "scalacheck" % "1.13.1")
+    else
+      Set.empty
+  ),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
