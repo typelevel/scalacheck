@@ -36,7 +36,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   scalaVersion := "2.11.8",
 
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-M4"),
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-M5"),
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
@@ -49,6 +49,13 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
 
   scalacOptions in (Compile,doc) += "-Xfatal-warnings",
+
+  mimaPreviousArtifacts := (
+    if (CrossVersion isScalaApiCompatible scalaVersion.value)
+      Set("org.scalacheck" %%% "scalacheck" % "1.13.1")
+    else
+      Set.empty
+  ),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -80,13 +87,10 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   }
 )
 
-import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
-
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     scalaJSStage in Global := FastOptStage,
-    mimaPreviousArtifacts := Set("org.scalacheck" % s"scalacheck_sjs0.6_${scalaBinaryVersion.value}" % "1.13.1"),
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
   .enablePlugins(ScalaJSPlugin)
@@ -94,6 +98,5 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    mimaPreviousArtifacts := Set("org.scalacheck" % s"scalacheck_${scalaBinaryVersion.value}" % "1.13.1"),
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
