@@ -13,11 +13,13 @@ import sbt.testing._
 import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.scalacheck.Test.Parameters
+
 private abstract class ScalaCheckRunner extends Runner {
 
   val args: Array[String]
   val loader: ClassLoader
-  val params: Test.Parameters
+  val applyCmdParams: Parameters => Parameters
 
   val successCount = new AtomicInteger(0)
   val failureCount = new AtomicInteger(0)
@@ -49,6 +51,17 @@ private abstract class ScalaCheckRunner extends Runner {
       obj match {
         case props: Properties => props.properties
         case prop: Prop => Seq("" -> prop)
+      }
+    }
+
+    // TODO copypasted from props val
+    val properties: Option[Properties] = {
+      val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
+      val obj = if (fp.isModule) Platform.loadModule(taskDef.fullyQualifiedName,loader)
+      else Platform.newInstance(taskDef.fullyQualifiedName, loader)(Seq())
+      obj match {
+        case props: Properties => Some(props)
+        case prop: Prop => None
       }
     }
 
@@ -85,6 +98,7 @@ private abstract class ScalaCheckRunner extends Runner {
         import util.Pretty.{pretty, Params}
 
         for ((`name`, prop) <- props) {
+          val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
           val result = Test.check(params, prop)
 
           val event = new Event {
@@ -162,8 +176,10 @@ final class ScalaCheckFramework extends Framework {
     val remoteArgs = _remoteArgs
     val loader = _loader
     val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
-    val params = prms.withTestCallback(new Test.TestCallback {})
-                     .withCustomClassLoader(Some(loader))
+    val applyCmdParams = prms.andThen {
+      p => p.withTestCallback(new Test.TestCallback {})
+          .withCustomClassLoader(Some(loader))
+    }
 
     def receiveMessage(msg: String): Option[String] = msg(0) match {
       case 'd' =>
@@ -191,9 +207,11 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val params = Test.cmdLineParser.parseParams(args)._1
-                   .withTestCallback(new Test.TestCallback {})
-                   .withCustomClassLoader(Some(loader))
+
+    val applyCmdParams = Test.cmdLineParser.parseParams(args)._1.andThen {
+      p => p.withTestCallback(new Test.TestCallback {})
+          .withCustomClassLoader(Some(loader))
+    }
 
     def receiveMessage(msg: String) = None
 

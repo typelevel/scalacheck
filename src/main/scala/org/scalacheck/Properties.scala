@@ -62,7 +62,8 @@ class Properties(val name: String) {
    *  with the exit code set to the number of failed properties. */
   def main(args: Array[String]): Unit = {
     val ret = Test.cmdLineParser.parseParams(args) match {
-      case (params, Nil) =>
+      case (applyCmdParams, Nil) =>
+        val params = applyCmdParams(overrideParameters(Test.Parameters.default))
         val res = Test.checkProperties(params, this)
         val failed = res.filter(!_._2.passed).size
         failed
