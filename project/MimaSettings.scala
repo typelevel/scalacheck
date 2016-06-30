@@ -9,16 +9,18 @@ object MimaSettings {
 
   lazy val settings = mimaDefaultSettings ++ Seq(
     mimaBinaryIssueFilters :=
-      removedPrivateMethods.map(exclude[MissingMethodProblem](_)) ++
-      newMethods.map(exclude[MissingMethodProblem](_)) ++
+      removedPrivateMethods.map(exclude[DirectMissingMethodProblem](_)) ++
+      newMethods.map(exclude[ReversedMissingMethodProblem](_)) ++
       removedPrivateClasses.map(exclude[MissingClassProblem](_)) ++
       otherProblems
   )
 
   private def newMethods = Seq(
+    "org.scalacheck.ScalaCheckRunner.applyCmdParams"
   )
 
   private def removedPrivateMethods = Seq(
+    "org.scalacheck.ScalaCheckRunner.params"
   )
 
   private def removedPrivateClasses = Seq(
