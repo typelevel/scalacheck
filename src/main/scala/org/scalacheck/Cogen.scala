@@ -86,6 +86,9 @@ object Cogen extends CogenArities {
   implicit def cogenVector[A: Cogen]: Cogen[Vector[A]] =
     Cogen.it(_.iterator)
 
+  implicit def cogenStream[A: Cogen]: Cogen[Stream[A]] =
+    Cogen.it(_.iterator)
+
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =
     Cogen.it(_.toVector.sorted.iterator)
 
