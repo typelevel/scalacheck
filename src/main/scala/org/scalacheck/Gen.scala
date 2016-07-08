@@ -504,7 +504,7 @@ object Gen extends GenArities{
    *  <code>nonEmptyContainerOf[Map,T,U](g)</code>. */
   def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T,U],(T,U)](g)
 
-  /** Generates a map of with at least the given number of elements. This method
+  /** Generates a map with at most the given number of elements. This method
    *  is equal to calling <code>containerOfN[Map,T,U](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
 
