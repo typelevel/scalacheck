@@ -701,58 +701,56 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
-  def forAllShrink[T, P](g: Gen[T],
-    shrink: T => Stream[T])(f: T => P
-  )(implicit pv: P => Prop, pp: T => Pretty
-  ): Prop = Prop { prms =>
+  def forAllShrink[T, P](g: Gen[T], shrink: T => Stream[T])(f: T => P)(implicit pv: P => Prop, pp: T => Pretty): Prop =
+    Prop { prms =>
 
-    val gr = g.doApply(prms, Seed.random())
-    val labels = gr.labels.mkString(",")
+      val gr = g.doApply(prms, Seed.random())
+      val labels = gr.labels.mkString(",")
 
-    def result(x: T) = {
-      val p = secure(pv(f(x)))
-      provedToTrue(p(prms))
-    }
-
-    /** Returns the first failed result in Left or success in Right */
-    def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
-      assert(!xs.isEmpty, "Stream cannot be empty")
-      val results = xs.map(x => (x, result(x)))
-      results.dropWhile(!_._2.failure).headOption match {
-        case None => Right(results.head)
-        case Some(xr) => Left(xr)
+      def result(x: T) = {
+        val p = secure(pv(f(x)))
+        provedToTrue(p(prms))
       }
-    }
 
-    def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
-      val xs = shrink(x).filter(gr.sieve)
-      val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
-      if(xs.isEmpty) res else getFirstFailure(xs) match {
-        case Right((x2,r2)) => res
-        case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
+      /** Returns the first failed result in Left or success in Right */
+      def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
+        assert(xs.nonEmpty, "Stream cannot be empty")
+        val results = xs.map(x => (x, result(x)))
+        results.dropWhile(!_._2.failure).headOption match {
+          case None => Right(results.head)
+          case Some(xr) => Left(xr)
+        }
       }
-    }
 
-    def replOrig(r0: Result, r1: Result) = (r0.args,r1.args) match {
-      case (a0::_,a1::as) =>
-        r1.copy(
-          args = a1.copy(
-            origArg = a0.origArg,
-            prettyOrigArg = a0.prettyOrigArg
-          ) :: as
-        )
-      case _ => r1
-    }
+      def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
+        val xs = shrink(x).filter(gr.sieve)
+        val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
+        if(xs.isEmpty) res else getFirstFailure(xs) match {
+          case Right((x2,r2)) => res
+          case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
+        }
+      }
 
-    gr.retrieve match {
-      case None => undecided(prms)
-      case Some(x) =>
-        val r = result(x)
-        if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
-        else shrinker(x,r,0,x)
-    }
+      def replOrig(r0: Result, r1: Result) = (r0.args,r1.args) match {
+        case (a0::_,a1::as) =>
+          r1.copy(
+            args = a1.copy(
+              origArg = a0.origArg,
+              prettyOrigArg = a0.prettyOrigArg
+            ) :: as
+          )
+        case _ => r1
+      }
 
-  }
+      gr.retrieve match {
+        case None => undecided(prms)
+        case Some(x) =>
+          val r = result(x)
+          if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
+          else shrinker(x,r,0,x)
+      }
+
+    }
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the default shrink function for the type */
