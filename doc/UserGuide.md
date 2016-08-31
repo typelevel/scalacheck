@@ -354,7 +354,7 @@ think of generators simply as functions, and the combinators in the `Gen`
 object can be used to create or modify the behaviour of such generator
 functions.
 
-Lets see how to create a new generator. The best way to do it is to use the
+Let's see how to create a new generator. The best way to do it is to use the
 generator combinators that exist in the `org.scalacheck.Gen` module. These can
 be combined using a for-comprehension. Suppose you need a generator which
 generates a tuple that contains two random integer values, one of them being at
