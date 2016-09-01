@@ -55,6 +55,7 @@ sealed abstract class Gen[+T] {
     rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
+  @deprecated("Empty generators are discouraged.", "1.14.0")
   def flatten[U](implicit asOption: T => Option[U]): Gen[U] =
     map(asOption).collect{ case Some(t) => t }
 
@@ -67,6 +68,7 @@ sealed abstract class Gen[+T] {
   /** Create a new generator that fails if the specified partial function
    *  is undefined for this generator's value, otherwise returns the result
    *  of the partial function applied to this generator's value. */
+  @deprecated("Empty generators are discouraged.", "1.14.0")
   def collect[U](pf: PartialFunction[T,U]): Gen[U] =
     flatMap { t => Gen.fromOption(pf.lift(t)) }
 
@@ -106,11 +108,9 @@ sealed abstract class Gen[+T] {
   def ==[U](g: Gen[U]) = Prop { prms =>
     // test equality using a random seed
     val seed = Seed.random()
-    (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
-      case (None,None) => Prop.proved(prms)
-      case (Some(r1),Some(r2)) if r1 == r2 => Prop.proved(prms)
-      case _ => Prop.falsified(prms)
-    }
+    val lhs = doApply(prms, seed).retrieve
+    val rhs = g.doApply(prms, seed).retrieve
+    if (lhs == rhs) Prop.proved(prms) else Prop.falsified(prms)
   }
 
   def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
@@ -118,11 +118,9 @@ sealed abstract class Gen[+T] {
   def !==[U](g: Gen[U]) = Prop { prms =>
     // test inequality using a random seed
     val seed = Seed.random()
-    (doApply(prms, seed).retrieve, g.doApply(prms, seed).retrieve) match {
-      case (None,None) => Prop.falsified(prms)
-      case (Some(r1),Some(r2)) if r1 == r2 => Prop.falsified(prms)
-      case _ => Prop.proved(prms)
-    }
+    val lhs = doApply(prms, seed).retrieve
+    val rhs = g.doApply(prms, seed).retrieve
+    if (lhs != rhs) Prop.proved(prms) else Prop.falsified(prms)
   }
 
   /** Put a label on the generator to make test reports clearer */
@@ -160,13 +158,15 @@ object Gen extends GenArities{
   /** Just an alias */
   private type P = Parameters
 
+  class RetrievalError extends RuntimeException("couldn't generate value")
+
   private[scalacheck] trait R[+T] {
     def labels: Set[String] = Set()
     def sieve[U >: T]: U => Boolean = _ => true
     protected def result: Option[T]
     def seed: Seed
 
-    def retrieve = result.filter(sieve)
+    def retrieve: Option[T] = result.filter(sieve)
 
     def copy[U >: T](
       l: Set[String] = this.labels,
@@ -175,7 +175,7 @@ object Gen extends GenArities{
       sd: Seed = this.seed
     ): R[U] = new R[U] {
       override val labels = l
-      override def sieve[V >: U] = { x:Any =>
+      override def sieve[V >: U] = { (x: Any) =>
         try s(x.asInstanceOf[U])
         catch { case _: java.lang.ClassCastException => false }
       }
@@ -313,13 +313,22 @@ object Gen extends GenArities{
   //// Various Generator Combinators ////
 
   /** A generator that always generates the given value */
-  implicit def const[T](x: T): Gen[T] = gen((p, seed) => r(Some(x), seed)).suchThat(_ == x)
+  implicit def const[T](x: T): Gen[T] = gen((p, seed) => r(Some(x), seed))
 
   /** A generator that never generates a value */
-  def fail[T]: Gen[T] = gen((p, seed) => r(None, seed)).suchThat(_ => false)
+  def fail[T]: Gen[T] = gen((p, seed) => failed[T](seed))
+
+  /** A result that never contains a value */
+  private[scalacheck] def failed[T](seed0: Seed): R[T] =
+    new R[T] {
+      val result: Option[T] = None
+      override def sieve[U >: T]: U => Boolean = _ => false
+      val seed = seed0
+    }
 
   /** A generator that fails if the provided option value is undefined,
    *  otherwise just returns the value. */
+  @deprecated("Empty generators are discouraged.", "1.14.0")
   def fromOption[T](o: Option[T]): Gen[T] = o match {
     case Some(t) => const(t)
     case None => fail
@@ -355,17 +364,20 @@ object Gen extends GenArities{
    *  evaluated each time the wrapper generator is evaluated.
    *  This has been deprecated in favor of [[org.scalacheck.Gen.delay]]. */
   @deprecated("Replaced with delay()", "1.13.0")
-  def wrap[T](g: => Gen[T]) = delay(g)
+  def wrap[T](g: => Gen[T]): Gen[T] = delay(g)
 
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
-  def delay[T](g: => Gen[T]) = gen { (p, seed) => g.doApply(p, seed) }
+  def delay[T](g: => Gen[T]): Gen[T] =
+    gen { (p, seed) => g.doApply(p, seed) }
 
   /** Creates a generator that can access its generation parameters */
-  def parameterized[T](f: Parameters => Gen[T]) = gen { (p, seed) => f(p).doApply(p, seed) }
+  def parameterized[T](f: Parameters => Gen[T]): Gen[T] =
+    gen { (p, seed) => f(p).doApply(p, seed) }
 
   /** Creates a generator that can access its generation size */
-  def sized[T](f: Int => Gen[T]) = gen { (p, seed) => f(p.size).doApply(p, seed) }
+  def sized[T](f: Int => Gen[T]): Gen[T] =
+    gen { (p, seed) => f(p.size).doApply(p, seed) }
 
   /** A generator that returns the current generation size */
   lazy val size: Gen[Int] = sized { sz => sz }
@@ -448,9 +460,8 @@ object Gen extends GenArities{
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0,s).flatMap(buildableOfN[C,T](_,g))) suchThat {
-      case c@null => g.sieveCopy(c)
-      case c => c.forall(g.sieveCopy)
+    sized(s => choose(0,s).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
+      if (c == null) g.sieveCopy(null) else c.forall(g.sieveCopy)
     }
 
   /** Generates a non-empty container of any Traversable type for which there
@@ -614,9 +625,8 @@ object Gen extends GenArities{
     val basicsAndSpecials = for {
       t <- specials ++ basics if t >= minT && t <= maxT
     } yield (1, const(t))
-    val allGens = basicsAndSpecials ++ List(
-      (basicsAndSpecials.length, c.choose(minT, maxT))
-    )
+    val other = (basicsAndSpecials.length, c.choose(minT, maxT))
+    val allGens = basicsAndSpecials :+ other
     frequency(allGens: _*)
   }
 
