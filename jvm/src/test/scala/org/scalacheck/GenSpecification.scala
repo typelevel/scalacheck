@@ -16,6 +16,7 @@ import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
 import java.util.Date
+import scala.util.{Try, Success, Failure}
 
 object GenSpecification extends Properties("Gen") {
 
@@ -75,28 +76,39 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-int") = forAll { (l: Int, h: Int) =>
-    if(l > h) choose(l,h) == fail
-    else forAll(choose(l,h)) { x => x >= l && x <= h }
+    Try(choose(l, h)) match {
+      case Success(g) => forAll(g) { x => l <= x && x <= h }
+      case Failure(_) => Prop(l > h)
+    }
   }
 
   property("choose-long") = forAll { (l: Long, h: Long) =>
-    if (l > h) choose(l,h) == fail
-    else forAll(choose(l,h)) { x => x >= l && x <= h }
+    Try(choose(l, h)) match {
+      case Success(g) => forAll(g) { x => l <= x && x <= h }
+      case Failure(_) => Prop(l > h)
+    }
   }
 
   property("choose-double") = forAll { (l: Double, h: Double) =>
-    forAll(choose(l,h)) { x => x >= l && x <= h }
+    Try(choose(l, h)) match {
+      case Success(g) => forAll(g) { x => l <= x && x <= h }
+      case Failure(_) => Prop(l > h)
+    }
   }
 
-  property("choose-large-double") = forAll(choose(Double.MinValue, Double.MaxValue)) { x =>
-    x >= Double.MinValue && x <= Double.MaxValue
+  import Double.{MinValue, MaxValue}
+  property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
+    MinValue <= x && x <= MaxValue
   }
 
   property("choose-xmap") = {
-    implicit val chooseDate = Choose.xmap[Long, Date](new Date(_), _.getTime)
+    implicit val chooseDate: Choose[Date] =
+      Choose.xmap[Long, Date](new Date(_), _.getTime)
     forAll { (l: Date, h: Date) =>
-      if(l.after(h)) choose(l, h) == fail
-      else forAll(choose(l,h)) { x => x.compareTo(l) >= 0 && x.compareTo(h) <= 0 }
+      Try(choose(l, h)) match {
+        case Success(g) => forAll(g) { x => x.compareTo(l) >= 0 && x.compareTo(h) <= 0 }
+        case Failure(_) => Prop(l.after(h))
+      }
     }
   }
 
@@ -104,9 +116,11 @@ object GenSpecification extends Properties("Gen") {
 
   property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
 
-  property("oneOf n") = forAll { l: List[Int] =>
-    if(l.isEmpty) oneOf(l) == fail
-    else forAll(oneOf(l))(l.contains)
+  property("oneOf n") = forAll { (l: List[Int]) =>
+    Try(oneOf(l)) match {
+      case Success(g) => forAll(g)(l.contains)
+      case Failure(_) => Prop(l.isEmpty)
+    }
   }
 
   property("oneOf 2") = forAll { (n1:Int, n2:Int) =>
@@ -151,10 +165,14 @@ object GenSpecification extends Properties("Gen") {
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
 
-  property("pick") = forAll { l: List[Int] =>
-    forAll(choose(-1, 2*l.length)) { n =>
-      if(n < 0 || n > l.length) pick(n,l) == fail
-      else forAll(pick(n,l)) { m => m.length == n && m.forall(l.contains) }
+  property("pick") = forAll { (lst: List[Int]) =>
+    forAll(choose(-1, 2 * lst.length)) { n =>
+      Try(pick(n, lst)) match {
+        case Success(g) =>
+          forAll(g) { m => m.length == n && m.forall(lst.contains) }
+        case Failure(_) =>
+          Prop(n < 0 || n > lst.length)
+      }
     }
   }
 

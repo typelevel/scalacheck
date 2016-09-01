@@ -17,6 +17,7 @@ import util.Buildable
 
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
+import scala.collection.mutable.ArrayBuffer
 
 sealed abstract class Gen[+T] {
 
@@ -262,8 +263,34 @@ object Gen extends GenArities{
   /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
   object Choose {
 
+    class IllegalBoundsError[A](low: A, high: A)
+        extends IllegalArgumentException(s"invalid bounds: low=$low, high=$high")
+
+    /**
+     * This method gets a ton of use -- so we want it to be as fast as
+     * possible for many of our common cases.
+     */
     private def chLng(l: Long, h: Long)(p: P, seed: Seed): R[Long] = {
-      if (h < l) r(None, seed) else {
+      if (h < l) {
+        throw new IllegalBoundsError(l, h)
+      } else if (h == l) {
+        const(l).doApply(p, seed)
+      } else if (l == Long.MinValue && h == Long.MaxValue) {
+        val (n, s) = seed.long
+        r(Some(n), s)
+      } else if (l == Int.MinValue && h == Int.MaxValue) {
+        val (n, s) = seed.long
+        r(Some(n.toInt.toLong), s)
+      } else if (l == Short.MinValue && h == Short.MaxValue) {
+        val (n, s) = seed.long
+        r(Some(n.toShort.toLong), s)
+      } else if (l == 0L && h == Char.MaxValue) {
+        val (n, s) = seed.long
+        r(Some(n.toChar.toLong), s)
+      } else if (l == Byte.MinValue && h == Byte.MaxValue) {
+        val (n, s) = seed.long
+        r(Some(n.toByte.toLong), s)
+      } else {
         val d = h - l + 1
         if (d <= 0) {
           var tpl = seed.long
@@ -283,51 +310,54 @@ object Gen extends GenArities{
     }
 
     private def chDbl(l: Double, h: Double)(p: P, seed: Seed): R[Double] = {
-      val d = h-l
-      if (d < 0) r(None, seed)
-      else if (d > Double.MaxValue) r(oneOf(choose(l, 0d), choose(0d, h)).apply(p, seed), seed.next)
-      else if (d == 0) r(Some(l), seed)
-      else {
+      val d = h - l
+      if (d < 0) {
+        throw new IllegalBoundsError(l, h)
+      } else if (d > Double.MaxValue) {
+        val (x, seed2) = seed.long
+        if (x < 0) chDbl(l, 0d)(p, seed2) else chDbl(0d, h)(p, seed2)
+      } else if (d == 0) {
+        r(Some(l), seed)
+      } else {
         val (n, s) = seed.double
         r(Some(n * (h-l) + l), s)
       }
     }
 
-    implicit val chooseLong: Choose[Long] = new Choose[Long] {
-      def choose(low: Long, high: Long) =
-        gen(chLng(low,high)).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseInt: Choose[Int] = new Choose[Int] {
-      def choose(low: Int, high: Int) =
-        gen(chLng(low,high)).map(_.toInt).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseByte: Choose[Byte] = new Choose[Byte] {
-      def choose(low: Byte, high: Byte) =
-        gen(chLng(low,high)).map(_.toByte).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseShort: Choose[Short] = new Choose[Short] {
-      def choose(low: Short, high: Short) =
-        gen(chLng(low,high)).map(_.toShort).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseChar: Choose[Char] = new Choose[Char] {
-      def choose(low: Char, high: Char) =
-        gen(chLng(low,high)).map(_.toChar).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseDouble: Choose[Double] = new Choose[Double] {
-      def choose(low: Double, high: Double) =
-        gen(chDbl(low,high)).suchThat(x => x >= low && x <= high)
-    }
-    implicit val chooseFloat: Choose[Float] = new Choose[Float] {
-      def choose(low: Float, high: Float) =
-        gen(chDbl(low,high)).map(_.toFloat).suchThat(x => x >= low && x <= high)
-    }
+    implicit val chooseLong: Choose[Long] =
+      new Choose[Long] {
+        def choose(low: Long, high: Long): Gen[Long] =
+          if (low > high) throw new IllegalBoundsError(low, high)
+        else gen(chLng(low,high))
+      }
+
+    implicit val chooseInt: Choose[Int] =
+      Choose.xmap[Long, Int](_.toInt, _.toLong)
+
+    implicit val chooseShort: Choose[Short] =
+      Choose.xmap[Long, Short](_.toShort, _.toLong)
+
+    implicit val chooseChar: Choose[Char] =
+      Choose.xmap[Long, Char](_.toChar, _.toLong)
+    implicit val chooseByte: Choose[Byte] =
+      Choose.xmap[Long, Byte](_.toByte, _.toLong)
+
+    implicit val chooseDouble: Choose[Double] =
+      new Choose[Double] {
+        def choose(low: Double, high: Double) =
+          if (low > high) throw new IllegalBoundsError(low, high)
+          else gen(chDbl(low,high))
+      }
+
+    implicit val chooseFloat: Choose[Float] =
+      Choose.xmap[Double, Float](_.toFloat, _.toDouble)
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
      *  types whose relationship is described by the provided transformation
      *  functions. (exponential functor map) */
     def xmap[T, U](from: T => U, to: U => T)(implicit c: Choose[T]): Choose[U] =
       new Choose[U] {
-        def choose(low: U, high: U) =
+        def choose(low: U, high: U): Gen[U] =
           c.choose(to(low), to(high)).map(from)
       }
   }
@@ -410,7 +440,12 @@ object Gen extends GenArities{
 
   /** Picks a random value from a list */
   def oneOf[T](xs: Seq[T]): Gen[T] =
-    choose(0, xs.size-1).map(xs(_)).suchThat(xs.contains)
+    if (xs.isEmpty) {
+      throw new IllegalArgumentException("oneOf called on empty collection")
+    } else {
+      val vector = xs.toVector
+      choose(0, vector.size - 1).map(vector(_))
+    }
 
   /** Picks a random value from a list */
   def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf(t0 +: t1 +: tn)
@@ -430,23 +465,21 @@ object Gen extends GenArities{
     g.map(Some.apply)
 
   /** Chooses one of the given generators with a weighted random distribution */
-  def frequency[T](gs: (Int,Gen[T])*): Gen[T] = {
-    gs.filter(_._1 > 0) match {
-      case Nil => fail
-      case filtered =>
-        var tot = 0l
-        val tree: TreeMap[Long, Gen[T]] = {
-          val builder = TreeMap.newBuilder[Long, Gen[T]]
-          filtered.foreach {
-            case (f, v) =>
-              tot += f
-              builder.+=((tot, v))
-          }
-          builder.result()
-        }
-        choose(1L, tot).flatMap(r => tree.from(r).head._2).suchThat { x =>
-          gs.exists(_._2.sieveCopy(x))
-        }
+  def frequency[T](gs: (Int, Gen[T])*): Gen[T] = {
+    val filtered = gs.iterator.filter(_._1 > 0).toVector
+    if (filtered.isEmpty) {
+      throw new IllegalArgumentException("no items with positive weights")
+    } else {
+    var total = 0L
+      val builder = TreeMap.newBuilder[Long, Gen[T]]
+      filtered.foreach { case (weight, value) =>
+        total += weight
+        builder += ((total, value))
+      }
+      val tree = builder.result
+      choose(1L, total).flatMap(r => tree.from(r).head._2).suchThat { x =>
+        gs.exists(_._2.sieveCopy(x))
+      }
     }
   }
 
@@ -495,9 +528,7 @@ object Gen extends GenArities{
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1,s).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
-      c.size > 0 && c.forall(g.sieveCopy)
-    }
+    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(_.size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
@@ -550,20 +581,29 @@ object Gen extends GenArities{
     choose(0, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that picks a given number of elements from a list, randomly */
-  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] =
-    if(n > l.size || n < 0) fail
-    else (gen { (p, seed0) =>
-      val b = new collection.mutable.ListBuffer[T]
-      b ++= l
+  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
+    if (n > l.size || n < 0) throw new IllegalArgumentException("!!!")
+    else if (n == 0) Gen.const(Nil)
+    else gen { (p, seed0) =>
+      val buf = ArrayBuffer.empty[T]
+      val it = l.iterator
       var seed = seed0
-      while(b.length > n) {
-        val c0 = choose(0, b.length-1)
-        val rt: R[Int] = c0.doApply(p, seed)
-        seed = rt.seed
-        b.remove(rt.retrieve.get)
+      var count = 0
+      while (it.hasNext) {
+        val t = it.next
+        count += 1
+        if (count <= n) {
+          buf += t
+        } else {
+          val (x, s) = seed.long
+          val i = (x & 0x7fffffff).toInt % n
+          if (i < n) buf(i) = t
+          seed = s
+        }
       }
-      r(Some(b), seed)
-    }).suchThat(_.forall(x => l.exists(x == _)))
+      r(Some(buf), seed)
+    }
+  }
 
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
