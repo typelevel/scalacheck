@@ -14,6 +14,8 @@ import language.implicitConversions
 
 import rng.Seed
 import util.Buildable
+
+import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
 
 sealed abstract class Gen[+T] {
@@ -45,6 +47,27 @@ sealed abstract class Gen[+T] {
   /** Evaluate this generator with the given parameters */
   def apply(p: Gen.Parameters, seed: Seed): Option[T] =
     doApply(p, seed).retrieve
+
+  /**
+   * Evaluate this generator with the given parameters.
+   *
+   * The generator will attempt to generate a valid `T` value. If a
+   * valid value is not produced it may retry several times,
+   * determined by the `retries` parameter (which defaults to 100).
+   *
+   * If all the retries fail it will throw a `Gen.RetrievalError`
+   * exception.
+   */
+  def pureApply(p: Gen.Parameters, seed: Seed, retries: Int = 100): T = {
+    @tailrec def loop(r: Gen.R[T], i: Int): T =
+      r.retrieve match {
+        case Some(value) =>
+          value
+        case None =>
+          if (i > 0) loop(r, i - 1) else throw new Gen.RetrievalError()
+      }
+    loop(doApply(p, seed), retries)
+  }
 
   /** Create a new generator by mapping the result of this generator */
   def map[U](f: T => U): Gen[U] = gen { (p, seed) => doApply(p, seed).map(f) }
