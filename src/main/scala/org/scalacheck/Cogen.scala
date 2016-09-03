@@ -12,6 +12,10 @@ package org.scalacheck
 import language.higherKinds
 import language.implicitConversions
 
+import scala.collection.immutable.BitSet
+import scala.util.{ Try, Success, Failure }
+
+import Arbitrary.arbitrary
 import rng.Seed
 
 sealed trait Cogen[-T] {
@@ -25,7 +29,7 @@ sealed trait Cogen[-T] {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities {
+object Cogen extends CogenArities with CogenLowPriority {
 
   // See https://github.com/rickynils/scalacheck/issues/230 for dummy expl.
   def apply[T](implicit ev: Cogen[T], dummy: Cogen[T]): Cogen[T] = ev
@@ -42,7 +46,7 @@ object Cogen extends CogenArities {
       def perturb(seed: Seed, t: T): Seed = f(seed, t).next
     }
 
-  private def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
+  def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
     new Cogen[T] {
       def perturb(seed: Seed, t: T): Seed =
         f(t).foldLeft(seed)(U.perturb).next
@@ -67,6 +71,15 @@ object Cogen extends CogenArities {
 
   implicit lazy val cogenDouble: Cogen[Double] =
     Cogen(n => java.lang.Double.doubleToLongBits(n))
+
+  implicit lazy val bigInt: Cogen[BigInt] =
+    Cogen[Array[Byte]].contramap(_.toByteArray)
+
+  implicit lazy val bigDecimal: Cogen[BigDecimal] =
+    Cogen[(Int, Array[Byte])].contramap(x => (x.scale, x.bigDecimal.unscaledValue.toByteArray))
+
+  implicit lazy val bitSet: Cogen[BitSet] =
+    Cogen.it(_.iterator)
 
   implicit def cogenOption[A](implicit A: Cogen[A]): Cogen[Option[A]] =
     Cogen((seed: Seed, o: Option[A]) => o.fold(seed)(a => A.perturb(seed.next, a)))
@@ -95,6 +108,21 @@ object Cogen extends CogenArities {
   implicit def cogenMap[K: Cogen: Ordering, V: Cogen: Ordering]: Cogen[Map[K, V]] =
     Cogen.it(_.toVector.sorted.iterator)
 
+  implicit def cogenFunction0[Z: Cogen]: Cogen[() => Z] =
+    Cogen[Z].contramap(f => f())
+
+  implicit val cogenException: Cogen[Exception] =
+    Cogen[String].contramap(_.toString)
+
+  implicit val cogenThrowable: Cogen[Throwable] =
+    Cogen[String].contramap(_.toString)
+
+  implicit def cogenTry[A: Cogen]: Cogen[Try[A]] =
+    Cogen((seed: Seed, x: Try[A]) => x match {
+      case Success(a) => Cogen[A].perturb(seed, a)
+      case Failure(e) => Cogen[Throwable].perturb(seed, e)
+    })
+
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)
 
@@ -104,4 +132,9 @@ object Cogen extends CogenArities {
     while (i < as.length) { s = A.perturb(s, as(i)); i += 1 }
     s.next
   }
+}
+
+trait CogenLowPriority {
+  implicit def cogenSeq[CC[x] <: Seq[x], A: Cogen]: Cogen[CC[A]] =
+    Cogen.it(_.iterator)
 }
