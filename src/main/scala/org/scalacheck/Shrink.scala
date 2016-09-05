@@ -90,40 +90,13 @@ object Shrink extends ShrinkLowPriority {
       shrink(x).map(cons(_,xs)).append(shrinkOne(xs).map(cons(x,_)))
     }
 
-  /** Shrink instances of any numeric data type */
-  implicit def shrinkFractional[T](implicit num: Fractional[T]): Shrink[T] = shrinkNumeric[T](num)
-  implicit def shrinkIntegral[T](implicit num: Integral[T]): Shrink[T] = shrinkNumeric[T](num)
+  /** Shrink instances for numeric data types */
 
-  private def shrinkNumeric[T](num: Numeric[T]): Shrink[T] = Shrink[T] { x: T =>
-    val minusOne = num.fromInt(-1)
-    val two = num.fromInt(2)
+  implicit def shrinkFractional[T: Fractional]: Shrink[T] =
+    new ShrinkFractional[T]
 
-    def isZeroOrVeryClose(n: T): Boolean = num match {
-      case _: Integral[T] => num.equiv(n, num.zero)
-      case _ => num.equiv(n, num.zero) || {
-        val multiple = num.times(n, num.fromInt(100000))
-        num.lt(num.abs(multiple), num.one) && !num.equiv(multiple, num.zero)
-      }
-    }
-
-    def half(n: T): T = num match {
-      case fractional: Fractional[T] => fractional.div(n, two)
-      case integral: Integral[T] => integral.quot(n, two)
-      case _ => sys.error("Undivisable number")
-    }
-
-    def upperHalves(sub: T): Stream[T] = {
-      val halfSub = half(sub)
-      val y = num.minus(x,sub)
-      if (isZeroOrVeryClose(sub) || num.equiv(x,y) || num.lteq(num.abs(sub), num.abs(halfSub))) Stream.empty
-      else cons(y, upperHalves(halfSub))
-    }
-
-    if (isZeroOrVeryClose(x)) Stream.empty[T] else {
-      val xs = upperHalves(half(x))
-      Stream.cons[T](num.zero, interleave(xs, xs.map(num.times(minusOne, _))))
-    }
-  }
+  implicit def shrinkIntegral[T: Integral]: Shrink[T] =
+    new ShrinkIntegral[T]
 
   /** Shrink instance of String */
   implicit lazy val shrinkString: Shrink[String] = Shrink { s =>
@@ -249,4 +222,41 @@ object Shrink extends ShrinkLowPriority {
   def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U =>
     st.shrink(to(u)).map(from)
   }
+}
+
+final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
+  import ev.{ equiv, fromInt, zero, minus, times, quot }
+  val minusOne = fromInt(-1)
+  val two = fromInt(2)
+
+  // assumes x is non-zero
+  private def halves(x: T): Stream[T] = {
+    val q = quot(x, two)
+    if (equiv(q, zero)) Stream(zero)
+    else q #:: times(q, minusOne) #:: halves(q)
+  }
+
+  def shrink(x: T): Stream[T] =
+    if (equiv(x, zero)) Stream.empty[T] else halves(x)
+}
+
+final class ShrinkFractional[T](implicit ev: Fractional[T]) extends Shrink[T] {
+  import ev.{ fromInt, abs, zero, one, minus, times, div, lt }
+
+  val minusOne = fromInt(-1)
+  val two = fromInt(2)
+  val hundredK = fromInt(100000)
+
+  def closeToZero(x: T): Boolean =
+    lt(abs(times(x, hundredK)), one)
+
+  // assumes x is not close to zero
+  private def halves(x: T): Stream[T] = {
+    val q = div(x, two)
+    if (closeToZero(q)) Stream(zero)
+    else q #:: times(q, minusOne) #:: halves(q)
+  }
+
+  def shrink(x: T): Stream[T] =
+    if (closeToZero(x)) Stream.empty[T] else halves(x)
 }
