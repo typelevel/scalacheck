@@ -116,6 +116,34 @@ def tupleCogen(i: Int) = {
 """
 }
 
+/*
+  implicit def cogenFunction2[A: Arbitrary, B: Arbitrary, Z: Cogen]: Cogen[(A, B) => Z] =
+    Cogen { (seed, f) =>
+      val r0 = arbitrary[A].doPureApply(params, seed)
+      val r1 = arbitrary[B].doPureApply(params, r0.seed)
+      Cogen[Z].perturb(r1.seed, f(r0.retrieve.get, r1.retrieve.get))
+    }
+ */
+
+def functionCogen(i: Int) = {
+  def stanza(j: Int): String = {
+    val s = if (j == 1) "seed" else s"r${j-1}.seed"
+    s"      val r${j} = arbitrary[T$j].doPureApply(params, $s)\n"
+  }
+
+  val ap = (1 to i).map(j => s"r${j}.retrieve.get").mkString("f(", ", ", ")")
+  val fn = s"Function$i[${types(i)}, Z]"
+
+  s"""
+  implicit final def function${i}[${types(i)}, Z](implicit ${wrappedArgs("Arbitrary",i)}, z: Cogen[Z]): Cogen[$fn] =
+    Cogen { (seed: Seed, f: $fn) =>
+${(1 to i).map(stanza).mkString}
+      Cogen[Z].perturb(seed, $ap)
+    }
+"""
+}
+
+
 println(
   args(0) match {
     case "Arbitrary" =>
@@ -166,6 +194,12 @@ package org.scalacheck
 private[scalacheck] abstract class CogenArities{
 
   ${1 to 22 map tupleCogen mkString ""}
+
+  import Arbitrary.arbitrary
+  import Gen.Parameters.{ default => params }
+  import rng.Seed
+
+  ${1 to 22 map functionCogen mkString ""}
 
 }"""
 

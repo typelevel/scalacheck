@@ -49,6 +49,14 @@ sealed abstract class Gen[+T] {
   def apply(p: Gen.Parameters, seed: Seed): Option[T] =
     doApply(p, seed).retrieve
 
+  def doPureApply(p: Gen.Parameters, seed: Seed, retries: Int = 100): Gen.R[T] = {
+    @tailrec def loop(r: Gen.R[T], i: Int): Gen.R[T] =
+      if (r.retrieve.isDefined) r
+      else if (i > 0) loop(r, i - 1)
+      else throw new Gen.RetrievalError()
+    loop(doApply(p, seed), retries)
+  }
+
   /**
    * Evaluate this generator with the given parameters.
    *
@@ -59,16 +67,8 @@ sealed abstract class Gen[+T] {
    * If all the retries fail it will throw a `Gen.RetrievalError`
    * exception.
    */
-  def pureApply(p: Gen.Parameters, seed: Seed, retries: Int = 100): T = {
-    @tailrec def loop(r: Gen.R[T], i: Int): T =
-      r.retrieve match {
-        case Some(value) =>
-          value
-        case None =>
-          if (i > 0) loop(r, i - 1) else throw new Gen.RetrievalError()
-      }
-    loop(doApply(p, seed), retries)
-  }
+  def pureApply(p: Gen.Parameters, seed: Seed, retries: Int = 100): T =
+    doPureApply(p, seed, retries).retrieve.get
 
   /** Create a new generator by mapping the result of this generator */
   def map[U](f: T => U): Gen[U] = gen { (p, seed) => doApply(p, seed).map(f) }
