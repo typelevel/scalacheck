@@ -1,7 +1,7 @@
 package org.scalacheck
 
 import java.util.HashMap
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.immutable.IntMap
 import org.scalacheck.Prop.{forAll, AnyOperators}
 
@@ -9,8 +9,8 @@ object IntMapSpec extends org.scalacheck.Properties("IntMap") {
   /** Compare a HashMap and an IntMap for equality */
   private def eqMaps(hm: HashMap[Int,Any], im: IntMap[Any]) = {
     im.keys.forall(hm.containsKey) &&
-    hm.keySet.containsAll(im.keys) &&
-    im.keys.forall(k => im(k) == hm(k))
+    hm.keySet.containsAll(im.keys.asJavaCollection) &&
+    im.keys.forall(k => im(k) == hm.asScala(k))
   }
 
   /** Create an IntMap and a HashMap with the same contents */
