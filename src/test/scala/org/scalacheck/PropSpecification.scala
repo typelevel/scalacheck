@@ -181,4 +181,11 @@ object PropSpecification extends Properties("Prop") {
   property("delay") = { delay(???); proved }
 
   property("lzy") = { lzy(???); proved }
+
+  property("Gen.Parameters.withInitialSeed") = forAll { (p: Prop) =>
+    val params = Gen.Parameters.default.withInitialSeed(999L)
+    val x = p(params).success
+    val set = (1 to 20).map(_ => p(params).success).toSet
+    Prop(set == Set(x)).label(s"$set == Set($x)")
+  }
 }

@@ -97,6 +97,18 @@ object Test {
       propFilter = propFilter
     )
 
+    /** Initial seed to use for testing. */
+    val initialSeed: Option[rng.Seed]
+
+    def withInitialSeed(seed: rng.Seed): Parameters =
+      cp(initialSeed = Some(seed))
+
+    def withInitialSeed(n: Long): Parameters =
+      cp(initialSeed = Some(rng.Seed(n)))
+
+    def withNoInitialSeed: Parameters =
+      cp(initialSeed = None)
+
     // private since we can't guarantee binary compatibility for this one
     private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
@@ -106,7 +118,8 @@ object Test {
       testCallback: TestCallback = testCallback,
       maxDiscardRatio: Float = maxDiscardRatio,
       customClassLoader: Option[ClassLoader] = customClassLoader,
-      propFilter: Option[String] = propFilter
+      propFilter: Option[String] = propFilter,
+      initialSeed: Option[rng.Seed] = initialSeed
     ) extends Parameters
 
     override def toString = s"Parameters${cp.toString.substring(2)}"
@@ -132,6 +145,7 @@ object Test {
       val maxDiscardRatio: Float = 5
       val customClassLoader: Option[ClassLoader] = None
       val propFilter = None
+      val initialSeed: Option[rng.Seed] = None
     }
 
     /** Verbose console reporter test parameters instance. */
@@ -298,7 +312,10 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
-    val genPrms = Gen.Parameters.default
+    val genPrms = initialSeed match {
+      case None => Gen.Parameters.default
+      case Some(seed) => Gen.Parameters.default.withInitialSeed(seed)
+    }
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests

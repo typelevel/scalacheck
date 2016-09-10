@@ -484,7 +484,7 @@ object Prop {
     pv: P => Prop,
     pp: A => Pretty
   ): Prop = Prop { prms =>
-    val gr = g.doApply(prms, Seed.random())
+    val gr = prms.startInitialSeed(g.doApply)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -507,7 +507,7 @@ object Prop {
     pv: P => Prop,
     pp1: T1 => Pretty
   ): Prop = Prop { prms =>
-    val gr = g1.doApply(prms, Seed.random())
+    val gr = prms.startInitialSeed(g1.doApply)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -705,7 +705,7 @@ object Prop {
   )(implicit pv: P => Prop, pp: T => Pretty
   ): Prop = Prop { prms =>
 
-    val gr = g.doApply(prms, Seed.random())
+    val gr = prms.startInitialSeed(g.doApply)
     val labels = gr.labels.mkString(",")
 
     def result(x: T) = {

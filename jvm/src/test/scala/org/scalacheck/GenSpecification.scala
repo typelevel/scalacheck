@@ -421,4 +421,35 @@ object GenSpecification extends Properties("Gen") {
       }
     }
   }
+
+  /**
+   * Ensure that the given generator runs deterministically with the
+   * same initialSeed parameter or the same seed.
+   *
+   * This test should be run with a generator that can produce
+   * multiple values, and where the odds of 30 trials coming back with
+   * the same result is low enough that the test won't produce many
+   * false positives.
+   */
+  def testDeterministicGen[A](g: Gen[A]): Prop = {
+    val params0 = Gen.Parameters.default
+    val params1 = params0.withInitialSeed(1248163264L)
+    val seed = Seed(987654321L)
+    val s0 = (1 to 30).map(_ => g(params0, Seed.random())).toSet
+    val s1 = (1 to 30).map(_ => g(params1, Seed.random())).toSet
+    val s2 = (1 to 30).map(_ => g(params0, seed)).toSet
+    (s"$s0" |: s0.size > 1) && (s"$s1" |: s1.size == 1) && (s"$s2" |: s2.size == 1)
+  }
+
+  property("arbitrary[Boolean] is deterministic") =
+    testDeterministicGen(arbitrary[Long])
+
+  property("arbitrary[Long] is deterministic") =
+    testDeterministicGen(arbitrary[Long])
+
+  property("arbitrary[List[Int]] is deterministic") =
+    testDeterministicGen(arbitrary[List[Int]])
+
+  property("Gen.choose(1, 10000) is deterministic") =
+    testDeterministicGen(Gen.choose(1, 10000))
 }
