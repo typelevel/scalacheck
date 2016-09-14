@@ -649,15 +649,27 @@ object Gen extends GenArities{
   def identifier: Gen[String] = (for {
     c <- alphaLowerChar
     cs <- listOf(alphaNumChar)
-  } yield (c::cs).mkString).suchThat(_.forall(c => c.isLetter || c.isDigit))
+  } yield (c::cs).mkString).suchThat(_.forall(_.isLetterOrDigit))
+
+  /** Generates a string of digits */
+  def numStr: Gen[String] =
+    listOf(numChar).map(_.mkString).suchThat(_.forall(_.isDigit))
+
+  /** Generates a string of upper-case alpha characters */
+  def alphaUpperStr: Gen[String] =
+    listOf(alphaUpperChar).map(_.mkString).suchThat(_.forall(_.isUpper))
+
+  /** Generates a string of lower-case alpha characters */
+  def alphaLowerStr: Gen[String] =
+      listOf(alphaLowerChar).map(_.mkString).suchThat(_.forall(_.isLower))
 
   /** Generates a string of alpha characters */
   def alphaStr: Gen[String] =
     listOf(alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
 
-  /** Generates a string of digits */
-  def numStr: Gen[String] =
-    listOf(numChar).map(_.mkString).suchThat(_.forall(_.isDigit))
+  /** Generates a string of alphanumerical characters */
+  def alphaNumStr: Gen[String] =
+    listOf(alphaNumChar).map(_.mkString).suchThat(_.forall(_.isLetterOrDigit))
 
 
   //// Number Generators ////

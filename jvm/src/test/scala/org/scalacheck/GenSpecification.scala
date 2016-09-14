@@ -200,6 +200,26 @@ object GenSpecification extends Properties("Gen") {
     s.forall(_.isLetterOrDigit)
   }
 
+  property("numStr") = forAll(numStr) { s =>
+    s.length >= 0 && s.forall(_.isDigit)
+  }
+
+  property("alphaUpperStr") = forAll(alphaUpperStr) { s =>
+    s.length >= 0 && s.forall(_.isUpper)
+  }
+
+  property("alphaLowerStr") = forAll(alphaLowerStr) { s =>
+    s.length >= 0 && s.forall(_.isLower)
+  }
+
+  property("alphaStr") = forAll(alphaStr) { s =>
+    s.length >= 0 && s.forall(_.isLetter)
+  }
+
+  property("alphaNumStr") = forAll(alphaNumStr) { s =>
+    s.length >= 0 && s.forall(_.isLetterOrDigit)
+  }
+
   // BigDecimal generation is tricky; just ensure that the generator gives
   // its constructor valid values.
   property("BigDecimal") = forAll { _: BigDecimal => true }
