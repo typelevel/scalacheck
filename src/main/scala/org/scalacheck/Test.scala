@@ -87,6 +87,15 @@ object Test {
       customClassLoader = customClassLoader
     )
 
+    /** A test predicate to filter tests against. */
+    val runFilter: Option[String]
+
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.runFilter]] set to the specified value. */
+    def withRunFilter(runFilter: Option[String]): Parameters = cp(
+      runFilter = runFilter
+    )
+
     // private since we can't guarantee binary compatibility for this one
     private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
@@ -95,7 +104,8 @@ object Test {
       workers: Int = workers,
       testCallback: TestCallback = testCallback,
       maxDiscardRatio: Float = maxDiscardRatio,
-      customClassLoader: Option[ClassLoader] = customClassLoader
+      customClassLoader: Option[ClassLoader] = customClassLoader,
+      runFilter: Option[String] = runFilter
     ) extends Parameters
 
     override def toString = s"Parameters${cp.toString.substring(2)}"
@@ -120,6 +130,7 @@ object Test {
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
       val customClassLoader: Option[ClassLoader] = None
+      val runFilter = None
     }
 
     /** Verbose console reporter test parameters instance. */
@@ -237,9 +248,16 @@ object Test {
       val help = "Verbosity level"
     }
 
+    object OptRunFilter extends OpStrOpt {
+      val default = Parameters.default.runFilter
+      val names = Set("runFilter", "f")
+      val help = "Filter to match tests against"
+    }
+
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
-      OptMaxSize, OptWorkers, OptVerbosity
+      OptMaxSize, OptWorkers, OptVerbosity,
+      OptRunFilter
     )
 
     def parseParams(args: Array[String]): (Parameters => Parameters, List[String]) = {
@@ -250,6 +268,7 @@ object Test {
         .withMinSize(optMap(OptMinSize): Int)
         .withMaxSize(optMap(OptMaxSize): Int)
         .withWorkers(optMap(OptWorkers): Int)
+        .withRunFilter(optMap(OptRunFilter): Option[String])
         .withTestCallback(ConsoleReporter(optMap(OptVerbosity)): TestCallback)
       (params, us)
     }
@@ -273,7 +292,6 @@ object Test {
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {
     import params._
-
     assertParams(params)
 
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
@@ -326,18 +344,35 @@ object Test {
     timedRes
   }
 
+  import scala.util.matching.Regex
+  def matchRunFilter(fullTestName: String, regex: Regex): Boolean = {
+    //split on the "." to extract the property name.
+    //expected format: test name.property name
+    fullTestName.split("\\.") match {
+      case Array(testName) if (regex.findFirstIn(testName).isDefined) => true
+      case Array(_, xs@_*) if (regex.findFirstIn(xs.mkString(".")).isDefined) => true
+      case _ => false
+    }
+  }
+
   /** Check a set of properties. */
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
-    ps.properties.map { case (name,p) =>
-      val testCallback = new TestCallback {
-        override def onPropEval(n: String, t: Int, s: Int, d: Int) =
-          params.testCallback.onPropEval(name,t,s,d)
-        override def onTestResult(n: String, r: Result) =
-          params.testCallback.onTestResult(name,r)
-      }
-      val res = check(params.withTestCallback(testCallback), p)
-      (name,res)
+    val propertyFilter = prms.runFilter.map(_.r)
+
+    ps.properties.filter {
+      case (name, _) => propertyFilter.fold(true)(matchRunFilter(name, _))
+    } map {
+      case (name, p)  =>
+        val testCallback = new TestCallback {
+          override def onPropEval(n: String, t: Int, s: Int, d: Int) =
+            params.testCallback.onPropEval(name,t,s,d)
+          override def onTestResult(n: String, r: Result) =
+            params.testCallback.onTestResult(name,r)
+        }
+
+        val res = check(params.withTestCallback(testCallback), p)
+        (name,res)
     }
   }
 }

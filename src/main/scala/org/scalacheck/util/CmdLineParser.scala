@@ -23,6 +23,7 @@ private[scalacheck] trait CmdLineParser {
   trait IntOpt extends Opt[Int]
   trait FloatOpt extends Opt[Float]
   trait StrOpt extends Opt[String]
+  trait OpStrOpt extends Opt[Option[String]]
 
   class OptMap(private val opts: Map[Opt[_],Any] = Map.empty) {
     def apply(flag: Flag): Boolean = opts.contains(flag)
@@ -73,6 +74,7 @@ private[scalacheck] trait CmdLineParser {
         case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
         case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
         case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
+        case Some(o: OpStrOpt) => getStr(a2).map(v => parse(as, om.set(o -> Option(v)), us))
         case _ => None
       }).getOrElse(parse(a2::as, om, us :+ a1))
     }
