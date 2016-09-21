@@ -456,7 +456,7 @@ way:
 val smallEvenInteger = Gen.choose(0,200) suchThat (_ % 2 == 0)
 ```
 
-Conditional generators works just like conditional properties, in the sense
+Conditional generators work just like conditional properties, in the sense
 that if the condition is too hard, ScalaCheck might not be able to generate
 enough values, and it might report a property test as undecided. The
 `smallEvenInteger` definition is probably OK, since it will only throw away
