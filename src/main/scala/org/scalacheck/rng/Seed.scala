@@ -5,7 +5,7 @@ package org.scalacheck.rng
  *
  * http://burtleburtle.net/bob/rand/smallprng.html
  */
-sealed abstract class Seed {
+sealed abstract class Seed extends Serializable {
   protected val a: Long
   protected val b: Long
   protected val c: Long

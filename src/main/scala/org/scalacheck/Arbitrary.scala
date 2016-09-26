@@ -14,9 +14,10 @@ import concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 import util.{FreqMap, Buildable}
+import util.SerializableCanBuildFroms._
 
 
-sealed abstract class Arbitrary[T] {
+sealed abstract class Arbitrary[T] extends Serializable {
   val arbitrary: Gen[T]
 }
 
@@ -122,9 +123,9 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
       (0xFFFF, 0xFFFF)
     )
 
-    Gen.frequency(validRangesInclusive.map {
+    Gen.frequency((validRangesInclusive.map {
       case (first, last) => (last + 1 - first, Gen.choose[Char](first, last))
-    }: _*)
+    }: List[(Int, Gen[Char])]): _*)
   }
 
   /** Arbitrary instance of Byte */
