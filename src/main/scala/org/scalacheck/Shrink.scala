@@ -12,9 +12,10 @@ package org.scalacheck
 import language.higherKinds
 
 import util.Buildable
+import util.SerializableCanBuildFroms._
 import scala.collection.{ JavaConversions => jcl }
 
-sealed abstract class Shrink[T] {
+sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
 }
 

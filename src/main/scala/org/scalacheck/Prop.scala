@@ -24,7 +24,7 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 
 @Platform.JSExportDescendentClasses
 @Platform.JSExportDescendentObjects
-sealed abstract class Prop {
+sealed abstract class Prop extends Serializable {
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}

@@ -14,12 +14,13 @@ import language.implicitConversions
 
 import rng.Seed
 import util.Buildable
+import util.SerializableCanBuildFroms._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
 
-sealed abstract class Gen[+T] {
+sealed abstract class Gen[+T] extends Serializable {
 
   //// Private interface ////
 
@@ -230,7 +231,7 @@ object Gen extends GenArities{
   //// Public interface ////
 
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
-  sealed abstract class Parameters {
+  sealed abstract class Parameters extends Serializable {
 
     /** The size of the generated value. Generator implementations are allowed
      *  to freely interpret (or ignore) this value. During test execution, the
@@ -255,7 +256,7 @@ object Gen extends GenArities{
   }
 
   /** A wrapper type for range types */
-  trait Choose[T] {
+  trait Choose[T] extends Serializable {
     /** Creates a generator that returns a value in the given inclusive range */
     def choose(min: T, max: T): Gen[T]
   }
