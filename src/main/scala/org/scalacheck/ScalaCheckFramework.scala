@@ -98,11 +98,10 @@ private abstract class ScalaCheckRunner extends Runner {
       names flatMap { name =>
         import util.Pretty.{pretty, Params}
 
+        val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
         val propertyFilter = params.propFilter.map(_.r)
 
         for ((`name`, prop) <- props) {
-          val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
-
           if (propertyFilter.isEmpty || propertyFilter.exists(matchPropFilter(name, _))) {
             val result = Test.check(params, prop)
 
