@@ -346,14 +346,14 @@ object Test {
   }
 
   import scala.util.matching.Regex
-  def matchPropFilter(fullTestName: String, regex: Regex): Boolean = {
-    //split on the "." to extract the property name.
-    //expected format: test name.property name
-    fullTestName.split("\\.") match {
-      case Array(testName) if (regex.findFirstIn(testName).isDefined) => true
-      case Array(_, xs@_*) if (regex.findFirstIn(xs.mkString(".")).isDefined) => true
-      case _ => false
-    }
+  /** Returns the result of filtering a property name by a supplied regular expression.
+    *
+    *  @param propertyName The name of the property to be filtered.
+    *  @param regex The regular expression to filter the property name by.
+    *  @return true if the regular expression matches the property name, false if not.
+    */
+  def matchPropFilter(propertyName: String, regex: Regex): Boolean = {
+    regex.findFirstIn(propertyName).isDefined
   }
 
   /** Check a set of properties. */
