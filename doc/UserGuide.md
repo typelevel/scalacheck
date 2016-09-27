@@ -723,6 +723,7 @@ Available options:
   -minSuccessfulTests, -s: Number of tests that must succeed in order to pass a property
   -maxDiscardRatio, -r: The maximum ratio between discarded and succeeded tests allowed before ScalaCheck stops testing a property. At least minSuccessfulTests will always be tested, though.
   -maxSize, -x: Maximum data generation size
+  -propFilter, -f: Regular expression to filter properties on
 ```
 
 These command line arguments can also be used in SBT to tweak ScalaCheck's
