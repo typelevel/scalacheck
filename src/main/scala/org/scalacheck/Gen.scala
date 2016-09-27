@@ -517,7 +517,7 @@ object Gen extends GenArities{
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0,s).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
+    sized(s => choose(0, s max 0).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
       if (c == null) g.sieveCopy(null) else c.forall(g.sieveCopy)
     }
 
@@ -679,14 +679,14 @@ object Gen extends GenArities{
    *  upper bound of the generation size parameter. */
   def posNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    sized(max => c.choose(one, fromInt(max)))
+    sized(n => c.choose(one, max(fromInt(n), one)))
   }
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
   def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    sized(max => c.choose(-fromInt(max), -one))
+    sized(n => c.choose(min(-fromInt(n), -one), -one))
   }
 
   /** Generates numbers within the given inclusive range, with

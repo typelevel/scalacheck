@@ -358,4 +358,10 @@ object GenSpecification extends Properties("Gen") {
     }
   }
   ////
+
+  property("positive generators are positive #269") =
+    Prop.forAll(Gen.posNum[Int]) { n => n > 0 }
+
+  property("negative generators are negative") =
+    Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
 }
