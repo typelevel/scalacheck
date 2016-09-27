@@ -87,13 +87,14 @@ object Test {
       customClassLoader = customClassLoader
     )
 
-    /** A test predicate to filter tests against. */
-    val runFilter: Option[String]
+    /** An optional regular expression to filter properties on. */
+    val propFilter: Option[String]
 
     /** Create a copy of this [[Test.Parameters]] instance with
-     *  [[Test.Parameters.runFilter]] set to the specified value. */
-    def withRunFilter(runFilter: Option[String]): Parameters = cp(
-      runFilter = runFilter
+     *  [[Test.Parameters.propFilter]] set to the specified regular expression
+     *  filter. */
+    def withPropFilter(propFilter: Option[String]): Parameters = cp(
+      propFilter = propFilter
     )
 
     // private since we can't guarantee binary compatibility for this one
@@ -105,7 +106,7 @@ object Test {
       testCallback: TestCallback = testCallback,
       maxDiscardRatio: Float = maxDiscardRatio,
       customClassLoader: Option[ClassLoader] = customClassLoader,
-      runFilter: Option[String] = runFilter
+      propFilter: Option[String] = propFilter
     ) extends Parameters
 
     override def toString = s"Parameters${cp.toString.substring(2)}"
@@ -130,7 +131,7 @@ object Test {
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
       val customClassLoader: Option[ClassLoader] = None
-      val runFilter = None
+      val propFilter = None
     }
 
     /** Verbose console reporter test parameters instance. */
@@ -248,16 +249,16 @@ object Test {
       val help = "Verbosity level"
     }
 
-    object OptRunFilter extends OpStrOpt {
-      val default = Parameters.default.runFilter
-      val names = Set("runFilter", "f")
-      val help = "Filter to match tests against"
+    object OptPropFilter extends OpStrOpt {
+      val default = Parameters.default.propFilter
+      val names = Set("propFilter", "f")
+      val help = "Regular expression to filter properties on"
     }
 
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
       OptMaxSize, OptWorkers, OptVerbosity,
-      OptRunFilter
+      OptPropFilter
     )
 
     def parseParams(args: Array[String]): (Parameters => Parameters, List[String]) = {
@@ -268,7 +269,7 @@ object Test {
         .withMinSize(optMap(OptMinSize): Int)
         .withMaxSize(optMap(OptMaxSize): Int)
         .withWorkers(optMap(OptWorkers): Int)
-        .withRunFilter(optMap(OptRunFilter): Option[String])
+        .withPropFilter(optMap(OptPropFilter): Option[String])
         .withTestCallback(ConsoleReporter(optMap(OptVerbosity)): TestCallback)
       (params, us)
     }
@@ -345,7 +346,7 @@ object Test {
   }
 
   import scala.util.matching.Regex
-  def matchRunFilter(fullTestName: String, regex: Regex): Boolean = {
+  def matchPropFilter(fullTestName: String, regex: Regex): Boolean = {
     //split on the "." to extract the property name.
     //expected format: test name.property name
     fullTestName.split("\\.") match {
@@ -358,10 +359,10 @@ object Test {
   /** Check a set of properties. */
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
-    val propertyFilter = prms.runFilter.map(_.r)
+    val propertyFilter = prms.propFilter.map(_.r)
 
     ps.properties.filter {
-      case (name, _) => propertyFilter.fold(true)(matchRunFilter(name, _))
+      case (name, _) => propertyFilter.fold(true)(matchPropFilter(name, _))
     } map {
       case (name, p)  =>
         val testCallback = new TestCallback {
