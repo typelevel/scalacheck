@@ -120,7 +120,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     // also exclude 0xFFFF as it is not unicode: http://bit.ly/2cVBrzK
     val validRangesInclusive = List[(Char, Char)](
       (0x0000, 0xD7FF),
-      (0xE000, 0xFFFD),
+      (0xE000, 0xFFFD)
     )
 
     Gen.frequency((validRangesInclusive.map {
