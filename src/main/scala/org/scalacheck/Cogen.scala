@@ -18,7 +18,7 @@ import scala.util.{ Try, Success, Failure }
 import Arbitrary.arbitrary
 import rng.Seed
 
-sealed trait Cogen[-T] extends Serializable {
+sealed trait Cogen[T] extends Serializable {
 
   def perturb(seed: Seed, t: T): Seed
 
