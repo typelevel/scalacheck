@@ -59,7 +59,12 @@ sealed abstract class Arbitrary[T] extends Serializable {
  *  generators.
  *  </p>
  */
-object Arbitrary extends ArbitraryLowPriority with ArbitraryArities
+object Arbitrary extends ArbitraryLowPriority with ArbitraryArities {
+
+  /** Arbitrary instance of the Function0 type. */
+  implicit def arbFunction0[T](implicit a: Arbitrary[T]): Arbitrary[() => T] =
+  Arbitrary(arbitrary[T] map (() => _))
+}
 
 /** separate trait to have same priority as ArbitraryArities */
 private[scalacheck] sealed trait ArbitraryLowPriority {
