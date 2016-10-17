@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Prop.{forAll, BooleanOperators}
+import Prop.{forAll, forAllNoShrink, BooleanOperators}
 import Shrink.shrink
 
 object ShrinkSpecification extends Properties("Shrink") {
@@ -83,4 +83,59 @@ object ShrinkSpecification extends Properties("Shrink") {
     val e: Either[Long, Int] = Right(i)
     shrink(e).forall(_.isRight)
   }
+
+  /* Ensure that shrink[T] terminates. (#244)
+   *
+   * Let's say shrinking "terminates" when the stream of values
+   * becomes empty. We can empirically determine the longest possible
+   * sequence for a given type before termination. (Usually this
+   * involves using the type's MinValue.)
+   *
+   * For example, shrink(Byte.MinValue).toList gives us 15 values:
+   *
+   *   List(-64, 64, -32, 32, -16, 16, -8, 8, -4, 4, -2, 2, -1, 1, 0)
+   *
+   * Similarly, shrink(Double.MinValue).size gives us 2081.
+   */
+
+  property("Shrink[Byte] terminates") =
+    forAllNoShrink((n: Byte) => Shrink.shrink(n).drop(15).isEmpty)
+
+  property("Shrink[Char] terminates") =
+    forAllNoShrink((n: Char) => Shrink.shrink(n).drop(16).isEmpty)
+
+  property("Shrink[Short] terminates") =
+    forAllNoShrink((n: Short) => Shrink.shrink(n).drop(31).isEmpty)
+
+  property("Shrink[Int] terminates") =
+    forAllNoShrink((n: Int) => Shrink.shrink(n).drop(63).isEmpty)
+
+  property("Shrink[Long] terminates") =
+    forAllNoShrink((n: Long) => Shrink.shrink(n).drop(127).isEmpty)
+
+  property("Shrink[Float] terminates") =
+    forAllNoShrink((n: Float) => Shrink.shrink(n).drop(2081).isEmpty)
+
+  property("Shrink[Double] terminates") =
+    forAllNoShrink((n: Double) => Shrink.shrink(n).drop(2081).isEmpty)
+
+  // make sure we handle sentinel values appropriately for Float/Double.
+
+  property("Shrink[Float] handles PositiveInfinity") =
+    Prop(Shrink.shrink(Float.PositiveInfinity).isEmpty)
+
+  property("Shrink[Float] handles NegativeInfinity") =
+    Prop(Shrink.shrink(Float.NegativeInfinity).isEmpty)
+
+  property("Shrink[Float] handles NaN") =
+    Prop(Shrink.shrink(Float.NaN).isEmpty)
+
+  property("Shrink[Double] handles PositiveInfinity") =
+    Prop(Shrink.shrink(Double.PositiveInfinity).isEmpty)
+
+  property("Shrink[Double] handles NegativeInfinity") =
+    Prop(Shrink.shrink(Double.NegativeInfinity).isEmpty)
+
+  property("Shrink[Double] handles NaN") =
+    Prop(Shrink.shrink(Double.NaN).isEmpty)
 }

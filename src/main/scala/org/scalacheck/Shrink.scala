@@ -226,15 +226,22 @@ object Shrink extends ShrinkLowPriority {
 }
 
 final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
-  import ev.{ equiv, fromInt, zero, minus, times, quot }
-  val minusOne = fromInt(-1)
+  import ev.{ fromInt, lt, gteq, quot, negate, equiv, zero, one }
+
   val two = fromInt(2)
 
-  // assumes x is non-zero
+  // see if T supports negative values or not. this makes some
+  // assumptions about how Integral[T] is defined, which work for
+  // Integral[Char] at least. we can't be sure user-defined
+  // Integral[T] instances will be reasonable.
+  val skipNegation = gteq(negate(one), one)
+
+  // assumes x is non-zero.
   private def halves(x: T): Stream[T] = {
     val q = quot(x, two)
     if (equiv(q, zero)) Stream(zero)
-    else q #:: times(q, minusOne) #:: halves(q)
+    else if (skipNegation) q #:: halves(q)
+    else q #:: negate(q) #:: halves(q)
   }
 
   def shrink(x: T): Stream[T] =
@@ -242,22 +249,33 @@ final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
 }
 
 final class ShrinkFractional[T](implicit ev: Fractional[T]) extends Shrink[T] {
-  import ev.{ fromInt, abs, zero, one, minus, times, div, lt }
+  import ev.{ fromInt, abs, zero, one, div, lteq, negate, lt }
 
-  val minusOne = fromInt(-1)
   val two = fromInt(2)
-  val hundredK = fromInt(100000)
 
-  def closeToZero(x: T): Boolean =
-    lt(abs(times(x, hundredK)), one)
+  // this makes some assumptions, namely that we can support 1e-5 as a
+  // fractional value. fortunately, if that is not true, it's likely
+  // that our divisions will converge to zero quickly enough anyway.
+  val small = div(one, fromInt(100000))
+  def closeToZero(x: T): Boolean = lteq(abs(x), small)
 
   // assumes x is not close to zero
   private def halves(x: T): Stream[T] = {
     val q = div(x, two)
     if (closeToZero(q)) Stream(zero)
-    else q #:: times(q, minusOne) #:: halves(q)
+    else q #:: negate(q) #:: halves(q)
+  }
+
+  // this catches things like NaN and Infinity. it's not clear that we
+  // should be shrinking those values, since they are sentinels.
+  def isUnusual(x0: T): Boolean = {
+    val x = abs(x0)
+    // the negation here is important -- if we wrote this as gteq(...)
+    // then it would not handle the NaN case correctly.
+    !lt(div(x, two), x)
   }
 
   def shrink(x: T): Stream[T] =
-    if (closeToZero(x)) Stream.empty[T] else halves(x)
+    if (closeToZero(x) || isUnusual(x)) Stream.empty[T]
+    else halves(x)
 }
