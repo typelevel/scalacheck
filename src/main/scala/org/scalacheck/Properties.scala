@@ -60,20 +60,23 @@ class Properties(val name: String) {
   /** Convenience method that makes it possible to use this property collection
    *  as an application that checks itself on execution. Calls `System.exit`
    *  with the exit code set to the number of failed properties. */
-  def main(args: Array[String]): Unit = {
-    val ret = Test.cmdLineParser.parseParams(args) match {
+  def main(args: Array[String]): Unit =
+    Test.cmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
         val params = applyCmdParams(overrideParameters(Test.Parameters.default))
         val res = Test.checkProperties(params, this)
-        val failed = res.filter(!_._2.passed).size
-        failed
+        val numFailed = res.count(!_._2.passed)
+        if (numFailed > 0) {
+          println(s"Found $numFailed failing properties.")
+          System.exit(1)
+        } else {
+          System.exit(0)
+        }
       case (_, os) =>
         println(s"Incorrect options: $os")
         Test.cmdLineParser.printHelp
-        -1
+        System.exit(-1)
     }
-    if (ret != 0) System.exit(ret)
-  }
 
   /** Adds all properties from another property collection to this one */
   def include(ps: Properties): Unit =
