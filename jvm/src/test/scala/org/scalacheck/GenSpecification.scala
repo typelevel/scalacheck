@@ -161,6 +161,10 @@ object GenSpecification extends Properties("Gen") {
     l.length == 0
   }
 
+  property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+    s.drop(n & 0xffff).nonEmpty
+  }
+
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }

@@ -574,6 +574,20 @@ object Gen extends GenArities{
    *  is equal to calling <code>containerOfN[Map,T,U](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
 
+  /** Generates an infinite stream. */
+  def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
+    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
+      case Some((h, s)) => h #:: unfold(s)(f)
+      case None => Stream.empty
+    }
+    gen { (p, seed0) =>
+      new R[Stream[T]] {
+        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s), s.next)))
+        val seed: Seed = seed0.next
+      }
+    }
+  }
+
   /** A generator that picks a random number of elements from a list */
   def someOf[T](l: Iterable[T]) = choose(0,l.size).flatMap(pick(_,l))
 
