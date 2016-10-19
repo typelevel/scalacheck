@@ -169,48 +169,79 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
-    def chooseBigInt: Gen[BigInt] =
-      sized((s: Int) => choose(-s, s)) map (x => BigInt(x))
+    val long: Gen[Long] =
+      Gen.choose(Long.MinValue, Long.MaxValue).map(x => if (x == 0) 1L else x)
 
-    def chooseReallyBigInt: Gen[BigInt] = for {
-      bi <- chooseBigInt
-      n <- choose(32,128)
-    } yield bi << n
+    val gen1: Gen[BigInt] = for { x <- long } yield BigInt(x)
+    val gen2: Gen[BigInt] = for { x <- gen1; y <- long } yield x * y
+    val gen3: Gen[BigInt] = for { x <- gen2; y <- long } yield x * y
+    val gen4: Gen[BigInt] = for { x <- gen3; y <- long } yield x * y
 
-    Arbitrary(
-      frequency(
-        (5, chooseBigInt),
-        (10, chooseReallyBigInt),
-        (1, BigInt(0)),
-        (1, BigInt(1)),
-        (1, BigInt(-1)),
-        (1, BigInt(Int.MaxValue) + 1),
-        (1, BigInt(Int.MinValue) - 1),
-        (1, BigInt(Long.MaxValue)),
-        (1, BigInt(Long.MinValue)),
-        (1, BigInt(Long.MaxValue) + 1),
-        (1, BigInt(Long.MinValue) - 1)
-      )
-    )
+    val gen0: Gen[BigInt] =
+      oneOf(
+        BigInt(0),
+        BigInt(1),
+        BigInt(-1),
+        BigInt(Int.MaxValue) + 1,
+        BigInt(Int.MinValue) - 1,
+        BigInt(Long.MaxValue),
+        BigInt(Long.MinValue),
+        BigInt(Long.MaxValue) + 1,
+        BigInt(Long.MinValue) - 1)
+
+    Arbitrary(frequency((5, gen0), (5, gen1), (4, gen2), (3, gen3), (2, gen4)))
   }
 
   /** Arbitrary BigDecimal */
   implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
-    import java.math.MathContext._
-    val mcGen = oneOf(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128)
-    val bdGen = for {
-      x <- arbBigInt.arbitrary
-      mc <- mcGen
-      limit <- const(if(mc == UNLIMITED) 0 else math.max(x.abs.toString.length - mc.getPrecision, 0))
-      scale <- Gen.chooseNum(Int.MinValue + limit , Int.MaxValue)
-    } yield {
-      try {
-        BigDecimal(x, scale, mc)
-      } catch {
-        case ae: java.lang.ArithmeticException => BigDecimal(x, scale, UNLIMITED) // Handle the case where scale/precision conflict
+    import java.math.MathContext, MathContext._
+
+    val genMathContext0: Gen[MathContext] =
+      oneOf(DECIMAL32, DECIMAL64, DECIMAL128)
+
+    val long: Gen[Long] =
+      Gen.choose(Long.MinValue, Long.MaxValue).map(x => if (x == 0) 1L else x)
+
+    val genWholeBigDecimal: Gen[BigDecimal] =
+      long.map(BigDecimal(_))
+
+    val genSmallBigDecimal: Gen[BigDecimal] =
+      for {
+        mc <- genMathContext0
+        n <- long
+        d <- long
+      } yield BigDecimal(n, 0, mc) / d
+
+    val genMathContext: Gen[MathContext] =
+      oneOf(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128)
+
+    val genLargeBigDecimal: Gen[BigDecimal] =
+      for {
+        mc <- genMathContext
+        n <- arbitrary[BigInt]
+        scale <- Gen.choose(-300, 300)
+      } yield {
+        try {
+          BigDecimal(n, scale, mc)
+        } catch { case ae: ArithmeticException =>
+          // Handle the case where scale/precision conflict
+          BigDecimal(n, scale, UNLIMITED)
+        }
       }
-    }
-    Arbitrary(bdGen)
+
+    val genSpecificBigDecimal: Gen[BigDecimal] =
+      oneOf(
+        BigDecimal(0),
+        BigDecimal(1),
+        BigDecimal(-1),
+        BigDecimal("1e-300"),
+        BigDecimal("-1e-300"))
+
+    Arbitrary(frequency(
+      (5, genWholeBigDecimal),
+      (10, genSmallBigDecimal),
+      (10, genLargeBigDecimal),
+      (5, genSpecificBigDecimal)))
   }
 
   /** Arbitrary java.lang.Number */
