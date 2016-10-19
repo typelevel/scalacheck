@@ -20,7 +20,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
 
-sealed abstract class Gen[+T] extends Serializable {
+sealed abstract class Gen[+T] extends Serializable { self =>
 
   //// Private interface ////
 
@@ -115,14 +115,40 @@ sealed abstract class Gen[+T] extends Serializable {
       catch { case _: java.lang.ClassCastException => false }
   }
 
-  /** Create a generator that calls this generator repeatedly until
-   *  the given condition is fulfilled. The generated value is then
-   *  returned. Use this combinator with care, since it may result
-   *  in infinite loops. Also, make sure that the provided test property
-   *  is side-effect free, eg it should not use external vars. */
-  def retryUntil(p: T => Boolean): Gen[T] = flatMap { t =>
-    if (p(t)) Gen.const(t).suchThat(p) else retryUntil(p)
+  case class RetryUntilException(n: Int) extends RuntimeException(s"retryUntil failed after $n attempts")
+
+  /**
+   * Create a generator that calls this generator repeatedly until the
+   * given condition is fulfilled. The generated value is then
+   * returned. Make sure that the provided test property is
+   * side-effect free (it should not use external vars).
+   *
+   * If the generator fails more than maxTries, a RetryUntilException
+   * will be thrown.
+   */
+  def retryUntil(p: T => Boolean, maxTries: Int): Gen[T] = {
+    require(maxTries > 0)
+    def loop(params: P, seed: Seed, tries: Int): R[T] =
+      if (tries > maxTries) throw RetryUntilException(tries) else {
+        val r = self.doApply(params, seed)
+        if (r.retrieve.exists(p)) r else loop(params, r.seed, tries + 1)
+      }
+    Gen.gen((params, seed) => loop(params, seed, 1))
   }
+
+  /**
+   * Create a generator that calls this generator repeatedly until the
+   * given condition is fulfilled. The generated value is then
+   * returned. Make sure that the provided test property is
+   * side-effect free (it should not use external vars).
+   *
+   *
+   * If the generator fails more than 10000 times, a
+   * RetryUntilException will be thrown. You can call `retryUntil`
+   * with a second parameter to change this number.
+   */
+  def retryUntil(p: T => Boolean): Gen[T] =
+    retryUntil(p, 10000)
 
   def sample: Option[T] =
     doApply(Gen.Parameters.default, Seed.random()).retrieve
