@@ -16,11 +16,9 @@ object MimaSettings {
   )
 
   private def newMethods = Seq(
-    "org.scalacheck.ScalaCheckRunner.applyCmdParams"
   )
 
   private def removedPrivateMethods = Seq(
-    "org.scalacheck.ScalaCheckRunner.params"
   )
 
   private def removedPrivateClasses = Seq(

@@ -1,8 +1,9 @@
 sourceDirectory := file("dummy source directory")
 
-lazy val versionNumber = "1.13.3"
+// When bumping to 1.14.1, remember to set mimaPreviousArtifacts to 1.14.0
+lazy val versionNumber = "1.14.0"
 
-lazy val isRelease = true
+lazy val isRelease = false
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
@@ -50,12 +51,12 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   scalacOptions in (Compile,doc) += "-Xfatal-warnings",
 
-  mimaPreviousArtifacts := (
-    if (CrossVersion isScalaApiCompatible scalaVersion.value)
-      Set("org.scalacheck" %%% "scalacheck" % "1.13.1")
-    else
-      Set.empty
-  ),
+  //mimaPreviousArtifacts := (
+  //  if (CrossVersion isScalaApiCompatible scalaVersion.value)
+  //    Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+  //  else
+  //    Set.empty
+  //),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
