@@ -11,11 +11,11 @@ package org.scalacheck
 
 import language.higherKinds
 import language.implicitConversions
-
+import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
-import scala.util.{ Try, Success, Failure }
-
+import scala.util.{Failure, Success, Try}
 import Arbitrary.arbitrary
+import java.math.BigInteger
 import rng.Seed
 
 sealed trait Cogen[T] extends Serializable {
@@ -43,7 +43,7 @@ object Cogen extends CogenArities with CogenLowPriority {
 
   def apply[T](f: (Seed, T) => Seed): Cogen[T] =
     new Cogen[T] {
-      def perturb(seed: Seed, t: T): Seed = f(seed, t).next
+      def perturb(seed: Seed, t: T): Seed = f(seed, t)
     }
 
   def it[T, U](f: T => Iterator[U])(implicit U: Cogen[U]): Cogen[T] =
@@ -75,8 +75,30 @@ object Cogen extends CogenArities with CogenLowPriority {
   implicit lazy val bigInt: Cogen[BigInt] =
     Cogen[Array[Byte]].contramap(_.toByteArray)
 
-  implicit lazy val bigDecimal: Cogen[BigDecimal] =
-    Cogen[(Int, Array[Byte])].contramap(x => (x.scale, x.bigDecimal.unscaledValue.toByteArray))
+  implicit lazy val bigDecimal: Cogen[BigDecimal] = {
+
+    // Normalize unscaled values and scaling factors by moving powers of ten from value to scaling factor.
+    @tailrec
+    def normalize(unscaled: BigInteger, scale: Int): (BigInteger, Int) = {
+      val divideAndRemainder = unscaled.divideAndRemainder(BigInteger.TEN)
+      val quotient = divideAndRemainder(0)
+      val remainder = divideAndRemainder(1)
+      val canNormalize = (unscaled.abs.compareTo(BigInteger.TEN) >= 0) &&
+        (remainder == BigInteger.ZERO) &&
+        (scale != Int.MaxValue) &&
+        (scale != Int.MinValue)
+      if (canNormalize) normalize(quotient, scale - 1) else (unscaled, scale)
+    }
+
+    // If the unscaled value is zero then the scaling factor doesn't matter. Otherwise perturb based on both.
+    Cogen((seed: Seed, n: BigDecimal) =>
+      if (n.bigDecimal.unscaledValue == BigInteger.ZERO)
+        Cogen[Int].perturb(seed, 0)
+      else {
+        val (unscaled, scale) = normalize(n.bigDecimal.unscaledValue, n.scale)
+        Cogen[(Int, Array[Byte])].perturb(seed, (scale, unscaled.toByteArray))
+    })
+  }
 
   implicit lazy val bitSet: Cogen[BitSet] =
     Cogen.it(_.iterator)
