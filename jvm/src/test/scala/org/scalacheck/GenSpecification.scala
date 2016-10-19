@@ -52,6 +52,12 @@ object GenSpecification extends Properties("Gen") {
 
   property("retryUntil") = forAll((g: Gen[Int]) => g.retryUntil(_ => true) == g)
 
+  property("retryUntil doesn't run forever") =
+    forAll((g: Gen[Int]) => Try(g.retryUntil(_ => false).sample).isFailure)
+
+  property("retryUntil requires valid parameters") =
+    forAll((g: Gen[Int]) => Try(g.retryUntil(_ => false, 0)).isFailure)
+
   property("const") = forAll { (x:Int, prms:Parameters, seed: Seed) =>
     const(x)(prms, seed) == Some(x)
   }
