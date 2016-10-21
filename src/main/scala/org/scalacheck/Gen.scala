@@ -19,6 +19,7 @@ import util.SerializableCanBuildFroms._
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 sealed abstract class Gen[+T] extends Serializable { self =>
 
@@ -378,6 +379,9 @@ object Gen extends GenArities{
 
     implicit val chooseFloat: Choose[Float] =
       Choose.xmap[Double, Float](_.toFloat, _.toDouble)
+
+    implicit val chooseFiniteDuration: Choose[FiniteDuration] =
+      Choose.xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
      *  types whose relationship is described by the provided transformation
@@ -870,4 +874,21 @@ object Gen extends GenArities{
     Gen.frequency(allWithFreqs:_*)
   }
 
+  val finiteDuration: Gen[FiniteDuration] =
+    // Duration.fromNanos doesn't allow Long.MinValue since it would create a
+    // duration that cannot be negated.
+    chooseNum(Long.MinValue + 1, Long.MaxValue).map(Duration.fromNanos)
+
+  /**
+   * Generates instance of Duration.
+   *
+   * In addition to `FiniteDuration` values, this can generate `Duration.Inf`,
+   * `Duration.MinusInf`, and `Duration.Undefined`.
+   */
+  val duration: Gen[Duration] = frequency(
+    1 -> const(Duration.Inf),
+    1 -> const(Duration.MinusInf),
+    1 -> const(Duration.Undefined),
+    1 -> const(Duration.Zero),
+    6 -> finiteDuration)
 }
