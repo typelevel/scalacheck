@@ -489,7 +489,7 @@ object Gen extends GenArities{
 
   /** Makes a generator result optional. Either `Some(T)` or `None` will be provided. */
   def option[T](g: Gen[T]): Gen[Option[T]] =
-    oneOf[Option[T]](some(g), None)
+    frequency(1 -> const(None), 9 -> some(g))
 
   /** A generator that returns `Some(T)` */
   def some[T](g: Gen[T]): Gen[Option[T]] =
