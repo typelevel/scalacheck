@@ -7,6 +7,7 @@ import org.scalacheck.Prop.forAll
 import org.scalacheck.rng.Seed
 
 import scala.util.Try
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object CogenSpecification extends Properties("Cogen") {
 
@@ -147,4 +148,6 @@ object CogenSpecification extends Properties("Cogen") {
   include(cogenLaws[Throwable], "cogenThrowable.")
   include(cogenLaws[Try[Int]], "cogenTry.")
   include(cogenLaws[Seq[Int]], "cogenSeq.")
+  include(cogenLaws[Duration], "cogenDuration.")
+  include(cogenLaws[FiniteDuration], "cogenFiniteDuration.")
 }

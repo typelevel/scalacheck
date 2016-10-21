@@ -14,6 +14,7 @@ import language.implicitConversions
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import Arbitrary.arbitrary
 import java.math.BigInteger
 import rng.Seed
@@ -143,6 +144,18 @@ object Cogen extends CogenArities with CogenLowPriority {
     Cogen((seed: Seed, x: Try[A]) => x match {
       case Success(a) => Cogen[A].perturb(seed, a)
       case Failure(e) => Cogen[Throwable].perturb(seed, e)
+    })
+
+  implicit val cogenFiniteDuration: Cogen[FiniteDuration] =
+    Cogen[Long].contramap(_.toNanos)
+
+  implicit val cogenDuration: Cogen[Duration] =
+    Cogen((seed: Seed, x: Duration) => x match {
+      case d: FiniteDuration => Cogen[FiniteDuration].perturb(seed, d)
+      // Undefined -> NaN, Inf -> PositiveInfinity, MinusInf -> NegativeInf
+      // We could just use `toUnit` for finite durations too, but the Long => Double
+      // conversion is lossy, so this approach may be better.
+      case d => Cogen[Double].perturb(seed, d.toUnit(java.util.concurrent.TimeUnit.NANOSECONDS))
     })
 
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
