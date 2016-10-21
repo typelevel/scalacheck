@@ -12,6 +12,7 @@ package org.scalacheck
 import language.higherKinds
 import concurrent.Future
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import util.{FreqMap, Buildable}
 import util.SerializableCanBuildFroms._
@@ -254,6 +255,19 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     // XXX TODO - restore BigInt and BigDecimal
     // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))
   }
+
+  /** Arbitrary instance of FiniteDuration */
+  implicit lazy val arbFiniteDuration: Arbitrary[FiniteDuration] =
+    Arbitrary(Gen.finiteDuration)
+
+  /**
+   * Arbitrary instance of Duration.
+   *
+   * In addition to `FiniteDuration` values, this can generate `Duration.Inf`,
+   * `Duration.MinusInf`, and `Duration.Undefined`.
+   */
+  implicit lazy val arbDuration: Arbitrary[Duration] =
+    Arbitrary(Gen.duration)
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] = {
