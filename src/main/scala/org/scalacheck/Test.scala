@@ -87,6 +87,16 @@ object Test {
       customClassLoader = customClassLoader
     )
 
+    /** An optional regular expression to filter properties on. */
+    val propFilter: Option[String]
+
+    /** Create a copy of this [[Test.Parameters]] instance with
+     *  [[Test.Parameters.propFilter]] set to the specified regular expression
+     *  filter. */
+    def withPropFilter(propFilter: Option[String]): Parameters = cp(
+      propFilter = propFilter
+    )
+
     // private since we can't guarantee binary compatibility for this one
     private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
@@ -95,7 +105,8 @@ object Test {
       workers: Int = workers,
       testCallback: TestCallback = testCallback,
       maxDiscardRatio: Float = maxDiscardRatio,
-      customClassLoader: Option[ClassLoader] = customClassLoader
+      customClassLoader: Option[ClassLoader] = customClassLoader,
+      propFilter: Option[String] = propFilter
     ) extends Parameters
 
     override def toString = s"Parameters${cp.toString.substring(2)}"
@@ -120,6 +131,7 @@ object Test {
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
       val customClassLoader: Option[ClassLoader] = None
+      val propFilter = None
     }
 
     /** Verbose console reporter test parameters instance. */
@@ -237,9 +249,16 @@ object Test {
       val help = "Verbosity level"
     }
 
+    object OptPropFilter extends OpStrOpt {
+      val default = Parameters.default.propFilter
+      val names = Set("propFilter", "f")
+      val help = "Regular expression to filter properties on"
+    }
+
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
-      OptMaxSize, OptWorkers, OptVerbosity
+      OptMaxSize, OptWorkers, OptVerbosity,
+      OptPropFilter
     )
 
     def parseParams(args: Array[String]): (Parameters => Parameters, List[String]) = {
@@ -250,6 +269,7 @@ object Test {
         .withMinSize(optMap(OptMinSize): Int)
         .withMaxSize(optMap(OptMaxSize): Int)
         .withWorkers(optMap(OptWorkers): Int)
+        .withPropFilter(optMap(OptPropFilter): Option[String])
         .withTestCallback(ConsoleReporter(optMap(OptVerbosity)): TestCallback)
       (params, us)
     }
@@ -273,7 +293,6 @@ object Test {
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {
     import params._
-
     assertParams(params)
 
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
@@ -326,18 +345,35 @@ object Test {
     timedRes
   }
 
+  import scala.util.matching.Regex
+  /** Returns the result of filtering a property name by a supplied regular expression.
+    *
+    *  @param propertyName The name of the property to be filtered.
+    *  @param regex The regular expression to filter the property name by.
+    *  @return true if the regular expression matches the property name, false if not.
+    */
+  def matchPropFilter(propertyName: String, regex: Regex): Boolean = {
+    regex.findFirstIn(propertyName).isDefined
+  }
+
   /** Check a set of properties. */
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
-    ps.properties.map { case (name,p) =>
-      val testCallback = new TestCallback {
-        override def onPropEval(n: String, t: Int, s: Int, d: Int) =
-          params.testCallback.onPropEval(name,t,s,d)
-        override def onTestResult(n: String, r: Result) =
-          params.testCallback.onTestResult(name,r)
-      }
-      val res = check(params.withTestCallback(testCallback), p)
-      (name,res)
+    val propertyFilter = prms.propFilter.map(_.r)
+
+    ps.properties.filter {
+      case (name, _) => propertyFilter.fold(true)(matchPropFilter(name, _))
+    } map {
+      case (name, p)  =>
+        val testCallback = new TestCallback {
+          override def onPropEval(n: String, t: Int, s: Int, d: Int) =
+            params.testCallback.onPropEval(name,t,s,d)
+          override def onTestResult(n: String, r: Result) =
+            params.testCallback.onTestResult(name,r)
+        }
+
+        val res = check(params.withTestCallback(testCallback), p)
+        (name,res)
     }
   }
 }
