@@ -142,7 +142,7 @@ object Cogen extends CogenArities with CogenLowPriority {
 
   implicit def cogenTry[A: Cogen]: Cogen[Try[A]] =
     Cogen((seed: Seed, x: Try[A]) => x match {
-      case Success(a) => Cogen[A].perturb(seed, a)
+      case Success(a) => Cogen[A].perturb(seed.next, a)
       case Failure(e) => Cogen[Throwable].perturb(seed, e)
     })
 
