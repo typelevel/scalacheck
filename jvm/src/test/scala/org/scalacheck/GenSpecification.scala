@@ -374,4 +374,25 @@ object GenSpecification extends Properties("Gen") {
 
   property("negative generators are negative") =
     Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
+
+  property("finite duration values are valid") =
+    // just make sure it constructs valid finite values that don't throw exceptions
+    Prop.forAll(Gen.finiteDuration) { _.isFinite }
+
+  property("duration values are valid") =
+    // just make sure it constructs valid values that don't throw exceptions
+    Prop.forAll(Gen.duration) { _ => true }
+
+  property("choose finite duration values are within range") = {
+    val g = for {
+      a <- Gen.finiteDuration
+      b <- Gen.finiteDuration
+    } yield if (a < b) (a, b) else (b, a)
+
+    Prop.forAll(g){ case (low, high) =>
+      Prop.forAll(Gen.choose(low, high)){ d =>
+        d >= low && d <= high
+      }
+    }
+  }
 }
