@@ -93,7 +93,13 @@ class Properties(val name: String) {
    *  }}}
    */
   sealed class PropertySpecifier() {
-    def update(propName: String, p: Prop) = props += ((name+"."+propName, p))
+    // TODO: Delete this in 1.14 -- kept for binary compat with 1.13.3 and prior
+    protected def update(propName: String, p: Prop) = {
+      props += ((name+"."+propName, p))
+    }
+    def update(propName: String, p: => Prop) = {
+      props += ((name+"."+propName, Prop.suspend(p)))
+    }
   }
 
   lazy val property = new PropertySpecifier()

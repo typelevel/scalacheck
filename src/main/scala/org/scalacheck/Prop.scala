@@ -300,6 +300,9 @@ object Prop {
   /** Create a property from a boolean value */
   def apply(b: Boolean): Prop = if(b) proved else falsified
 
+  /** Create a prop that evaluates the by-name argument on each application. */
+  def suspend(p: => Prop): Prop = apply(prms => p(prms))
+
 
   // Implicits
 
