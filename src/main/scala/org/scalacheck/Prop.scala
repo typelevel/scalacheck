@@ -43,7 +43,7 @@ sealed abstract class Prop extends Serializable {
     for(r1 <- this; r2 <- p) yield f(r1,r2)
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. Should only be used when running 
+   *  and reports the result on the console. Should only be used when running
    *  tests interactively within the Scala REPL.*/
   def check(prms: Test.Parameters): Unit = Test.check(
     if(prms.testCallback.isInstanceOf[ConsoleReporter]) prms
@@ -52,16 +52,16 @@ sealed abstract class Prop extends Serializable {
   )
 
   /** Convenience method that checks this property with the given parameters
-   *  and reports the result on the console. Should only be used when running 
-   *  tests interactively within the Scala REPL. 
+   *  and reports the result on the console. Should only be used when running
+   *  tests interactively within the Scala REPL.
    *
    *  The default test parameters
    *  ([[Test.Parameters.default]]) are used for the check. */
   def check: Unit = check(Test.Parameters.default)
 
   /** Convenience method that checks this property and reports the result
-   *  on the console. Should only be used when running 
-   *  tests interactively within the Scala REPL. 
+   *  on the console. Should only be used when running
+   *  tests interactively within the Scala REPL.
    *
    *  The provided argument should be a function that takes
    *  the default test parameters ([[Test.Parameters.default]])
@@ -299,10 +299,6 @@ object Prop {
 
   /** Create a property from a boolean value */
   def apply(b: Boolean): Prop = if(b) proved else falsified
-
-  /** Create a prop that evaluates the by-name argument on each application. */
-  def suspend(p: => Prop): Prop = apply(prms => p(prms))
-
 
   // Implicits
 

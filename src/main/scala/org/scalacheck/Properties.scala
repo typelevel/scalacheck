@@ -98,7 +98,7 @@ class Properties(val name: String) {
       props += ((name+"."+propName, p))
     }
     def update(propName: String, p: => Prop) = {
-      props += ((name+"."+propName, Prop.suspend(p)))
+      props += ((name+"."+propName, Prop.delay(p)))
     }
   }
 
