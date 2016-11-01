@@ -1,5 +1,7 @@
 sourceDirectory := file("dummy source directory")
 
+scalaVersionSettings
+
 // When bumping to 1.14.1, remember to set mimaPreviousArtifacts to 1.14.0
 lazy val versionNumber = "1.14.0"
 
@@ -7,7 +9,12 @@ lazy val isRelease = false
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
-lazy val sharedSettings = MimaSettings.settings ++ Seq(
+lazy val scalaVersionSettings = Seq(
+  scalaVersion := "2.12.0",
+  crossScalaVersions := Seq("2.10.6", "2.11.8", scalaVersion.value)
+)
+
+lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   name := "scalacheck",
 
@@ -34,10 +41,6 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
     "oss.sonatype.org",
     username, password
   )).toSeq,
-
-  scalaVersion := "2.12.0",
-
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
