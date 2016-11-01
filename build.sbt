@@ -1,8 +1,8 @@
 sourceDirectory := file("dummy source directory")
 
-lazy val versionNumber = "1.12.5"
+lazy val versionNumber = "1.12.6"
 
-lazy val isRelease = true
+lazy val isRelease = false
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
