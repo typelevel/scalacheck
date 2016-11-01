@@ -29,12 +29,13 @@ object MimaSettings {
   )
 
   private def otherProblems = Seq(
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.args"),
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.loader"),
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.params"),
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.args"),
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.loader"),
-    exclude[AbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.params")
+    exclude[DirectAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.args"),
+    exclude[DirectAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.loader"),
+    exclude[DirectAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.params"),
+    exclude[ReversedAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.args"),
+    exclude[ReversedAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.loader"),
+    exclude[ReversedAbstractMethodProblem]("org.scalacheck.ScalaCheckRunner.params"),
+    exclude[ReversedMissingMethodProblem]("org.scalacheck.util.CmdLineParser.parseArgs")
   )
 
 }
