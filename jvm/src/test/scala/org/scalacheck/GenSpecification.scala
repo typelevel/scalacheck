@@ -193,6 +193,18 @@ object GenSpecification extends Properties("Gen") {
     cal.getTime != null
   }
 
+  property("deterministic calendar") = forAll { (seed: Seed) =>
+    val params = Gen.Parameters.default
+    val date0 = Gen.calendar(params, seed)
+    // we wait a few milliseconds to be sure we aren't accidentally
+    // leaving the calendar's time unset. Calendar.getInstance starts
+    // with the "current time" so if we aren't careful we will end up
+    // with non-deterministic calendar generation.
+    Thread.sleep(3)
+    val date1 = Gen.calendar(params, seed)
+    date0 == date1
+  }
+
   property("alphaUpperChar") = forAll(alphaUpperChar) { c =>
     c.isLetter && c.isUpper
   }
