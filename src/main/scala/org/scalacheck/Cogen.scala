@@ -35,9 +35,6 @@ object Cogen extends CogenArities with CogenLowPriority {
   // See https://github.com/rickynils/scalacheck/issues/230 for dummy expl.
   def apply[T](implicit ev: Cogen[T], dummy: Cogen[T]): Cogen[T] = ev
 
-  // To remain binary compatible, should be removed in 1.14
-  private[scalacheck] def apply[T](ev: Cogen[T]): Cogen[T] = ev
-
   def apply[T](f: T => Long): Cogen[T] = new Cogen[T] {
     def perturb(seed: Seed, t: T): Seed = seed.reseed(f(t))
   }
