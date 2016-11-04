@@ -21,6 +21,8 @@ import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
+import java.util.{ Calendar, UUID }
+
 sealed abstract class Gen[+T] extends Serializable { self =>
 
   //// Private interface ////
@@ -754,16 +756,15 @@ object Gen extends GenArities{
   //// Misc Generators ////
 
   /** Generates a version 4 (random) UUID. */
-  lazy val uuid: Gen[java.util.UUID] = for {
+  lazy val uuid: Gen[UUID] = for {
     l1 <- Gen.choose(Long.MinValue, Long.MaxValue)
     l2 <- Gen.choose(Long.MinValue, Long.MaxValue)
     y <- Gen.oneOf('8', '9', 'a', 'b')
-  } yield java.util.UUID.fromString(
-    new java.util.UUID(l1,l2).toString.updated(14, '4').updated(19, y)
+  } yield UUID.fromString(
+    new UUID(l1,l2).toString.updated(14, '4').updated(19, y)
   )
 
-  lazy val calendar: Gen[java.util.Calendar] = {
-    import java.util.{ Calendar, Date, TimeZone, Locale }
+  lazy val calendar: Gen[Calendar] = {
     import Calendar._
 
     def adjust(c: Calendar)(f: Calendar => Unit): Calendar = { f(c); c }
@@ -812,10 +813,10 @@ object Gen extends GenArities{
       })
 
     val firstDayOfYearGen: Gen[Calendar] =
-      for { c <- calendar; y <- yearGen(c) } yield adjust(c)(_.set(y, 0, 1))
+      for { c <- calendar; y <- yearGen(c) } yield adjust(c)(_.set(y, JANUARY, 1))
 
     val lastDayOfYearGen: Gen[Calendar] =
-      for { c <- calendar; y <- yearGen(c) } yield adjust(c)(_.set(y, 11, 31))
+      for { c <- calendar; y <- yearGen(c) } yield adjust(c)(_.set(y, DECEMBER, 31))
 
     val closestLeapDateGen: Gen[Calendar] =
       for { c <- calendar; y <- yearGen(c) } yield moveToNearestLeapDate(c, y)
