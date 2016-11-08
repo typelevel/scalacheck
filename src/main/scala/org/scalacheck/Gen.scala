@@ -56,7 +56,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   def doPureApply(p: Gen.Parameters, seed: Seed, retries: Int = 100): Gen.R[T] = {
     @tailrec def loop(r: Gen.R[T], i: Int): Gen.R[T] =
       if (r.retrieve.isDefined) r
-      else if (i > 0) loop(r, i - 1)
+      else if (i > 0) loop(doApply(p, r.seed), i - 1)
       else throw new Gen.RetrievalError()
     loop(doApply(p, seed), retries)
   }
