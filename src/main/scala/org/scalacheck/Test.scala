@@ -312,10 +312,9 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / (workers: Double))
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
-    val genPrms = initialSeed match {
-      case None => Gen.Parameters.default
-      case Some(seed) => Gen.Parameters.default.withInitialSeed(seed)
-    }
+    //val seed = p.fixedSeed.getOrElse(rng.Seed.random)
+    //val genPrms = Gen.Parameters.default.withInitialSeed(seed)
+    val genPrms = Gen.Parameters.default
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests

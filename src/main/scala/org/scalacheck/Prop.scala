@@ -24,13 +24,24 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 
 @Platform.JSExportDescendentClasses
 @Platform.JSExportDescendentObjects
-sealed abstract class Prop extends Serializable {
+sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
   import Gen.Parameters
 
   def apply(prms: Parameters): Result
+
+  def viewSeed(name: String): Prop =
+    Prop { prms0 =>
+      val seed = Seed.random()
+      val res = self(prms0.withInitialSeed(seed))
+      if (res.failure) println(s"failing seed for $name is ${seed.toBase64}")
+      res
+    }
+
+  def useSeed(name: String, seed: Seed): Prop =
+    Prop(prms0 => self(prms0.withInitialSeed(seed)))
 
   def contramap(f: Parameters => Parameters): Prop =
     new PropFromFun(params => apply(f(params)))
@@ -479,12 +490,19 @@ object Prop {
     aa: Arbitrary[A]
   ): Prop = exists(aa.arbitrary)(f)
 
+  def startSeed(prms: Parameters): (Parameters, Seed) =
+    prms.initialSeed match {
+      case Some(seed) => (prms.withNoInitialSeed, seed)
+      case None => (prms, Seed.random())
+    }
+
   /** Existential quantifier for an explicit generator. */
   def exists[A,P](g: Gen[A])(f: A => P)(implicit
     pv: P => Prop,
     pp: A => Pretty
-  ): Prop = Prop { prms =>
-    val gr = prms.startInitialSeed(g.doApply)
+  ): Prop = Prop { prms0 =>
+    val (prms, seed) = startSeed(prms0)
+    val gr = g.doApply(prms, seed)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -506,8 +524,9 @@ object Prop {
     f: T1 => P)(implicit
     pv: P => Prop,
     pp1: T1 => Pretty
-  ): Prop = Prop { prms =>
-    val gr = prms.startInitialSeed(g1.doApply)
+  ): Prop = Prop { prms0 =>
+    val (prms, seed) = startSeed(prms0)
+    val gr = g1.doApply(prms, seed)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
@@ -703,9 +722,10 @@ object Prop {
   def forAllShrink[T, P](g: Gen[T],
     shrink: T => Stream[T])(f: T => P
   )(implicit pv: P => Prop, pp: T => Pretty
-  ): Prop = Prop { prms =>
+  ): Prop = Prop { prms0 =>
 
-    val gr = prms.startInitialSeed(g.doApply)
+    val (prms, seed) = startSeed(prms0)
+    val gr = g.doApply(prms, seed)
     val labels = gr.labels.mkString(",")
 
     def result(x: T) = {

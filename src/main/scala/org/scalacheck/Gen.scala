@@ -299,12 +299,6 @@ object Gen extends GenArities{
         case None => f(this, seed)
       }
 
-    def startInitialSeed[A](f: (Parameters, Seed) => A): A =
-      initialSeed match {
-        case Some(s) => f(this.withNoInitialSeed, s)
-        case None => f(this, Seed.random())
-      }
-
     // private since we can't guarantee binary compatibility for this one
     private case class cp(size: Int = size, initialSeed: Option[Seed] = None) extends Parameters
   }
@@ -663,7 +657,7 @@ object Gen extends GenArities{
 
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
-    if (n > l.size || n < 0) throw new IllegalArgumentException("!!!")
+    if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
     else gen { (p, seed0) =>
       val buf = ArrayBuffer.empty[T]
