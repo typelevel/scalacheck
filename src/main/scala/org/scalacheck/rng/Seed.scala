@@ -65,6 +65,20 @@ sealed abstract class Seed extends Serializable {
   }
 
   /**
+   * This is a quick way of deterministically sliding this RNG to a
+   * different part of the PRNG sequence.
+   *
+   * We use this as an easy way to "split" the RNG off into a new part
+   * of the sequence. We want to do this in situations where we've
+   * already called .next several times, and we want to avoid
+   * repeating those numbers while preserving determinism.
+   */
+  def slide: Seed = {
+    val (n, s) = long
+    s.reseed(n)
+  }
+
+  /**
    * Generates a Long value.
    *
    * The values will be uniformly distributed. */

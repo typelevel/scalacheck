@@ -34,8 +34,14 @@ sealed abstract class Prop extends Serializable { self =>
 
   def viewSeed(name: String): Prop =
     Prop { prms0 =>
-      val seed = Seed.random()
-      val res = self(prms0.withInitialSeed(seed))
+      val (prms, seed) = prms0.initialSeed match {
+        case Some(sd) =>
+          (prms0, sd)
+        case None =>
+          val sd = Seed.random()
+          (prms0.withInitialSeed(sd), sd)
+      }
+      val res = self(prms)
       if (res.failure) println(s"failing seed for $name is ${seed.toBase64}")
       res
     }
@@ -490,10 +496,35 @@ object Prop {
     aa: Arbitrary[A]
   ): Prop = exists(aa.arbitrary)(f)
 
+  /**
+   * This handles situations where we have a starting seed in our
+   * paramters.
+   *
+   * If we do, then we remove it from parameters and return it. If
+   * not, we create a new random seed. The new parameters from this
+   * method should be used with all the generation that this prop
+   * needs itself.
+   *
+   * Note that if this Prop needs to evaluate other Props (e.g. in
+   * forAll), you should make sure *not* to use the parameters
+   * returned from this method. We need for all Props evaluated by
+   * this one to behave deterministically if this Prop was given a
+   * seed. In that case you should use `slideSeed` to update the
+   * parameters.
+   */
   def startSeed(prms: Parameters): (Parameters, Seed) =
     prms.initialSeed match {
       case Some(seed) => (prms.withNoInitialSeed, seed)
       case None => (prms, Seed.random())
+    }
+
+  /**
+   *
+   */
+  def slideSeed(prms: Parameters): Parameters =
+    prms.initialSeed match {
+      case Some(seed) => prms.withInitialSeed(seed.slide)
+      case None => prms
     }
 
   /** Existential quantifier for an explicit generator. */
@@ -508,7 +539,7 @@ object Prop {
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        val r = p(prms).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
+        val r = p(slideSeed(prms0)).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         r.status match {
           case True => r.copy(status = Proof)
           case False => r.copy(status = Undecided)
@@ -532,7 +563,7 @@ object Prop {
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        provedToTrue(p(prms)).addArg(Arg(labels,x,0,x,pp1(x),pp1(x)))
+        provedToTrue(p(slideSeed(prms0))).addArg(Arg(labels,x,0,x,pp1(x),pp1(x)))
     }
   }
 
@@ -730,7 +761,7 @@ object Prop {
 
     def result(x: T) = {
       val p = secure(pv(f(x)))
-      provedToTrue(p(prms))
+      provedToTrue(p(slideSeed(prms0)))
     }
 
     /** Returns the first failed result in Left or success in Right */

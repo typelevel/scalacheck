@@ -198,4 +198,14 @@ object PropSpecification extends Properties("Prop") {
       val set = (1 to 20).map(_ => p(params).success).toSet
       Prop(set == Set(x)).label(s"$set == Set($x)")
     }
+
+  property("prop.useSeed is deterministic (pt. 2)") =
+    forAll { (g1: Gen[Int], g2: Gen[Int], g3: Gen[Int], n: Long) =>
+      val params = Gen.Parameters.default
+      val p0 = Prop.forAll(g1, g2, g3) { (x, y, z) => x == y && y == z }
+      val p = p0.useSeed("some name", rng.Seed(n))
+      val x = p(params).success
+      val set = (1 to 20).map(_ => p(params).success).toSet
+      Prop(set == Set(x)).label(s"$set == Set($x)")
+    }
 }
