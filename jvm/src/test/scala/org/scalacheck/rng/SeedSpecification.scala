@@ -29,17 +29,31 @@ object SeedSpecification extends Properties("Seed") {
       0.0 <= n && n < 1.0
     }
 
+  case class Base(value: Int)
+
+  object Base {
+    implicit val arbitraryBase: Arbitrary[Base] =
+      Arbitrary(Gen.choose(2, 100).map(Base(_)))
+  }
+
   property("longs are evenly-distributed") =
-    forAll(arbitrary[Seed], Gen.choose(2, 100)) { (seed: Seed, base: Int) =>
-      val buckets = new Array[Int](base)
-      def loop(s0: Seed, count: Int): Unit =
-        if (count > 0) {
+    forAll { (seed: Seed, b: Base) =>
+      val base = b.value
+
+      def countZeros(s0: Seed, i: Int, seen0: Int): Int =
+        if (i <= 0) seen0 else {
           val (x, s1) = s0.long
-          buckets((x & 0xffff).toInt % base) += 1
-          loop(s1, count - 1)
+          val n = (x & 0x7fffffff).toInt % base
+          val seen = if (n == 0) seen0 + 1 else seen0
+          countZeros(s1, i - 1, seen)
         }
-      loop(seed, 1000)
-      base == base
+
+      val count = 10000
+      val mean = count.toDouble / base
+      val stdDev = Math.sqrt(mean * ((base.toDouble - 1) / base))
+      val delta = 5 * stdDev // 1 in 1.7M false positives
+      val zeros = countZeros(seed, count, 0)
+      (mean - delta) <= zeros && zeros <= (mean + delta)
     }
 
   property("equality works") =
