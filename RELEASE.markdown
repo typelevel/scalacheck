@@ -1,4 +1,4 @@
-ScalaCheck 1.13.3 Release Notes
+# ScalaCheck 1.14.0 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -6,7 +6,26 @@ failing test cases. ScalaCheck started out as a straightforward Scala port of
 the Haskell library QuickCheck, and has since wandered off on its own. Most
 features of QuickCheck can be found in ScalaCheck and vice versa, though.
 
-ScalaCheck highlights:
+## What's new in ScalaCheck 1.14.0?
+
+ScalaCheck 1.14.0 is a major update from ScalaCheck 1.13.x, and it is not
+binary compatible with earlier versions of ScalaCheck. This means that if you
+are using any other framework in combination with ScalaCheck, like `ScalaTest`
+or `specs2` you can usually _not_ just bump the version of ScalaCheck in your
+build definition. You need to make sure that the combination of frameworks you
+are using was built and tested together with each other, otherwise you can run
+into errors related to binary compatibility that are possibly very hard to
+debug.
+
+If you're using ScalaCheck as your only testing framework, you can safely update
+your build definition to use the latest ScalaCheck release, but you might see
+compilation errors or deprecation warnings due to changes in ScalaCheck's API.
+
+For a detailed enumeration of what's new in ScalaCheck 1.14.0, see
+https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown
+
+
+## ScalaCheck highlights
 
   * Specifications are written in Scala, in a DSL-like fashion using
     combinators from the ScalaCheck library.
@@ -26,13 +45,8 @@ ScalaCheck highlights:
 
   * ScalaCheck is well integrated with ScalaTest, sbt and specs2.
 
-What's new in version 1.13.3?
 
-Version 1.13.3 contains a bunch of bug fixes since 1.13.2, and some minor
-API additions.
-
-
-ScalaCheck links:
+## ScalaCheck Resources
 
   * Official documentation, downloads etc: http://www.scalacheck.org
 
@@ -48,7 +62,7 @@ ScalaCheck links:
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.13.3" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
     )
 
   * Maven dependency
@@ -71,5 +85,5 @@ ScalaCheck links:
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.11</artifactId>
-      <version>1.13.3</version>
+      <version>1.14.0</version>
     </dependency>
