@@ -158,6 +158,9 @@ object Cogen extends CogenArities with CogenLowPriority {
       case d => Cogen[Double].perturb(seed, d.toUnit(java.util.concurrent.TimeUnit.NANOSECONDS))
     })
 
+  implicit def cogenPartialFunction[A: Arbitrary, B: Cogen]: Cogen[PartialFunction[A, B]] =
+    Cogen[A => Option[B]].contramap(_.lift)
+
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)
 
