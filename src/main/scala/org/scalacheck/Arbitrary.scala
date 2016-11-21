@@ -371,4 +371,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]
     Arbitrary(Gen.oneOf(values))
   }
+
+  implicit def arbPartialFunction[A: Cogen, B: Arbitrary]: Arbitrary[PartialFunction[A, B]] =
+    Arbitrary(implicitly[Arbitrary[A => Option[B]]].arbitrary.map(Function.unlift))
 }
