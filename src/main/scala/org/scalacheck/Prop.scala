@@ -24,13 +24,30 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 
 @Platform.JSExportDescendentClasses
 @Platform.JSExportDescendentObjects
-sealed abstract class Prop extends Serializable {
+sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, Proof, True, False, Exception, Undecided,
     provedToTrue, secure, mergeRes}
   import Gen.Parameters
 
   def apply(prms: Parameters): Result
+
+  def viewSeed(name: String): Prop =
+    Prop { prms0 =>
+      val (prms, seed) = prms0.initialSeed match {
+        case Some(sd) =>
+          (prms0, sd)
+        case None =>
+          val sd = Seed.random()
+          (prms0.withInitialSeed(sd), sd)
+      }
+      val res = self(prms)
+      if (res.failure) println(s"failing seed for $name is ${seed.toBase64}")
+      res
+    }
+
+  def useSeed(name: String, seed: Seed): Prop =
+    Prop(prms0 => self(prms0.withInitialSeed(seed)))
 
   def contramap(f: Parameters => Parameters): Prop =
     new PropFromFun(params => apply(f(params)))
@@ -479,18 +496,50 @@ object Prop {
     aa: Arbitrary[A]
   ): Prop = exists(aa.arbitrary)(f)
 
+  /**
+   * This handles situations where we have a starting seed in our
+   * paramters.
+   *
+   * If we do, then we remove it from parameters and return it. If
+   * not, we create a new random seed. The new parameters from this
+   * method should be used with all the generation that this prop
+   * needs itself.
+   *
+   * Note that if this Prop needs to evaluate other Props (e.g. in
+   * forAll), you should make sure *not* to use the parameters
+   * returned from this method. We need for all Props evaluated by
+   * this one to behave deterministically if this Prop was given a
+   * seed. In that case you should use `slideSeed` to update the
+   * parameters.
+   */
+  def startSeed(prms: Parameters): (Parameters, Seed) =
+    prms.initialSeed match {
+      case Some(seed) => (prms.withNoInitialSeed, seed)
+      case None => (prms, Seed.random())
+    }
+
+  /**
+   *
+   */
+  def slideSeed(prms: Parameters): Parameters =
+    prms.initialSeed match {
+      case Some(seed) => prms.withInitialSeed(seed.slide)
+      case None => prms
+    }
+
   /** Existential quantifier for an explicit generator. */
   def exists[A,P](g: Gen[A])(f: A => P)(implicit
     pv: P => Prop,
     pp: A => Pretty
-  ): Prop = Prop { prms =>
-    val gr = g.doApply(prms, Seed.random())
+  ): Prop = Prop { prms0 =>
+    val (prms, seed) = startSeed(prms0)
+    val gr = g.doApply(prms, seed)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        val r = p(prms).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
+        val r = p(slideSeed(prms0)).addArg(Arg(labels,x,0,x,pp(x),pp(x)))
         r.status match {
           case True => r.copy(status = Proof)
           case False => r.copy(status = Undecided)
@@ -506,14 +555,15 @@ object Prop {
     f: T1 => P)(implicit
     pv: P => Prop,
     pp1: T1 => Pretty
-  ): Prop = Prop { prms =>
-    val gr = g1.doApply(prms, Seed.random())
+  ): Prop = Prop { prms0 =>
+    val (prms, seed) = startSeed(prms0)
+    val gr = g1.doApply(prms, seed)
     gr.retrieve match {
       case None => undecided(prms)
       case Some(x) =>
         val p = secure(f(x))
         val labels = gr.labels.mkString(",")
-        provedToTrue(p(prms)).addArg(Arg(labels,x,0,x,pp1(x),pp1(x)))
+        provedToTrue(p(slideSeed(prms0))).addArg(Arg(labels,x,0,x,pp1(x),pp1(x)))
     }
   }
 
@@ -703,14 +753,15 @@ object Prop {
   def forAllShrink[T, P](g: Gen[T],
     shrink: T => Stream[T])(f: T => P
   )(implicit pv: P => Prop, pp: T => Pretty
-  ): Prop = Prop { prms =>
+  ): Prop = Prop { prms0 =>
 
-    val gr = g.doApply(prms, Seed.random())
+    val (prms, seed) = startSeed(prms0)
+    val gr = g.doApply(prms, seed)
     val labels = gr.labels.mkString(",")
 
     def result(x: T) = {
       val p = secure(pv(f(x)))
-      provedToTrue(p(prms))
+      provedToTrue(p(slideSeed(prms0)))
     }
 
     /** Returns the first failed result in Left or success in Right */

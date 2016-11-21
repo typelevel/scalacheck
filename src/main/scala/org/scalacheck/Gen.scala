@@ -109,10 +109,11 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  test property is side-effect free, eg it should not use external vars.
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) = {
-      val res = Gen.this.doApply(p, seed)
-      res.copy(s = { x:T => res.sieve(x) && f(x) })
-    }
+    def doApply(p: P, seed: Seed) =
+      p.useInitialSeed(seed) { (p0, s0) =>
+        val res = Gen.this.doApply(p0, s0)
+        res.copy(s = { x:T => res.sieve(x) && f(x) })
+      }
     override def sieveCopy(x: Any) =
       try Gen.this.sieveCopy(x) && f(x.asInstanceOf[T])
       catch { case _: java.lang.ClassCastException => false }
@@ -179,10 +180,11 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   /** Put a label on the generator to make test reports clearer */
   def label(l: String): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) = {
-      val r = Gen.this.doApply(p, seed)
-      r.copy(l = r.labels + l)
-    }
+    def doApply(p: P, seed: Seed) =
+      p.useInitialSeed(seed) { (p0, s0) =>
+        val r = Gen.this.doApply(p0, s0)
+        r.copy(l = r.labels + l)
+      }
     override def sieveCopy(x: Any) = Gen.this.sieveCopy(x)
   }
 
@@ -254,7 +256,7 @@ object Gen extends GenArities{
 
   /** Generator factory method */
   private[scalacheck] def gen[T](f: (P, Seed) => R[T]): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) = f(p, seed)
+    def doApply(p: P, seed: Seed): R[T] = p.useInitialSeed(seed)(f)
   }
 
   //// Public interface ////
@@ -262,18 +264,43 @@ object Gen extends GenArities{
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
   sealed abstract class Parameters extends Serializable {
 
-    /** The size of the generated value. Generator implementations are allowed
-     *  to freely interpret (or ignore) this value. During test execution, the
-     *  value of this parameter is controlled by [[Test.Parameters.minSize]] and
-     *  [[Test.Parameters.maxSize]]. */
+    /**
+     * The size of the generated value. Generator implementations are
+     * allowed to freely interpret (or ignore) this value. During test
+     * execution, the value of this parameter is controlled by
+     * [[Test.Parameters.minSize]] and [[Test.Parameters.maxSize]].
+     */
     val size: Int
 
-    /** Create a copy of this [[Gen.Parameters]] instance with
-     *  [[Gen.Parameters.size]] set to the specified value. */
-    def withSize(size: Int): Parameters = cp(size = size)
+    /**
+     * Create a copy of this [[Gen.Parameters]] instance with
+     * [[Gen.Parameters.size]] set to the specified value.
+     */
+    def withSize(size: Int): Parameters =
+      cp(size = size)
+
+    /**
+     *
+     */
+    val initialSeed: Option[Seed]
+
+    def withInitialSeed(seed: Seed): Parameters =
+      cp(initialSeed = Some(seed))
+
+    def withInitialSeed(n: Long): Parameters =
+      cp(initialSeed = Some(Seed(n)))
+
+    def withNoInitialSeed: Parameters =
+      cp(initialSeed = None)
+
+    def useInitialSeed[A](seed: Seed)(f: (Parameters, Seed) => A): A =
+      initialSeed match {
+        case Some(s) => f(this.withNoInitialSeed, s)
+        case None => f(this, seed)
+      }
 
     // private since we can't guarantee binary compatibility for this one
-    private case class cp(size: Int = size) extends Parameters
+    private case class cp(size: Int = size, initialSeed: Option[Seed] = None) extends Parameters
   }
 
   /** Provides methods for creating [[org.scalacheck.Gen.Parameters]] values */
@@ -281,6 +308,7 @@ object Gen extends GenArities{
     /** Default generator parameters instance. */
     val default: Parameters = new Parameters {
       val size: Int = 100
+      val initialSeed: Option[Seed] = None
     }
   }
 
@@ -629,7 +657,7 @@ object Gen extends GenArities{
 
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
-    if (n > l.size || n < 0) throw new IllegalArgumentException("!!!")
+    if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
     else gen { (p, seed0) =>
       val buf = ArrayBuffer.empty[T]

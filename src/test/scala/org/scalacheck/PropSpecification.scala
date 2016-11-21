@@ -181,4 +181,31 @@ object PropSpecification extends Properties("Prop") {
   property("delay") = { delay(???); proved }
 
   property("lzy") = { lzy(???); proved }
+
+  property("Gen.Parameters.withInitialSeed is deterministic") =
+    forAll { (p: Prop) =>
+      val params = Gen.Parameters.default.withInitialSeed(999L)
+      val x = p(params).success
+      val set = (1 to 20).map(_ => p(params).success).toSet
+      Prop(set == Set(x)).label(s"$set == Set($x)")
+    }
+
+  property("prop.useSeed is deterministic") =
+    forAll { (p0: Prop, n: Long) =>
+      val params = Gen.Parameters.default
+      val p = p0.useSeed("some name", rng.Seed(n))
+      val x = p(params).success
+      val set = (1 to 20).map(_ => p(params).success).toSet
+      Prop(set == Set(x)).label(s"$set == Set($x)")
+    }
+
+  property("prop.useSeed is deterministic (pt. 2)") =
+    forAll { (g1: Gen[Int], g2: Gen[Int], g3: Gen[Int], n: Long) =>
+      val params = Gen.Parameters.default
+      val p0 = Prop.forAll(g1, g2, g3) { (x, y, z) => x == y && y == z }
+      val p = p0.useSeed("some name", rng.Seed(n))
+      val x = p(params).success
+      val set = (1 to 20).map(_ => p(params).success).toSet
+      Prop(set == Set(x)).label(s"$set == Set($x)")
+    }
 }

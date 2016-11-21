@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import org.scalacheck.rng.Seed
+
 import language.reflectiveCalls
 
 import util.ConsoleReporter
@@ -99,4 +101,19 @@ class Properties(val name: String) {
   }
 
   lazy val property = new PropertySpecifier()
+
+  sealed class PropertyWithSeedSpecifier() {
+    def update(propName: String, optSeed: Option[String], p: => Prop) = {
+      val fullName = s"$name.$propName"
+      optSeed match {
+        case Some(encodedSeed) =>
+          val seed = Seed.fromBase64(encodedSeed)
+          props += ((fullName, Prop.delay(p).useSeed(fullName, seed)))
+        case None =>
+          props += ((fullName, Prop.delay(p).viewSeed(fullName)))
+      }
+    }
+  }
+
+  lazy val propertyWithSeed = new PropertyWithSeedSpecifier()
 }
