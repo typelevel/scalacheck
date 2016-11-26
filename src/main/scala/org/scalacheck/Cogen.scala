@@ -116,6 +116,9 @@ object Cogen extends CogenArities with CogenLowPriority {
   implicit def cogenString: Cogen[String] =
     Cogen.it(_.iterator)
 
+  implicit def cogenSymbol: Cogen[Symbol] =
+    Cogen[String].contramap(_.name)
+
   implicit def cogenList[A: Cogen]: Cogen[List[A]] =
     Cogen.it(_.iterator)
 
