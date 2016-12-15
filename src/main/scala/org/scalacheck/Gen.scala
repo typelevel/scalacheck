@@ -721,10 +721,12 @@ object Gen extends GenArities{
 
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
-  def identifier: Gen[String] = (for {
-    c <- alphaLowerChar
-    cs <- listOf(alphaNumChar)
-  } yield (c::cs).mkString)
+  def identifier: Gen[String] = Gen.sized { size =>
+    for {
+      c <- alphaLowerChar
+      cs <- Gen.resize(size - 1, listOf(alphaNumChar))
+    } yield (c :: cs).mkString
+  }
 
   /** Generates a string of digits */
   def numStr: Gen[String] =
