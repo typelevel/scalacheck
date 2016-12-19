@@ -34,7 +34,7 @@ object Pretty {
 
   def apply(f: Params => String): Pretty = new Pretty { def apply(p: Params) = f(p) }
 
-  def pretty[T <% Pretty](t: T, prms: Params): String = {
+  def pretty[T](t: T, prms: Params)(implicit ev: T => Pretty): String = {
     val p = (t: Pretty) match {
       case null => prettyAny(null)
       case p => p
@@ -42,7 +42,7 @@ object Pretty {
     p(prms)
   }
 
-  def pretty[T <% Pretty](t: T): String = pretty(t, defaultParams)
+  def pretty[T](t: T)(implicit ev: T => Pretty): String = pretty(t, defaultParams)
 
   implicit def strBreak(s1: String) = new {
     def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2

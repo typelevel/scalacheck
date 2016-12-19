@@ -12,19 +12,14 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, within, throws, BooleanOperators, secure, delay, lzy
+  Exception, Proof, throws, BooleanOperators, secure, delay, lzy
 }
-import Gen.{
-  const, fail, frequency, oneOf, choose, listOf, listOfN,
-  Parameters
-}
-import java.util.concurrent.atomic.AtomicBoolean
+import Gen.{ const, fail, oneOf, listOf, Parameters }
 
 object PropSpecification extends Properties("Prop") {
 
   def propException(): Prop = {
     throw new java.lang.Exception("exception")
-    passed
   }
 
   property("Prop.==> undecided") = forAll { p1: Prop =>

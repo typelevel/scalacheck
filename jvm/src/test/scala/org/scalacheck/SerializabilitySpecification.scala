@@ -4,8 +4,6 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream,
 
 import Prop.proved
 
-import util.SerializableCanBuildFroms._
-
 object SerializabilitySpecification extends Properties("Serializability") {
 
   // adapted from https://github.com/milessabin/shapeless/blob/6b870335c219d59079b46eddff15028332c0c294/core/jvm/src/test/scala/shapeless/serialization.scala#L42-L62

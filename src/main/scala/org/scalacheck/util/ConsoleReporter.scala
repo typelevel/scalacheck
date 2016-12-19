@@ -10,7 +10,7 @@
 package org.scalacheck.util
 
 import Pretty.{Params, pretty, format}
-import org.scalacheck.{Prop, Properties, Test}
+import org.scalacheck.Test
 
 /** A [[org.scalacheck.Test.TestCallback]] implementation that prints
  *  test results directly to the console. This is the callback used

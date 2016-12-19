@@ -13,7 +13,6 @@ import language.higherKinds
 
 import util.Buildable
 import util.SerializableCanBuildFroms._
-import scala.collection.{ JavaConversions => jcl }
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 sealed abstract class Shrink[T] extends Serializable {
@@ -29,7 +28,6 @@ object Shrink extends ShrinkLowPriority {
 
   import Stream.{cons, empty}
   import scala.collection._
-  import java.util.ArrayList
 
   /** Interleaves two streams */
   private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
@@ -235,7 +233,7 @@ object Shrink extends ShrinkLowPriority {
 }
 
 final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
-  import ev.{ fromInt, lt, gteq, quot, negate, equiv, zero, one }
+  import ev.{ fromInt, gteq, quot, negate, equiv, zero, one }
 
   val two = fromInt(2)
 

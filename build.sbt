@@ -10,7 +10,7 @@ lazy val isRelease = false
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.0",
+  scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.10.6", "2.11.8", scalaVersion.value)
 )
 
@@ -50,9 +50,27 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
-  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-encoding", "UTF-8",
+    "-feature",
+    "-unchecked",
+    "-Xfatal-warnings",
+    "-Xlint",
+    "-Xfuture",
+    "-Yno-adapted-args",
+    "-Ywarn-dead-code",
+    "-Ywarn-inaccessible",
+    "-Ywarn-nullary-override",
+    "-Ywarn-nullary-unit",
+    "-Ywarn-numeric-widen") ++ {
+    scalaBinaryVersion.value match {
+      case "2.10" => Nil
+      case _ => Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
+    }
+  },
 
-  scalacOptions in (Compile,doc) += "-Xfatal-warnings",
+  scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   //mimaPreviousArtifacts := (
   //  if (CrossVersion isScalaApiCompatible scalaVersion.value)

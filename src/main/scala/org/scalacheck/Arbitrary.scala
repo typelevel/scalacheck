@@ -14,7 +14,7 @@ import concurrent.Future
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-import util.{FreqMap, Buildable}
+import util.Buildable
 import util.SerializableCanBuildFroms._
 
 
@@ -69,7 +69,6 @@ object Arbitrary extends ArbitraryLowPriority with ArbitraryArities {
 /** separate trait to have same priority as ArbitraryArities */
 private[scalacheck] sealed trait ArbitraryLowPriority {
   import Gen.{const, choose, sized, frequency, oneOf, buildableOf, resize}
-  import collection.{immutable, mutable}
 
   /** Creates an Arbitrary instance */
   def apply[T](g: => Gen[T]): Arbitrary[T] = new Arbitrary[T] {
@@ -216,7 +215,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
         mc <- genMathContext0
         n <- long
         d <- long
-      } yield BigDecimal(n, 0, mc) / d
+      } yield BigDecimal(n, 0, mc) / d.toDouble
 
     val genMathContext: Gen[MathContext] =
       oneOf(UNLIMITED, DECIMAL32, DECIMAL64, DECIMAL128)

@@ -60,7 +60,7 @@ object GenSpecification extends Properties("Gen") {
 
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
-  property("wrap") = forAll((g: Gen[Int]) => wrap(g) == g)
+  property("wrap") = forAll((g: Gen[Int]) => delay(g) == g)
 
   property("delay") = forAll((g: Gen[Int]) => delay(g) == g)
 
@@ -299,7 +299,7 @@ object GenSpecification extends Properties("Gen") {
     const(5), const(6), const(7), const(8),
     const(9)
   )) {
-    _ == (1,2,3,4,5,6,7,8,9)
+    _ == ((1,2,3,4,5,6,7,8,9))
   }
 
   //// See https://github.com/rickynils/scalacheck/issues/79
@@ -366,7 +366,7 @@ object GenSpecification extends Properties("Gen") {
     Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
-      var seed = rng.Seed(n)
+      var seed = rng.Seed(n.toLong)
       while (i < n) {
         val (d,s1) = seed.double
         sum += d
@@ -382,7 +382,7 @@ object GenSpecification extends Properties("Gen") {
     Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
-      var seed = rng.Seed(n)
+      var seed = rng.Seed(n.toLong)
       while (i < n) {
         val (l,s1) = seed.long
         sum += math.abs(l).toDouble * scale

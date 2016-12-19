@@ -50,7 +50,9 @@ private[scalacheck] object Platform {
           blocking { workerFun(idx) }
         })
         val zeroRes = Result(Passed,0,0,FreqMap.empty[Set[Any]],0)
-        val res = Future.fold(fs)(zeroRes)(mergeResults)
+        val res =
+          if (fs.isEmpty) Future.successful(zeroRes)
+          else Future.sequence(fs).map(_.foldLeft(zeroRes)(mergeResults))
         Await.result(res, concurrent.duration.Duration.Inf)
       } finally {
         stop()
@@ -65,8 +67,6 @@ private[scalacheck] object Platform {
 
   def loadModule(name: String, loader: ClassLoader): AnyRef =
     Class.forName(name + "$", true, loader).getField("MODULE$").get(null)
-
-  import scala.annotation.Annotation
 
   class JSExportDescendentObjects(ignoreInvalidDescendants: Boolean)
       extends scala.annotation.Annotation {

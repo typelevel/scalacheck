@@ -10,7 +10,6 @@
 package org.scalacheck.util
 
 import scala.collection.Set
-import org.scalacheck.Test
 
 private[scalacheck] trait CmdLineParser {
 
@@ -51,7 +50,7 @@ private[scalacheck] trait CmdLineParser {
     if (s != null && s.matches("[0987654321]+\\.?[0987654321]*")) Some(s.toFloat)
     else None
 
-  def printHelp = {
+  def printHelp(): Unit = {
     println("Available options:")
     opts.foreach { opt =>
       println("  " + opt.names.map("-"+_).mkString(", ") + ": " + opt.help)

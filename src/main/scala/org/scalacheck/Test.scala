@@ -309,7 +309,7 @@ object Test {
     import params._
     assertParams(params)
 
-    val iterations = math.ceil(minSuccessfulTests / (workers: Double))
+    val iterations = math.ceil(minSuccessfulTests / workers.toDouble)
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
     //val seed = p.fixedSeed.getOrElse(rng.Seed.random)
@@ -325,7 +325,7 @@ object Test {
       def isExhausted = d > minSuccessfulTests * maxDiscardRatio
 
       while(!stop && res == null && n < iterations) {
-        val size = (minSize: Double) + (sizeStep * (workerIdx + (workers*(n+d))))
+        val size = minSize.toDouble + (sizeStep * (workerIdx + (workers*(n+d))))
         val propRes = p(genPrms.withSize(size.round.toInt))
         fm = if(propRes.collected.isEmpty) fm else fm + propRes.collected
         propRes.status match {
