@@ -11,6 +11,7 @@ package org.scalacheck.commands
 
 import org.scalacheck._
 import scala.util.{Try, Success, Failure}
+import scala.language.implicitConversions
 
 /** An API for stateful testing in ScalaCheck.
  *
@@ -19,7 +20,80 @@ import scala.util.{Try, Success, Failure}
  *  @since 1.12.0
  */
 trait Commands {
-
+  
+/**
+    *  The [[Term]] type models a (per test) unique binding, and a possible
+    *  value. Symbolic terms are meant for use during test generation, and
+    *  dynamic terms are for runtime. ScalaCheck automatically encapsulates the
+    *  results of a command into SymbolicTerm's during test generation, and DynamicTerm's
+    *  during runtime.
+    */
+  sealed abstract class Term[+A](val binding: Binding) {
+    def get: Try[A]
+    def isEmpty: Boolean
+    def isDefined: Boolean = !isEmpty
+    final def nonEmpty = isDefined
+    final def getOrElse[B >: A](default: => B): B = if (isEmpty || get.isFailure) default else this.get.get
+    final def orNull[A1 >: A](implicit ev: Null <:< A1): A1 = this getOrElse ev(null)
+    
+    // Returns result of applying $f to this $term's value if
+    // the term is non-empty and has a Success value. Otherwise,
+    // evaluates ifEmpty.
+    final def fold[B](ifEmpty: => B)(f: A => B): B = if(isEmpty) ifEmpty else f(get.get)
+    
+    final def map[B](f: A => B): Option[B] = {
+      if(isEmpty) None else Some(f(get.get))
+    }
+    
+    final def flatMap[B](f: A => Option[B]): Option[B] = {
+      if(isEmpty) None else f(get.get)
+    }
+    
+    // Will return Some(value), if there is a Success value and p is true. Otherwise None
+    final def filter(p: A => Boolean): Option[A] =
+      if(isEmpty) None else if(p(get.get)) Some(get.get) else None
+    
+    // Filters based on the binding, not the value.
+    final def filterBinding(p: Binding => Boolean): Option[Term[A]] =
+      if(p(this.binding)) Some(this) else None
+    
+    final def contains[A1 >: A](elem: A1): Boolean =
+      !isEmpty && get.get == elem
+    
+    final def exists(p: A => Boolean): Boolean =
+      !isEmpty && p(get.get)
+    
+    final def forall(p: A => Boolean): Boolean = isEmpty || p(get.get)
+    
+    final def foreach[U](f: A => U) {
+        if(!isEmpty) f(get.get)
+      }
+    
+    final def collect[B](pf: PartialFunction[A, B]): Option[B] =
+      if(!isEmpty) pf.lift(this.get.get) else None
+      
+    final def orElse[B >: A](alternative: => B): B =
+      if(isEmpty) alternative else this.get.get
+  }
+  
+   /**
+   * A Binding is a (per SUT) unique identifier, basically a wrapped int with a nicer name. This helps clarify
+   * intent, if you need to keep track of term bindings in your State, e.g. a Map[String, Binding]
+   * has the clear intent of mapping strings to a term binding, while Map[String, Int] is less clear.
+   */
+  case class Binding(val binding: Int)
+  implicit def intToBinding(o: Int) = new Binding(o)
+  
+  case class SymbVar[A](override val binding: Binding) extends Term[A](binding) {
+    override def isEmpty = true
+    override def get = throw new NoSuchElementException("SymbVar.get")
+  }
+  
+  case class DynVar[A](override val binding: Binding, val value: Try[A]) extends Term[A](binding) {
+    override def isEmpty = get.isFailure
+    override def get = value
+  }
+  
   /** The abstract state type. Must be immutable.
    *  The [[State]] type should model the state of the system under
    *  test (SUT). It should only contain details needed for specifying
@@ -108,12 +182,12 @@ trait Commands {
      *  is later used for verifying that the command behaved according
      *  to the specification, by the [[Command!.postCondition* postCondition]]
      *  method. */
-    def run(sut: Sut): Result
+    def run(sut: Sut, state: State): Result
 
     /** Returns a new [[State]] instance that represents the
      *  state of the system after this command has run, given the system
      *  was in the provided state before the run. */
-    def nextState(state: State): State
+    def nextState(state: State, v: Term[Result]): State
 
     /** Precondition that decides if this command is allowed to run
      *  when the system under test is in the provided state. */
@@ -126,9 +200,9 @@ trait Commands {
 
     /** Wraps the run and postCondition methods in order not to leak the
      *  dependant Result type. */
-    private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
+    private[Commands] def runPC(sut: Sut, state: State): (Try[String], State => Prop) = {
       import Prop.BooleanOperators
-      val r = Try(run(sut))
+      val r = Try(run(sut, state))
       (r.map(_.toString), s => preCondition(s) ==> postCondition(s,r))
     }
   }
@@ -154,41 +228,10 @@ trait Commands {
   /** A command that doesn't do anything */
   case object NoOp extends Command {
     type Result = Null
-    def run(sut: Sut) = null
-    def nextState(state: State) = state
+    def run(sut: Sut, state: State) = null
+    def nextState(state: State, v: Term[Null]) = state
     def preCondition(state: State) = true
     def postCondition(state: State, result: Try[Null]) = true
-  }
-
-  /** A command that runs a sequence of other commands.
-   *  All commands (and their post conditions) are executed even if some
-   *  command fails. Note that you probably can't use this method if you're
-   *  testing in parallel (`threadCount` larger than 1). This is because
-   *  ScalaCheck regards each command as atomic, even if the command
-   *  is a sequence of other commands. */
-  def commandSequence(head: Command, snd: Command, rest: Command*): Command =
-    CommandSequence(head, snd, rest: _*)
-
-  /** A command that runs a sequence of other commands */
-  private final case class CommandSequence(
-    head: Command, snd: Command, rest: Command*
-  ) extends SuccessCommand {
-    /* The tail of the command sequence */
-    val tail: Command =
-      if (rest.isEmpty) snd else CommandSequence(snd, rest.head, rest.tail: _*)
-
-    type Result = (Try[head.Result], Try[tail.Result])
-
-    def run(sut: Sut): Result = (Try(head.run(sut)), Try(tail.run(sut)))
-
-    def nextState(state: State): State = tail.nextState(head.nextState(state))
-
-    def preCondition(state: State): Boolean =
-      head.preCondition(state) && tail.preCondition(head.nextState(state))
-
-    def postCondition(state: State, result: Result): Prop =
-      head.postCondition(state, result._1) &&
-      tail.postCondition(head.nextState(state), result._2)
   }
 
   /** A property that can be used to test this [[Commands]] specification.
@@ -266,7 +309,7 @@ trait Commands {
   // Private methods //
   private type Commands = List[Command]
 
-  private case class Actions(
+  case class Actions(
     s: State, seqCmds: Commands, parCmds: List[Commands]
   )
 
@@ -281,10 +324,17 @@ trait Commands {
   }
 
   private def runSeqCmds(sut: Sut, s0: State, cs: Commands
-  ): (Prop, State, List[Try[String]]) =
-    cs.foldLeft((Prop.proved,s0,List[Try[String]]())) { case ((p,s,rs),c) =>
-      val (r,pf) = c.runPC(sut)
-      (p && pf(s), c.nextState(s), rs :+ r)
+  ): (Prop, State, List[Try[String]]) = {
+    val (prop, finalState, labels, _) = cs.foldLeft((Prop.proved,s0,List[Try[String]](),1)) { 
+      case ((p,s,rs,count),c) => {
+        import Prop.BooleanOperators
+        val r = Try(c.run(sut, s))
+        val pf:State => Prop = st => c.preCondition(st) ==> c.postCondition(st,r)
+        val term = DynVar(Binding(count), r)
+        (p && pf(s), c.nextState(s,term), rs :+ r.map(_.toString), count + 1)
+      }
+    }
+    (prop, finalState, labels)
     }
 
   private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]
@@ -296,15 +346,20 @@ trait Commands {
 
     def endStates(scss: (State, List[Commands])): List[State] = {
       val (s,css) = (scss._1, scss._2.filter(_.nonEmpty))
+      var count = 0
       (memo.get((s,css)),css) match {
         case (Some(states),_) => states
         case (_,Nil) => List(s)
         case (_,cs::Nil) =>
-          List(cs.init.foldLeft(s) { case (s0,c) => c.nextState(s0) })
+          List(cs.init.foldLeft(s) { case (s0,c) => {
+            count += 1
+            c.nextState(s0, SymbVar(count)) 
+          }})
         case _ =>
-          val inits = scan(css) { case (cs,x) =>
-            (cs.head.nextState(s), cs.tail::x)
-          }
+          val inits = scan(css) { case (cs,x) => {
+            count += 1
+            (cs.head.nextState(s, SymbVar(count)), cs.tail::x)
+          }}
           val states = inits.distinct.flatMap(endStates).distinct
           memo += (s,css) -> states
           states
@@ -314,8 +369,8 @@ trait Commands {
     def run(endStates: List[State], cs: Commands
     ): Future[(Prop,List[(Command,Try[String])])] = Future {
       if(cs.isEmpty) (Prop.proved, Nil) else blocking {
-        val rs = cs.init.map(_.runPC(sut)._1)
-        val (r,pf) = cs.last.runPC(sut)
+        val rs = cs.init.map(_.runPC(sut, s)._1)
+        val (r,pf) = cs.last.runPC(sut, s)
         (Prop.atLeastOne(endStates.map(pf): _*), cs.zip(rs :+ r))
       }
     }
@@ -363,24 +418,28 @@ trait Commands {
 
     def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] = {
       val l: List[Unit] = List.fill(sz)(())
+      var count = 0
       l.foldLeft(const((s,Nil:Commands))) { case (g,()) =>
         for {
           (s0,cs) <- g
           c <- genCommand(s0) suchThat (_.preCondition(s0))
-        } yield (c.nextState(s0), cs :+ c)
+        } yield {
+          count += 1
+          (c.nextState(s0, SymbVar(count)), cs :+ c)
+        }
       }
     }
 
-    def cmdsPrecond(s: State, cmds: Commands): (State,Boolean) = cmds match {
+    def cmdsPrecond(s: State, cmds: Commands, count: Int): (State,Boolean) = cmds match {
       case Nil => (s,true)
-      case c::cs if c.preCondition(s) => cmdsPrecond(c.nextState(s), cs)
+      case c::cs if c.preCondition(s) => cmdsPrecond(c.nextState(s, SymbVar(count)), cs, count + 1)
       case _ => (s,false)
     }
 
     def actionsPrecond(as: Actions) =
       as.parCmds.length != 1 && as.parCmds.forall(_.nonEmpty) &&
-      initialPreCondition(as.s) && (cmdsPrecond(as.s, as.seqCmds) match {
-        case (s,true) => as.parCmds.forall(cmdsPrecond(s,_)._2)
+      initialPreCondition(as.s) && (cmdsPrecond(as.s, as.seqCmds, 1) match {
+        case (s,true) => as.parCmds.forall(cmdsPrecond(s,_,1)._2)
         case _ => false
       })
 
