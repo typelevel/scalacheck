@@ -72,9 +72,9 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   // Force clean before packaging.
   // https://github.com/rickynils/scalacheck/issues/318
-  packageBin in compile := {
+  packageBin in Compile := {
     clean.value
-    (packageBin in compile).value
+    (packageBin in Compile).value
   },
 
   // Travis should only publish snapshots
