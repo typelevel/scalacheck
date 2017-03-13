@@ -51,9 +51,15 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   scalacOptions in (Compile,doc) += "-Xfatal-warnings",
 
   mimaPreviousArtifacts := (
-    if (CrossVersion isScalaApiCompatible scalaVersion.value)
-      Set("org.scalacheck" %%% "scalacheck" % "1.13.4")
-    else
+    if (CrossVersion isScalaApiCompatible scalaVersion.value) {
+      val artifactId =
+        if(isScalaJSProject.value) {
+          s"${name.value}_sjs0.6_${scalaBinaryVersion.value}"
+        } else {
+          s"${name.value}_${scalaBinaryVersion.value}"
+        }
+      Set("org.scalacheck" % artifactId % "1.13.4")
+    } else
       Set.empty
   ),
 
