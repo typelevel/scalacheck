@@ -24,6 +24,20 @@ object GenSpecification extends Properties("Gen") {
     arbitrary[Long] flatMap Seed.apply
   )
 
+  property("pureApply #300") = {
+    def testCase[A](gen: Gen[A]): Prop =
+      sizedProp { sz =>
+        val g = Gen.function1(gen)(Cogen[Int])
+        if (sz > 0) forAll(g) { f => f(999); true } else Prop(true)
+      }
+    val p0 = testCase(arbitrary[Int].suchThat(_ != 0))
+    val p1 = testCase(arbitrary[String].suchThat(_ != ""))
+    val p2 = testCase(arbitrary[Boolean].suchThat(_ != false))
+    val p3 = testCase(arbitrary[List[Double]].suchThat(_ != Nil))
+    val p4 = testCase(oneOf(1, 2, 3, 4, 5).suchThat(_ == 1))
+    p0 && p1 && p2 && p3 && p4
+  }
+
   property("sequence") =
     forAll(listOf(frequency((10,const(arbitrary[Int])),(1,const(fail)))))(l =>
       (someFailing(l) && (sequence[List[Int],Int](l) == fail)) ||
