@@ -1,8 +1,8 @@
 sourceDirectory := file("dummy source directory")
 
-lazy val versionNumber = "1.13.5"
+lazy val versionNumber = "1.13.6"
 
-lazy val isRelease = true
+lazy val isRelease = false
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
@@ -58,7 +58,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
         } else {
           s"${name.value}_${scalaBinaryVersion.value}"
         }
-      Set("org.scalacheck" % artifactId % "1.13.4")
+      Set("org.scalacheck" % artifactId % "1.13.5")
     } else
       Set.empty
   ),
