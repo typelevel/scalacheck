@@ -70,6 +70,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   publishMavenStyle := true,
 
+  // Force clean before packaging.
+  // https://github.com/rickynils/scalacheck/issues/318
+  packageBin in compile := {
+    clean.value
+    (packageBin in compile).value
+  },
+
   // Travis should only publish snapshots
   publishArtifact := !(isRelease && travisCommit.isDefined),
 
