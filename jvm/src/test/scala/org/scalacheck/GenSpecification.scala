@@ -231,6 +231,10 @@ object GenSpecification extends Properties("Gen") {
 
   property("alphaNumChar") = forAll(alphaNumChar)(_.isLetterOrDigit)
 
+  property("utf8Char") = forAll(utf8Char)(_.isValidChar)
+
+  property("utf8PrintableChar") = forAll(utf8PrintableChar)(_.isValidChar)
+
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
     s.forall(_.isLetterOrDigit)
@@ -254,6 +258,14 @@ object GenSpecification extends Properties("Gen") {
 
   property("alphaNumStr") = forAll(alphaNumStr) { s =>
     s.length >= 0 && s.forall(_.isLetterOrDigit)
+  }
+
+  property("utf8Str") = forAll(utf8Str) { s =>
+    s.length >= 0 && s.forall(_.isValidChar)
+  }
+
+  property("utf8PrintableStr") = forAll(utf8PrintableStr) { s =>
+    s.length >= 0 && s.forall(_.isValidChar)
   }
 
   // BigDecimal generation is tricky; just ensure that the generator gives

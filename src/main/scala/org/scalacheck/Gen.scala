@@ -716,6 +716,11 @@ object Gen extends GenArities{
   /** Generates an alphanumerical character */
   def alphaNumChar = frequency((1,numChar), (9,alphaChar))
 
+  /** Generates a UTF-8 character, with extra weighting for printable characters */
+  def utf8Char: Gen[Char] = chooseNum(0, 255, 32 to 126:_*).map(_.toChar)
+
+  /** Generates a UTF-8 printable character */
+  def utf8PrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
 
   //// String Generators ////
 
@@ -745,6 +750,14 @@ object Gen extends GenArities{
   /** Generates a string of alphanumerical characters */
   def alphaNumStr: Gen[String] =
     listOf(alphaNumChar).map(_.mkString)
+
+  /** Generates a string of UTF-8 characters, with extra weighting for printable characters */
+  def utf8Str: Gen[String] =
+    listOf(utf8Char).map(_.mkString)
+
+  /** Generates a string of UTF-8 printable characters */
+  def utf8PrintableStr: Gen[String] =
+    listOf(utf8PrintableChar).map(_.mkString)
 
 
   //// Number Generators ////
