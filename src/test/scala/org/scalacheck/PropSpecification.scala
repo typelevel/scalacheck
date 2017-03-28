@@ -186,7 +186,7 @@ object PropSpecification extends Properties("Prop") {
     forAll { (p: Prop) =>
       val params = Gen.Parameters.default.withInitialSeed(999L)
       val x = p(params).success
-      val set = (1 to 20).map(_ => p(params).success).toSet
+      val set = (1 to 10).map(_ => p(params).success).toSet
       Prop(set == Set(x)).label(s"$set == Set($x)")
     }
 
@@ -195,7 +195,7 @@ object PropSpecification extends Properties("Prop") {
       val params = Gen.Parameters.default
       val p = p0.useSeed("some name", rng.Seed(n))
       val x = p(params).success
-      val set = (1 to 20).map(_ => p(params).success).toSet
+      val set = (1 to 10).map(_ => p(params).success).toSet
       Prop(set == Set(x)).label(s"$set == Set($x)")
     }
 
@@ -204,8 +204,8 @@ object PropSpecification extends Properties("Prop") {
       val params = Gen.Parameters.default
       val p0 = Prop.forAll(g1, g2, g3) { (x, y, z) => x == y && y == z }
       val p = p0.useSeed("some name", rng.Seed(n))
-      val x = p(params).success
-      val set = (1 to 20).map(_ => p(params).success).toSet
-      Prop(set == Set(x)).label(s"$set == Set($x)")
+      val r1 = p(params).success
+      val r2 = p(params).success
+      Prop(r1 == r2).label(s"$r1 == $r2")
     }
 }

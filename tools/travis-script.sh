@@ -4,7 +4,7 @@ set -evu
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
-  TESTS=200
+  TESTS=100
 else
   TESTS=1000
 fi
