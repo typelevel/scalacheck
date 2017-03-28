@@ -107,7 +107,7 @@ class Properties(val name: String) {
       val fullName = s"$name.$propName"
       optSeed match {
         case Some(encodedSeed) =>
-          val seed = Seed.fromBase64(encodedSeed)
+          val seed = Seed.fromBase64(encodedSeed).get
           props += ((fullName, Prop.delay(p).useSeed(fullName, seed)))
         case None =>
           props += ((fullName, Prop.delay(p).viewSeed(fullName)))
