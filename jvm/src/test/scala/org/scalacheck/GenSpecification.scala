@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2016 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -231,6 +231,19 @@ object GenSpecification extends Properties("Gen") {
 
   property("alphaNumChar") = forAll(alphaNumChar)(_.isLetterOrDigit)
 
+  property("asciiChar") = forAll(asciiChar)(_.isValidChar)
+
+  property("asciiPrintableChar") = forAll(asciiPrintableChar) { ch =>
+    val charType = Character.getType(ch)
+    Character.isLetterOrDigit(ch) || Character.isSpaceChar(ch) ||
+      charType == Character.CONNECTOR_PUNCTUATION || charType == Character.DASH_PUNCTUATION ||
+      charType == Character.START_PUNCTUATION || charType == Character.END_PUNCTUATION ||
+      charType == Character.INITIAL_QUOTE_PUNCTUATION || charType == Character.FINAL_QUOTE_PUNCTUATION ||
+      charType == Character.OTHER_PUNCTUATION ||
+      charType == Character.MATH_SYMBOL || charType == Character.CURRENCY_SYMBOL ||
+      charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
+  }
+
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
     s.forall(_.isLetterOrDigit)
@@ -254,6 +267,23 @@ object GenSpecification extends Properties("Gen") {
 
   property("alphaNumStr") = forAll(alphaNumStr) { s =>
     s.length >= 0 && s.forall(_.isLetterOrDigit)
+  }
+
+  property("asciiStr") = forAll(asciiStr) { s =>
+    s.length >= 0 && s.forall(_.isValidChar)
+  }
+
+  property("asciiPrintableStr") = forAll(asciiPrintableStr) { s =>
+    s.length >= 0 && s.forall { ch =>
+      val charType = Character.getType(ch)
+      Character.isLetterOrDigit(ch) || Character.isSpaceChar(ch) ||
+        charType == Character.CONNECTOR_PUNCTUATION || charType == Character.DASH_PUNCTUATION ||
+        charType == Character.START_PUNCTUATION || charType == Character.END_PUNCTUATION ||
+        charType == Character.INITIAL_QUOTE_PUNCTUATION || charType == Character.FINAL_QUOTE_PUNCTUATION ||
+        charType == Character.OTHER_PUNCTUATION ||
+        charType == Character.MATH_SYMBOL || charType == Character.CURRENCY_SYMBOL ||
+        charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
+    }
   }
 
   // BigDecimal generation is tricky; just ensure that the generator gives

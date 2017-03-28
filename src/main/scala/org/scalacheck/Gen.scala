@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
  **  ScalaCheck                                                             **
- **  Copyright (c) 2007-2016 Rickard Nilsson. All rights reserved.          **
+ **  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
  **  http://www.scalacheck.org                                              **
  **                                                                         **
  **  This software is released under the terms of the Revised BSD License.  **
@@ -655,6 +655,16 @@ object Gen extends GenArities{
   def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
     choose(0, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
+  /** A generator that picks at least one element from a list */
+  def atLeastOne[T](l: Iterable[T]) = {
+    require(l.size > 0, "There has to be at least one option to choose from")
+    choose(1,l.size).flatMap(pick(_,l))
+  }
+
+  /** A generator that picks at least one element from a list */
+  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+    choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
+
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
@@ -716,6 +726,11 @@ object Gen extends GenArities{
   /** Generates an alphanumerical character */
   def alphaNumChar = frequency((1,numChar), (9,alphaChar))
 
+  /** Generates a ASCII character, with extra weighting for printable characters */
+  def asciiChar: Gen[Char] = chooseNum(0, 127, 32 to 126:_*).map(_.toChar)
+
+  /** Generates a ASCII printable character */
+  def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
 
   //// String Generators ////
 
@@ -745,6 +760,14 @@ object Gen extends GenArities{
   /** Generates a string of alphanumerical characters */
   def alphaNumStr: Gen[String] =
     listOf(alphaNumChar).map(_.mkString)
+
+  /** Generates a string of ASCII characters, with extra weighting for printable characters */
+  def asciiStr: Gen[String] =
+    listOf(asciiChar).map(_.mkString)
+
+  /** Generates a string of ASCII printable characters */
+  def asciiPrintableStr: Gen[String] =
+    listOf(asciiPrintableChar).map(_.mkString)
 
 
   //// Number Generators ////
