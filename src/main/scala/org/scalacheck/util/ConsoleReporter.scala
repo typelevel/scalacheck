@@ -13,8 +13,9 @@ import Pretty.{Params, pretty, format}
 import org.scalacheck.Test
 
 /** A [[org.scalacheck.Test.TestCallback]] implementation that prints
- *  test results directly to the console. This is the callback used
- *  by ScalaCheck's command line test runner, and when you run [[org.scalacheck.Prop!.check:Unit*]]
+ *  test results directly to the console. This is the callback used by
+ *  ScalaCheck's command line test runner, and when you run
+ *  `org.scalacheck.Prop.check()`.
  */
 class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
 

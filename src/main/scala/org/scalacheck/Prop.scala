@@ -763,7 +763,9 @@ object Prop {
       provedToTrue(p(slideSeed(prms0)))
     }
 
-    /** Returns the first failed result in Left or success in Right */
+    /*
+     * Returns the first failed result in Left or success in Right.
+     */
     def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
       val results = xs.map(x => (x, result(x)))
