@@ -655,6 +655,16 @@ object Gen extends GenArities{
   def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
     choose(0, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
+  /** A generator that picks at least one element from a list */
+  def atLeastOne[T](l: Iterable[T]) = {
+    require(l.size > 0, "There has to be at least one option to choose from")
+    choose(1,l.size).flatMap(pick(_,l))
+  }
+
+  /** A generator that picks at least one element from a list */
+  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+    choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
+
   /** A generator that picks a given number of elements from a list, randomly */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
