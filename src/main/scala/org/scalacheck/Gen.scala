@@ -642,7 +642,7 @@ object Gen extends GenArities{
     }
     gen { (p, seed0) =>
       new R[Stream[T]] {
-        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s), s.next)))
+        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s) -> s.next)))
         val seed: Seed = seed0.next
       }
     }
@@ -701,7 +701,7 @@ object Gen extends GenArities{
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
-  def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R] =
+  def resultOf[T,R0](f: T => R0)(implicit a: Arbitrary[T]): Gen[R0] =
     arbitrary[T] map f
 
   /** Creates a Function0 generator. */

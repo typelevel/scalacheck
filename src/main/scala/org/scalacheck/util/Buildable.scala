@@ -9,8 +9,6 @@
 
 package org.scalacheck.util
 
-import language.higherKinds
-
 import collection.{ Map => _, _ }
 import generic.CanBuildFrom
 

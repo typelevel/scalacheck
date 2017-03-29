@@ -10,7 +10,6 @@
 package org.scalacheck.example
 
 import org.scalacheck._
-import Gen.{listOf, alphaStr, numChar}
 
 object StringUtils extends Properties("Examples.StringUtils") {
 

@@ -50,9 +50,9 @@ sealed trait FreqMap[T] extends Serializable {
 
   def getCounts: List[(T,Int)] = underlying.toList.sortBy(-_._2)
 
-  def getRatio(t: T) = for(c <- getCount(t)) yield (c: Float)/total
+  def getRatio(t: T) = for(c <- getCount(t)) yield c.toFloat/total
 
-  def getRatios = for((t,c) <- getCounts) yield (t, (c: Float)/total)
+  def getRatios = for((t,c) <- getCounts) yield (t, c.toFloat/total)
 
   override def toString = underlying.toString
 }

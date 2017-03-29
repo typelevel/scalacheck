@@ -13,7 +13,6 @@ import Gen._
 import Prop._
 import Test._
 import Arbitrary._
-import collection.mutable.ListBuffer
 
 object TestSpecification extends Properties("Test") {
 
@@ -29,7 +28,7 @@ object TestSpecification extends Properties("Test") {
 
   val shrinked = forAll( (t: (Int,Int,Int)) => false )
 
-  val propException = forAll { n:Int => throw new java.lang.Exception; true }
+  val propException = forAll { n:Int => throw new java.lang.Exception }
 
   val undefinedInt = for{
     n <- arbitrary[Int]

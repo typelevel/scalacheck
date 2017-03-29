@@ -13,7 +13,7 @@ import language.implicitConversions
 import language.reflectiveCalls
 
 import rng.Seed
-import util.{Pretty, FreqMap, Buildable, ConsoleReporter}
+import util.{Pretty, ConsoleReporter}
 import scala.annotation.tailrec
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
@@ -26,8 +26,7 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 @Platform.JSExportDescendentObjects
 sealed abstract class Prop extends Serializable { self =>
 
-  import Prop.{Result, Proof, True, False, Exception, Undecided,
-    provedToTrue, secure, mergeRes}
+  import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
   import Gen.Parameters
 
   def apply(prms: Parameters): Result
@@ -74,7 +73,7 @@ sealed abstract class Prop extends Serializable { self =>
    *
    *  The default test parameters
    *  ([[Test.Parameters.default]]) are used for the check. */
-  def check: Unit = check(Test.Parameters.default)
+  def check(): Unit = check(Test.Parameters.default)
 
   /** Convenience method that checks this property and reports the result
    *  on the console. Should only be used when running
@@ -169,7 +168,7 @@ sealed abstract class Prop extends Serializable { self =>
 
 object Prop {
 
-  import Gen.{fail, frequency, oneOf, Parameters}
+  import Gen.{fail, Parameters}
   import Arbitrary.{arbitrary}
   import Shrink.{shrink}
 
@@ -321,7 +320,7 @@ object Prop {
 
   /** A collection of property operators on `Any` values.
    *  Import [[Prop.AnyOperators]] to make the operators available. */
-  class ExtendedAny[T <% Pretty](x: => T) {
+  class ExtendedAny[T](x: => T)(implicit ev: T => Pretty) {
     /** See [[Prop.imply]] */
     def imply(f: PartialFunction[T,Prop]) = Prop.imply(x,f)
     /** See [[Prop.iff]] */
@@ -350,7 +349,7 @@ object Prop {
   /** Implicit method that makes a number of property operators on values of
    * type `Any` available in the current scope.
    * See [[Prop.ExtendedAny]] for documentation on the operators. */
-  implicit def AnyOperators[T <% Pretty](x: => T) = new ExtendedAny[T](x)
+  implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty) = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on boolean
    * values available in the current scope. See [[Prop.ExtendedBoolean]] for
@@ -449,7 +448,7 @@ object Prop {
     try { x; false } catch { case e if c.isInstance(e) => true }
 
   /** Collect data for presentation in test report */
-  def collect[T, P <% Prop](f: T => P): T => Prop = t => Prop { prms =>
+  def collect[T, P](f: T => P)(implicit ev: P => Prop): T => Prop = t => Prop { prms =>
     val prop = f(t)
     prop(prms).collect(t)
   }
@@ -469,7 +468,7 @@ object Prop {
 
   /** Wraps and protects a property, turning exceptions thrown
    *  by the property into test failures. */
-  def secure[P <% Prop](p: => P): Prop =
+  def secure[P](p: => P)(implicit ev: P => Prop): Prop =
     try (p: Prop) catch { case e: Throwable => exception(e) }
 
   /** Wraps a property to delay its evaluation. The given parameter is
@@ -764,7 +763,9 @@ object Prop {
       provedToTrue(p(slideSeed(prms0)))
     }
 
-    /** Returns the first failed result in Left or success in Right */
+    /*
+     * Returns the first failed result in Left or success in Right.
+     */
     def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
       val results = xs.map(x => (x, result(x)))

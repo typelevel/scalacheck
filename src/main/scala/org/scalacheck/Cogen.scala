@@ -10,12 +10,10 @@
 package org.scalacheck
 
 import language.higherKinds
-import language.implicitConversions
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import Arbitrary.arbitrary
 import java.math.BigInteger
 import rng.Seed
 

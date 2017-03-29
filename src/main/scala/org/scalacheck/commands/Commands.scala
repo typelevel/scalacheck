@@ -167,15 +167,14 @@ trait Commands {
    *  ScalaCheck regards each command as atomic, even if the command
    *  is a sequence of other commands. */
   def commandSequence(head: Command, snd: Command, rest: Command*): Command =
-    CommandSequence(head, snd, rest: _*)
+    new CommandSequence(head, snd, rest: _*)
 
   /** A command that runs a sequence of other commands */
-  private final case class CommandSequence(
-    head: Command, snd: Command, rest: Command*
-  ) extends SuccessCommand {
+  private final class CommandSequence(val head: Command, snd: Command, rest: Command*)
+    extends SuccessCommand {
     /* The tail of the command sequence */
     val tail: Command =
-      if (rest.isEmpty) snd else CommandSequence(snd, rest.head, rest.tail: _*)
+      if (rest.isEmpty) snd else new CommandSequence(snd, rest.head, rest.tail: _*)
 
     type Result = (Try[head.Result], Try[tail.Result])
 
@@ -223,14 +222,14 @@ trait Commands {
           val runningSuts = for((_,Some(sut)) <- suts.values) yield sut
           if (canCreateNewSut(as.s, initSuts, runningSuts)) {
             val sutId = new AnyRef
-            suts += (sutId -> (as.s,None))
+            suts += (sutId -> (as.s -> None))
             Some(sutId)
           } else None
         }
         sutId match {
           case Some(id) =>
             val sut = newSut(as.s)
-            def removeSut  {
+            def removeSut():Unit = {
               suts.synchronized {
                 suts -= id
                 destroySut(sut)
@@ -238,7 +237,7 @@ trait Commands {
             }
             val doRun = suts.synchronized {
               if (suts.contains(id)) {
-                suts += (id -> (as.s,Some(sut)))
+                suts += (id -> (as.s -> Some(sut)))
                 true
               } else false
             }
@@ -321,7 +320,7 @@ trait Commands {
     }
 
     try {
-      val res = Future.traverse(pcmds)(run(endStates(s,pcmds), _)) map { l =>
+      val res = Future.traverse(pcmds)(run(endStates(s -> pcmds), _)) map { l =>
         val (ps,rs) = l.unzip
         (Prop.atLeastOne(ps: _*), rs)
       }
@@ -359,7 +358,7 @@ trait Commands {
 
   /** [[Actions]] generator */
   private def actions(threadCount: Int, maxParComb: Int): Gen[Actions] = {
-    import Gen.{const, listOfN, choose, sized}
+    import Gen.{const, listOfN, sized}
 
     def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] = {
       val l: List[Unit] = List.fill(sz)(())
@@ -401,11 +400,11 @@ trait Commands {
     val parSz = {
       // Nbr of combinations
       def seqs(n: Long, m: Long): Long =
-        if(n == 1) 1 else math.round(math.pow(n,m)) * seqs(n-1,m)
+        if(n == 1) 1 else math.round(math.pow(n.toDouble, m.toDouble)) * seqs(n-1,m)
 
       if (threadCount < 2) 0 else {
         var parSz = 1
-        while (seqs(threadCount, parSz) < maxParComb) parSz += 1
+        while (seqs(threadCount.toLong, parSz.toLong) < maxParComb) parSz += 1
         parSz
       }
     }
