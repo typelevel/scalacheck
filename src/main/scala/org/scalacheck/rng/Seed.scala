@@ -10,10 +10,10 @@ import scala.util.Try
  * http://burtleburtle.net/bob/rand/smallprng.html
  */
 sealed abstract class Seed extends Serializable {
-  val a: Long
-  val b: Long
-  val c: Long
-  val d: Long
+  protected val a: Long
+  protected val b: Long
+  protected val c: Long
+  protected val d: Long
 
   /**
    * Generate a Base-64 representation of this seed.
