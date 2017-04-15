@@ -99,7 +99,7 @@ sealed abstract class Seed extends Serializable {
 object Seed {
 
   private case class apply(a: Long, b: Long, c: Long, d: Long) extends Seed {
-    override def toString: String = toBase64
+    override def toString: String = s"""Seed.fromBase64("$toBase64")"""
   }
 
   /** Generate a deterministic seed. */
