@@ -1,4 +1,8 @@
-package org.scalacheck.rng
+package org.scalacheck
+package rng
+
+import scala.annotation.tailrec
+import scala.util.Try
 
 /**
  * Simple RNG by Bob Jenkins:
@@ -95,7 +99,7 @@ sealed abstract class Seed extends Serializable {
 object Seed {
 
   private case class apply(a: Long, b: Long, c: Long, d: Long) extends Seed {
-    override def toString: String = "Seed(%016x, %016x, %016x, %016x)" format (a, b, c, d)
+    override def toString: String = s"""Seed.fromBase64("$toBase64")"""
   }
 
   /** Generate a deterministic seed. */
@@ -141,14 +145,11 @@ object Seed {
    * This method will throw an IllegalArgumentException if parsing
    * fails.
    */
-  def fromBase64(s: String): Seed = {
+  def fromBase64(s: String): Try[Seed] = {
     def fail(s: String): Nothing = throw new IllegalArgumentException(s)
-    if (s.length != 44) fail(s"wrong Base64 length: $s")
-    if (s.charAt(43) != '=') fail(s"wrong Base64 format: $s")
-    if (s.charAt(42) == '=') fail(s"wrong Base64 format: $s")
 
     def dec(c: Char): Long =
-      if ('A' <= c && c <= 'Z') (c - 'A').toLong
+      if      ('A' <= c && c <= 'Z') (c - 'A').toLong
       else if ('a' <= c && c <= 'z') ((c - 'a') + 26).toLong
       else if ('0' <= c && c <= '9') ((c - '0') + 52).toLong
       else if (c == '-') 62L
@@ -156,7 +157,7 @@ object Seed {
       else fail(s"illegal Base64 character: $c")
 
     val longs = new Array[Long](4)
-    def decode(x: Long, shift: Int, i: Int, j: Int): Seed =
+    @tailrec def decode(x: Long, shift: Int, i: Int, j: Int): Seed =
       if (i >= 43) {
         Seed.fromLongs(longs(0), longs(1), longs(2), longs(3))
       } else {
@@ -169,7 +170,13 @@ object Seed {
           decode(b >>> sh, 6 - sh, i + 1, j + 1)
         }
       }
-    decode(0L, 0, 0, 0)
+
+    Try {
+      if (s.length != 44) fail(s"wrong Base64 length: $s")
+      if (s.charAt(43) != '=') fail(s"wrong Base64 format: $s")
+      if (s.charAt(42) == '=') fail(s"wrong Base64 format: $s")
+      decode(0L, 0, 0, 0)
+    }
   }
 
   /** Generate a random seed. */

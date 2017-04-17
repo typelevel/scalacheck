@@ -12,6 +12,7 @@ package org.scalacheck
 import Prop.forAll
 import Arbitrary.arbitrary
 import rng.Seed
+import scala.util.Try
 
 object SeedSpecification extends Properties("Seed") {
 
@@ -69,11 +70,11 @@ object SeedSpecification extends Properties("Seed") {
 
   property("base-64 serialization works") =
     forAll { (s0: Seed) =>
-      s0 == Seed.fromBase64(s0.toBase64)
+      Try(s0) == Seed.fromBase64(s0.toBase64)
     }
 
   property("illegal seeds throw exceptions") =
     forAll { (s: String) =>
-      scala.util.Try(Seed.fromBase64(s)).isFailure
+      Seed.fromBase64(s).isFailure
     }
 }
