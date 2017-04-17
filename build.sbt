@@ -70,6 +70,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     }
   },
 
+  // HACK: without these lines, the console is basically unusable,
+  // since all imports are reported as being unused (and then become
+  // fatal errors).
+  scalacOptions in (Compile, console) ~= {_.filterNot("-Ywarn-unused-import" == _)},
+  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
+
+  // don't use fatal warnings in tests
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   //mimaPreviousArtifacts := (
