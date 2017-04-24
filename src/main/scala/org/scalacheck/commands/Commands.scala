@@ -159,6 +159,51 @@ trait Commands {
     def preCondition(state: State) = true
     def postCondition(state: State, result: Try[Null]) = true
   }
+  
+  /** A command sequence that is executed completely even if some commands fail. */
+  def commandSequence(head: Command, tail: Command*) = new CommandSequence(head +: tail, true)
+  /** A command sequence that is aborted even if some commands fail. */
+  def abortableCommandSequence(head: Command, tail: Command*) = new CommandSequence(head +: tail, false)
+
+  case class CommandSequence(commands: Seq[Command], continueOnFailure:Boolean) extends SuccessCommand {
+    lazy val headCommand: Command = if (commands.isEmpty) NoOp else commands.head
+    lazy val tailCommands: Command = if (commands.size <= 1) NoOp else new CommandSequence(commands.tail, continueOnFailure)
+    type Result = (Try[headCommand.Result], Option[tailCommands.Result])
+    def run(sut: Sut): Result = {
+      val headResult: Try[headCommand.Result] = try {
+        Success(headCommand.run(sut))
+      } catch {
+        case e: Exception => Failure(e)
+      }
+      (headResult, 
+          if(headResult.isSuccess || continueOnFailure) Some(tailCommands.run(sut)) else None
+       )
+    }
+
+    def nextState(state: State) = 
+        tailCommands.nextState(headCommand.nextState(state))
+        
+    def preCondition(state: State) = 
+        headCommand.preCondition(state) && 
+        tailCommands.preCondition(headCommand.nextState(state))
+        
+    def postCondition(state: State, result: Result) = {
+          val areAllCommandsExecuted = ! result._2.isEmpty
+          
+          ("The state must not be changed by the aborted commands" |: Prop.propBoolean(areAllCommandsExecuted || {
+           val stateAfterHeadCommand = headCommand.nextState(state)
+           val stateAfterAllCommands = tailCommands.nextState(stateAfterHeadCommand)
+           stateAfterHeadCommand == stateAfterAllCommands
+          })) && 
+          headCommand.postCondition(state, result._1) && { 
+            if (areAllCommandsExecuted) 
+               tailCommands.postCondition(headCommand.nextState(state), Success(result._2.get)) 
+            else 
+                true
+          }
+    }
+  }
+
 
   /** A command that runs a sequence of other commands.
    *  All commands (and their post conditions) are executed even if some
