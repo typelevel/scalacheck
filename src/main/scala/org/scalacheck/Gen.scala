@@ -653,7 +653,7 @@ object Gen extends GenArities{
           buf += t
         } else {
           val (x, s) = seed.long
-          val i = (x & 0x7fffffff).toInt % n
+          val i = (x & 0x7fffffff).toInt % count
           if (i < n) buf(i) = t
           seed = s
         }
