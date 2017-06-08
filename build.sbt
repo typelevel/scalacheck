@@ -21,7 +21,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   version := {
     val suffix =
       if (isRelease) ""
-      else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
+      else /*travisCommit.map("-" + _.take(7)).getOrElse("") +*/ "-SNAPSHOT"
     versionNumber + suffix
   },
 
