@@ -10,7 +10,6 @@
 package org.scalacheck.util
 
 import language.implicitConversions
-import language.reflectiveCalls
 
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
@@ -44,7 +43,7 @@ object Pretty {
 
   def pretty[T](t: T)(implicit ev: T => Pretty): String = pretty(t, defaultParams)
 
-  implicit def strBreak(s1: String) = new {
+  private[this] implicit class StrBreak(val s1: String) extends AnyVal {
     def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2
   }
 
