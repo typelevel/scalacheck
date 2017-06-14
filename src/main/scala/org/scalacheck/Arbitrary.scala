@@ -173,6 +173,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbError: Arbitrary[Error] =
     Arbitrary(const(new Error))
 
+  /** Arbitrary instance of UUID */
+  implicit lazy val arbUuid: Arbitrary[java.util.UUID] =
+    Arbitrary(Gen.uuid)
+
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
     val long: Gen[Long] =
