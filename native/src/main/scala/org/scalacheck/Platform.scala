@@ -28,7 +28,7 @@ private[scalacheck] object Platform {
     org.scalajs.testinterface.TestUtils.newInstance(name, loader)(args)
 
   // We don't need those annotation in Native, and they have been deprecated.
-  // We use `Unit` instead of the definition in Native because `-Xfatal-warnings`
+  // We use `String` instead of the definition in Native because `-Xfatal-warnings`
   // is set.
   type JSExportDescendentObjects = String
   type JSExportDescendentClasses = String

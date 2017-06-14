@@ -21,7 +21,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   version := {
     val suffix =
       if (isRelease) ""
-      else /*travisCommit.map("-" + _.take(7)).getOrElse("") +*/ "-SNAPSHOT"
+      else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
     versionNumber + suffix
   },
 
@@ -136,7 +136,6 @@ lazy val native = project.in(file("native"))
     doc in Compile := (doc in Compile in jvm).value,
     scalaVersion := "2.11.11",
     libraryDependencies ++= Seq(
-      "org.scala-sbt" % "test-interface" % "1.0",
       "org.scala-native" %% "test-interface_native0.3.0-SNAPSHOT" % "0.3.0-SNAPSHOT"
     )
   )
