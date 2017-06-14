@@ -27,7 +27,9 @@ private[scalacheck] object Platform {
   def newInstance(name: String, loader: ClassLoader)(args: Seq[AnyRef]): AnyRef =
     org.scalajs.testinterface.TestUtils.newInstance(name, loader)(args)
 
-  type JSExportDescendentObjects = scala.scalajs.js.annotation.JSExportDescendentObjects
-
-  type JSExportDescendentClasses = scala.scalajs.js.annotation.JSExportDescendentClasses
+  // We don't need those annotation in Native, and they have been deprecated.
+  // We use `Unit` instead of the definition in Native because `-Xfatal-warnings`
+  // is set.
+  type JSExportDescendentObjects = String
+  type JSExportDescendentClasses = String
 }
