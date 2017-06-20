@@ -97,7 +97,10 @@ lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     scalaJSStage in Global := FastOptStage,
-    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
+    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
+    // this will work for the Scala.js 0.6.x series but will eventually need
+    // to be addressed properly, as per http://www.scala-js.org/news/2017/03/21/announcing-scalajs-0.6.15/
+    scalacOptions += "-P:scalajs:suppressExportDeprecations"
   )
   .enablePlugins(ScalaJSPlugin)
 
