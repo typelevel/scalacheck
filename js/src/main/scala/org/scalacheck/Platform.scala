@@ -24,10 +24,8 @@ private[scalacheck] object Platform {
   def loadModule(name: String, loader: ClassLoader): AnyRef =
     org.scalajs.testinterface.TestUtils.loadModule(name, loader)
 
-  def newInstance(name: String, loader: ClassLoader)(args: Seq[AnyRef]): AnyRef =
-    org.scalajs.testinterface.TestUtils.newInstance(name, loader)(args)
+  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
+    org.scalajs.testinterface.TestUtils.newInstance(name, loader, paramTypes)(args)
 
-  type JSExportDescendentObjects = scala.scalajs.js.annotation.JSExportDescendentObjects
-
-  type JSExportDescendentClasses = scala.scalajs.js.annotation.JSExportDescendentClasses
+  type EnableReflectiveInstantiation = scala.scalajs.reflect.annotation.EnableReflectiveInstantiation
 }
