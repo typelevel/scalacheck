@@ -136,7 +136,7 @@ lazy val native = project.in(file("native"))
     doc in Compile := (doc in Compile in jvm).value,
     scalaVersion := "2.11.11",
     libraryDependencies ++= Seq(
-      "org.scala-native" %% "test-interface_native0.3.0-SNAPSHOT" % "0.3.0-SNAPSHOT"
+      "org.scala-native" %% "test-interface_native0.3" % "0.3.1"
     )
   )
   .enablePlugins(ScalaNativePlugin)
