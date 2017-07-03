@@ -1,4 +1,5 @@
 language: scala
+dist: trusty
 script: ./tools/travis-script.sh
 after_success: ./tools/travis-deploy.sh
 branches:
@@ -27,4 +28,11 @@ env:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
     - PLATFORM=jvm SBT_PARALLEL=false WORKERS=4 DEPLOY=false
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
-sudo: false
+
+matrix:
+  include:
+    - scala: 2.11.11
+      before_script:
+        - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.0/bin/travis_setup.sh | bash -x
+      sudo: required
+      env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
