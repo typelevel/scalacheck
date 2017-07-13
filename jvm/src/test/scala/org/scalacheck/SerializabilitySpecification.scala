@@ -72,20 +72,24 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableArbitrary[Int]("Int")
   serializableArbitrary[Double]("Double")
   serializableArbitrary[Boolean]("Boolean")
+  serializableArbitrary[Int => Int]("Int => Int")
 
   serializableGen("identifier", Gen.identifier)
   serializableGen("oneOf", Gen.oneOf(true, false))
   serializableGen("choose", Gen.choose(1, 10))
+  serializableGen("function1", Gen.function1[Int, Int](Gen.choose(1, 10)))
 
   serializableCogen[String]("String")
   serializableCogen[Int]("Int")
   serializableCogen[Double]("Double")
   serializableCogen[Boolean]("Boolean")
+  serializableCogen[Int => Int]("Int => Int")
 
   serializableShrink[String]("String")
   serializableShrink[Int]("Int")
   serializableShrink[Double]("Double")
   serializableShrink[Boolean]("Boolean")
+  serializableShrink[Int => Int]("Int => Int")
 
   property("Seed serializability") = {
     assert(serializable(rng.Seed(1L)))
