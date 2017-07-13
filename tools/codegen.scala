@@ -19,8 +19,12 @@ def wrappedArgs(wrapper: String, i: Int) =
     idents("T",i).map(wrapType(_,wrapper))
   ))
 
-def generators(s: Seq[(String,String)]) =
-  s map { case (v,a) => s"$v<-$a"} mkString "; "
+def flatMappedGenerators(i: Int, s: Seq[(String,String)]): String =
+  s.init.foldRight(s"${s.last._2}.map { ${s.last._1} => (${vals(i)}) }") {
+    case ((t, g), acc) =>
+      val T = t.toUpperCase
+      s"${g}.flatMap(new Function1[${T}, Gen[(${types(i)})]] { def apply(${t}: ${T}): Gen[(${types(i)})] = $acc })"
+  }
 
 def vals(i: Int) = csv(idents("t",i))
 
@@ -54,23 +58,30 @@ def genfn(i: Int) = s"""
 """
 
 def tuple(i: Int) = {
-  val gens = generators(
-    idents("t",i) zip
-    idents("a",i).map(_+".arbitrary")
-  )
-  s"""
+  val gens = idents("a",i).map(_+".arbitrary") mkString ","
+
+  if (i == 1) {
+    s"""
   /** Arbitrary instance of ${i}-Tuple */
   implicit def arbTuple$i[${types(i)}](implicit
     ${wrappedArgs("Arbitrary",i)}
   ): Arbitrary[Tuple$i[${types(i)}]]
-    = Arbitrary(for {
-        ${gens}
-      } yield Tuple$i(${vals(i)}))
+    = Arbitrary(${gens}.map(Tuple1(_)))
 """
+  } else {
+    s"""
+  /** Arbitrary instance of ${i}-Tuple */
+  implicit def arbTuple$i[${types(i)}](implicit
+    ${wrappedArgs("Arbitrary",i)}
+  ): Arbitrary[Tuple$i[${types(i)}]]
+    = Arbitrary(Gen.zip(${gens}))
+"""
+  }
 }
 
 def zip(i: Int) = {
-  val gens = generators(idents("t",i) zip idents("g",i))
+  val gens = flatMappedGenerators(i, idents("t",i) zip idents("g",i))
+
   def sieveCopy = idents("g",i) zip idents("t",i) map { case (g,t) => s"$g.sieveCopy($t)" } mkString " && "
   s"""
   /** Combines the given generators into one generator that produces a
@@ -78,9 +89,7 @@ def zip(i: Int) = {
   def zip[${types(i)}](
     ${wrappedArgs("Gen",i)}
   ): Gen[(${types(i)})] = {
-    val g = for {
-      ${gens}
-    } yield (${vals(i)})
+    val g = $gens
     g.suchThat {
       case (${vals(i)}) =>
         ${sieveCopy}
