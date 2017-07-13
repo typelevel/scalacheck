@@ -28,8 +28,7 @@ import util.ConsoleReporter
  *  }
  *  }}}
  */
-@Platform.JSExportDescendentClasses
-@Platform.JSExportDescendentObjects
+@Platform.EnableReflectiveInstantiation
 class Properties(val name: String) {
 
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]

@@ -22,8 +22,7 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
   def apply(prms: Gen.Parameters) = f(prms)
 }
 
-@Platform.JSExportDescendentClasses
-@Platform.JSExportDescendentObjects
+@Platform.EnableReflectiveInstantiation
 sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
