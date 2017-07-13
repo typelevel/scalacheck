@@ -200,6 +200,18 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("distributed pick") = {
+    val lst = (0 to 7).toIterable
+    val n = 2
+    forAll(pick(n, lst)) { xs: Seq[Int] =>
+      xs.map { x: Int =>
+        Prop.collect(x) {
+          xs.size == n
+        }
+      } reduce (_ && _)
+    }
+  }
+
   property("numChar") = forAll(numChar)(_.isDigit)
 
   property("calendar") = forAll(calendar) { cal =>
