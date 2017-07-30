@@ -12,6 +12,8 @@ package org.scalacheck
 import Prop.{forAll, forAllNoShrink, BooleanOperators}
 import Shrink.shrink
 
+import scala.concurrent.duration.{Duration, FiniteDuration}
+
 object ShrinkSpecification extends Properties("Shrink") {
 
   def shrinkClosure[T : Shrink](x: T): Stream[T] = {
@@ -44,6 +46,14 @@ object ShrinkSpecification extends Properties("Shrink") {
     !shrink(n).contains(n)
   }
 
+  property("duration") = forAll { n: Duration =>
+    !shrink(n).contains(n)
+  }
+
+  property("finite duration") = forAll { n: FiniteDuration =>
+    !shrink(n).contains(n)
+  }
+
   property("non-zero byte") = forAll { n: Byte =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
@@ -66,6 +76,14 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   property("non-zero double") = forAll { n: Double =>
     (math.abs(n) > 1E-5d) ==> shrinkClosure(n).contains(0)
+  }
+
+  property("non-zero finite duration") = forAll { n: FiniteDuration =>
+    (n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
+  }
+
+  property("non-zero duration") = forAll { n: Duration =>
+    (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
   implicit def vectorShrink[A: Shrink] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
@@ -119,6 +137,12 @@ object ShrinkSpecification extends Properties("Shrink") {
   property("Shrink[Double] terminates") =
     forAllNoShrink((n: Double) => Shrink.shrink(n).drop(2081).isEmpty)
 
+  property("Shrink[FiniteDuration] terminates") =
+    forAllNoShrink((n: FiniteDuration) => Shrink.shrink(n).drop(2081).isEmpty)
+
+  property("Shrink[Duration] terminates") =
+    forAllNoShrink((n: Duration) => Shrink.shrink(n).drop(2081).isEmpty)
+
   // make sure we handle sentinel values appropriately for Float/Double.
 
   property("Shrink[Float] handles PositiveInfinity") =
@@ -138,4 +162,13 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   property("Shrink[Double] handles NaN") =
     Prop(Shrink.shrink(Double.NaN).isEmpty)
+
+  property("Shrink[Duration] handles Inf") =
+    Prop(Shrink.shrink(Duration.Inf: Duration).isEmpty)
+
+  property("Shrink[Duration] handles MinusInf") =
+    Prop(Shrink.shrink(Duration.MinusInf: Duration).isEmpty)
+
+  property("Shrink[Duration] handles Undefined") =
+    Prop(Shrink.shrink(Duration.Undefined: Duration).isEmpty)
 }

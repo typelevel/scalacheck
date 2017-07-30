@@ -12,6 +12,7 @@ package org.scalacheck
 import language.higherKinds
 import concurrent.Future
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import util.{FreqMap, Buildable}
 import util.SerializableCanBuildFroms._
@@ -58,7 +59,12 @@ sealed abstract class Arbitrary[T] extends Serializable {
  *  generators.
  *  </p>
  */
-object Arbitrary extends ArbitraryLowPriority with ArbitraryArities
+object Arbitrary extends ArbitraryLowPriority with ArbitraryArities {
+
+  /** Arbitrary instance of the Function0 type. */
+  implicit def arbFunction0[T](implicit a: Arbitrary[T]): Arbitrary[() => T] =
+  Arbitrary(arbitrary[T] map (() => _))
+}
 
 /** separate trait to have same priority as ArbitraryArities */
 private[scalacheck] sealed trait ArbitraryLowPriority {
@@ -167,6 +173,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbError: Arbitrary[Error] =
     Arbitrary(const(new Error))
 
+  /** Arbitrary instance of UUID */
+  implicit lazy val arbUuid: Arbitrary[java.util.UUID] =
+    Arbitrary(Gen.uuid)
+
   /** Arbitrary BigInt */
   implicit lazy val arbBigInt: Arbitrary[BigInt] = {
     val long: Gen[Long] =
@@ -254,6 +264,19 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     // XXX TODO - restore BigInt and BigDecimal
     // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))
   }
+
+  /** Arbitrary instance of FiniteDuration */
+  implicit lazy val arbFiniteDuration: Arbitrary[FiniteDuration] =
+    Arbitrary(Gen.finiteDuration)
+
+  /**
+   * Arbitrary instance of Duration.
+   *
+   * In addition to `FiniteDuration` values, this can generate `Duration.Inf`,
+   * `Duration.MinusInf`, and `Duration.Undefined`.
+   */
+  implicit lazy val arbDuration: Arbitrary[Duration] =
+    Arbitrary(Gen.duration)
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] = {
@@ -352,4 +375,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]
     Arbitrary(Gen.oneOf(values))
   }
+
+  implicit def arbPartialFunction[A: Cogen, B: Arbitrary]: Arbitrary[PartialFunction[A, B]] =
+    Arbitrary(implicitly[Arbitrary[A => Option[B]]].arbitrary.map(Function.unlift))
 }

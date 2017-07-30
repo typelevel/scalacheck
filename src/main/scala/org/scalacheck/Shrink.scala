@@ -14,6 +14,7 @@ import language.higherKinds
 import util.Buildable
 import util.SerializableCanBuildFroms._
 import scala.collection.{ JavaConversions => jcl }
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
@@ -216,6 +217,14 @@ object Shrink extends ShrinkLowPriority {
     Shrink { x =>
       x.fold(shrink(_).map(Left(_)), shrink(_).map(Right(_)))
     }
+
+  implicit val shrinkFiniteDuration: Shrink[FiniteDuration] =
+    xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
+
+  implicit val shrinkDuration: Shrink[Duration] = Shrink {
+    case d: FiniteDuration => shrinkFiniteDuration.shrink(d)
+    case _ => Stream.empty
+  }
 
   /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
     *  whose relationship is described by the provided transformation functions.

@@ -207,6 +207,18 @@ object GenSpecification extends Properties("Gen") {
     cal.getTime != null
   }
 
+  property("deterministic calendar") = forAll { (seed: Seed) =>
+    val params = Gen.Parameters.default
+    val date0 = Gen.calendar(params, seed)
+    // we wait a few milliseconds to be sure we aren't accidentally
+    // leaving the calendar's time unset. Calendar.getInstance starts
+    // with the "current time" so if we aren't careful we will end up
+    // with non-deterministic calendar generation.
+    Thread.sleep(3)
+    val date1 = Gen.calendar(params, seed)
+    date0 == date1
+  }
+
   property("alphaUpperChar") = forAll(alphaUpperChar) { c =>
     c.isLetter && c.isUpper
   }
@@ -218,6 +230,19 @@ object GenSpecification extends Properties("Gen") {
   property("alphaChar") = forAll(alphaChar)(_.isLetter)
 
   property("alphaNumChar") = forAll(alphaNumChar)(_.isLetterOrDigit)
+
+  property("asciiChar") = forAll(asciiChar)(_.isValidChar)
+
+  property("asciiPrintableChar") = forAll(asciiPrintableChar) { ch =>
+    val charType = Character.getType(ch)
+    Character.isLetterOrDigit(ch) || Character.isSpaceChar(ch) ||
+      charType == Character.CONNECTOR_PUNCTUATION || charType == Character.DASH_PUNCTUATION ||
+      charType == Character.START_PUNCTUATION || charType == Character.END_PUNCTUATION ||
+      charType == Character.INITIAL_QUOTE_PUNCTUATION || charType == Character.FINAL_QUOTE_PUNCTUATION ||
+      charType == Character.OTHER_PUNCTUATION ||
+      charType == Character.MATH_SYMBOL || charType == Character.CURRENCY_SYMBOL ||
+      charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
+  }
 
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
@@ -242,6 +267,23 @@ object GenSpecification extends Properties("Gen") {
 
   property("alphaNumStr") = forAll(alphaNumStr) { s =>
     s.length >= 0 && s.forall(_.isLetterOrDigit)
+  }
+
+  property("asciiStr") = forAll(asciiStr) { s =>
+    s.length >= 0 && s.forall(_.isValidChar)
+  }
+
+  property("asciiPrintableStr") = forAll(asciiPrintableStr) { s =>
+    s.length >= 0 && s.forall { ch =>
+      val charType = Character.getType(ch)
+      Character.isLetterOrDigit(ch) || Character.isSpaceChar(ch) ||
+        charType == Character.CONNECTOR_PUNCTUATION || charType == Character.DASH_PUNCTUATION ||
+        charType == Character.START_PUNCTUATION || charType == Character.END_PUNCTUATION ||
+        charType == Character.INITIAL_QUOTE_PUNCTUATION || charType == Character.FINAL_QUOTE_PUNCTUATION ||
+        charType == Character.OTHER_PUNCTUATION ||
+        charType == Character.MATH_SYMBOL || charType == Character.CURRENCY_SYMBOL ||
+        charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
+    }
   }
 
   // BigDecimal generation is tricky; just ensure that the generator gives
@@ -388,4 +430,25 @@ object GenSpecification extends Properties("Gen") {
 
   property("negative generators are negative") =
     Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
+
+  property("finite duration values are valid") =
+    // just make sure it constructs valid finite values that don't throw exceptions
+    Prop.forAll(Gen.finiteDuration) { _.isFinite }
+
+  property("duration values are valid") =
+    // just make sure it constructs valid values that don't throw exceptions
+    Prop.forAll(Gen.duration) { _ => true }
+
+  property("choose finite duration values are within range") = {
+    val g = for {
+      a <- Gen.finiteDuration
+      b <- Gen.finiteDuration
+    } yield if (a < b) (a, b) else (b, a)
+
+    Prop.forAll(g){ case (low, high) =>
+      Prop.forAll(Gen.choose(low, high)){ d =>
+        d >= low && d <= high
+      }
+    }
+  }
 }
