@@ -10,8 +10,8 @@ lazy val isRelease = false
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", scalaVersion.value)
+  scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-M2", scalaVersion.value)
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -56,7 +56,6 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-feature",
     "-unchecked",
     "-Xfatal-warnings",
-    "-Xlint",
     "-Xfuture",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
@@ -65,8 +64,9 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-Ywarn-nullary-unit",
     "-Ywarn-numeric-widen") ++ {
     scalaBinaryVersion.value match {
-      case "2.10" => Nil
-      case _ => Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
+      case "2.10" => Seq("-Xlint")
+      case "2.11" => Seq("-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import")
+      case _      => Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused:imports,-patvars,-implicits,-locals,-privates,-params")
     }
   },
 
