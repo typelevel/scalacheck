@@ -144,8 +144,8 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("throws") = throws(classOf[java.lang.Exception]) {
-    val s: String = null
-    s.length
+    val it: Iterator[Int] = Iterator.empty
+    it.next()
   }
 
   property("sizedProp") = {

@@ -129,3 +129,14 @@ lazy val jvm = project.in(file("jvm"))
   .settings(
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
+
+lazy val native = project.in(file("native"))
+  .settings(sharedSettings: _*)
+  .settings(
+    doc in Compile := (doc in Compile in jvm).value,
+    scalaVersion := "2.11.11",
+    libraryDependencies ++= Seq(
+      "org.scala-native" %% "test-interface_native0.3" % "0.3.1"
+    )
+  )
+  .enablePlugins(ScalaNativePlugin)
