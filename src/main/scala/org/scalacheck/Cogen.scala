@@ -126,8 +126,8 @@ object Cogen extends CogenArities with CogenLowPriority {
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =
     Cogen.it(_.toVector.sorted.iterator)
 
-  implicit def cogenMap[K: Cogen: Ordering, V: Cogen: Ordering]: Cogen[Map[K, V]] =
-    Cogen.it(_.toVector.sorted.iterator)
+  implicit def cogenMap[K: Cogen: Ordering, V: Cogen]: Cogen[Map[K, V]] =
+    Cogen.it(_.toVector.sortBy(_._1).iterator)
 
   implicit def cogenFunction0[Z: Cogen]: Cogen[() => Z] =
     Cogen[Z].contramap(f => f())
