@@ -18,3 +18,6 @@ target
 
 /examples/simple-sbt/project/
 /examples/simple-sbt/target/
+
+# Intellij
+.idea
