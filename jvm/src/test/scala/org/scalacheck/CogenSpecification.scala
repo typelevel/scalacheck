@@ -35,13 +35,13 @@ object CogenSpecification extends Properties("Cogen") {
     }
 
     // Two exceptions are equal if they have the same string representation.
-    implicit val exceptionEqual = new Equal[Exception] {
+    implicit val exceptionEqual: Equal[Exception] = new Equal[Exception] {
       override def equal(a1: Exception, a2: Exception): Boolean =
         a1.toString == a2.toString
     }
 
     // Two throwables are equal if they have the same string representation.
-    implicit val throwableEqual = new Equal[Throwable] {
+    implicit val throwableEqual: Equal[Throwable] = new Equal[Throwable] {
       override def equal(a1: Throwable, a2: Throwable): Boolean =
         a1.toString == a2.toString
     }
@@ -57,7 +57,7 @@ object CogenSpecification extends Properties("Cogen") {
 
   // Avoid reimplementing equality for other standard classes.
   trait EqualLowPriority {
-    implicit def universal[A] = new Equal[A] {
+    implicit def universal[A]: Equal[A] = new Equal[A] {
       override def equal(a1: A, a2: A): Boolean = a1 == a2
     }
   }
