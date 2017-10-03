@@ -323,11 +323,33 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("product") = forAll { (a: Int, b: Int) =>
+    forAll(Gen.product(a, b)) {
+      case (a1, b1) => a1 == a && b1 == b
+    }
+  }
+
   property("some") = forAll { n: Int =>
     forAll(some(n)) {
       case Some(m) if m == n => true
       case _ => false
     }
+  }
+
+  property("tailRecM") = forAll { (init: Int) =>
+    val g: ((Int, Int)) => Gen[Either[(Int, Int), Int]] =
+      {
+        case (c, x) if c <= 0 => Right(x)
+        case (c, x) => Left((c - 1, x * Int.MaxValue))
+      }
+
+    val g1 = Gen.tailRecM((10, init))(g)
+    def g2(x: (Int, Int)): Gen[Int] = g(x).flatMap {
+      case Left(y) => g2(y)
+      case Right(x) => Gen.const(x)
+    }
+
+    forAll(g1, g2((10, init)))(_ == _)
   }
 
   property("uuid version 4") = forAll(uuid) { _.version == 4 }

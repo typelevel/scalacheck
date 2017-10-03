@@ -467,6 +467,46 @@ object Gen extends GenArities{
     g.map(b.fromIterable)
   }
 
+  /** Monadic recursion on Gen
+   * This is a stack-safe loop that is the same as:
+   *
+   * {{{
+   *
+   * fn(a).flatMap {
+   *   case Left(a) => tailRec(a)(fn)
+   *   case Right(b) => Gen.const(b)
+   *   }
+   *
+   * }}}
+   *
+   * which is useful for doing monadic loops without blowing up the
+   * stack
+   */
+  def tailRecM[A, B](a0: A)(fn: A => Gen[Either[A, B]]): Gen[B] = {
+    @tailrec
+    def tailRecMR[A, B](a: A, labs: Set[String])(fn: A => R[Either[A, B]]): R[B] = {
+      val re = fn(a)
+      val nextLabs = labs | re.labels
+      re.retrieve match {
+        case None => r(None, re.seed).copy(l = nextLabs)
+        case Some(Right(b)) => r(Some(b), re.seed).copy(l = nextLabs)
+        case Some(Left(a)) => tailRecMR(a, nextLabs)(fn)
+      }
+    }
+
+    gen[B] { (p: P, seed: Seed) =>
+      tailRecMR(a0, Set.empty) { a => fn(a).doApply(p, seed) }
+    }
+  }
+
+  /** Build a pair from two generators
+   */
+  def product[A, B](ga: Gen[A], gb: Gen[B]): Gen[(A, B)] =
+    for {
+      a <- ga
+      b <- gb
+    } yield (a, b)
+
   /** Wraps a generator lazily. The given parameter is only evaluated once,
    *  and not until the wrapper generator is evaluated. */
   def lzy[T](g: => Gen[T]): Gen[T] = {
