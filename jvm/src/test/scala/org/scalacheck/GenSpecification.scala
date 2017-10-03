@@ -323,24 +323,34 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
-  property("product") = forAll { (a: Int, b: Int) =>
-    forAll(Gen.product(a, b)) {
-      case (a1, b1) => a1 == a && b1 == b
+  property("product") = forAll { (a: Int, b: Int, seeds: List[Seed]) =>
+    val ga = Gen.choose(Int.MinValue, a)
+    val gb = Gen.choose(Int.MinValue, b)
+
+    val prod1 = Gen.product(ga, gb)
+    val prod2 = ga.flatMap { a => gb.map((a, _)) }
+
+    val params = Gen.Parameters.default
+    seeds.forall { seed =>
+      prod1.pureApply(params, seed) == prod2.pureApply(params, seed)
     }
   }
 
   property("some") = forAll { n: Int =>
     forAll(some(n)) {
-      case Some(m) if m == n => true
+      case Some(m) => m == n
       case _ => false
     }
   }
 
-  property("tailRecM") = forAll { (init: Int) =>
+  property("tailRecM") = forAll { (init: Int, seeds: List[Seed]) =>
     val g: ((Int, Int)) => Gen[Either[(Int, Int), Int]] =
       {
-        case (c, x) if c <= 0 => Right(x)
-        case (c, x) => Left((c - 1, x * Int.MaxValue))
+        case (c, x) if c <= 0 =>
+          Gen.const(Right(x))
+        case (c, x) =>
+          val g = Gen.choose(Int.MinValue, x)
+          g.map { i => Left(((c - 1), i)) }
       }
 
     val g1 = Gen.tailRecM((10, init))(g)
@@ -349,7 +359,14 @@ object GenSpecification extends Properties("Gen") {
       case Right(x) => Gen.const(x)
     }
 
-    forAll(g1, g2((10, init)))(_ == _)
+    val finalG2 = g2((10, init))
+
+
+    val params = Gen.Parameters.default
+
+    seeds.forall { seed =>
+      g1.pureApply(params, seed) == finalG2.pureApply(params, seed)
+    }
   }
 
   property("uuid version 4") = forAll(uuid) { _.version == 4 }

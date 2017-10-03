@@ -484,28 +484,35 @@ object Gen extends GenArities{
    */
   def tailRecM[A, B](a0: A)(fn: A => Gen[Either[A, B]]): Gen[B] = {
     @tailrec
-    def tailRecMR[A, B](a: A, labs: Set[String])(fn: A => R[Either[A, B]]): R[B] = {
-      val re = fn(a)
+    def tailRecMR(a: A, seed: Seed, labs: Set[String])(fn: (A, Seed) => R[Either[A, B]]): R[B] = {
+      val re = fn(a, seed)
       val nextLabs = labs | re.labels
       re.retrieve match {
         case None => r(None, re.seed).copy(l = nextLabs)
         case Some(Right(b)) => r(Some(b), re.seed).copy(l = nextLabs)
-        case Some(Left(a)) => tailRecMR(a, nextLabs)(fn)
+        case Some(Left(a)) => tailRecMR(a, re.seed, nextLabs)(fn)
       }
     }
 
+    // This is the "Reader-style" appoach to making a stack-safe loop:
+    // we put one outer closure around an explicitly tailrec loop
     gen[B] { (p: P, seed: Seed) =>
-      tailRecMR(a0, Set.empty) { a => fn(a).doApply(p, seed) }
+      tailRecMR(a0, seed, Set.empty) { (a, seed) => fn(a).doApply(p, seed) }
     }
   }
 
   /** Build a pair from two generators
    */
   def product[A, B](ga: Gen[A], gb: Gen[B]): Gen[(A, B)] =
-    for {
-      a <- ga
-      b <- gb
-    } yield (a, b)
+    gen[(A, B)] { (p: P, seed: Seed) =>
+      val ra = ga.doApply(p, seed)
+      ra.retrieve match {
+        case None => r(None, ra.seed).copy(l = ra.labels)
+        case Some(a) =>
+          val rb = gb.doApply(p, ra.seed)
+          rb.map((a, _)).copy(l = ra.labels | rb.labels)
+      }
+    }
 
   /** Wraps a generator lazily. The given parameter is only evaluated once,
    *  and not until the wrapper generator is evaluated. */
