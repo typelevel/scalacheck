@@ -501,19 +501,6 @@ object Gen extends GenArities{
     }
   }
 
-  /** Build a pair from two generators
-   */
-  def product[A, B](ga: Gen[A], gb: Gen[B]): Gen[(A, B)] =
-    gen[(A, B)] { (p: P, seed: Seed) =>
-      val ra = ga.doApply(p, seed)
-      ra.retrieve match {
-        case None => r(None, ra.seed).copy(l = ra.labels)
-        case Some(a) =>
-          val rb = gb.doApply(p, ra.seed)
-          rb.map((a, _)).copy(l = ra.labels | rb.labels)
-      }
-    }
-
   /** Wraps a generator lazily. The given parameter is only evaluated once,
    *  and not until the wrapper generator is evaluated. */
   def lzy[T](g: => Gen[T]): Gen[T] = {

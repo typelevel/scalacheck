@@ -323,19 +323,6 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
-  property("product") = forAll { (a: Int, b: Int, seeds: List[Seed]) =>
-    val ga = Gen.choose(Int.MinValue, a)
-    val gb = Gen.choose(Int.MinValue, b)
-
-    val prod1 = Gen.product(ga, gb)
-    val prod2 = ga.flatMap { a => gb.map((a, _)) }
-
-    val params = Gen.Parameters.default
-    seeds.forall { seed =>
-      prod1.pureApply(params, seed) == prod2.pureApply(params, seed)
-    }
-  }
-
   property("some") = forAll { n: Int =>
     forAll(some(n)) {
       case Some(m) => m == n
