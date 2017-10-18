@@ -527,6 +527,10 @@ object Gen extends GenArities{
   def sized[T](f: Int => Gen[T]): Gen[T] =
     gen { (p, seed) => f(p.size).doApply(p, seed) }
 
+  /** Creates a generator that can access its generation parameters and seed */
+  def proxied[T](f: (P, Seed) => Gen[T]): Gen[T] =
+    gen { (p, seed) => f(p, seed).doApply(p, seed) }
+
   /** A generator that returns the current generation size */
   lazy val size: Gen[Int] = sized { sz => sz }
 

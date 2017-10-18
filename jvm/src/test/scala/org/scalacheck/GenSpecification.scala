@@ -136,6 +136,13 @@ object GenSpecification extends Properties("Gen") {
 
   property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
 
+  property("proxied") =
+    Prop.forAll { (p1: Gen.Parameters, seed: Long, g: Gen[Int]) =>
+        val s1 = rng.Seed(seed)
+        Gen.proxied((p, s) => g).apply(p1, s1) == g.apply(p1, s1)
+    }
+
+
   property("oneOf n") = forAll { (l: List[Int]) =>
     Try(oneOf(l)) match {
       case Success(g) => forAll(g)(l.contains)
