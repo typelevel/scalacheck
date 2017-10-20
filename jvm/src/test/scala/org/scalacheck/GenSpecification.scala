@@ -510,7 +510,7 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("arbitrary[Boolean] is deterministic") =
-    testDeterministicGen(arbitrary[Long])
+    testDeterministicGen(arbitrary[Boolean])
 
   property("arbitrary[Long] is deterministic") =
     testDeterministicGen(arbitrary[Long])
