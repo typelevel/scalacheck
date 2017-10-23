@@ -98,7 +98,13 @@ private abstract class ScalaCheckRunner extends Runner {
       names flatMap { name =>
         import util.Pretty.{pretty, Params}
 
-        val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
+        //If there are no command line arguments provided then override defaults with what is defined in the
+        //Property. If there are any command line arguments provided, override the values defined on the
+        //Property with those defined via the command line.
+        val paramsFromProperty = properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params))
+        val noCmdArgsProvided = Parameters.hasSameCmdArgs(applyCmdParams(Parameters.default), Parameters.default)
+        val params = if (noCmdArgsProvided) paramsFromProperty else applyCmdParams(paramsFromProperty)
+
         val propertyFilter = params.propFilter.map(_.r)
 
         for ((`name`, prop) <- props) {

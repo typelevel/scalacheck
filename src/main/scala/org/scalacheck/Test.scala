@@ -148,6 +148,26 @@ object Test {
       val initialSeed: Option[rng.Seed] = None
     }
 
+    /**
+     * Compares if two supplied Parameters p1, p2 have equal values for all
+     * arguments that can be supplied via the command line:
+     * - minSuccessfulTests
+     * - minSize
+     * - maxSize
+     * - workers
+     * - maxDiscardRatio
+     * - propFilter
+     *
+     */
+    def hasSameCmdArgs(p1: Parameters, p2: Parameters): Boolean = {
+      p1.minSuccessfulTests == p2.minSuccessfulTests &&
+      p1.minSize            == p2.minSize            &&
+      p1.maxSize            == p2.maxSize            &&
+      p1.workers            == p2.workers            &&
+      p1.maxDiscardRatio    == p2.maxDiscardRatio    &&
+      p1.propFilter         == p2.propFilter
+    }
+
     /** Verbose console reporter test parameters instance. */
     val defaultVerbose: Parameters = default.withTestCallback(ConsoleReporter(2))
   }
@@ -371,7 +391,6 @@ object Test {
 
   /** Check a set of properties. */
   def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
-    val params = ps.overrideParameters(prms)
     val propertyFilter = prms.propFilter.map(_.r)
 
     ps.properties.filter {
@@ -380,12 +399,12 @@ object Test {
       case (name, p)  =>
         val testCallback = new TestCallback {
           override def onPropEval(n: String, t: Int, s: Int, d: Int) =
-            params.testCallback.onPropEval(name,t,s,d)
+            prms.testCallback.onPropEval(name,t,s,d)
           override def onTestResult(n: String, r: Result) =
-            params.testCallback.onTestResult(name,r)
+            prms.testCallback.onTestResult(name,r)
         }
 
-        val res = check(params.withTestCallback(testCallback), p)
+        val res = check(prms.withTestCallback(testCallback), p)
         (name,res)
     }
   }
