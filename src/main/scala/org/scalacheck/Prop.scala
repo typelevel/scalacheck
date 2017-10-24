@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import language.implicitConversions
-import language.reflectiveCalls
 
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
@@ -100,14 +99,14 @@ sealed abstract class Prop extends Serializable { self =>
    *  as an application that checks itself on execution. Calls `System.exit`
    *  with a non-zero exit code if the property check fails. */
   def main(args: Array[String]): Unit = {
-    val ret = Test.cmdLineParser.parseParams(args) match {
+    val ret = Test.CmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
         val params = applyCmdParams(Test.Parameters.default)
         if (Test.check(params, this).passed) 0
         else 1
       case (_, os) =>
         println(s"Incorrect options: $os")
-        Test.cmdLineParser.printHelp
+        Test.CmdLineParser.printHelp
         -1
     }
     if (ret != 0) System.exit(ret)

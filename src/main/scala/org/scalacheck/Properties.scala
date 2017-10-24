@@ -11,8 +11,6 @@ package org.scalacheck
 
 import org.scalacheck.rng.Seed
 
-import language.reflectiveCalls
-
 import util.ConsoleReporter
 
 /** Represents a collection of properties, with convenient methods
@@ -61,7 +59,7 @@ class Properties(val name: String) {
    *  as an application that checks itself on execution. Calls `System.exit`
    *  with the exit code set to the number of failed properties. */
   def main(args: Array[String]): Unit =
-    Test.cmdLineParser.parseParams(args) match {
+    Test.CmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
         val params = applyCmdParams(overrideParameters(Test.Parameters.default))
         val res = Test.checkProperties(params, this)
@@ -74,7 +72,7 @@ class Properties(val name: String) {
         }
       case (_, os) =>
         println(s"Incorrect options: $os")
-        Test.cmdLineParser.printHelp
+        Test.CmdLineParser.printHelp
         System.exit(-1)
     }
 
