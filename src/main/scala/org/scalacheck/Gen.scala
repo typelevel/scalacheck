@@ -93,6 +93,12 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  test property is side-effect free, eg it should not use external vars. */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
+  /** Create a new generator that uses this generator to produce a value
+   *  that doesn't fulfill the given condition. If the condition is fulfilled,
+   *  the generator fails (returns None). Also, make sure that the provided
+   *  test property is side-effect free, eg it should not use external vars. */
+  def filterNot(p: T => Boolean): Gen[T] = suchThat(x => !p(x))
+
   /** Create a new generator that fails if the specified partial function
    *  is undefined for this generator's value, otherwise returns the result
    *  of the partial function applied to this generator's value. */
