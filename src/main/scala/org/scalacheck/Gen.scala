@@ -650,9 +650,10 @@ object Gen extends GenArities{
    *  `nonEmptyContainerOf[List,T](g)`. */
   def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T],T](g)
 
-  /** Generates a list of the given length. This method is equal to calling
-   *  `containerOfN[List,T](n,g)`. */
-  def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T],T](n,g)
+  /** Generates a list of the given length. This method is equivalent to calling
+   *  `containerOfN[List,T](n,g).suchThat(_.size == n)`. */
+  def listOfN[T](n: Int, g: Gen[T]) =
+    buildableOfN[List[T],T](n,g).suchThat(_.size == n)
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
