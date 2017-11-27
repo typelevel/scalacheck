@@ -7,9 +7,8 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.commands
-
-import org.scalacheck._
+package org.scalacheck
+package commands
 
 object CommandsSpecification extends Properties("Commands") {
 

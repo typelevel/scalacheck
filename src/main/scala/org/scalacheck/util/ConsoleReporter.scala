@@ -7,10 +7,10 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.util
+package org.scalacheck
+package util
 
 import Pretty.{Params, pretty, format}
-import org.scalacheck.Test
 
 /** A [[org.scalacheck.Test.TestCallback]] implementation that prints
  *  test results directly to the console. This is the callback used by

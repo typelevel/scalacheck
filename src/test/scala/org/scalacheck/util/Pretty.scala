@@ -7,9 +7,8 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.util
-
-import org.scalacheck.Properties
+package org.scalacheck
+package util
 
 object PrettySpecification extends Properties("Pretty") {
 

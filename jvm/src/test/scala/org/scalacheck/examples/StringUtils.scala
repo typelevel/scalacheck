@@ -7,9 +7,8 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.example
-
-import org.scalacheck._
+package org.scalacheck
+package example
 
 object StringUtils extends Properties("Examples.StringUtils") {
 
