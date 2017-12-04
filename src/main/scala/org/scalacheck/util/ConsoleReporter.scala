@@ -17,19 +17,20 @@ import org.scalacheck.Test
  *  ScalaCheck's command line test runner, and when you run
  *  `org.scalacheck.Prop.check()`.
  */
-class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
+class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
+  extends Test.TestCallback {
 
   private val prettyPrms = Params(verbosity)
 
-  override def onTestResult(name: String, res: Test.Result) = {
+  override def onTestResult(name: String, res: Test.Result): Unit = {
     if(verbosity > 0) {
       if(name == "") {
         val s = (if(res.passed) "+ " else "! ") + pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", 75))
+        printf("\r%s\n", format(s, "", "", columnWidth))
       } else {
         val s = (if(res.passed) "+ " else "! ") + name + ": " +
           pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", 75))
+        printf("\r%s\n", format(s, "", "", columnWidth))
       }
     }
   }
@@ -39,7 +40,9 @@ class ConsoleReporter(val verbosity: Int) extends Test.TestCallback {
 object ConsoleReporter {
 
   /** Factory method, creates a ConsoleReporter with the
-   *  the given verbosity */
-  def apply(verbosity: Int = 0) = new ConsoleReporter(verbosity)
+   *  the given verbosity and wraps output at the given column width
+   *  (use 0 for unlimited width). */
+  def apply(verbosity: Int = 0, columnWidth: Int = 75) =
+    new ConsoleReporter(verbosity, columnWidth)
 
 }

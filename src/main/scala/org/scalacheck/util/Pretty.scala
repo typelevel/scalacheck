@@ -52,7 +52,7 @@ object Pretty {
     else s + List.fill(length-s.length)(c).mkString
 
   def break(s: String, lead: String, length: Int): String =
-    if(s.length <= length) s
+    if(s.length <= length || length <= 0) s
     else s.substring(0, length) / break(lead+s.substring(length), lead, length)
 
   def format(s: String, lead: String, trail: String, width: Int) =
