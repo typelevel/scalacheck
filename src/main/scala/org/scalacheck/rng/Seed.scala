@@ -1,5 +1,4 @@
-package org.scalacheck
-package rng
+package org.scalacheck.rng
 
 import scala.annotation.tailrec
 import scala.util.Try
