@@ -1,6 +1,5 @@
-package org.scalacheck.examples
-
-import org.scalacheck.{Prop, Properties}
+package org.scalacheck
+package examples
 
 object Examples extends Properties("Examples") {
 
@@ -32,8 +31,6 @@ object Examples extends Properties("Examples") {
       age <- choose(1,100)
     } yield Person(firstName, lastName, age)
   }
-
-  import org.scalacheck.Arbitrary
 
   implicit val arbPerson = Arbitrary(genPerson)
 

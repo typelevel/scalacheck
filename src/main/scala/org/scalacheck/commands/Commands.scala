@@ -7,9 +7,9 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.commands
+package org.scalacheck
+package commands
 
-import org.scalacheck._
 import scala.util.{Try, Success, Failure}
 
 /** An API for stateful testing in ScalaCheck.
