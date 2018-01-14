@@ -121,6 +121,13 @@ object GenSpecification extends Properties("Gen") {
     MinValue <= x && x <= MaxValue
   }
 
+  import Double.{NegativeInfinity, PositiveInfinity}
+  property("choose-infinite-double") = {
+    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
+      xs.exists(_ != 0d)
+    }
+  }
+
   property("choose-xmap") = {
     implicit val chooseDate: Choose[Date] =
       Choose.xmap[Long, Date](new Date(_), _.getTime)

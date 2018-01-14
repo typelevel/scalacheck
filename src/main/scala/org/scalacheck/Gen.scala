@@ -377,6 +377,10 @@ object Gen extends GenArities{
       val d = h - l
       if (d < 0) {
         throw new IllegalBoundsError(l, h)
+      } else if (l == Double.NegativeInfinity) {
+        chDbl(Double.MinValue, h)(p, seed)
+      } else if (h == Double.PositiveInfinity) {
+        chDbl(l, Double.MaxValue)(p, seed)
       } else if (d > Double.MaxValue) {
         val (x, seed2) = seed.long
         if (x < 0) chDbl(l, 0d)(p, seed2) else chDbl(0d, h)(p, seed2)
