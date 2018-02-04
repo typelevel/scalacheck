@@ -27,7 +27,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   //// Private interface ////
 
-  import Gen.{R, r, gen}
+  import Gen.{R, gen}
 
   /** Just an alias */
   private type P = Gen.Parameters
