@@ -786,8 +786,8 @@ is defined in ScalaCheck:
 /** Shrink instance of 2-tuple */
 implicit def shrinkTuple2[T1,T2](implicit s1: Shrink[T1], s2: Shrink[T2]
 ): Shrink[(T1,T2)] = Shrink { case (t1,t2) =>
-  (for(x1 <- shrink(t1)) yield (x1, t2)) append
-  (for(x2 <- shrink(t2)) yield (t1, x2))
+  (for(x1 <- s1.shrink(t1)) yield (x1, t2)) append
+  (for(x2 <- s2.shrink(t2)) yield (t1, x2))
 }
 ```
 
