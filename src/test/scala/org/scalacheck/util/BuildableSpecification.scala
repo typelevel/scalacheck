@@ -7,8 +7,9 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck
-package util
+package org.scalacheck.util
+
+import org.scalacheck._
 
 import language.higherKinds
 
