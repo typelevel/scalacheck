@@ -13,11 +13,11 @@ object GenCodepointSpecification extends Properties("Gen") {
     property("nonCharCP is not defined") = forAll(Gen.nonCharCP) { cp => !Character.isDefined(cp)}
 
     property("plainBMPCP is defined") = forAll(Gen.plainBMPCP)(Character.isDefined)
-    property("plainBMPCP is no surrogate") = forAll(Gen.plainBMPCP)(cp => !Character.isSurrogate(cp.toChar))
+    property("plainBMPCP is no surrogate") = forAll(Gen.plainBMPCP)(cp => !Character.isHighSurrogate(cp.toChar) && !Character.isLowSurrogate(cp.toChar))
     property("plainBMPCP is in the BMP") = forAll(Gen.plainBMPCP)(cp => !Character.isSupplementaryCodePoint(cp))
     property("plainBMPCP is not private use") = forAll(Gen.plainBMPCP) {cp => Character.getType(cp) != Character.PRIVATE_USE}
 
-    property("validBMPCP is no surrogate") = forAll(Gen.validBMPCP)(cp => !Character.isSurrogate(cp.toChar))
+    property("validBMPCP is no surrogate") = forAll(Gen.validBMPCP)(cp => !Character.isHighSurrogate(cp.toChar) && !Character.isLowSurrogate(cp.toChar))
     property("validBMPCP is in the BMP") = forAll(Gen.validBMPCP)(cp => !Character.isSupplementaryCodePoint(cp))
 
     property("emptyPlaneCP is not defined") = forAll(Gen.emptyPlaneCP){cp => !Character.isDefined(cp)} 
