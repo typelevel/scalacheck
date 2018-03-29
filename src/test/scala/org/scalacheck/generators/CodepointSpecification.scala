@@ -22,7 +22,9 @@ object GenCodepointSpecification extends Properties("Gen") {
 
     property("emptyPlaneCP is not defined") = forAll(Gen.emptyPlaneCP){cp => !Character.isDefined(cp)} 
 
-    property("supplementalPUCP is private use") = forAll(Gen.supplementalPUCP){cp => Character.getType(cp) == Character.PRIVATE_USE}
-    property("supplementalPUCP is defined") = forAll(Gen.supplementalPUCP)(Character.isDefined)
+    property("supplementalPUCP is private use or end of block") = forAll(Gen.supplementalPUCP){cp => (
+        (Character.getType(cp) == Character.PRIVATE_USE) ||
+        (cp == 0xFFFFF || cp == 0xFFFFE || cp == 0x10FFFF || cp == 0x10FFFE)
+    )}
 
 }
