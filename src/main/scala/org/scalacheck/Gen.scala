@@ -772,7 +772,155 @@ object Gen extends GenArities{
   /** Generates a ASCII printable character */
   def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
 
+  /** Generates a high surrogate code unit */
+  def highSurrogateChar: Gen[Char] = choose('\uD800', '\uDBFF')
+
+  /** Generates a low surrogate code unit */
+  def lowSurrogateChar: Gen[Char] = choose('\uDC00', '\uDFFF')
+
+
+  /// Code point Generators ////
+
+
+  private object CodePointRanges {
+    //ranges are inclusive
+    
+    //the codepoint range outside which there are no codepoints
+    val defined = (0x0000, 0x10FFFF)
+
+    //private use areas
+    val mainPrivateUse = (0xE000, 0xF8FF)
+    val sub1PrivateUse = (0xF0000, 0xFFFFD)
+    val sub2PrivateUse = (0x100000, 0x10FFFD)
+
+    //non-characters
+    val bmpNonCharRange = (0xFDD0, 0xFDEF)
+    val blockEndNonChars = List(
+    0x0FFFE, 0x0FFFF,
+    0x1FFFE, 0x1FFFF,
+    0x2FFFE, 0x2FFFF,
+    0x3FFFE, 0x3FFFF,
+    0x4FFFE, 0x4FFFF,
+    0x5FFFE, 0x5FFFF,
+    0x6FFFE, 0x6FFFF,
+    0x7FFFE, 0x7FFFF,
+    0x8FFFE, 0x8FFFF,
+    0x9FFFE, 0x9FFFF,
+    0xAFFFE, 0xAFFFF,
+    0xBFFFE, 0xBFFFF,
+    0xCFFFE, 0xCFFFF,
+    0xDFFFE, 0xDFFFF,
+    0xEFFFE, 0xEFFFF,
+    0xFFFFE, 0xFFFFF,
+    0x10FFFE, 0x10FFFF)
+
+    def isNonChar(cp: Int): Boolean = (cp >= bmpNonCharRange._1 && 
+                                       (cp <= bmpNonCharRange._2 || blockEndNonChars.contains(cp)))
+
+    val highSurrogates = (0xD800, 0xDBFF)
+    val lowSurrogates = (0xDC00, 0xDFFF)
+
+                            /* skip surrogates + private use, skip non-chars */
+    lazy val plainBMP = ((0 to 0xD800) ++ (0xF900 to 0xFDCF) ++ (0xFDFF to 0xFFFD)).filter(cp => Character.isDefined(cp)).toList
+
+  }
+  
+  /** Generates a codepoint in a private use area */
+  def privateUseCP: Gen[Int] = oneOf(
+    choose(CodePointRanges.mainPrivateUse._1, CodePointRanges.mainPrivateUse._2),
+    choose(CodePointRanges.sub1PrivateUse._1, CodePointRanges.sub1PrivateUse._2),
+    choose(CodePointRanges.sub2PrivateUse._1, CodePointRanges.sub2PrivateUse._2)
+  )
+
+
+  /** Generates a codepoint for a non character */
+  def nonCharCP: Gen[Int] = oneOf(
+    choose(CodePointRanges.bmpNonCharRange._1, CodePointRanges.bmpNonCharRange._2),
+    oneOf(CodePointRanges.blockEndNonChars)
+  )
+
+  /** Generates a valid codepoint in the BMP, excluding shenennigans
+   *
+   * No shenennigans means only assigned codepoints that are not reserved, not private use and not non characters
+   */
+  def plainBMPCP: Gen[Int] = oneOf(CodePointRanges.plainBMP)
+
+  /** Generates a valid codepoint in the BMP
+  *
+  * This includes any codepoint, assigned or unsassigned, including non-characters
+  * but excluding surrogates
+  */
+  def validBMPCP: Gen[Int] = oneOf(choose(0, 0xD800), choose(0xE000, 0xFFFF))
+
+  /** Generates a codepoint within one of the planes 3 to 13
+  *
+  * These planes currently don't have any assignments in them
+  */
+  def emptyPlaneCP: Gen[Int] = choose(0x30000, 0xDFFFF)
+
+  /** Generates a codepoint within plane 14, the Supplementary Special-purpose Plane (SSP)
+  *
+  * The first two blocks of this plane contain (non-graphics) characters
+  * The rest is empty
+  */
+  def sppCP: Gen[Int] = oneOf(choose(0xE0000, 0xE007F), choose(0xE0100, 0xE01EF), choose(0xE0000, 0xEFFFF))
+
+  /** Generates a codepoint from plane 15 or 16, Supplementary Private Use Area-A and B */
+  def supplementalPUCP: Gen[Int] = choose(0xF0000, 0x10FFFF)
+
+
+  /** Generates a valid codepoint
+  *
+  * Will not contain an unpaired surragate codepoint, the rest is fair game. Private use are valid characters.
+  * The Unicode FAQ says about non characters: "[...] Noncharacters do not cause a Unicode string to be ill-formed in any UTF.[...]"
+  * (see: https://www.unicode.org/faq/private_use.html)
+  *
+  * A weighing is applied to get a reasonable cross-section of Unicode:
+  * BMP codepoints
+  * plane 1 and 2
+  * plane 3 to 13
+  * assigned and unassigned parts of plane 14
+  * plane 15 and 16
+  */
+  def validCP: Gen[Int] = oneOf(
+    validBMPCP, //BMP
+    choose(0x10000, 0x2FFFF), //plane 1 + 2
+    emptyPlaneCP, //plane 3 - 13
+    sppCP, //plane 14
+    supplementalPUCP //plane 15 + 16
+  )
+
   //// String Generators ////
+
+  /**
+  * Generates a string that consists of characters that are in the BMP, are assigned, are not private use, are not surrogates, and are not non characters
+  */
+  def plainBMPStr: Gen[String] = for {
+    cplist <- listOf(plainBMPCP)
+    cps = cplist.toArray
+  } yield new String(cps, 0, cps.length)
+
+  /**
+  * Generates a valid unicode string.
+  *
+  * That excludes unpaired surrogate codepoints, but includes everything else.
+  * see also: the validCP codepoint generator
+  */
+  def validStr: Gen[String] = for {
+    cplist <- listOf(validCP)
+    cps = cplist.toArray
+  } yield new String(cps, 0, cps.length)
+
+  /** Generates a String
+  *
+  * No additional guarantees are given
+  * This string does not need to be a valid Unicode string
+  */
+  def anyStr: Gen[String] = for {
+    cplist <- listOf(choose(CodePointRanges.defined._1, CodePointRanges.defined._2))
+    cps = cplist.toArray
+  } yield new String(cps, 0, cps.length)
+
 
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
