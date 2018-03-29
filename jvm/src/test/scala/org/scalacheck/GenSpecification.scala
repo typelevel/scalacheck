@@ -17,6 +17,7 @@ import Arbitrary._
 import Shrink._
 import java.util.Date
 import scala.util.{Try, Success, Failure}
+import scala.collection.immutable.Seq
 
 object GenSpecification extends Properties("Gen") {
 

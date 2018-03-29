@@ -55,15 +55,15 @@ trait Commands {
    *  (a singleton [[Sut]]), implement this method the following way:
    *
    *  {{{
-   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
-   *    runningSuts: Traversable[Sut]
+   *  def canCreateNewSut(newState: State, initSuts: Iterable[State]
+   *    runningSuts: Iterable[Sut]
    *  ) = {
    *    initSuts.isEmpty && runningSuts.isEmpty
    *  }
    *  }}}
    */
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]): Boolean
+  def canCreateNewSut(newState: State, initSuts: Iterable[State],
+    runningSuts: Iterable[Sut]): Boolean
 
   /** Create a new [[Sut]] instance with an internal state that
    *  corresponds to the provided abstract state instance. The provided state

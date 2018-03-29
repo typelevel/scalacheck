@@ -11,6 +11,8 @@ package org.scalacheck
 
 import Prop.Arg
 
+import scala.collection.immutable.Seq
+
 object Test {
 
   import util.{FreqMap, CmdLineParser, ConsoleReporter}

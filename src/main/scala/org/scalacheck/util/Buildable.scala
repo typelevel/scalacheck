@@ -14,7 +14,7 @@ import generic.CanBuildFrom
 
 trait Buildable[T,C] extends Serializable {
   def builder: mutable.Builder[T,C]
-  def fromIterable(it: Traversable[T]): C = {
+  def fromIterable(it: Iterable[T]): C = {
     val b = builder
     b ++= it
     b.result()

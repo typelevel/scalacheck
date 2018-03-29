@@ -49,7 +49,7 @@ object Shrink extends ShrinkLowPriority {
     cons(x, s.shrink(x))
 
   /** Shrink instance of container */
-  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
+  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Iterable[T], s: Shrink[T],
     b: Buildable[T,C[T]]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
     val ys = v(xs)
@@ -58,7 +58,7 @@ object Shrink extends ShrinkLowPriority {
   }
 
   /** Shrink instance of container2 */
-  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
+  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Iterable[(T,U)], s: Shrink[(T,U)],
     b: Buildable[(T,U),C[T,U]]
   ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
     val ys = v(xs)
