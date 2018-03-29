@@ -370,7 +370,7 @@ object Test {
   }
 
   /** Check a set of properties. */
-  def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
+  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
     val propertyFilter = prms.propFilter.map(_.r)
 

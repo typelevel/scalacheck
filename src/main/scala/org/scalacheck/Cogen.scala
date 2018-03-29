@@ -17,6 +17,8 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
 import rng.Seed
 
+import scala.collection.compat._
+
 sealed trait Cogen[T] extends Serializable {
 
   def perturb(seed: Seed, t: T): Seed
@@ -115,7 +117,7 @@ object Cogen extends CogenArities with CogenLowPriority {
     Cogen[String].contramap(_.name)
 
   implicit def cogenList[A: Cogen]: Cogen[List[A]] =
-    Cogen.it(_.iterator)
+    Cogen.it(_.iterator())
 
   implicit def cogenVector[A: Cogen]: Cogen[Vector[A]] =
     Cogen.it(_.iterator)

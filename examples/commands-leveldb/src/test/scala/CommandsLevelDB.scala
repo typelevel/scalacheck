@@ -30,8 +30,8 @@ object LevelDBSpec extends Commands {
     def path = s"db_$name"
   }
 
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]
+  def canCreateNewSut(newState: State, initSuts: Iterable[State],
+    runningSuts: Iterable[Sut]
   ) = {
     !initSuts.exists(_.name == newState.name) &&
     !runningSuts.exists(_.name == newState.name)

@@ -12,6 +12,8 @@ package org.scalacheck
 import Prop.{forAll, forAllNoShrink, BooleanOperators}
 import Shrink.shrink
 
+import scala.collection.compat._
+
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ShrinkSpecification extends Properties("Shrink") {
@@ -19,7 +21,7 @@ object ShrinkSpecification extends Properties("Shrink") {
   def shrinkClosure[T : Shrink](x: T): Stream[T] = {
     val xs = shrink[T](x)
     if(xs.isEmpty) xs
-    else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
+    else xs.lazyAppendAll(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
   property("byte") = forAll { n: Byte =>

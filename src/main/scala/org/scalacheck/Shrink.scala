@@ -15,6 +15,8 @@ import util.Buildable
 import util.SerializableCanBuildFroms._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
+import scala.collection.compat._
+
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
 }
@@ -49,21 +51,21 @@ object Shrink extends ShrinkLowPriority {
     cons(x, s.shrink(x))
 
   /** Shrink instance of container */
-  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
+  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Iterable[T], s: Shrink[T],
     b: Buildable[T,C[T]]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
     val ys = v(xs)
     val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+    removeChunks(ys.size,zs).lazyAppendAll(shrinkOne(zs)).map(b.fromIterable)
   }
 
   /** Shrink instance of container2 */
-  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
+  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Iterable[(T,U)], s: Shrink[(T,U)],
     b: Buildable[(T,U),C[T,U]]
   ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
     val ys = v(xs)
     val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+    removeChunks(ys.size,zs).lazyAppendAll(shrinkOne(zs)).map(b.fromIterable)
   }
 
   private def removeChunks[T](n: Int, xs: Stream[T]): Stream[Stream[T]] =
@@ -75,9 +77,9 @@ object Shrink extends ShrinkLowPriority {
       lazy val xs1 = xs.take(n1)
       lazy val xs2 = xs.drop(n1)
       lazy val xs3 =
-        for (ys1 <- removeChunks(n1, xs1) if !ys1.isEmpty) yield ys1 append xs2
+        for (ys1 <- removeChunks(n1, xs1) if !ys1.isEmpty) yield ys1 lazyAppendAll xs2
       lazy val xs4 =
-        for (ys2 <- removeChunks(n2, xs2) if !ys2.isEmpty) yield xs1 append ys2
+        for (ys2 <- removeChunks(n2, xs2) if !ys2.isEmpty) yield xs1 lazyAppendAll ys2
 
       cons(xs1, cons(xs2, interleave(xs3, xs4)))
     }
@@ -87,7 +89,7 @@ object Shrink extends ShrinkLowPriority {
     else {
       val x = zs.head
       val xs = zs.tail
-      shrink(x).map(cons(_,xs)).append(shrinkOne(xs).map(cons(x,_)))
+      shrink(x).map(cons(_,xs)).lazyAppendAll(shrinkOne(xs).map(cons(x,_)))
     }
 
   /** Shrink instances for numeric data types */
@@ -114,7 +116,7 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink
   ]: Shrink[(T1,T2)] =
     Shrink { case (t1,t2) =>
-      shrink(t1).map((_,t2)) append
+      shrink(t1).map((_,t2)) lazyAppendAll
       shrink(t2).map((t1,_))
     }
 
@@ -123,8 +125,8 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink, T3:Shrink
   ]: Shrink[(T1,T2,T3)] =
     Shrink { case (t1,t2,t3) =>
-      shrink(t1).map((_, t2, t3)) append
-      shrink(t2).map((t1, _, t3)) append
+      shrink(t1).map((_, t2, t3)) lazyAppendAll
+      shrink(t2).map((t1, _, t3)) lazyAppendAll
       shrink(t3).map((t1, t2, _))
     }
 
@@ -133,9 +135,9 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink
   ]: Shrink[(T1,T2,T3,T4)] =
     Shrink { case (t1,t2,t3,t4) =>
-      shrink(t1).map((_, t2, t3, t4)) append
-      shrink(t2).map((t1, _, t3, t4)) append
-      shrink(t3).map((t1, t2, _, t4)) append
+      shrink(t1).map((_, t2, t3, t4)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4)) lazyAppendAll
       shrink(t4).map((t1, t2, t3, _))
     }
 
@@ -144,10 +146,10 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink
   ]: Shrink[(T1,T2,T3,T4,T5)] =
     Shrink { case (t1,t2,t3,t4,t5) =>
-      shrink(t1).map((_, t2, t3, t4, t5)) append
-      shrink(t2).map((t1, _, t3, t4, t5)) append
-      shrink(t3).map((t1, t2, _, t4, t5)) append
-      shrink(t4).map((t1, t2, t3, _, t5)) append
+      shrink(t1).map((_, t2, t3, t4, t5)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4, t5)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4, t5)) lazyAppendAll
+      shrink(t4).map((t1, t2, t3, _, t5)) lazyAppendAll
       shrink(t5).map((t1, t2, t3, t4, _))
     }
 
@@ -156,11 +158,11 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink
   ]: Shrink[(T1,T2,T3,T4,T5,T6)] =
     Shrink { case (t1,t2,t3,t4,t5,t6) =>
-      shrink(t1).map((_, t2, t3, t4, t5, t6)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6)) append
+      shrink(t1).map((_, t2, t3, t4, t5, t6)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4, t5, t6)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4, t5, t6)) lazyAppendAll
+      shrink(t4).map((t1, t2, t3, _, t5, t6)) lazyAppendAll
+      shrink(t5).map((t1, t2, t3, t4, _, t6)) lazyAppendAll
       shrink(t6).map((t1, t2, t3, t4, t5, _))
     }
 
@@ -169,12 +171,12 @@ object Shrink extends ShrinkLowPriority {
     T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink, T7:Shrink
   ]: Shrink[(T1,T2,T3,T4,T5,T6,T7)] =
     Shrink { case (t1,t2,t3,t4,t5,t6,t7) =>
-      shrink(t1).map((_, t2, t3, t4, t5, t6, t7)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7)) append
+      shrink(t1).map((_, t2, t3, t4, t5, t6, t7)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4, t5, t6, t7)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4, t5, t6, t7)) lazyAppendAll
+      shrink(t4).map((t1, t2, t3, _, t5, t6, t7)) lazyAppendAll
+      shrink(t5).map((t1, t2, t3, t4, _, t6, t7)) lazyAppendAll
+      shrink(t6).map((t1, t2, t3, t4, t5, _, t7)) lazyAppendAll
       shrink(t7).map((t1, t2, t3, t4, t5, t6, _))
     }
 
@@ -184,13 +186,13 @@ object Shrink extends ShrinkLowPriority {
     T7:Shrink, T8:Shrink
   ]: Shrink[(T1,T2,T3,T4,T5,T6,T7,T8)] =
     Shrink { case (t1,t2,t3,t4,t5,t6,t7,t8) =>
-      shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8)) append
-      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8)) append
+      shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8)) lazyAppendAll
+      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8)) lazyAppendAll
+      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8)) lazyAppendAll
+      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8)) lazyAppendAll
+      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8)) lazyAppendAll
       shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _))
     }
 
@@ -200,14 +202,14 @@ object Shrink extends ShrinkLowPriority {
     T7:Shrink, T8:Shrink, T9:Shrink
   ]: Shrink[(T1,T2,T3,T4,T5,T6,T7,T8,T9)] =
     Shrink { case (t1,t2,t3,t4,t5,t6,t7,t8,t9) =>
-      shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8, t9)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8, t9)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8, t9)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8, t9)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8, t9)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8, t9)) append
-      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8, t9)) append
-      shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _, t9)) append
+      shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8, t9)) lazyAppendAll
+      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8, t9)) lazyAppendAll
+      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8, t9)) lazyAppendAll
+      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8, t9)) lazyAppendAll
+      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8, t9)) lazyAppendAll
+      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8, t9)) lazyAppendAll
+      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8, t9)) lazyAppendAll
+      shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _, t9)) lazyAppendAll
       shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
     }
 
