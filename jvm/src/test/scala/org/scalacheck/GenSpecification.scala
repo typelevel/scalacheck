@@ -118,7 +118,7 @@ object GenSpecification extends Properties("Gen") {
 
   import Double.{MinValue, MaxValue}
   property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
-    MinValue <= x && x <= MaxValue
+    MinValue <= x && x <= MaxValue && !x.isNaN
   }
 
   import Double.{NegativeInfinity, PositiveInfinity}
