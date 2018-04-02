@@ -411,10 +411,10 @@ object Gen extends GenArities{
         def choose(low: Double, high: Double) =
           if (low > high) throw new IllegalBoundsError(low, high)
           else if (low == Double.NegativeInfinity)
-            frequency(1 -> Double.NegativeInfinity,
+            frequency(1 -> const(Double.NegativeInfinity),
                       9 -> choose(Double.MinValue, high))
           else if (high == Double.PositiveInfinity)
-            frequency(1 -> Double.PositiveInfinity,
+            frequency(1 -> const(Double.PositiveInfinity),
                       9 -> choose(low, Double.MaxValue))
           else gen(chDbl(low,high))
       }
