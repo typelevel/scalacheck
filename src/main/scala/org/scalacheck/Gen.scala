@@ -377,10 +377,6 @@ object Gen extends GenArities{
       val d = h - l
       if (d < 0) {
         throw new IllegalBoundsError(l, h)
-      } else if (l == Double.NegativeInfinity) {
-        chDbl(Double.MinValue, h)(p, seed)
-      } else if (h == Double.PositiveInfinity) {
-        chDbl(l, Double.MaxValue)(p, seed)
       } else if (d > Double.MaxValue) {
         val (x, seed2) = seed.long
         if (x < 0) chDbl(l, 0d)(p, seed2) else chDbl(0d, h)(p, seed2)
@@ -414,6 +410,12 @@ object Gen extends GenArities{
       new Choose[Double] {
         def choose(low: Double, high: Double) =
           if (low > high) throw new IllegalBoundsError(low, high)
+          else if (low == Double.NegativeInfinity)
+            frequency(1 -> Double.NegativeInfinity,
+                      9 -> choose(Double.MinValue, high))
+          else if (high == Double.PositiveInfinity)
+            frequency(1 -> Double.PositiveInfinity,
+                      9 -> choose(low, Double.MaxValue))
           else gen(chDbl(low,high))
       }
 
