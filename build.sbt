@@ -13,9 +13,8 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.12.3",
-  // Temporary: we will eventually use 2.13.0-M4, which will be published to maven central
-  resolvers += "scala-pr" at "https://scala-ci.typesafe.com/artifactory/scala-integration/",
-  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-pre-c577876", scalaVersion.value)
+  // Temporary: we will eventually use 2.13.0-M4
+  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-M4-pre-20d3c21", scalaVersion.value)
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
