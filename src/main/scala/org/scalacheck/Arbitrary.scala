@@ -372,7 +372,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   implicit def arbEnum[A <: java.lang.Enum[A]](implicit A: reflect.ClassTag[A]): Arbitrary[A] = {
     val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]
-    Arbitrary(Gen.oneOf(values))
+    Arbitrary(Gen.oneOf(values.to[Vector]))
   }
 
   implicit def arbPartialFunction[A: Cogen, B: Arbitrary]: Arbitrary[PartialFunction[A, B]] =

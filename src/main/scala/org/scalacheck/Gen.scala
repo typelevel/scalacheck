@@ -531,7 +531,7 @@ object Gen extends GenArities{
     }
 
   /** Picks a random value from a list */
-  def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf(t0 +: t1 +: tn)
+  def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf((t0 +: t1 +: tn).to[Vector])
 
   /** Picks a random generator from a list */
   def oneOf[T](g0: Gen[T], g1: Gen[T], gn: Gen[T]*): Gen[T] = {
@@ -708,7 +708,7 @@ object Gen extends GenArities{
           seed = s
         }
       }
-      r(Some(buf), seed)
+      r(Some(buf.to[Vector]), seed)
     }
   }
 

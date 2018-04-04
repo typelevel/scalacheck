@@ -12,6 +12,7 @@ package org.scalacheck
 import org.scalacheck.rng.Seed
 
 import language.reflectiveCalls
+import collection.immutable.Seq
 
 import util.ConsoleReporter
 
@@ -41,7 +42,7 @@ class Properties(val name: String) {
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
-  def properties: collection.Seq[(String,Prop)] = props
+  def properties: Seq[(String,Prop)] = props.to[Seq]
 
   /** Convenience method that checks the properties with the given parameters
    *  (or default parameters, if not specified)
