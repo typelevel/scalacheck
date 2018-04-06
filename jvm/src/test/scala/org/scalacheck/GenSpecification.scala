@@ -179,7 +179,7 @@ object GenSpecification extends Properties("Gen") {
     l.length == 0
   }
 
-  property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+  property("infiniteLazyList") = forAll(infiniteLazyList(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
     s.drop(n & 0xffff).nonEmpty
   }
 
@@ -201,7 +201,7 @@ object GenSpecification extends Properties("Gen") {
   property("distributed pick") = {
     val lst = (0 to 7).toIterable
     val n = 2
-    forAll(pick(n, lst)) { xs: Seq[Int] =>
+    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
           xs.size == n

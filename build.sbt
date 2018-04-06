@@ -10,8 +10,8 @@ lazy val isRelease = true
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.5",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M3", scalaVersion.value)
+  scalaVersion := "2.12.6",
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M4", scalaVersion.value)
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -57,7 +57,6 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-unchecked",
     "-Xfatal-warnings",
     "-Xfuture",
-    "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-inaccessible",
     "-Ywarn-nullary-override",

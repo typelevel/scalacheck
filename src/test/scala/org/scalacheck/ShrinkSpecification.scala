@@ -16,10 +16,10 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ShrinkSpecification extends Properties("Shrink") {
 
-  def shrinkClosure[T : Shrink](x: T): Stream[T] = {
+  def shrinkClosure[T : Shrink](x: T): LazyList[T] = {
     val xs = shrink[T](x)
     if(xs.isEmpty) xs
-    else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
+    else xs.lazyAppendedAll(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
   property("byte") = forAll { n: Byte =>
@@ -104,7 +104,7 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   /* Ensure that shrink[T] terminates. (#244)
    *
-   * Let's say shrinking "terminates" when the stream of values
+   * Let's say shrinking "terminates" when the lazy list of values
    * becomes empty. We can empirically determine the longest possible
    * sequence for a given type before termination. (Usually this
    * involves using the type's MinValue.)

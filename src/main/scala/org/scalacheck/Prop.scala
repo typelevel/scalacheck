@@ -749,7 +749,7 @@ object Prop {
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
   def forAllShrink[T, P](g: Gen[T],
-    shrink: T => Stream[T])(f: T => P
+    shrink: T => LazyList[T])(f: T => P
   )(implicit pv: P => Prop, pp: T => Pretty
   ): Prop = Prop { prms0 =>
 
@@ -765,8 +765,8 @@ object Prop {
     /*
      * Returns the first failed result in Left or success in Right.
      */
-    def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
-      assert(!xs.isEmpty, "Stream cannot be empty")
+    def getFirstFailure(xs: LazyList[T]): Either[(T,Result),(T,Result)] = {
+      assert(!xs.isEmpty, "LazyList cannot be empty")
       val results = xs.map(x => (x, result(x)))
       results.dropWhile(!_._2.failure).headOption match {
         case None => Right(results.head)

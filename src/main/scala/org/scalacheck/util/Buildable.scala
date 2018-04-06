@@ -9,12 +9,11 @@
 
 package org.scalacheck.util
 
-import collection.{ Map => _, _ }
-import generic.CanBuildFrom
+import scala.collection.{mutable, Map => _, _}
 
 trait Buildable[T,C] extends Serializable {
   def builder: mutable.Builder[T,C]
-  def fromIterable(it: Traversable[T]): C = {
+  def fromIterable(it: Iterable[T]): C = {
     val b = builder
     b ++= it
     b.result()
@@ -22,49 +21,41 @@ trait Buildable[T,C] extends Serializable {
 }
 
 /**
-  * CanBuildFrom instances implementing Serializable, so that the objects capturing those can be
+  * Factory instances implementing Serializable, so that the objects capturing those can be
   * serializable too.
   */
 object SerializableCanBuildFroms {
 
-  implicit def listCanBuildFrom[T]: CanBuildFrom[List[T], T, List[T]] =
-    new CanBuildFrom[List[T], T, List[T]] with Serializable {
-      def apply(from: List[T]) = List.newBuilder[T]
-      def apply() = List.newBuilder[T]
+  implicit def listFactory[T]: Factory[T, List[T]] =
+    new Factory[T, List[T]] with Serializable {
+      def fromSpecific(source: IterableOnce[T]): List[T] = List.from(source)
+      def newBuilder: mutable.Builder[T, List[T]] = List.newBuilder[T]
     }
 
-  implicit def bitsetCanBuildFrom[T]: CanBuildFrom[BitSet, Int, BitSet] =
-    new CanBuildFrom[BitSet, Int, BitSet] with Serializable {
-      def apply(from: BitSet) = BitSet.newBuilder
-      def apply() = BitSet.newBuilder
+  implicit def bitsetFactory[T]: Factory[Int, BitSet] =
+    new Factory[Int, BitSet] with Serializable {
+      def fromSpecific(source: IterableOnce[Int]) = BitSet.fromSpecific(source)
+      def newBuilder: mutable.Builder[Int, BitSet] = BitSet.newBuilder
     }
 
-  implicit def mapCanBuildFrom[T, U]: CanBuildFrom[Map[T, U], (T, U), Map[T, U]] =
-    new CanBuildFrom[Map[T, U], (T, U), Map[T, U]] with Serializable {
-      def apply(from: Map[T, U]) = Map.newBuilder[T, U]
-      def apply() = Map.newBuilder[T, U]
+  implicit def mapFactory[T, U]: Factory[(T, U), Map[T, U]] =
+    new Factory[(T, U), Map[T, U]] with Serializable {
+      def fromSpecific(source: IterableOnce[(T, U)]) = Map.from(source)
+      def newBuilder: mutable.Builder[(T, U), Map[T, U]] = Map.newBuilder[T, U]
     }
 
 }
 
 object Buildable {
 
-  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]) =
+  implicit def buildableFactory[T,C](implicit f: Factory[T,C]) =
     new Buildable[T,C] {
-      def builder = c.apply
+      def builder = f.newBuilder
     }
 
   import java.util.ArrayList
   implicit def buildableArrayList[T] = new Buildable[T,ArrayList[T]] {
-    def builder = new mutable.Builder[T,ArrayList[T]] {
-      val al = new ArrayList[T]
-      def +=(x: T) = {
-        al.add(x)
-        this
-      }
-      def clear() = al.clear()
-      def result() = al
-    }
+    def builder = new ArrayListBuilder[T]
   }
 
 }
