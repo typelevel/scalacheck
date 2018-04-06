@@ -123,7 +123,7 @@ object Cogen extends CogenArities with CogenLowPriority {
   implicit def cogenVector[A: Cogen]: Cogen[Vector[A]] =
     Cogen.it(_.iterator)
 
-  implicit def cogenStream[A: Cogen]: Cogen[Stream[A]] =
+  implicit def cogenLazyList[A: Cogen]: Cogen[LazyList[A]] =
     Cogen.it(_.iterator)
 
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =

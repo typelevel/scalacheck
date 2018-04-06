@@ -17,12 +17,12 @@ import collection._
 object BuildableSpecification {
   def container[C[_]](implicit
     evb: Buildable[String, C[String]],
-    evt: C[String] => Traversable[String]
+    evt: C[String] => Iterable[String]
   ) = Gen.containerOf[C, String](Gen.alphaStr)
 
   implicit val listGen: Gen[List[String]] = container[List]
 
-  implicit val streamGen: Gen[Stream[String]] = container[Stream]
+  implicit val lazyListGen: Gen[LazyList[String]] = container[LazyList]
 
   implicit val arrayGen: Gen[Array[String]] = container[Array]
 

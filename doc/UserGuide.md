@@ -471,17 +471,17 @@ responsible for generating the individual items. You can use it in the
 following way:
 
 ```scala
-val genIntList      = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
+val genIntList        = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
 
-val genStringStream = Gen.containerOf[Stream,String](Gen.alphaStr)
+val genStringLazyList = Gen.containerOf[LazyList,String](Gen.alphaStr)
 
-val genBoolArray    = Gen.containerOf[Array,Boolean](true)
+val genBoolArray      = Gen.containerOf[Array,Boolean](true)
 ```
 
-By default, ScalaCheck supports generation of `List`, `Stream`, `Set`, `Array`,
-and `ArrayList` (from `java.util`). You can add support for additional
-containers by adding implicit `Buildable` instances. See `Buildable.scala` for
-examples.
+By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
+2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array`, and
+`ArrayList` (from `java.util`). You can add support for additional containers
+by adding implicit `Buildable` instances. See `Buildable.scala` for examples.
 
 There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 `Gen.containerOfN` for generating containers of a given size.
@@ -778,9 +778,9 @@ can also define default shrinking methods. This is done by defining an implicit
 method that returns a `Shrink[T]` instance. This is done by using the
 `Shrink(...)` factory method, which as its only parameter takes a function and
 returns an instance of `Shrink[T]`. In turn, the function should take a value
-of the given type `T`, and return a `Stream` of shrank variants of the given
-value. As an example, look at the implicit `Shrink` instance for a tuple as it
-is defined in ScalaCheck:
+of the given type `T`, and return a `Stream` (`LazyList` on Scala 2.13) of shrank
+variants of the given value. As an example, look at the implicit `Shrink` instance
+for a tuple as it is defined in ScalaCheck:
 
 ```scala
 /** Shrink instance of 2-tuple */
@@ -873,15 +873,15 @@ object CounterSpecification extends Commands {
    *  (a singleton [[Sut]]), implement this method the following way:
    *
    *  {{{
-   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
-   *    runningSuts: Traversable[Sut]
+   *  def canCreateNewSut(newState: State, initSuts: Iterable[State]
+   *    runningSuts: Iterable[Sut]
    *  ) = {
    *    initSuts.isEmpty && runningSuts.isEmpty
    *  }
    *  }}}
    */
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]): Boolean = true
+  def canCreateNewSut(newState: State, initSuts: Iterable[State],
+    runningSuts: Iterable[Sut]): Boolean = true
 
   /** The precondition for the initial state, when no commands yet have
    *  run. This is used by ScalaCheck when command sequences are shrinked

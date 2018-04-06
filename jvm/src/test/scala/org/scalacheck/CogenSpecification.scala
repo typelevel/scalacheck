@@ -140,7 +140,7 @@ object CogenSpecification extends Properties("Cogen") {
   include(cogenLaws[String], "cogenString.")
   include(cogenLaws[List[Int]], "cogenList.")
   include(cogenLaws[Vector[Int]], "cogenVector.")
-  include(cogenLaws[Stream[Int]], "cogenStream.")
+  include(cogenLaws[LazyList[Int]], "cogenLazyList.")
   include(cogenLaws[Set[Int]], "cogenSet.")
   include(cogenLaws[Map[Int, Int]], "cogenMap.")
   include(cogenLaws[() => Int], "cogenFunction0.")
