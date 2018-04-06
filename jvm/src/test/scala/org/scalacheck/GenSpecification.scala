@@ -181,6 +181,15 @@ object GenSpecification extends Properties("Gen") {
     l.length == 0
   }
 
+  property("distinctListOfN") = forAll(choose(0, 100)) { n =>
+    forAll(distinctListOfN(n, arbitrary[Int])(_ == _)) { _.size == n }
+  }
+
+  property("distinctListOfN generates lists of distinct values") =
+    forAll(distinctListOfN(10, arbitrary[Int])(_ % 40 == _ % 40)) {
+      _.groupBy(_ % 40).values.forall(_.size == 1)
+    }
+
   property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
     s.drop(n & 0xffff).nonEmpty
   }
