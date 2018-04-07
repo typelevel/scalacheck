@@ -618,19 +618,21 @@ object Gen extends GenArities{
    *  elements than `n`, but not more.
    *
    *  Elements are distinct, which is determined by `areEqual`. If `n` distinct
-   *  elements cannot be generated, the container generator will fail.
+   *  elements cannot be generated, the container generator will fail. Each
+   *  element will have `maxAttempts` tries to produce a distinct value before
+   *  giving up.
    */
-  def distinctBuildableOfN[C,T](n: Int, g: Gen[T])(areEqual: (T,T) => Boolean)(implicit
+  def distinctBuildableOfN[C,T](n: Int, g: Gen[T], maxAttempts: Int)(areEqual: (T,T) => Boolean)(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] = {
     require(n >= 0)
     Gen.gen { (params, seed) =>
       @tailrec def loop(rs: R[Vector[T]], attempt: Int): R[Vector[T]] =
         rs.retrieve match {
-          case None                     => throw new Gen.RetrievalError()
-          case Some(es) if es.size == n => rs
-          case Some(_) if attempt > n   => throw new Gen.RetrievalError()
-          case Some(es)                 =>
+          case None                               => throw new Gen.RetrievalError()
+          case Some(es) if es.size == n           => rs
+          case Some(_)  if attempt >= maxAttempts => throw new Gen.RetrievalError()
+          case Some(es)                           =>
             val gNext = g.doApply(params, rs.seed)
             val rsNext = rs.copy(sd = gNext.seed)
             gNext.retrieve match {
@@ -671,10 +673,10 @@ object Gen extends GenArities{
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
   ): Gen[C[T]] = buildableOfN[C[T],T](n,g)
 
-  /** A convenience method for calling `distinctBuildableOfN[C[T],T](n,g)(e)`. */
-  def distinctContainerOfN[C[_], T](n: Int, g: Gen[T])(e: (T, T) => Boolean)(implicit
+  /** A convenience method for calling `distinctBuildableOfN[C[T],T](n,g,m)(e)`. */
+  def distinctContainerOfN[C[_], T](n: Int, g: Gen[T], m: Int)(e: (T, T) => Boolean)(implicit
     evb: Buildable[T, C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = distinctBuildableOfN(n, g)(e)
+  ): Gen[C[T]] = distinctBuildableOfN(n, g, m)(e)
 
   /** A convenience method for calling `buildableOf[C[T],T](g)`. */
   def containerOf[C[_],T](g: Gen[T])(implicit
@@ -701,10 +703,10 @@ object Gen extends GenArities{
   def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T],T](n,g)
 
   /** Generates a list of distinct elements of the given length. This method is equal to calling
-   *  `distinctContainerOfN[List,T](n,g)(e)`
+   *  `distinctContainerOfN[List,T](n,g,m)(e)`
    */
-  def distinctListOfN[T](n: Int, g: Gen[T])(e: (T, T) => Boolean): Gen[List[T]] =
-    distinctBuildableOfN[List[T],T](n, g)(e)
+  def distinctListOfN[T](n: Int, g: Gen[T], m: Int)(e: (T, T) => Boolean): Gen[List[T]] =
+    distinctBuildableOfN[List[T],T](n, g, m)(e)
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling

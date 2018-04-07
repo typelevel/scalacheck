@@ -182,11 +182,11 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("distinctListOfN") = forAll(choose(0, 100)) { n =>
-    forAll(distinctListOfN(n, arbitrary[Int])(_ == _)) { _.size == n }
+    forAll(distinctListOfN(n, arbitrary[Int], 50)(_ == _)) { _.size == n }
   }
 
   property("distinctListOfN generates lists of distinct values") =
-    forAll(distinctListOfN(10, arbitrary[Int])(_ % 40 == _ % 40)) {
+    forAll(distinctListOfN(10, arbitrary[Int], 50)(_ % 40 == _ % 40)) {
       _.groupBy(_ % 40).values.forall(_.size == 1)
     }
 
