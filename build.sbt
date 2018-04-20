@@ -1,3 +1,5 @@
+import sbt.CrossVersion
+
 sourceDirectory := file("dummy source directory")
 
 scalaVersionSettings
@@ -11,7 +13,8 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-M3", scalaVersion.value)
+  // Temporary: we will eventually use 2.13.0-M4
+  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-M4-pre-20d3c21", scalaVersion.value)
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -46,6 +49,17 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
+  unmanagedSourceDirectories in Compile ++= {
+    (unmanagedSourceDirectories in Compile).value.map { dir =>
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) => file(dir.getPath ++ "-2.13")
+        case _             => file(dir.getPath ++ "-2.10-2.12")
+      }
+    }
+  },
+
+  libraryDependencies += "org.scala-lang" %% "scala-collection-compat" % "0.1-SNAPSHOT",
+
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
   javacOptions += "-Xmx1024M",
@@ -55,7 +69,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xfatal-warnings",
+    //"-Xfatal-warnings", Disabled because “import scala.collection.compat._” causes “Unused import” warnings on 2.13.
     "-Xfuture",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",

@@ -203,7 +203,7 @@ object GenSpecification extends Properties("Gen") {
   property("distributed pick") = {
     val lst = (0 to 7).toIterable
     val n = 2
-    forAll(pick(n, lst)) { xs: Seq[Int] =>
+    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
           xs.size == n

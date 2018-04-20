@@ -26,8 +26,8 @@ object RedisSpec extends Commands {
     connected: Boolean
   )
 
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]
+  def canCreateNewSut(newState: State, initSuts: Iterable[State],
+    runningSuts: Iterable[Sut]
   ): Boolean = {
     initSuts.isEmpty && runningSuts.isEmpty
   }
