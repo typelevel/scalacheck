@@ -36,7 +36,7 @@ matrix:
   include:
     - scala: 2.11.11
       before_script:
-        - curl https://raw.githubusercontent.com/scala-native/scala-native/21539aa97947f767afcd85b5c2fb3c0262b2d301/bin/travis_setup.sh | bash -x
+        - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       sudo: required
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
   exclude:
