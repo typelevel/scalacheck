@@ -80,21 +80,6 @@ object GenSpecification extends Properties("Gen") {
     fail(prms, seed) == None
   }
 
-  property("fromOption") = forAll { (prms: Parameters, seed: Seed, o: Option[Int]) =>
-    o match {
-      case Some(x) => fromOption(o)(prms, seed) == Some(x)
-      case None => fromOption(o)(prms, seed) == None
-    }
-  }
-
-  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Seed) =>
-    val g = const(o).collect { case Some(n) => n }
-    o match {
-      case Some(x) => g(prms, seed) == Some(x)
-      case None => g(prms, seed) == None
-    }
-  }
-
   property("choose-int") = forAll { (l: Int, h: Int) =>
     Try(choose(l, h)) match {
       case Success(g) => forAll(g) { x => l <= x && x <= h }

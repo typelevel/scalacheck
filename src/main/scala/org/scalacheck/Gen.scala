@@ -83,10 +83,6 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def flatten[U](implicit asOption: T => Option[U]): Gen[U] =
-    map(asOption).collect{ case Some(t) => t }
-
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
@@ -98,13 +94,6 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  the generator fails (returns None). Also, make sure that the provided
    *  test property is side-effect free, eg it should not use external vars. */
   def filterNot(p: T => Boolean): Gen[T] = suchThat(x => !p(x))
-
-  /** Create a new generator that fails if the specified partial function
-   *  is undefined for this generator's value, otherwise returns the result
-   *  of the partial function applied to this generator's value. */
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def collect[U](pf: PartialFunction[T,U]): Gen[U] =
-    flatMap { t => Gen.fromOption(pf.lift(t)) }
 
   /** Creates a non-strict filtered version of this generator. */
   def withFilter(p: T => Boolean): WithFilter = new WithFilter(p)
@@ -446,14 +435,6 @@ object Gen extends GenArities{
       val seed = seed0
     }
 
-  /** A generator that fails if the provided option value is undefined,
-   *  otherwise just returns the value. */
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def fromOption[T](o: Option[T]): Gen[T] = o match {
-    case Some(t) => const(t)
-    case None => fail
-  }
-
   /** A generator that generates a random value in the given (inclusive)
    *  range. If the range is invalid, the generator will not generate
    *  any value. */
@@ -513,12 +494,6 @@ object Gen extends GenArities{
     lazy val h = g
     gen { (p, seed) => h.doApply(p, seed) }
   }
-
-  /** Wraps a generator for later evaluation. The given parameter is
-   *  evaluated each time the wrapper generator is evaluated.
-   *  This has been deprecated in favor of [[org.scalacheck.Gen.delay]]. */
-  @deprecated("Replaced with delay()", "1.13.0")
-  def wrap[T](g: => Gen[T]): Gen[T] = delay(g)
 
   /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
