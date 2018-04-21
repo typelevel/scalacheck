@@ -10,8 +10,8 @@ lazy val isRelease = false
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.13.0-M3", scalaVersion.value)
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M3", scalaVersion.value)
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -134,7 +134,7 @@ lazy val native = project.in(file("native"))
   .settings(sharedSettings: _*)
   .settings(
     doc in Compile := (doc in Compile in jvm).value,
-    scalaVersion := "2.11.11",
+    scalaVersion := "2.11.12",
     libraryDependencies ++= Seq(
       "org.scala-native" %% "test-interface_native0.3" % nativeVersion
     )

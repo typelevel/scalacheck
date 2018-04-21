@@ -14,9 +14,9 @@ notifications:
     - rickynils@gmail.com
 
 scala:
-  - 2.10.6
-  - 2.11.11
-  - 2.12.3
+  - 2.10.7
+  - 2.11.12
+  - 2.12.4
   - 2.13.0-M3
 jdk:
   - oraclejdk8
@@ -34,11 +34,11 @@ sudo: false
 
 matrix:
   include:
-    - scala: 2.11.11
+    - scala: 2.11.12
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       sudo: required
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
   exclude:
-    - scala: 2.10.6
+    - scala: 2.10.7
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
