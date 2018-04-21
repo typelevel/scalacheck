@@ -8,7 +8,21 @@
   other test frameworks you're using are binary compatible with this release of
   ScalaCheck.
 
+* The source code license was changed to the unmodified 3-clause BSD license.
+  Previously, a slightly reworded 3-clause BSD license was used.
+
+### Fixed
+
+* Deadlock in test runner (https://github.com/rickynils/scalacheck/issues/290)
+
 ### Added
+
+* Add an `initialSeed` test parameter that can be set to make property
+  evaluation deterministic. If the same seed is used, the generated test cases
+  will be the same. By default, this initial seed is randomized (like in
+  previous versions of ScalaCheck).
+
+* New generators and `Arbitrary` instances added for various types.
 
 * Support for filtering properties in the test runner
   (https://github.com/rickynils/scalacheck/pull/267).
