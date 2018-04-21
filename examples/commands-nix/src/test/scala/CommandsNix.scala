@@ -140,7 +140,7 @@ object MachineSpec extends Commands {
     idGen = Gen.listOfN(8, Gen.alphaLowerChar).map(_.mkString)
     ids <- Gen.listOfN(machineCount, idGen)
     subnet <- genSubnet
-    machines <- Gen.sequence[List,Machine](ids.map(genMachine(_, subnet)))
+    machines <- Gen.sequence[List[Machine], Machine](ids.map(genMachine(_, subnet)))
   } yield machines
 
   def genPingOffline(state: State): Gen[Ping] = for {
