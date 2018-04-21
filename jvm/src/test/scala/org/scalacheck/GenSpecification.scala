@@ -103,7 +103,20 @@ object GenSpecification extends Properties("Gen") {
 
   import Double.{MinValue, MaxValue}
   property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
-    MinValue <= x && x <= MaxValue
+    MinValue <= x && x <= MaxValue && !x.isNaN
+  }
+
+  import Double.{NegativeInfinity, PositiveInfinity}
+  property("choose-infinite-double") = {
+    forAll(Gen.choose(NegativeInfinity, PositiveInfinity)) { x =>
+      NegativeInfinity <= x && x <= PositiveInfinity && !x.isNaN
+    }
+  }
+
+  property("choose-infinite-double-fix-zero-defect-379") = {
+    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
+      xs.exists(_ != 0d)
+    }
   }
 
   property("choose-xmap") = {
