@@ -5,7 +5,7 @@ scalaVersionSettings
 // When bumping to 1.14.1, remember to set mimaPreviousArtifacts to 1.14.0
 lazy val versionNumber = "1.14.0"
 
-lazy val isRelease = false
+lazy val isRelease = true
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 

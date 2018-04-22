@@ -1,6 +1,6 @@
 # ScalaCheck CHANGELOG
 
-## 1.14.0 (UNRELEASED)
+## 1.14.0 (2018-04-22)
 
 ### Changed
 
