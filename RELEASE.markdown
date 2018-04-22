@@ -67,7 +67,7 @@ https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown
 
   * Maven dependency
 
-    Add this to your pom.xml (example for Scala 2.11):
+    Add this to your pom.xml (example for Scala 2.12):
 
     <repositories>
       <repository>
@@ -84,6 +84,6 @@ https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.11</artifactId>
+      <artifactId>scalacheck_2.12</artifactId>
       <version>1.14.0</version>
     </dependency>
