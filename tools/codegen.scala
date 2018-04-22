@@ -117,7 +117,7 @@ def resultOf(i: Int) = {
 def tupleCogen(i: Int) = {
   s"""
   implicit final def tuple${i}[${types(i)}](implicit ${wrappedArgs("Cogen",i)}): Cogen[Tuple$i[${types(i)}]] =
-    Cogen((seed: rng.Seed, t: Tuple$i[${types(i)}]) =>
+    Cogen((seed, t) =>
       ${idents("c", i).zipWithIndex.foldLeft("seed"){
         case (str, (c, n)) => s"$c.perturb($str, t._${n + 1})"
       }}
