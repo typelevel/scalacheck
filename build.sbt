@@ -78,12 +78,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // don't use fatal warnings in tests
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
-  mimaPreviousArtifacts := (
-    if (CrossVersion isScalaApiCompatible scalaVersion.value)
-      Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
-    else
-      Set.empty
-  ),
+  mimaPreviousArtifacts := Set("org.scalacheck" %% "scalacheck" % "1.14.0"),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
