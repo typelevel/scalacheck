@@ -80,7 +80,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   mimaPreviousArtifacts := (
     if (CrossVersion isScalaApiCompatible scalaVersion.value)
-      Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+      Set("org.scalacheck" %% "scalacheck" % "1.14.0")
     else
       Set.empty
   ),
