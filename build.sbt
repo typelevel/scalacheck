@@ -65,7 +65,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     scalaBinaryVersion.value match {
       case "2.10" => Seq("-Xlint")
       case "2.11" => Seq("-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import")
-      case _      => Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused:imports,-patvars,-implicits,-locals,-privates,-params")
+      case _      => Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused:imports,-patvars,-implicits,-locals,-privates,-explicits")
     }
   },
 
