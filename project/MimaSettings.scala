@@ -22,6 +22,7 @@ object MimaSettings {
   )
 
   private def removedPrivateClasses = Seq(
+    "org.scalacheck.Platform$EnableReflectiveInstantiation"
   )
 
   private def otherProblems = Seq(

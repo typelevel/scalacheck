@@ -27,7 +27,7 @@ private abstract class ScalaCheckRunner extends Runner {
   val errorCount = new AtomicInteger(0)
   val testCount = new AtomicInteger(0)
 
-  def deserializeTask(task: String, deserializer: String => TaskDef) = {
+  def deserializeTask(task: String, deserializer: String => TaskDef): BaseTask = {
     val taskDef = deserializer(task)
     val countTestSelectors = taskDef.selectors.toSeq.count {
       case _:TestSelector => true
