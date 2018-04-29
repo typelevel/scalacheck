@@ -9,7 +9,7 @@ lazy val isRelease = false
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.5",
+  scalaVersion := "2.12.6",
   crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M3", scalaVersion.value)
 )
 
