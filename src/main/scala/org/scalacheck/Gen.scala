@@ -624,28 +624,16 @@ object Gen extends GenArities{
    */
   def distinctBuildableOfN[C,T](n: Int, g: Gen[T], maxAttempts: Int)(areEqual: (T,T) => Boolean)(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
-  ): Gen[C] = {
-    require(n >= 0)
-    Gen.gen { (params, seed) =>
-      @tailrec def loop(rs: R[Vector[T]], attempt: Int): R[Vector[T]] =
-        rs.retrieve match {
-          case None                               => throw new Gen.RetrievalError()
-          case Some(es) if es.size == n           => rs
-          case Some(_)  if attempt >= maxAttempts => throw new Gen.RetrievalError()
-          case Some(es)                           =>
-            val gNext = g.doApply(params, rs.seed)
-            val rsNext = rs.copy(sd = gNext.seed)
-            gNext.retrieve match {
-              case None                                 => loop(rsNext, attempt + 1)
-              case Some(e) if es.exists(areEqual(_, e)) => loop(rsNext, attempt + 1)
-              case Some(e)                              => loop(rsNext.map(_ :+ e), 0)
-            }
-        }
-
-      loop(r(Some(Vector.empty[T]), seed), 0).map(evb.fromIterable(_))
-    }.suchThat(c => if (c == null) g.sieveCopy(null) else c.forall(g.sieveCopy))
-  }
-
+  ): Gen[C] =
+    tailRecM((List.empty[T], 0, 0)) {
+    case (_, _, attempts) if attempts >= maxAttempts => Gen.fail
+    case (accum, size, _) if size >= n => Gen.const(Right(accum))
+    case (accum, size, attempts) =>
+      g.map { trial: T =>
+        if (accum.exists(areEqual(_, trial))) Left((accum, size, attempts + 1))
+        else Left((trial :: accum, size + 1, 0))
+      }
+  }.map(evb.fromIterable(_))
 
   /** Generates a container of any Traversable type for which there exists an
    *  implicit [[org.scalacheck.util.Buildable]] instance. The elements in the
