@@ -18,10 +18,12 @@ object MimaSettings {
   )
 
   private def newMethods = Seq(
+    "org.scalacheck.util.Buildable.fromIterable",
     "org.scalacheck.commands.Commands.canCreateNewSut"
   )
 
   private def removedPrivateMethods = Seq(
+    "org.scalacheck.util.Buildable.fromIterable"
   )
 
   private def removedPrivateClasses = Seq(
