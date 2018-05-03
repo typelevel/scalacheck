@@ -63,7 +63,7 @@ private[scalacheck] object Platform {
 
   def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
     if(!args.isEmpty) ???
-    else Class.forName(name, true, loader).newInstance.asInstanceOf[AnyRef]
+    else Class.forName(name, true, loader).getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]
 
   def loadModule(name: String, loader: ClassLoader): AnyRef =
     Class.forName(name + "$", true, loader).getField("MODULE$").get(null)
