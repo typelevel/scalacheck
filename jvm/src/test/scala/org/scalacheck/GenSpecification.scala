@@ -181,12 +181,12 @@ object GenSpecification extends Properties("Gen") {
     l.length == 0
   }
 
-  property("distinctListOfN") = forAll(choose(0, 100)) { n =>
-    forAll(distinctListOfN(n, arbitrary[Int], 50)(_ == _)) { _.size == n }
+  property("distinctContainerOfN generates containers of size n") = forAll(choose(0, 100)) { n =>
+    forAll(distinctContainerOfN[List, Int](n, arbitrary[Int])(_ == _)) { _.size == n }
   }
 
-  property("distinctListOfN generates lists of distinct values") =
-    forAll(distinctListOfN(10, arbitrary[Int], 50)(_ % 40 == _ % 40)) {
+  property("distinctContainerOfN generates containsers of distinct values") =
+    forAll(distinctContainerOfN[List, Int](10, arbitrary[Int])(_ % 40 == _ % 40)) {
       _.groupBy(_ % 40).values.forall(_.size == 1)
     }
 
