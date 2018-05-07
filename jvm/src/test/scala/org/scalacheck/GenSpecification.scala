@@ -181,13 +181,26 @@ object GenSpecification extends Properties("Gen") {
     l.length == 0
   }
 
-  property("distinctContainerOfN generates containers of size n") = forAll(choose(0, 100)) { n =>
-    forAll(distinctContainerOfN[List, Int](n, arbitrary[Int])(_ == _)) { _.size == n }
+  property("setOfN generates sets of size n") = forAll(choose(0, 100)) { n =>
+    forAll(setOfN(n, arbitrary[Int])) { _.size == n }
   }
 
-  property("distinctContainerOfN generates containsers of distinct values") =
-    forAll(distinctContainerOfN[List, Int](10, arbitrary[Int])(_ % 40 == _ % 40)) {
-      _.groupBy(_ % 40).values.forall(_.size == 1)
+  property("distinctContainerOfN generates containers of size n") = forAll(choose(0, 100)) { n =>
+    forAll(distinctContainerOfN[List, Int, Int](n, arbitrary[Int])(_ % 100)) { _.size == n }
+  }
+
+  property("distinctContainerOfN generates containers of distinct values") =
+    forAll(distinctContainerOfN[List, Int, Int](10, arbitrary[Int])(_ % 100)) {
+      _.groupBy(_ % 100).values.forall(_.size == 1)
+    }
+
+  property("distinctContainerOfNByFn generates containers of size n") = forAll(choose(0, 100)) { n =>
+    forAll(distinctContainerOfNByFn[List, Int](n, arbitrary[Int])(_ == _)) { _.size == n }
+  }
+
+  property("distinctContainerOfNByFn generates containers of distinct values") =
+    forAll(distinctContainerOfNByFn[List, Int](10, arbitrary[Int])(_ % 100 == _ % 100)) {
+      _.groupBy(_ % 100).values.forall(_.size == 1)
     }
 
   property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
