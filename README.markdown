@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/scalacheck/Lobby](https://badges.gitter.im/scalacheck/Lobby.svg)](https://gitter.im/scalacheck/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Build Status](https://secure.travis-ci.org/rickynils/scalacheck.png?branch=master)](http://travis-ci.org/rickynils/scalacheck)
+[![Build Status](https://travis-ci.org/rickynils/scalacheck.svg?branch=master)](http://travis-ci.org/rickynils/scalacheck)
 
 ScalaCheck is a library written in [Scala](http://www.scala-lang.org/) and 
 used for automated property-based testing of Scala or Java programs.

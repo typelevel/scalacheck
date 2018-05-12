@@ -24,7 +24,7 @@ The following is what you need to add to your `build.sbt` file to make the
 ScalaCheck test runner work:
 
 ```
-libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.13.5" % "test"
+libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.0" % "test"
 ```
 
 ## Limitations
