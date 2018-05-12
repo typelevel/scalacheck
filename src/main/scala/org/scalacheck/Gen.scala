@@ -546,6 +546,10 @@ object Gen extends GenArities{
   def some[T](g: Gen[T]): Gen[Option[T]] =
     g.map(Some.apply)
 
+  /** Generates a `Left` of `T` or a `Right` of `U` with equal probability. */
+  def either[T, U](gt: Gen[T], gu: Gen[U]): Gen[Either[T, U]] =
+    oneOf(gt.map(Left(_)), gu.map(Right(_)))
+
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int, Gen[T])*): Gen[T] = {
     val filtered = gs.iterator.filter(_._1 > 0).toVector
