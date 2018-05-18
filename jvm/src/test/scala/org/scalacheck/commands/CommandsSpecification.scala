@@ -30,8 +30,8 @@ object CommandsSpecification extends Properties("Commands") {
 
     override def shrinkState: Shrink[Int] = implicitly
 
-    def canCreateNewSut(newState: State, initSuts: Iterable[State],
-      runningSuts: Iterable[Sut]) = true
+    def canCreateNewSut(newState: State, initSuts: Traversable[State],
+      runningSuts: Traversable[Sut]) = true
 
     def newSut(state: State): Sut = Counter(state)
 

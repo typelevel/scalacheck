@@ -873,15 +873,15 @@ object CounterSpecification extends Commands {
    *  (a singleton [[Sut]]), implement this method the following way:
    *
    *  {{{
-   *  def canCreateNewSut(newState: State, initSuts: Iterable[State]
-   *    runningSuts: Iterable[Sut]
+   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
+   *    runningSuts: Traversable[Sut]
    *  ) = {
    *    initSuts.isEmpty && runningSuts.isEmpty
    *  }
    *  }}}
    */
-  def canCreateNewSut(newState: State, initSuts: Iterable[State],
-    runningSuts: Iterable[Sut]): Boolean = true
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]): Boolean = true
 
   /** The precondition for the initial state, when no commands yet have
    *  run. This is used by ScalaCheck when command sequences are shrinked

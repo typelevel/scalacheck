@@ -15,7 +15,7 @@ import ScalaVersionSpecific._
 
 trait Buildable[T,C] extends Serializable {
   def builder: mutable.Builder[T,C]
-  def fromIterable(it: Iterable[T]): C = {
+  def fromIterable(it: Traversable[T]): C = {
     val b = builder
     b ++= it
     b.result()
@@ -27,14 +27,15 @@ trait Buildable[T,C] extends Serializable {
   * serializable too.
   */
 object SerializableCanBuildFroms {
-  implicit def listFactory[T]: Factory[T, List[T]] = ScalaVersionSpecific.listFactory
-  implicit def bitsetFactory[T]: Factory[Int, BitSet] = ScalaVersionSpecific.bitsetFactory
-  implicit def mapFactory[T, U]: Factory[(T, U), Map[T, U]] = ScalaVersionSpecific.mapFactory
+  // Names are `..CanBuildFrom` for binary compatibility. Change to `..Factory` in a major release.
+  implicit def listCanBuildFrom[T]: Factory[T, List[T]] = ScalaVersionSpecific.listFactory
+  implicit def bitsetCanBuildFrom[T]: Factory[Int, BitSet] = ScalaVersionSpecific.bitsetFactory
+  implicit def mapCanBuildFrom[T, U]: Factory[(T, U), Map[T, U]] = ScalaVersionSpecific.mapFactory
 }
 
 object Buildable {
-
-  implicit def buildableFactory[T,C](implicit f: Factory[T,C]) =
+  // Name is `..CanBuildFrom` for binary compatibility. Change to `..Factory` in a major release.
+  implicit def buildableCanBuildFrom[T,C](implicit f: Factory[T,C]) =
     new Buildable[T,C] {
       def builder = f.newBuilder
     }

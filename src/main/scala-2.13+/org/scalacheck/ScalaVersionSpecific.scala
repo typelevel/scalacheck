@@ -7,7 +7,7 @@ import scala.collection.mutable.Builder
 import rng.Seed
 
 private[scalacheck] object ScalaVersionSpecific {
-  def toLazyList[T](i: IterableOnce[T]) = i.to(LazyList)
+  def toLazyList[T](i: IterableOnce[T]) = LazyList.from(i)
 
   def listFactory[T]: Factory[T, List[T]] =
     new Factory[T, List[T]] with Serializable {
@@ -48,7 +48,7 @@ private[scalacheck] trait GenVersionSpecific {
 private[scalacheck] trait GenSpecificationVersionSpecific
 
 private[scalacheck] trait CogenVersionSpecific {
-  implicit def cogenStream[A: Cogen]: Cogen[Stream[A]] =
+  implicit def cogenLazyList[A: Cogen]: Cogen[LazyList[A]] =
     Cogen.it(_.iterator)
 }
 
