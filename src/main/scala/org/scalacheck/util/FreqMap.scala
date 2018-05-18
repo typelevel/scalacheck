@@ -9,6 +9,8 @@
 
 package org.scalacheck.util
 
+import org.scalacheck.ScalaVersionSpecific._
+
 sealed trait FreqMap[T] extends Serializable {
   protected val underlying: scala.collection.immutable.Map[T,Int]
   val total: Int
@@ -32,7 +34,7 @@ sealed trait FreqMap[T] extends Serializable {
 
   def ++(fm: FreqMap[T]): FreqMap[T] = new FreqMap[T] {
     private val keys = FreqMap.this.underlying.keySet ++ fm.underlying.keySet
-    private val mappings = keys.to(LazyList).map { x =>
+    private val mappings = toLazyList(keys).map { x =>
       (x, fm.getCount(x).getOrElse(0) + FreqMap.this.getCount(x).getOrElse(0))
     }
     val underlying = scala.collection.immutable.Map(mappings: _*)

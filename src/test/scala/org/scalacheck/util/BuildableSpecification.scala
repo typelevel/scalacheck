@@ -10,9 +10,9 @@
 package org.scalacheck
 package util
 
-import language.higherKinds
-
-import collection._
+import scala.collection._
+import scala.language.higherKinds
+import ScalaVersionSpecific._
 
 object BuildableSpecification {
   def container[C[_]](implicit
@@ -21,6 +21,8 @@ object BuildableSpecification {
   ) = Gen.containerOf[C, String](Gen.alphaStr)
 
   implicit val listGen: Gen[List[String]] = container[List]
+
+  implicit val streamGen: Gen[Stream[String]] = container[Stream]
 
   implicit val lazyListGen: Gen[LazyList[String]] = container[LazyList]
 

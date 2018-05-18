@@ -16,6 +16,7 @@ import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
 import rng.Seed
+import ScalaVersionSpecific._
 
 sealed trait Cogen[T] extends Serializable {
 
@@ -28,7 +29,7 @@ sealed trait Cogen[T] extends Serializable {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities with CogenLowPriority {
+object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific {
 
   def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
 

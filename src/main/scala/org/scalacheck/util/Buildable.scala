@@ -10,6 +10,8 @@
 package org.scalacheck.util
 
 import scala.collection.{mutable, Map => _, _}
+import org.scalacheck.{ScalaVersionSpecific, ArrayListBuilder}
+import ScalaVersionSpecific._
 
 trait Buildable[T,C] extends Serializable {
   def builder: mutable.Builder[T,C]
@@ -25,25 +27,9 @@ trait Buildable[T,C] extends Serializable {
   * serializable too.
   */
 object SerializableCanBuildFroms {
-
-  implicit def listFactory[T]: Factory[T, List[T]] =
-    new Factory[T, List[T]] with Serializable {
-      def fromSpecific(source: IterableOnce[T]): List[T] = List.from(source)
-      def newBuilder: mutable.Builder[T, List[T]] = List.newBuilder[T]
-    }
-
-  implicit def bitsetFactory[T]: Factory[Int, BitSet] =
-    new Factory[Int, BitSet] with Serializable {
-      def fromSpecific(source: IterableOnce[Int]) = BitSet.fromSpecific(source)
-      def newBuilder: mutable.Builder[Int, BitSet] = BitSet.newBuilder
-    }
-
-  implicit def mapFactory[T, U]: Factory[(T, U), Map[T, U]] =
-    new Factory[(T, U), Map[T, U]] with Serializable {
-      def fromSpecific(source: IterableOnce[(T, U)]) = Map.from(source)
-      def newBuilder: mutable.Builder[(T, U), Map[T, U]] = Map.newBuilder[T, U]
-    }
-
+  implicit def listFactory[T]: Factory[T, List[T]] = ScalaVersionSpecific.listFactory
+  implicit def bitsetFactory[T]: Factory[Int, BitSet] = ScalaVersionSpecific.bitsetFactory
+  implicit def mapFactory[T, U]: Factory[(T, U), Map[T, U]] = ScalaVersionSpecific.mapFactory
 }
 
 object Buildable {

@@ -15,6 +15,7 @@ import language.reflectiveCalls
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
 import scala.annotation.tailrec
+import ScalaVersionSpecific._
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
  *  use `Prop.apply` instead. */

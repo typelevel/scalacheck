@@ -14,6 +14,7 @@ import language.higherKinds
 import util.Buildable
 import util.SerializableCanBuildFroms._
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import ScalaVersionSpecific._
 
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): LazyList[T]
@@ -53,7 +54,7 @@ object Shrink extends ShrinkLowPriority {
     b: Buildable[T,C[T]]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
     val ys = v(xs)
-    val zs = ys.to(LazyList)
+    val zs = toLazyList(ys)
     removeChunks(ys.size,zs).lazyAppendedAll(shrinkOne(zs)).map(b.fromIterable)
   }
 
@@ -62,7 +63,7 @@ object Shrink extends ShrinkLowPriority {
     b: Buildable[(T,U),C[T,U]]
   ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
     val ys = v(xs)
-    val zs = ys.to(LazyList)
+    val zs = toLazyList(ys)
     removeChunks(ys.size,zs).lazyAppendedAll(shrinkOne(zs)).map(b.fromIterable)
   }
 
