@@ -15,6 +15,7 @@ import language.implicitConversions
 import rng.Seed
 import util.Buildable
 import util.SerializableCanBuildFroms._
+import ScalaVersionSpecific._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
@@ -200,7 +201,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
-object Gen extends GenArities{
+object Gen extends GenArities with GenVersionSpecific {
 
   //// Private interface ////
 
@@ -656,14 +657,14 @@ object Gen extends GenArities{
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
 
   /** Generates an infinite lazy list. */
-  def infiniteLazyList[T](g: => Gen[T]): Gen[LazyList[T]] = {
-    def unfold[A, S](z: S)(f: S => Option[(A, S)]): LazyList[A] = f(z) match {
+  def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
+    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
       case Some((h, s)) => h #:: unfold(s)(f)
-      case None => LazyList.empty
+      case None => Stream.empty
     }
     gen { (p, seed0) =>
-      new R[LazyList[T]] {
-        val result: Option[LazyList[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s) -> s.next)))
+      new R[Stream[T]] {
+        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s) -> s.next)))
         val seed: Seed = seed0.next
       }
     }

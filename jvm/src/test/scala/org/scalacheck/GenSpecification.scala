@@ -18,7 +18,7 @@ import Shrink._
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
-object GenSpecification extends Properties("Gen") {
+object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
   implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
     arbitrary[Long] flatMap Seed.apply
@@ -177,6 +177,10 @@ object GenSpecification extends Properties("Gen") {
 
   property("empty listOfN") = forAll(listOfN(0, arbitrary[Int])) { l =>
     l.length == 0
+  }
+
+  property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+    s.drop(n & 0xffff).nonEmpty
   }
 
   property("infiniteLazyList") = forAll(infiniteLazyList(arbitrary[Int]), arbitrary[Short]) { (s, n) =>

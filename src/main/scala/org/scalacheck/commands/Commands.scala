@@ -11,6 +11,7 @@ package org.scalacheck.commands
 
 import org.scalacheck._
 import scala.util.{Try, Success, Failure}
+import ScalaVersionSpecific._
 
 /** An API for stateful testing in ScalaCheck.
  *

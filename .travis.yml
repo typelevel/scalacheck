@@ -46,3 +46,5 @@ matrix:
   exclude:
     - scala: 2.10.7
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+    - scala: 2.13.0-M4
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
