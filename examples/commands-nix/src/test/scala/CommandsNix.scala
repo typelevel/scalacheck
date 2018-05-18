@@ -100,8 +100,8 @@ object MachineSpec extends Commands {
   type Sut = Map[String, org.libvirt.Domain]
 
   // TODO we should check for example total amount of memory used here
-  def canCreateNewSut(newState: State, initSuts: Iterable[State],
-    runningSuts: Iterable[Sut]
+  def canCreateNewSut(newState: State, initSuts: Traversable[State],
+    runningSuts: Traversable[Sut]
   ): Boolean = true
 
   def newSut(state: State): Sut = {

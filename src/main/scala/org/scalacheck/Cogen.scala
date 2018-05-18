@@ -16,7 +16,6 @@ import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
 import rng.Seed
-import ScalaVersionSpecific._
 
 sealed trait Cogen[T] extends Serializable {
 
@@ -120,7 +119,7 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
   implicit def cogenVector[A: Cogen]: Cogen[Vector[A]] =
     Cogen.it(_.iterator)
 
-  implicit def cogenLazyList[A: Cogen]: Cogen[LazyList[A]] =
+  implicit def cogenStream[A: Cogen]: Cogen[Stream[A]] =
     Cogen.it(_.iterator)
 
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =

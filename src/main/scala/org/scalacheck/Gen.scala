@@ -450,7 +450,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C,T](gs: Iterable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
+  def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
     val g = gen { (p, seed) =>
       gs.foldLeft(r(Some(Vector.empty[T]), seed)) {
         case (rs,g) =>
