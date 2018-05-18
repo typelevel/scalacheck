@@ -38,6 +38,9 @@ matrix:
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       sudo: required
+      addons:
+        apt:
+          update: true # https://github.com/rickynils/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - env: EXAMPLES
       script:
