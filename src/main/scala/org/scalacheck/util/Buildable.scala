@@ -26,8 +26,8 @@ trait Buildable[T,C] extends Serializable {
   * Factory instances implementing Serializable, so that the objects capturing those can be
   * serializable too.
   */
+// Names are `..CanBuildFrom` for binary compatibility. Change to `..Factory` in a major release.
 object SerializableCanBuildFroms {
-  // Names are `..CanBuildFrom` for binary compatibility. Change to `..Factory` in a major release.
   implicit def listCanBuildFrom[T]: Factory[T, List[T]] = ScalaVersionSpecific.listFactory
   implicit def bitsetCanBuildFrom[T]: Factory[Int, BitSet] = ScalaVersionSpecific.bitsetFactory
   implicit def mapCanBuildFrom[T, U]: Factory[(T, U), Map[T, U]] = ScalaVersionSpecific.mapFactory
@@ -41,7 +41,7 @@ object Buildable {
     }
 
   import java.util.ArrayList
-  implicit def buildableArrayList[T] = new Buildable[T,ArrayList[T]] {
+  implicit def buildableArrayList[T]: Buildable[T, ArrayList[T]] = new Buildable[T,ArrayList[T]] {
     def builder = new ArrayListBuilder[T]
   }
 

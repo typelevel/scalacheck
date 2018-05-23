@@ -30,7 +30,7 @@ object Shrink extends ShrinkLowPriority {
   import LazyList.{cons, empty}
   import scala.collection._
 
-  /** Interleaves two lazy lists */
+  /** Interleaves two streams / lazy lists */
   private def interleave[T](xs: LazyList[T], ys: LazyList[T]): LazyList[T] =
     if(xs.isEmpty) ys
     else if(ys.isEmpty) xs
@@ -45,12 +45,12 @@ object Shrink extends ShrinkLowPriority {
   def shrink[T](x: T)(implicit s: Shrink[T]): LazyList[T] = s.shrink(x)
 
   /** Shrink a value, but also return the original value as the first element in
-   *  the resulting lazy list */
+   *  the resulting stream / lazy list */
   def shrinkWithOrig[T](x: T)(implicit s: Shrink[T]): LazyList[T] =
     cons(x, s.shrink(x))
 
   /** Shrink instance of container */
-  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Iterable[T], s: Shrink[T],
+  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
     b: Buildable[T,C[T]]
   ): Shrink[C[T]] = Shrink { xs: C[T] =>
     val ys = v(xs)
@@ -59,7 +59,7 @@ object Shrink extends ShrinkLowPriority {
   }
 
   /** Shrink instance of container2 */
-  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Iterable[(T,U)], s: Shrink[(T,U)],
+  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
     b: Buildable[(T,U),C[T,U]]
   ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
     val ys = v(xs)
