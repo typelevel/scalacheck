@@ -105,7 +105,7 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   /* Ensure that shrink[T] terminates. (#244)
    *
-   * Let's say shrinking "terminates" when the lazy list of values
+   * Let's say shrinking "terminates" when the stream / lazy list of values
    * becomes empty. We can empirically determine the longest possible
    * sequence for a given type before termination. (Usually this
    * involves using the type's MinValue.)
