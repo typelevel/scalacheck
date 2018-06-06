@@ -11,7 +11,6 @@ package org.scalacheck.commands
 
 import org.scalacheck._
 import scala.util.{Try, Success, Failure}
-import ScalaVersionSpecific._
 
 /** An API for stateful testing in ScalaCheck.
  *
@@ -271,8 +270,8 @@ trait Commands {
   )
 
   private implicit val shrinkActions = Shrink[Actions] { as =>
-    val shrinkedCmds: LazyList[Actions] =
-      Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) lazyAppendedAll
+    val shrinkedCmds: Stream[Actions] =
+      Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
       Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
 
     Shrink.shrinkWithOrig[State](as.s)(shrinkState) flatMap { state =>
