@@ -778,7 +778,7 @@ can also define default shrinking methods. This is done by defining an implicit
 method that returns a `Shrink[T]` instance. This is done by using the
 `Shrink(...)` factory method, which as its only parameter takes a function and
 returns an instance of `Shrink[T]`. In turn, the function should take a value
-of the given type `T`, and return a `Stream` (`LazyList` on Scala 2.13) of shrank
+of the given type `T`, and return a `Stream` of shrank
 variants of the given value. As an example, look at the implicit `Shrink` instance
 for a tuple as it is defined in ScalaCheck:
 
