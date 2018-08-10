@@ -484,6 +484,39 @@ examples.
 There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 `Gen.containerOfN` for generating containers of a given size.
 
+To generate a container by picking an arbitrary number of elements use
+`Gen.someOf`, or by picking one or more elements with
+`Gen.atLeastOne`.
+
+```scala
+val zeroOrMoreDigits = Gen.someOf(1 to 9)
+
+val oneOrMoreDigits = Gen.atLeastOne(1 to 9)
+```
+
+Here are generators that randomly pick `n` elements from a container
+with `Gen.pick`:
+
+```scala
+val fiveDice: Gen[Seq[Int]] = Gen.pick(5, 1 to 6)
+
+val threeLetters: Gen[Seq[Char]] = Gen.pick(3, 'A' to 'Z')
+```
+
+Note that `Gen.someOf`, `Gen.atLeastOne`, and `Gen.pick` only randomly
+select elements.  They do not generate permutations of the result
+with elements in different orders.
+
+To make your generator artificially permute the order of elements, you
+can run `scala.util.Random.shuffle` on each of the generated containers
+with the `map` method.
+
+```scala
+import scala.util.Random
+
+val threeLettersPermuted = threeLetters.map(Random.shuffle(_))
+```
+
 #### The `arbitrary` Generator
 
 There is a special generator, `org.scalacheck.Arbitrary.arbitrary`, which
