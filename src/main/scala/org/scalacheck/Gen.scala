@@ -643,16 +643,16 @@ object Gen extends GenArities{
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
-   *  <code>containerOf[Map,T,U](g)</code>. */
+   *  <code>containerOf[Map,(T,U)](g)</code>. */
   def mapOf[T,U](g: => Gen[(T,U)]) = buildableOf[Map[T,U],(T,U)](g)
 
   /** Generates a non-empty map of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
-   *  <code>nonEmptyContainerOf[Map,T,U](g)</code>. */
+   *  <code>nonEmptyContainerOf[Map,(T,U)](g)</code>. */
   def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T,U],(T,U)](g)
 
   /** Generates a map with at most the given number of elements. This method
-   *  is equal to calling <code>containerOfN[Map,T,U](n,g)</code>. */
+   *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
 
   /** Generates an infinite stream. */
