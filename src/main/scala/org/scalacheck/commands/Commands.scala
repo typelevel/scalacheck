@@ -241,9 +241,9 @@ trait Commands {
                 true
               } else false
             }
-            if (doRun) runActions(sut,as, removeSut)
+            if (doRun) runActions(sut,as, removeSut())
             else {
-              removeSut
+              removeSut()
               Prop.undecided
             }
 

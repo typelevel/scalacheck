@@ -59,10 +59,10 @@ object PropSpecification extends Properties("Prop") {
     forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { p: Prop =>
-    (p && propException) == exception
+    (p && propException()) == exception
   }
   property("Prop.&& Exception 2") = {
-    (passed && propException) == exception
+    (passed && propException()) == exception
   }
   property("Prop.&& Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)

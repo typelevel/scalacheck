@@ -106,7 +106,7 @@ sealed abstract class Prop extends Serializable { self =>
         else 1
       case (_, os) =>
         println(s"Incorrect options: $os")
-        Test.CmdLineParser.printHelp
+        Test.CmdLineParser.printHelp()
         -1
     }
     if (ret != 0) System.exit(ret)
