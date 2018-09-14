@@ -348,12 +348,12 @@ object Prop {
   /** Implicit method that makes a number of property operators on values of
    * type `Any` available in the current scope.
    * See [[Prop.ExtendedAny]] for documentation on the operators. */
-  implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty) = new ExtendedAny[T](x)
+  implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty): ExtendedAny[T] = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on boolean
    * values available in the current scope. See [[Prop.ExtendedBoolean]] for
    * documentation on the operators. */
-  implicit def BooleanOperators(b: => Boolean) = new ExtendedBoolean(b)
+  implicit def BooleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
 
   /** Implicit conversion of Boolean values to Prop values. */
   implicit def propBoolean(b: Boolean): Prop = Prop(b)
@@ -449,7 +449,7 @@ object Prop {
   /** Collect data for presentation in test report */
   def collect[T, P](f: T => P)(implicit ev: P => Prop): T => Prop = t => Prop { prms =>
     val prop = f(t)
-    prop(prms).collect(t)
+    ev(prop)(prms).collect(t)
   }
 
   /** Collect data for presentation in test report */
@@ -468,7 +468,7 @@ object Prop {
   /** Wraps and protects a property, turning exceptions thrown
    *  by the property into test failures. */
   def secure[P](p: => P)(implicit ev: P => Prop): Prop =
-    try (p: Prop) catch { case e: Throwable => exception(e) }
+    try ev(p) catch { case e: Throwable => exception(e) }
 
   /** Wraps a property to delay its evaluation. The given parameter is
    *  evaluated each time the wrapper property is evaluated. */

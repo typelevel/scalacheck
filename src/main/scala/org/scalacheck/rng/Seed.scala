@@ -55,7 +55,7 @@ sealed abstract class Seed extends Serializable {
     val b1 = c + rotateLeft(d, 37)
     val c1 = d + e
     val d1 = e + a
-    Seed(a1, b1, c1, d1)
+    Seed.apply(a1, b1, c1, d1)
   }
 
   /** Reseed the RNG using the given Long value. */
@@ -63,7 +63,7 @@ sealed abstract class Seed extends Serializable {
     val n0 = ((n >>> 32) & 0xffffffff)
     val n1 = (n & 0xffffffff)
     var i = 0
-    var seed: Seed = Seed(a ^ n0, b ^ n1, c, d)
+    var seed: Seed = Seed.apply(a ^ n0, b ^ n1, c, d)
     while(i < 16) { seed = seed.next; i += 1 }
     seed
   }
@@ -105,7 +105,7 @@ object Seed {
   /** Generate a deterministic seed. */
   def apply(s: Long): Seed = {
     var i = 0
-    var seed: Seed = Seed(0xf1ea5eed, s, s, s)
+    var seed: Seed = Seed.apply(0xf1ea5eed, s, s, s)
     while (i < 20) { seed = seed.next; i += 1 }
     seed
   }

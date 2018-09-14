@@ -49,13 +49,13 @@ object SerializableCanBuildFroms {
 
 object Buildable {
 
-  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]) =
+  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]): Buildable[T,C] =
     new Buildable[T,C] {
       def builder = c.apply
     }
 
   import java.util.ArrayList
-  implicit def buildableArrayList[T] = new Buildable[T,ArrayList[T]] {
+  implicit def buildableArrayList[T]: Buildable[T,ArrayList[T]] = new Buildable[T,ArrayList[T]] {
     def builder = new mutable.Builder[T,ArrayList[T]] {
       val al = new ArrayList[T]
       def +=(x: T) = {
