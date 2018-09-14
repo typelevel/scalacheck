@@ -19,6 +19,8 @@ object MimaSettings {
   )
 
   private def removedPrivateMethods = Seq(
+    // lazy val cmdLineParser is now an object
+    "org.scalacheck.Test.cmdLineParser"
   )
 
   private def removedPrivateClasses = Seq(
