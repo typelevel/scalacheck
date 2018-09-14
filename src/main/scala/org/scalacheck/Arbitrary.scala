@@ -19,7 +19,7 @@ import util.SerializableCanBuildFroms._
 
 
 sealed abstract class Arbitrary[T] extends Serializable {
-  val arbitrary: Gen[T]
+  def arbitrary: Gen[T]
 }
 
 /** Defines implicit [[org.scalacheck.Arbitrary]] instances for common types.
