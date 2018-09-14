@@ -13,7 +13,7 @@ import org.scalacheck.ScalaVersionSpecific._
 
 sealed trait FreqMap[T] extends Serializable {
   protected val underlying: scala.collection.immutable.Map[T,Int]
-  val total: Int
+  def total: Int
 
   def +(t: T): FreqMap[T] = new FreqMap[T] {
     private val n = FreqMap.this.underlying.get(t) match {
