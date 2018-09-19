@@ -13,7 +13,7 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M4", scalaVersion.value),
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M5", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -70,15 +70,14 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-unchecked",
     "-Xfuture",
     "-Ywarn-dead-code",
-    "-Ywarn-inaccessible",
-    "-Ywarn-nullary-override",
-    "-Ywarn-nullary-unit",
     "-Ywarn-numeric-widen") ++ {
-    val modern = Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused-import", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
+    val modern = Seq("-Xlint:-unused", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
+    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit")
+    val removedModern = Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
     scalaMajorVersion.value match {
-      case 10 => Seq("-Xfatal-warnings", "-Xlint")
-      case 11 => Seq("-Xfatal-warnings", "-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import")
-      case 12 => "-Xfatal-warnings" +: modern
+      case 10 => Seq("-Xfatal-warnings", "-Xlint") ++ removed
+      case 11 => Seq("-Xfatal-warnings", "-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import") ++ removed
+      case 12 => "-Xfatal-warnings" +: (modern ++ removed ++ removedModern)
       case 13 => modern
     }
   },
@@ -93,7 +92,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   mimaPreviousArtifacts := {
-    // TODO: re-enable MiMa for 2.13.0-M4 once there is a release out
+    // TODO: re-enable MiMa for 2.13 once there is a release out
     if (scalaMajorVersion.value == 13) Set()
     else Set("org.scalacheck" %% "scalacheck" % "1.14.0")
   },
