@@ -311,7 +311,6 @@ object Test {
     var stop = false
     //val seed = p.fixedSeed.getOrElse(rng.Seed.random)
     //val genPrms = Gen.Parameters.default.withInitialSeed(seed)
-    val genPrms = Gen.Parameters.default
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests
@@ -323,7 +322,7 @@ object Test {
 
       while(!stop && res == null && n < iterations) {
         val size = minSize.toDouble + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propRes = p(genPrms.withSize(size.round.toInt))
+        val propRes = p(params.withSize(size.round.toInt))
         fm = if(propRes.collected.isEmpty) fm else fm + propRes.collected
         propRes.status match {
           case Prop.Undecided =>
