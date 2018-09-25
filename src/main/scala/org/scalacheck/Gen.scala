@@ -442,8 +442,8 @@ object Gen extends GenArities{
     }
 
   /** A generator that generates a random value in the given (inclusive)
-   *  range. If the range is invalid, the generator will not generate
-   *  any value. */
+   *  range. If the range is invalid, an IllegalBoundsError exception will be
+   *  thrown. */
   def choose[T](min: T, max: T)(implicit c: Choose[T]): Gen[T] =
     c.choose(min, max)
 
