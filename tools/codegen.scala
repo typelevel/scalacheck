@@ -50,10 +50,10 @@ def genfn(i: Int) = s"""
     Gen.gen { (p, seed0) =>
       val f: ${fntype(i)} =
         (${fnArgs(i)}) => g.pureApply(p, ${nestedPerturbs(i)})
-      new Gen.R[${fntype(i)}] {
-        val result = Some(f)
-        val seed = seed0.next
-      }
+      Gen.r[${fntype(i)}](
+        r = Some(f),
+        sd = seed0.next
+      )
     }
 """
 
