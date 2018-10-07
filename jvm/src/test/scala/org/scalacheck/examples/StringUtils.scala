@@ -26,7 +26,7 @@ object StringUtils extends Properties("Examples.StringUtils") {
     }
 
     def tokenize(s: String, delim: Char) = {
-      val delimStr = new java.lang.Character(delim).toString
+      val delimStr = Character.valueOf(delim).toString
       val st = new java.util.StringTokenizer(s, delimStr)
       val tokens = Array.ofDim[String](st.countTokens)
       var i = 0;
