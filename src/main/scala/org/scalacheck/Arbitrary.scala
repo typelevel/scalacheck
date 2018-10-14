@@ -121,7 +121,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /** Arbitrary instance of Char */
   implicit lazy val arbChar: Arbitrary[Char] = Arbitrary {
-    // exclude 0xFFFE due to this bug: http://bit.ly/1QryQZy
+    // exclude 0xFFFE due to this bug: https://bit.ly/2pTpAu8
     // also exclude 0xFFFF as it is not unicode: http://bit.ly/2cVBrzK
     val validRangesInclusive = List[(Char, Char)](
       (0x0000, 0xD7FF),
