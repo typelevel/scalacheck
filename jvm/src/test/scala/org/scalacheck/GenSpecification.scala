@@ -141,6 +141,13 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("oneOf n in set") = forAll { (s: Set[Int]) =>
+    Try(oneOf(s)) match {
+      case Success(g) => forAll(g)(s.contains)
+      case Failure(_) => Prop(s.isEmpty)
+    }
+  }
+
   property("oneOf 2") = forAll { (n1:Int, n2:Int) =>
     forAll(oneOf(n1, n2)) { n => n == n1 || n == n2 }
   }
