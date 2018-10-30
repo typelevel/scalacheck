@@ -54,9 +54,14 @@ object GenSpecification extends Properties("Gen") {
     forAll(g) { n => true }
   }
 
-  property("frequency 3") = forAll(choose(0,100000)) { n =>
+  property("frequency 3") = forAll(choose(1,100000)) { n =>
     forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
   }
+
+  property("frequency 4") =
+    Prop.throws(classOf[IllegalArgumentException]) {
+      frequency()
+    }
 
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
