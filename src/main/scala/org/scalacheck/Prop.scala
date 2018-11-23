@@ -804,106 +804,97 @@ object Prop {
 
   }
 
-  /** Universal quantifier for an explicit generator. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for an explicit generator. */
   def forAll[T1,P](
     g1: Gen[T1])(
     f: T1 => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
+  ): Prop = forAllNoShrink(g1)(f)
 
-  /** Universal quantifier for two explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for two explicit generators. */
   def forAll[T1,T2,P](
     g1: Gen[T1], g2: Gen[T2])(
     f: (T1,T2) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2)(f(t, _:T2)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty
+  ): Prop = forAllNoShrink(g1, g2)(f)
 
-  /** Universal quantifier for three explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for three explicit generators. */
   def forAll[T1,T2,T3,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
     f: (T1,T2,T3) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3)(f(t, _:T2, _:T3)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3)(f)
 
-  /** Universal quantifier for four explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for four explicit generators. */
   def forAll[T1,T2,T3,T4,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
     f: (T1,T2,T3,T4) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3, g4)(f)
 
-  /** Universal quantifier for five explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for five explicit generators. */
   def forAll[T1,T2,T3,T4,T5,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
     f: (T1,T2,T3,T4,T5) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3, g4, g5)(f)
 
-  /** Universal quantifier for six explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for six explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
     f: (T1,T2,T3,T4,T5,T6) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3, g4, g5, g6)(f)
 
-  /** Universal quantifier for seven explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for seven explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,T7,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
     f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty,
-    s7: Shrink[T7], pp7: T7 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3, g4, g5, g6, g7)(f)
 
-  /** Universal quantifier for eight explicit generators. Shrinks failed arguments
-   *  with the default shrink function for the type */
+  /** Universal quantifier for eight explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,T7,T8,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
     f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty,
-    s7: Shrink[T7], pp7: T7 => Pretty,
-    s8: Shrink[T8], pp8: T8 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty,
+    pp8: T8 => Pretty
+  ): Prop = forAllNoShrink(g1, g2, g3, g4, g5, g6, g7, g8)(f)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,P] (
