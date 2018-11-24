@@ -114,7 +114,7 @@ object GenSpecification extends Properties("Gen") {
   }
 
   property("choose-infinite-double-fix-zero-defect-379") = {
-    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
+    Prop.forAll(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
       xs.exists(_ != 0d)
     }
   }
@@ -429,7 +429,7 @@ object GenSpecification extends Properties("Gen") {
 
   //// See https://github.com/rickynils/scalacheck/issues/209
   property("uniform double #209") =
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    Prop.forAll(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)
@@ -445,7 +445,7 @@ object GenSpecification extends Properties("Gen") {
 
   property("uniform long #209") = {
     val scale = 1d / Long.MaxValue
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    Prop.forAll(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)

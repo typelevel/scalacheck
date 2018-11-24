@@ -659,7 +659,7 @@ object Prop {
     f: A1 => P)(implicit
     pv: P => Prop,
     a1: Arbitrary[A1], pp1: A1 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1])(f)
+  ): Prop = forAll(arbitrary[A1])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,P](
@@ -667,7 +667,7 @@ object Prop {
     pv: P => Prop,
     a1: Arbitrary[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], pp2: A2 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1], arbitrary[A2])(f)
+  ): Prop = forAll(arbitrary[A1], arbitrary[A2])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,A3,P](
@@ -676,7 +676,7 @@ object Prop {
     a1: Arbitrary[A1], pp1: A1 => Pretty,
     a2: Arbitrary[A2], pp2: A2 => Pretty,
     a3: Arbitrary[A3], pp3: A3 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3])(f)
+  ): Prop = forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,A3,A4,P](
@@ -686,7 +686,7 @@ object Prop {
     a2: Arbitrary[A2], pp2: A2 => Pretty,
     a3: Arbitrary[A3], pp3: A3 => Pretty,
     a4: Arbitrary[A4], pp4: A4 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4])(f)
+  ): Prop = forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,A3,A4,A5,P](
@@ -697,7 +697,7 @@ object Prop {
     a3: Arbitrary[A3], pp3: A3 => Pretty,
     a4: Arbitrary[A4], pp4: A4 => Pretty,
     a5: Arbitrary[A5], pp5: A5 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5])(f)
+  ): Prop = forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,A3,A4,A5,A6,P](
@@ -709,7 +709,7 @@ object Prop {
     a4: Arbitrary[A4], pp4: A4 => Pretty,
     a5: Arbitrary[A5], pp5: A5 => Pretty,
     a6: Arbitrary[A6], pp6: A6 => Pretty
-  ): Prop = forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6])(f)
+  ): Prop = forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6])(f)
 
   /** Converts a function into a universally quantified property */
   def forAllNoShrink[A1,A2,A3,A4,A5,A6,A7,P](
@@ -723,7 +723,7 @@ object Prop {
     a6: Arbitrary[A6], pp6: A6 => Pretty,
     a7: Arbitrary[A7], pp7: A7 => Pretty
   ): Prop = {
-    forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6],
+    forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6],
       arbitrary[A7])(f)
   }
 
@@ -740,7 +740,7 @@ object Prop {
     a7: Arbitrary[A7], pp7: A7 => Pretty,
     a8: Arbitrary[A8], pp8: A8 => Pretty
   ): Prop = {
-    forAllNoShrink(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6],
+    forAll(arbitrary[A1], arbitrary[A2], arbitrary[A3], arbitrary[A4], arbitrary[A5], arbitrary[A6],
       arbitrary[A7], arbitrary[A8])(f)
   }
 
@@ -928,7 +928,7 @@ object Prop {
     p: P => Prop,
     pp1: T1 => Pretty,
     pp2: T2 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2)(f(t, _:T2)))
+  ): Prop = forAll(g1)(t => forAll(g2)(f(t, _:T2)))
 
   /** Universal quantifier for three explicit generators. */
   def forAll[T1,T2,T3,P](
@@ -938,7 +938,7 @@ object Prop {
     pp1: T1 => Pretty,
     pp2: T2 => Pretty,
     pp3: T3 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3)(f(t, _:T2, _:T3)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3)(f(t, _:T2, _:T3)))
 
   /** Universal quantifier for four explicit generators. */
   def forAll[T1,T2,T3,T4,P](
@@ -949,7 +949,7 @@ object Prop {
     pp2: T2 => Pretty,
     pp3: T3 => Pretty,
     pp4: T4 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
 
   /** Universal quantifier for five explicit generators. */
   def forAll[T1,T2,T3,T4,T5,P](
@@ -961,7 +961,7 @@ object Prop {
     pp3: T3 => Pretty,
     pp4: T4 => Pretty,
     pp5: T5 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
 
   /** Universal quantifier for six explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,P](
@@ -974,7 +974,7 @@ object Prop {
     pp4: T4 => Pretty,
     pp5: T5 => Pretty,
     pp6: T6 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
 
   /** Universal quantifier for seven explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,T7,P](
@@ -988,7 +988,7 @@ object Prop {
     pp5: T5 => Pretty,
     pp6: T6 => Pretty,
     pp7: T7 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
 
   /** Universal quantifier for eight explicit generators. */
   def forAll[T1,T2,T3,T4,T5,T6,T7,T8,P](
@@ -1003,7 +1003,7 @@ object Prop {
     pp6: T6 => Pretty,
     pp7: T7 => Pretty,
     pp8: T8 => Pretty
-  ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
+  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,P] (
