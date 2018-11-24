@@ -907,7 +907,7 @@ object Prop {
   def forAll[T1,P](
     g1: Gen[T1])(
     f: T1 => P)(implicit
-    p: P => Prop,
+    pv: P => Prop,
     pp1: T1 => Pretty
   ): Prop = Prop { prms0 =>
     val (prms, seed) = startSeed(prms0)
