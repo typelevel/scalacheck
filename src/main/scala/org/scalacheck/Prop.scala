@@ -805,6 +805,107 @@ object Prop {
   }
 
   /** Universal quantifier for an explicit generator. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,P](
+    g1: Gen[T1],
+    f: T1 => P,
+    p: P => Prop,
+    s1: Shrink[T1],
+    pp1: T1 => Pretty
+  ): Prop = forAllNoShrink(g1)(f)(p, pp1)
+
+  /** Universal quantifier for two explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,P](
+    g1: Gen[T1], g2: Gen[T2],
+    f: (T1,T2) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty
+  ): Prop = forAllNoShrink(g1, g2)(f)(p, pp1, pp2)
+
+  /** Universal quantifier for three explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3],
+    f: (T1,T2,T3) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty
+  ): Prop = forAll(g1, g2, g3)(f)(p, pp1, pp2, pp3)
+
+  /** Universal quantifier for four explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,T4,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4],
+    f: (T1,T2,T3,T4) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty
+  ): Prop = forAll(g1, g2, g3, g4)(f)(p, pp1, pp2, pp3, pp4)
+
+  /** Universal quantifier for five explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,T4,T5,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5],
+    f: (T1,T2,T3,T4,T5) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty
+  ): Prop = forAll(g1, g2, g3, g4, g5)(f)(p, pp1, pp2, pp3, pp4, pp5)
+
+  /** Universal quantifier for six explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,T4,T5,T6,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6],
+    f: (T1,T2,T3,T4,T5,T6) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty
+  ): Prop = forAll(g1, g2, g3, g4, g5, g6)(f)(p, pp1, pp2, pp3, pp4, pp5, pp6)
+
+  /** Universal quantifier for seven explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,T4,T5,T6,T7,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7],
+    f: (T1,T2,T3,T4,T5,T6,T7) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty,
+    s7: Shrink[T7], pp7: T7 => Pretty
+  ): Prop = forAll(g1, g2, g3, g4, g5, g6, g7)(f)(p, pp1, pp2, pp3, pp4, pp5, pp6, pp7)
+
+  /** Universal quantifier for eight explicit generators. */
+  @deprecated("Use the variant without Shrink.  Here only for bincompat.", "1.15.0")
+  def forAll[T1,T2,T3,T4,T5,T6,T7,T8,P](
+    g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8],
+    f: (T1,T2,T3,T4,T5,T6,T7,T8) => P,
+    p: P => Prop,
+    s1: Shrink[T1], pp1: T1 => Pretty,
+    s2: Shrink[T2], pp2: T2 => Pretty,
+    s3: Shrink[T3], pp3: T3 => Pretty,
+    s4: Shrink[T4], pp4: T4 => Pretty,
+    s5: Shrink[T5], pp5: T5 => Pretty,
+    s6: Shrink[T6], pp6: T6 => Pretty,
+    s7: Shrink[T7], pp7: T7 => Pretty,
+    s8: Shrink[T8], pp8: T8 => Pretty
+  ): Prop = forAll(g1, g2, g3, g4, g5, g6, g7, g8)(f)(p, pp1, pp2, pp3, pp4, pp5, pp6, pp7, pp8)
+
+  /** Universal quantifier for an explicit generator. */
   def forAll[T1,P](
     g1: Gen[T1])(
     f: T1 => P)(implicit
