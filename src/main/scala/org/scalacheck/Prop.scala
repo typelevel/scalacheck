@@ -548,7 +548,7 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Does not shrink failed
    *  test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,P](
     g1: Gen[T1])(
     f: T1 => P)(implicit
@@ -558,7 +558,7 @@ object Prop {
 
   /** Universal quantifier for two explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,P](
     g1: Gen[T1], g2: Gen[T2])(
     f: (T1,T2) => P)(implicit
@@ -569,7 +569,7 @@ object Prop {
 
   /** Universal quantifier for three explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
     f: (T1,T2,T3) => P)(implicit
@@ -581,7 +581,7 @@ object Prop {
 
   /** Universal quantifier for four explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,T4,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
     f: (T1,T2,T3,T4) => P)(implicit
@@ -594,7 +594,7 @@ object Prop {
 
   /** Universal quantifier for five explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,T4,T5,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
     f: (T1,T2,T3,T4,T5) => P)(implicit
@@ -608,7 +608,7 @@ object Prop {
 
   /** Universal quantifier for six explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,T4,T5,T6,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
     f: (T1,T2,T3,T4,T5,T6) => P)(implicit
@@ -623,7 +623,7 @@ object Prop {
 
   /** Universal quantifier for seven explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,T4,T5,T6,T7,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
     f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
@@ -639,7 +639,7 @@ object Prop {
 
   /** Universal quantifier for eight explicit generators.
    *  Does not shrink failed test cases. */
-  @deprecated("Use 'forAll'.  Here only for bincompat")
+  @deprecated("Use 'forAll'.  Here only for bincompat", "1.15.0")
   def forAllNoShrink[T1,T2,T3,T4,T5,T6,T7,T8,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
     f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
