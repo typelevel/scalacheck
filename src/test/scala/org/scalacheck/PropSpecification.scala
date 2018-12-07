@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import Prop.{
-  forAll, falsified, undecided, exception, passed, proved, all,
+  forAll, forAllNoShrink, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
   Exception, Proof, throws, BooleanOperators, secure, delay, lzy
 }
@@ -24,7 +24,7 @@ object PropSpecification extends Properties("Prop") {
 
   property("Prop.==> undecided") = forAll { p1: Prop =>
     val g = oneOf(falsified,undecided)
-    forAll(g) { p2 =>
+    forAllNoShrink(g) { p2 =>
       val p3 = (p2 ==> p1)
       p3 == undecided || (p3 == exception && p1 == exception)
     }
@@ -33,7 +33,7 @@ object PropSpecification extends Properties("Prop") {
   property("Prop.==> true") = {
     val g1 = oneOf(proved,falsified,undecided,exception)
     val g2 = oneOf(passed,proved)
-    forAll(g1, g2) { case (p1,p2) =>
+    forAllNoShrink(g1, g2) { case (p1,p2) =>
       val p = p2 ==> p1
       (p == p1) || (p2 == passed && p1 == proved && p == passed)
     }
@@ -56,7 +56,7 @@ object PropSpecification extends Properties("Prop") {
 
   property("Prop.&& Commutativity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
+    forAllNoShrink(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { p: Prop =>
     (p && propException) == exception
@@ -66,7 +66,7 @@ object PropSpecification extends Properties("Prop") {
   }
   property("Prop.&& Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g)(p => (p && proved) == p)
+    forAllNoShrink(g)(p => (p && proved) == p)
   }
   property("Prop.&& False") = forAll { p: Prop =>
     val q = p && falsified
@@ -74,7 +74,7 @@ object PropSpecification extends Properties("Prop") {
   }
   property("Prop.&& Undecided") = {
     val g = oneOf(proved,passed,undecided)
-    forAll(g)(p => (p && undecided) == undecided)
+    forAllNoShrink(g)(p => (p && undecided) == undecided)
   }
   property("Prop.&& Right prio") = forAll { (sz: Int, prms: Parameters) =>
     val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
@@ -83,42 +83,42 @@ object PropSpecification extends Properties("Prop") {
 
   property("Prop.|| Commutativity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
+    forAllNoShrink(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
   }
   property("Prop.|| Exception") = forAll { p: Prop =>
     (p || propException()) == exception
   }
   property("Prop.|| Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g)(p => (p || falsified) == p)
+    forAllNoShrink(g)(p => (p || falsified) == p)
   }
   property("Prop.|| True") = {
     val g = oneOf(proved,passed,falsified,undecided)
-    forAll(g)(p => (p || proved) == proved)
+    forAllNoShrink(g)(p => (p || proved) == proved)
   }
   property("Prop.|| Undecided") = {
     val g = oneOf(falsified,undecided)
-    forAll(g)(p => (p || undecided) == undecided)
+    forAllNoShrink(g)(p => (p || undecided) == undecided)
   }
 
   property("Prop.++ Commutativity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
+    forAllNoShrink(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
   }
   property("Prop.++ Exception") = forAll { p: Prop =>
     (p ++ propException()) == exception
   }
   property("Prop.++ Identity 1") = {
     val g = oneOf(falsified,passed,proved,exception)
-    forAll(g)(p => (p ++ proved) == p)
+    forAllNoShrink(g)(p => (p ++ proved) == p)
   }
   property("Prop.++ Identity 2") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g)(p => (p ++ undecided) == p)
+    forAllNoShrink(g)(p => (p ++ undecided) == p)
   }
   property("Prop.++ False") = {
     val g = oneOf(falsified,passed,proved,undecided)
-    forAll(g)(p => (p ++ falsified) == falsified)
+    forAllNoShrink(g)(p => (p ++ falsified) == falsified)
   }
 
   property("undecided") = forAll { prms: Parameters =>
@@ -137,9 +137,9 @@ object PropSpecification extends Properties("Prop") {
     exception(e)(prms).status == Exception(e)
   }
 
-  property("all") = forAll(Gen.nonEmptyListOf(const(proved)))(l => all(l:_*))
+  property("all") = forAllNoShrink(Gen.nonEmptyListOf(const(proved)))(l => all(l:_*))
 
-  property("atLeastOne") = forAll(Gen.nonEmptyListOf(const(proved))) { l =>
+  property("atLeastOne") = forAllNoShrink(Gen.nonEmptyListOf(const(proved))) { l =>
     atLeastOne(l:_*)
   }
 
@@ -150,13 +150,13 @@ object PropSpecification extends Properties("Prop") {
 
   property("sizedProp") = {
     val g = oneOf(passed,falsified,undecided,exception)
-    forAll(g) { p => p == sizedProp(_ => p) }
+    forAllNoShrink(g) { p => p == sizedProp(_ => p) }
   }
 
   property("someFailing") = {
     val g: Gen[Gen[Int]] = oneOf(List(const(1), fail))
     val gs: Gen[List[Gen[Int]]] = listOf(g)
-    forAll(gs) { (gs: List[Gen[Int]]) =>
+    forAllNoShrink(gs) { (gs: List[Gen[Int]]) =>
       someFailing(gs) || gs.forall(_.sample.isDefined)
     }
   }
@@ -164,7 +164,7 @@ object PropSpecification extends Properties("Prop") {
   property("noneFailing") = {
     val g: Gen[Gen[Int]] = oneOf(List(const(1), fail))
     val gs: Gen[List[Gen[Int]]] = listOf(g)
-    forAll(gs) { (gs: List[Gen[Int]]) =>
+    forAllNoShrink(gs) { (gs: List[Gen[Int]]) =>
       noneFailing(gs) || gs.exists(!_.sample.isDefined)
     }
   }
@@ -197,7 +197,7 @@ object PropSpecification extends Properties("Prop") {
   property("prop.useSeed is deterministic (pt. 2)") =
     forAll { (g1: Gen[Int], g2: Gen[Int], g3: Gen[Int], n: Long) =>
       val params = Gen.Parameters.default
-      val p0 = Prop.forAll(g1, g2, g3) { (x, y, z) => x == y && y == z }
+      val p0 = Prop.forAllNoShrink(g1, g2, g3) { (x, y, z) => x == y && y == z }
       val p = p0.useSeed("some name", rng.Seed(n))
       val r1 = p(params).success
       val r2 = p(params).success

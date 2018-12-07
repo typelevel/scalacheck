@@ -806,6 +806,7 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,P](
     g1: Gen[T1])(
     f: T1 => P)(implicit
@@ -816,6 +817,7 @@ object Prop {
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,P](
     g1: Gen[T1], g2: Gen[T2])(
     f: (T1,T2) => P)(implicit
@@ -826,6 +828,7 @@ object Prop {
 
   /** Universal quantifier for three explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
     f: (T1,T2,T3) => P)(implicit
@@ -837,6 +840,7 @@ object Prop {
 
   /** Universal quantifier for four explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,T4,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
     f: (T1,T2,T3,T4) => P)(implicit
@@ -849,6 +853,7 @@ object Prop {
 
   /** Universal quantifier for five explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,T4,T5,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
     f: (T1,T2,T3,T4,T5) => P)(implicit
@@ -862,6 +867,7 @@ object Prop {
 
   /** Universal quantifier for six explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,T4,T5,T6,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
     f: (T1,T2,T3,T4,T5,T6) => P)(implicit
@@ -876,6 +882,7 @@ object Prop {
 
   /** Universal quantifier for seven explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,T4,T5,T6,T7,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
     f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
@@ -891,6 +898,7 @@ object Prop {
 
   /** Universal quantifier for eight explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
+  @deprecated("Use 'forAllNoShrink', shrinking will be disabled for Gen by default in the next release", "1.14.1")
   def forAll[T1,T2,T3,T4,T5,T6,T7,T8,P](
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
     f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
