@@ -686,7 +686,10 @@ object Gen extends GenArities{
   def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
-  /** A generator that picks a given number of elements from a list, randomly */
+  /** A generator that randomly picks a given number of elements from a list
+   * 
+   * The elements are not guaranteed to be permuted in random order.
+   */
   def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
@@ -711,7 +714,10 @@ object Gen extends GenArities{
     }
   }
 
-  /** A generator that picks a given number of elements from a list, randomly */
+  /** A generator that randomly picks a given number of elements from a list
+   * 
+   * The elements are not guaranteed to be permuted in random order.
+   */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
     val gs = g1 +: g2 +: gn
     pick(n, 0 until gs.size).flatMap(idxs =>
