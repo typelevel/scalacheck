@@ -813,7 +813,7 @@ object Prop {
     p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
+  ): Prop = forAllNoShrink[T1,P](g1)(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
