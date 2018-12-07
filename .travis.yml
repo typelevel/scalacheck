@@ -20,6 +20,7 @@ scala:
   - 2.13.0-M3
 jdk:
   - oraclejdk8
+  - openjdk11
 env:
   global:
     - secure: PwIb1un8vuuyoidnjHaKO81FD49n5ZTVEnf6hVKkMRe3hipr+WGWv19m92yE/n34ROFo1BM9DmfYxaexlE0pI2o/a5MV1i3kNSwUk+Yt8uU6F4+nyQKROQUe76UtAtXmsYgLqXaWSW0+EVidMyhSktkXXxiU5wCGLdKkPu3Vj9w=
@@ -46,3 +47,7 @@ matrix:
   exclude:
     - scala: 2.10.7
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+    - jdk: openjdk11
+      scala: 2.10.7
+    - jdk: openjdk11
+      scala: 2.11.12
