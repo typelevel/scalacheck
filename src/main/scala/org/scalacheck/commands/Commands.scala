@@ -215,7 +215,7 @@ trait Commands {
   final def property(threadCount: Int = 1, maxParComb: Int = 1000000): Prop = {
     val suts = collection.mutable.Map.empty[AnyRef,(State,Option[Sut])]
 
-    Prop.forAll(actions(threadCount, maxParComb)) { as =>
+    Prop.forAllShrink(actions(threadCount, maxParComb)) { as =>
       try {
         val sutId = suts.synchronized {
           val initSuts = for((state,None) <- suts.values) yield state

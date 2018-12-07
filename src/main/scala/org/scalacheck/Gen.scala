@@ -163,7 +163,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     if (lhs == rhs) Prop.proved(prms) else Prop.falsified(prms)
   }
 
-  def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
+  def !=[U](g: Gen[U]) = Prop.forAllShrink(this)(r => Prop.forAllShrink(g)(_ != r))
 
   def !==[U](g: Gen[U]) = Prop { prms =>
     // test inequality using a random seed
