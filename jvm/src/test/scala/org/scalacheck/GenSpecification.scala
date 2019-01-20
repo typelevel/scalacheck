@@ -214,9 +214,16 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  /**
+   * Expect:
+   * 25% 1, 2, 3
+   * 25% 1, 2, 4
+   * 25% 1, 4, 3
+   * 25% 4, 2, 3
+   */
   property("distributed pick") = {
-    val lst = (0 to 7).toIterable
-    val n = 2
+    val lst = (1 to 4).toIterable
+    val n = 3
     forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
