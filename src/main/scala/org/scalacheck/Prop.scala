@@ -169,7 +169,6 @@ object Prop {
 
   import Gen.{fail, Parameters}
   import Arbitrary.{arbitrary}
-  import Shrink.{shrink}
 
   // Types
 
@@ -748,8 +747,16 @@ object Prop {
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments
    *  with the given shrink function */
+  @deprecated("Use forAllShrink with implicit Shrink[T]", "1.15.0")
   def forAllShrink[T, P](g: Gen[T],
     shrink: T => Stream[T])(f: T => P
+  )(implicit pv: P => Prop, pp: T => Pretty
+  ): Prop = forAllShrink(g, Shrink(shrink))(f)
+
+  /** Universal quantifier for an explicit generator. Shrinks failed arguments
+   *  with the explicit `Shrink`. */
+  private def forAllShrink[T, P](g: Gen[T],
+    s: Shrink[T])(f: T => P
   )(implicit pv: P => Prop, pp: T => Pretty
   ): Prop = Prop { prms0 =>
 
@@ -775,7 +782,7 @@ object Prop {
     }
 
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
-      val xs = shrink(x).filter(gr.sieve)
+      val xs = s.shrink(x).filter(gr.sieve)
       val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
       if(xs.isEmpty) res else getFirstFailure(xs) match {
         case Right((x2,r2)) => res
@@ -812,7 +819,7 @@ object Prop {
     p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
+  ): Prop = forAllShrink[T1,P](g1, s1)(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -910,7 +917,7 @@ object Prop {
     f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
-  ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
+  ): Prop = forAllShrink(arbitrary[A1],s1)(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (

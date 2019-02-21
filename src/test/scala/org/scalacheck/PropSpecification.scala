@@ -12,7 +12,8 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, throws, BooleanOperators, secure, delay, lzy
+  Exception, Proof, throws, BooleanOperators, secure, delay, lzy,
+  forAllShrink, forAllNoShrink
 }
 import Gen.{ const, fail, oneOf, listOf, Parameters }
 
@@ -127,6 +128,107 @@ object PropSpecification extends Properties("Prop") {
 
   property("falsified") = forAll { prms: Parameters =>
     falsified(prms).status == False
+  }
+
+  // FIXME: This method was deprecated in 1.15.0, and will be removed.
+  property("forAllShrink(Gen, T=>Shrink[T])") = {
+    val anyVal: Gen[AnyVal] = Arbitrary.arbitrary[AnyVal]
+    val shrinkAnyVal: Shrink[AnyVal] = Shrink {
+      case v: Unit    => Shrink.shrink[Unit](v)
+      case v: Boolean => Shrink.shrink[Boolean](v)
+      case v: Char    => Shrink.shrink[Char](v)
+      case v: Byte    => Shrink.shrink[Byte](v)
+      case v: Short   => Shrink.shrink[Short](v)
+      case v: Int     => Shrink.shrink[Int](v)
+      case v: Long    => Shrink.shrink[Long](v)
+      case v: Float   => Shrink.shrink[Float](v)
+      case v: Double  => Shrink.shrink[Double](v)
+    }
+    forAllShrink(anyVal, shrinkAnyVal.shrink(_: AnyVal)) { _ =>
+      passed
+    }
+  }
+
+  property("forAll(Arbitrary)") = {
+    forAll { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+      forAll { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+        forAll { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+          forAll { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+            forAll { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+              forAll { (_: AnyVal, _: AnyVal, _: AnyVal)  =>
+                forAll { (_: AnyVal, _: AnyVal)  =>
+                  forAll { (_: AnyVal) =>
+                    passed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  property("forAllNoShrink(Arbitrary)") = {
+    forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+      forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+        forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+          forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+            forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal, _: AnyVal)  =>
+              forAllNoShrink { (_: AnyVal, _: AnyVal, _: AnyVal)  =>
+                forAllNoShrink { (_: AnyVal, _: AnyVal)  =>
+                  forAllNoShrink { (_: AnyVal) =>
+                    passed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  property("forAll(Gen)") = {
+    val anyVal: Gen[AnyVal] = Arbitrary.arbitrary[AnyVal]
+    forAll(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _, _, _)  =>
+      forAll(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _, _)  =>
+        forAll(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _)  =>
+          forAll(anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _)  =>
+            forAll(anyVal, anyVal, anyVal, anyVal) { (_, _, _, _)  =>
+              forAll(anyVal, anyVal, anyVal) { (_, _, _)  =>
+                forAll(anyVal, anyVal) { (_, _)  =>
+                  forAll(anyVal) { (_) =>
+                    passed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  property("forAllNoShrink(Gen)") = {
+    val anyVal: Gen[AnyVal] = Arbitrary.arbitrary[AnyVal]
+    forAllNoShrink(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _, _, _)  =>
+      forAllNoShrink(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _, _)  =>
+        forAllNoShrink(anyVal, anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _, _)  =>
+          forAllNoShrink(anyVal, anyVal, anyVal, anyVal, anyVal) { (_, _, _, _, _)  =>
+            forAllNoShrink(anyVal, anyVal, anyVal, anyVal) { (_, _, _, _)  =>
+              forAllNoShrink(anyVal, anyVal, anyVal) { (_, _, _)  =>
+                forAllNoShrink(anyVal, anyVal) { (_, _)  =>
+                  forAllNoShrink(anyVal) { (_) =>
+                    passed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   property("proved") = forAll((prms: Parameters) => proved(prms).status == Proof)
