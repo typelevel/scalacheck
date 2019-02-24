@@ -120,6 +120,12 @@ object ShrinkSpecification extends Properties("Shrink") {
   property("Shrink[Byte] terminates") =
     forAllNoShrink((n: Byte) => Shrink.shrink(n).drop(15).isEmpty)
 
+  property("Shrink[(Byte,Byte)] terminates") =
+    forAllNoShrink(Shrink.shrink(_:(Byte,Byte)).drop(2 * 15).isEmpty)
+
+  property("Shrink[(Byte,Byte,Byte)] terminates") =
+    forAllNoShrink(Shrink.shrink(_:(Byte,Byte,Byte)).drop(3 * 15).isEmpty)
+
   property("Shrink[Char] terminates") =
     forAllNoShrink((n: Char) => Shrink.shrink(n).drop(16).isEmpty)
 

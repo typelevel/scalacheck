@@ -820,9 +820,10 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2])(
     f: (T1,T2) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2)(f(t, _:T2)))
+    s2: Shrink[(T1,T2)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty
+  ): Prop = forAll[(T1,T2),P](g1 zip g2)(f.tupled)
 
   /** Universal quantifier for three explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -830,10 +831,13 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3])(
     f: (T1,T2,T3) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3)(f(t, _:T2, _:T3)))
+    s3: Shrink[(T1,T2,T3)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty
+  ): Prop = forAll[(T1,T2,T3),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  })(f.tupled)
 
   /** Universal quantifier for four explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -841,11 +845,16 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4])(
     f: (T1,T2,T3,T4) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4)(f(t, _:T2, _:T3, _:T4)))
+    s4: Shrink[(T1,T2,T3,T4)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty
+  ): Prop = forAll[(T1,T2,T3,T4),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  }.zip(g4).map {
+    case ((t1,t2,t3),t4) => (t1,t2,t3,t4) }
+  )(f.tupled)
 
   /** Universal quantifier for five explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -853,12 +862,19 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5])(
     f: (T1,T2,T3,T4,T5) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5)(f(t, _:T2, _:T3, _:T4, _:T5)))
+    s5: Shrink[(T1,T2,T3,T4,T5)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty
+  ): Prop = forAll[(T1,T2,T3,T4,T5),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  }.zip(g4).map {
+    case ((t1,t2,t3),t4) => (t1,t2,t3,t4)
+  }.zip(g5).map {
+    case ((t1,t2,t3,t4),t5) => (t1,t2,t3,t4,t5)
+  })(f.tupled)
 
   /** Universal quantifier for six explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -866,13 +882,22 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6])(
     f: (T1,T2,T3,T4,T5,T6) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6)))
+    s6: Shrink[(T1,T2,T3,T4,T5,T6)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty
+  ): Prop = forAll[(T1,T2,T3,T4,T5,T6),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  }.zip(g4).map {
+    case ((t1,t2,t3),t4) => (t1,t2,t3,t4)
+  }.zip(g5).map {
+    case ((t1,t2,t3,t4),t5) => (t1,t2,t3,t4,t5)
+  }.zip(g6).map {
+    case ((t1,t2,t3,t4,t5),t6) => (t1,t2,t3,t4,t5,t6)
+  })(f.tupled)
 
   /** Universal quantifier for seven explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -880,14 +905,25 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7])(
     f: (T1,T2,T3,T4,T5,T6,T7) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty,
-    s7: Shrink[T7], pp7: T7 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7)))
+    s7: Shrink[(T1,T2,T3,T4,T5,T6,T7)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty
+  ): Prop = forAll[(T1,T2,T3,T4,T5,T6,T7),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  }.zip(g4).map {
+    case ((t1,t2,t3),t4) => (t1,t2,t3,t4)
+  }.zip(g5).map {
+    case ((t1,t2,t3,t4),t5) => (t1,t2,t3,t4,t5)
+  }.zip(g6).map {
+    case ((t1,t2,t3,t4,t5),t6) => (t1,t2,t3,t4,t5,t6)
+  }.zip(g7).map {
+    case ((t1,t2,t3,t4,t5,t6),t7) => (t1,t2,t3,t4,t5,t6,t7)
+  })(f.tupled)
 
   /** Universal quantifier for eight explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -895,99 +931,127 @@ object Prop {
     g1: Gen[T1], g2: Gen[T2], g3: Gen[T3], g4: Gen[T4], g5: Gen[T5], g6: Gen[T6], g7: Gen[T7], g8: Gen[T8])(
     f: (T1,T2,T3,T4,T5,T6,T7,T8) => P)(implicit
     p: P => Prop,
-    s1: Shrink[T1], pp1: T1 => Pretty,
-    s2: Shrink[T2], pp2: T2 => Pretty,
-    s3: Shrink[T3], pp3: T3 => Pretty,
-    s4: Shrink[T4], pp4: T4 => Pretty,
-    s5: Shrink[T5], pp5: T5 => Pretty,
-    s6: Shrink[T6], pp6: T6 => Pretty,
-    s7: Shrink[T7], pp7: T7 => Pretty,
-    s8: Shrink[T8], pp8: T8 => Pretty
-  ): Prop = forAll(g1)(t => forAll(g2,g3,g4,g5,g6,g7,g8)(f(t, _:T2, _:T3, _:T4, _:T5, _:T6, _:T7, _:T8)))
+    s8: Shrink[(T1,T2,T3,T4,T5,T6,T7,T8)],
+    pp1: T1 => Pretty,
+    pp2: T2 => Pretty,
+    pp3: T3 => Pretty,
+    pp4: T4 => Pretty,
+    pp5: T5 => Pretty,
+    pp6: T6 => Pretty,
+    pp7: T7 => Pretty,
+    pp8: T8 => Pretty
+  ): Prop = forAll[(T1,T2,T3,T4,T5,T6,T7,T8),P](g1.zip(g2).zip(g3).map {
+    case ((t1,t2),t3) => (t1,t2,t3)
+  }.zip(g4).map {
+    case ((t1,t2,t3),t4) => (t1,t2,t3,t4)
+  }.zip(g5).map {
+    case ((t1,t2,t3,t4),t5) => (t1,t2,t3,t4,t5)
+  }.zip(g6).map {
+    case ((t1,t2,t3,t4,t5),t6) => (t1,t2,t3,t4,t5,t6)
+  }.zip(g7).map {
+    case ((t1,t2,t3,t4,t5,t6),t7) => (t1,t2,t3,t4,t5,t6,t7)
+  }.zip(g8).map {
+    case ((t1,t2,t3,t4,t5,t6,t7),t8) => (t1,t2,t3,t4,t5,t6,t7,t8)
+  })(f.tupled)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,P] (
     f: A1 => P)(implicit
+    s1: Shrink[A1],
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
-  ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
+    a1: Arbitrary[A1], pp1: A1 => Pretty
+  ): Prop = forAllShrink(a1.arbitrary,shrink[A1])(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (
     f: (A1,A2) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2)))
+    a2: Arbitrary[(A1,A2)],
+    s2: Shrink[(A1,A2)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty
+  ): Prop = forAllShrink(a2.arbitrary,shrink[(A1,A2)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,P] (
     f: (A1,A2,A3) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3)))
+    a3: Arbitrary[(A1,A2,A3)],
+    s3: Shrink[(A1,A2,A3)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty
+  ): Prop = forAllShrink(a3.arbitrary,shrink[(A1,A2,A3)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,P] (
     f: (A1,A2,A3,A4) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty,
-    a4: Arbitrary[A4], s4: Shrink[A4], pp4: A4 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4)))
+    a4: Arbitrary[(A1,A2,A3,A4)],
+    s: Shrink[(A1,A2,A3,A4)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty,
+    pp4: A4 => Pretty
+  ): Prop = forAllShrink(a4.arbitrary,shrink[(A1,A2,A3,A4)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,P] (
     f: (A1,A2,A3,A4,A5) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty,
-    a4: Arbitrary[A4], s4: Shrink[A4], pp4: A4 => Pretty,
-    a5: Arbitrary[A5], s5: Shrink[A5], pp5: A5 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5)))
+    a5: Arbitrary[(A1,A2,A3,A4,A5)],
+    s: Shrink[(A1,A2,A3,A4,A5)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty,
+    pp4: A4 => Pretty,
+    pp5: A5 => Pretty
+  ): Prop = forAllShrink(a5.arbitrary,shrink[(A1,A2,A3,A4,A5)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,P] (
     f: (A1,A2,A3,A4,A5,A6) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty,
-    a4: Arbitrary[A4], s4: Shrink[A4], pp4: A4 => Pretty,
-    a5: Arbitrary[A5], s5: Shrink[A5], pp5: A5 => Pretty,
-    a6: Arbitrary[A6], s6: Shrink[A6], pp6: A6 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6)))
+    a6: Arbitrary[(A1,A2,A3,A4,A5,A6)],
+    s: Shrink[(A1,A2,A3,A4,A5,A6)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty,
+    pp4: A4 => Pretty,
+    pp5: A5 => Pretty,
+    pp6: A6 => Pretty
+  ): Prop = forAllShrink(a6.arbitrary,shrink[(A1,A2,A3,A4,A5,A6)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,A7,P] (
     f: (A1,A2,A3,A4,A5,A6,A7) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty,
-    a4: Arbitrary[A4], s4: Shrink[A4], pp4: A4 => Pretty,
-    a5: Arbitrary[A5], s5: Shrink[A5], pp5: A5 => Pretty,
-    a6: Arbitrary[A6], s6: Shrink[A6], pp6: A6 => Pretty,
-    a7: Arbitrary[A7], s7: Shrink[A7], pp7: A7 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7)))
+    a7: Arbitrary[(A1,A2,A3,A4,A5,A6,A7)],
+    s: Shrink[(A1,A2,A3,A4,A5,A6,A7)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty,
+    pp4: A4 => Pretty,
+    pp5: A5 => Pretty,
+    pp6: A6 => Pretty,
+    pp7: A7 => Pretty
+  ): Prop = forAllShrink(a7.arbitrary,shrink[(A1,A2,A3,A4,A5,A6,A7)])(f.tupled andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,A3,A4,A5,A6,A7,A8,P] (
     f: (A1,A2,A3,A4,A5,A6,A7,A8) => P)(implicit
     p: P => Prop,
-    a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty,
-    a2: Arbitrary[A2], s2: Shrink[A2], pp2: A2 => Pretty,
-    a3: Arbitrary[A3], s3: Shrink[A3], pp3: A3 => Pretty,
-    a4: Arbitrary[A4], s4: Shrink[A4], pp4: A4 => Pretty,
-    a5: Arbitrary[A5], s5: Shrink[A5], pp5: A5 => Pretty,
-    a6: Arbitrary[A6], s6: Shrink[A6], pp6: A6 => Pretty,
-    a7: Arbitrary[A7], s7: Shrink[A7], pp7: A7 => Pretty,
-    a8: Arbitrary[A8], s8: Shrink[A8], pp8: A8 => Pretty
-  ): Prop = forAll((a: A1) => forAll(f(a, _:A2, _:A3, _:A4, _:A5, _:A6, _:A7, _:A8)))
+    a8: Arbitrary[(A1,A2,A3,A4,A5,A6,A7,A8)],
+    s: Shrink[(A1,A2,A3,A4,A5,A6,A7,A8)],
+    pp1: A1 => Pretty,
+    pp2: A2 => Pretty,
+    pp3: A3 => Pretty,
+    pp4: A4 => Pretty,
+    pp5: A5 => Pretty,
+    pp6: A6 => Pretty,
+    pp7: A7 => Pretty,
+    pp8: A8 => Pretty
+  ): Prop = forAllShrink(a8.arbitrary,shrink[(A1,A2,A3,A4,A5,A6,A7,A8)])(f.tupled andThen p)
 
   /** Ensures that the property expression passed in completes within the given
    *  space of time. */

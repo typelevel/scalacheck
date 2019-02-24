@@ -84,6 +84,10 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
+  /** Create a new generator by tupling it with another generator */
+  def zip[U](g: Gen[U]): Gen[(T,U)] =
+    flatMap((t: T) => g.map((t, _: U)))
+    
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
