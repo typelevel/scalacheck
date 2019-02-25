@@ -9,8 +9,7 @@
 
 package org.scalacheck.util
 
-import collection.{ Map => _, _ }
-import generic.CanBuildFrom
+import scala.collection.{mutable, Map => _, _}
 
 trait Buildable[T,C] extends Serializable {
   def builder: mutable.Builder[T,C]
@@ -21,53 +20,13 @@ trait Buildable[T,C] extends Serializable {
   }
 }
 
-/**
-  * CanBuildFrom instances implementing Serializable, so that the objects capturing those can be
-  * serializable too.
-  */
-object SerializableCanBuildFroms {
-
-  implicit def listCanBuildFrom[T]: CanBuildFrom[List[T], T, List[T]] =
-    new CanBuildFrom[List[T], T, List[T]] with Serializable {
-      def apply(from: List[T]) = List.newBuilder[T]
-      def apply() = List.newBuilder[T]
-    }
-
-  implicit def bitsetCanBuildFrom[T]: CanBuildFrom[BitSet, Int, BitSet] =
-    new CanBuildFrom[BitSet, Int, BitSet] with Serializable {
-      def apply(from: BitSet) = BitSet.newBuilder
-      def apply() = BitSet.newBuilder
-    }
-
-  implicit def mapCanBuildFrom[T, U]: CanBuildFrom[Map[T, U], (T, U), Map[T, U]] =
-    new CanBuildFrom[Map[T, U], (T, U), Map[T, U]] with Serializable {
-      def apply(from: Map[T, U]) = Map.newBuilder[T, U]
-      def apply() = Map.newBuilder[T, U]
-    }
-
-}
-
-object Buildable {
-
-  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]) =
-    new Buildable[T,C] {
-      def builder = c.apply
-    }
-
+object Buildable extends BuildableVersionSpecific {
   import java.util.ArrayList
-  implicit def buildableArrayList[T] = new Buildable[T,ArrayList[T]] {
-    def builder = new mutable.Builder[T,ArrayList[T]] {
-      val al = new ArrayList[T]
-      def +=(x: T) = {
-        al.add(x)
-        this
-      }
-      def clear() = al.clear()
-      def result() = al
-    }
+  implicit def buildableArrayList[T]: Buildable[T, ArrayList[T]] = new Buildable[T,ArrayList[T]] {
+    def builder = new ArrayListBuilder[T]
   }
-
 }
+
 /*
 object Buildable2 {
 

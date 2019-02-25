@@ -5,6 +5,8 @@ import org.scalacheck.Gen.listOfN
 import org.scalacheck.GenSpecification.arbSeed
 import org.scalacheck.Prop.forAll
 import org.scalacheck.rng.Seed
+import ScalaVersionSpecific._
+
 
 import scala.util.Try
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -141,6 +143,7 @@ object CogenSpecification extends Properties("Cogen") {
   include(cogenLaws[List[Int]], "cogenList.")
   include(cogenLaws[Vector[Int]], "cogenVector.")
   include(cogenLaws[Stream[Int]], "cogenStream.")
+  include(cogenLaws[LazyList[Int]], "cogenLazyList.")
   include(cogenLaws[Set[Int]], "cogenSet.")
   include(cogenLaws[Map[Int, Int]], "cogenMap.")
   include(cogenLaws[() => Int], "cogenFunction0.")

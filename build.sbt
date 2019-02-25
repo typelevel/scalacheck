@@ -1,5 +1,7 @@
 sourceDirectory := file("dummy source directory")
 
+val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
+
 scalaVersionSettings
 
 lazy val versionNumber = "1.14.1"
@@ -10,7 +12,13 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M3", scalaVersion.value)
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M5", scalaVersion.value),
+  scalaMajorVersion := {
+    val v = scalaVersion.value
+    CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
+      throw new RuntimeException(s"could not get Scala major version from $v")
+    }
+  }
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -43,6 +51,11 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
+  unmanagedSourceDirectories in Compile += {
+    val s = if (scalaMajorVersion.value >= 13) "+" else "-"
+    (baseDirectory in LocalRootProject).value / "src" / "main" / s"scala-2.13$s"
+  },
+
   unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
@@ -54,18 +67,17 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xfatal-warnings",
     "-Xfuture",
-    "-Yno-adapted-args",
     "-Ywarn-dead-code",
-    "-Ywarn-inaccessible",
-    "-Ywarn-nullary-override",
-    "-Ywarn-nullary-unit",
     "-Ywarn-numeric-widen") ++ {
-    scalaBinaryVersion.value match {
-      case "2.10" => Seq("-Xlint")
-      case "2.11" => Seq("-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import")
-      case _      => Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused-import", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
+    val modern = Seq("-Xlint:-unused", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
+    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit")
+    val removedModern = Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
+    scalaMajorVersion.value match {
+      case 10 => Seq("-Xfatal-warnings", "-Xlint") ++ removed
+      case 11 => Seq("-Xfatal-warnings", "-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import") ++ removed
+      case 12 => "-Xfatal-warnings" +: (modern ++ removed ++ removedModern)
+      case 13 => modern
     }
   },
 
@@ -78,7 +90,11 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // don't use fatal warnings in tests
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
-  mimaPreviousArtifacts := Set("org.scalacheck" %% "scalacheck" % "1.14.0"),
+  mimaPreviousArtifacts := {
+    // TODO: re-enable MiMa for 2.13 once there is a release out
+    if (scalaMajorVersion.value == 13) Set()
+    else Set("org.scalacheck" %% "scalacheck" % "1.14.0")
+  },
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -114,7 +130,10 @@ lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     scalaJSStage in Global := FastOptStage,
-    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
+    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
+    // because Scala.js deprecated TestUtils but we haven't worked around that yet,
+    // see https://github.com/rickynils/scalacheck/pull/435#issuecomment-430405390
+    scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings"))
   )
   .enablePlugins(ScalaJSPlugin)
 

@@ -11,6 +11,7 @@ package org.scalacheck
 
 import Prop.{forAll, forAllNoShrink, BooleanOperators}
 import Shrink.shrink
+import ScalaVersionSpecific._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 

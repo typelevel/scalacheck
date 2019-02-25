@@ -40,7 +40,7 @@ class Properties(val name: String) {
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
-  def properties: Seq[(String,Prop)] = props
+  def properties: collection.Seq[(String,Prop)] = props
 
   /** Convenience method that checks the properties with the given parameters
    *  (or default parameters, if not specified)

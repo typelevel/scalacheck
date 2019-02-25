@@ -18,7 +18,7 @@ import Shrink._
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
-object GenSpecification extends Properties("Gen") {
+object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
   implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
     arbitrary[Long] flatMap Seed.apply
@@ -54,7 +54,7 @@ object GenSpecification extends Properties("Gen") {
     forAll(g) { n => true }
   }
 
-  property("frequency 3") = forAll(choose(0,100000)) { n =>
+  property("frequency 3") = forAll(choose(1,100000)) { n =>
     forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
   }
 
@@ -183,6 +183,10 @@ object GenSpecification extends Properties("Gen") {
     s.drop(n & 0xffff).nonEmpty
   }
 
+  property("infiniteLazyList") = forAll(infiniteLazyList(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+    s.drop(n & 0xffff).nonEmpty
+  }
+
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
@@ -201,7 +205,7 @@ object GenSpecification extends Properties("Gen") {
   property("distributed pick") = {
     val lst = (0 to 7).toIterable
     val n = 2
-    forAll(pick(n, lst)) { xs: Seq[Int] =>
+    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
           xs.size == n

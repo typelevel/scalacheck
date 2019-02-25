@@ -17,7 +17,7 @@ scala:
   - 2.10.7
   - 2.11.12
   - 2.12.6
-  - 2.13.0-M3
+  - 2.13.0-M5
 jdk:
   - oraclejdk8
   - openjdk11
@@ -39,6 +39,9 @@ matrix:
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       sudo: required
+      addons:
+        apt:
+          update: true # https://github.com/rickynils/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - env: EXAMPLES
       script:
@@ -51,3 +54,5 @@ matrix:
       scala: 2.10.7
     - jdk: openjdk11
       scala: 2.11.12
+    - scala: 2.13.0-M5
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=0.6.25

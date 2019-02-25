@@ -28,7 +28,7 @@ sealed trait Cogen[T] extends Serializable {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities with CogenLowPriority {
+object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific {
 
   // for binary compatibility
   private[scalacheck] def apply[T](ev: Cogen[T]): Cogen[T] = ev

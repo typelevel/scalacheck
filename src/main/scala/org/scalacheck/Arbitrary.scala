@@ -357,7 +357,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     Arbitrary(Gen.oneOf(arbitrary[T].map(Success(_)), arbitrary[Throwable].map(Failure(_))))
 
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
-   *  (such as lists, arrays, streams, etc). The maximum size of the container
+   *  (such as lists, arrays, streams / lazy lists, etc). The maximum size of the container
    *  depends on the size generation parameter. */
   implicit def arbContainer[C[_],T](implicit
     a: Arbitrary[T], b: Buildable[T,C[T]], t: C[T] => Traversable[T]
@@ -372,7 +372,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   implicit def arbEnum[A <: java.lang.Enum[A]](implicit A: reflect.ClassTag[A]): Arbitrary[A] = {
     val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]
-    Arbitrary(Gen.oneOf(values))
+    Arbitrary(Gen.oneOf(values.toIndexedSeq))
   }
 
   implicit def arbPartialFunction[A: Cogen, B: Arbitrary]: Arbitrary[PartialFunction[A, B]] =

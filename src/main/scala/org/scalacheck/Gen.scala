@@ -15,6 +15,7 @@ import language.implicitConversions
 import rng.Seed
 import util.Buildable
 import util.SerializableCanBuildFroms._
+import ScalaVersionSpecific._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
@@ -200,7 +201,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
-object Gen extends GenArities{
+object Gen extends GenArities with GenVersionSpecific {
 
   //// Private interface ////
 
@@ -559,7 +560,7 @@ object Gen extends GenArities{
         builder += ((total, value))
       }
       val tree = builder.result
-      choose(1L, total).flatMap(r => tree.from(r).head._2).suchThat { x =>
+      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2).suchThat { x =>
         gs.exists(_._2.sieveCopy(x))
       }
     }
@@ -690,7 +691,7 @@ object Gen extends GenArities{
    * 
    * The elements are not guaranteed to be permuted in random order.
    */
-  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
+  def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
     else gen { (p, seed0) =>
