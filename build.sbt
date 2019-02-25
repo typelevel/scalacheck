@@ -140,6 +140,7 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
+    fork in Test := true,
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 
