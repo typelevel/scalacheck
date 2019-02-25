@@ -521,14 +521,20 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Creates a resized version of a generator */
   def resize[T](s: Int, g: Gen[T]) = gen((p, seed) => g.doApply(p.withSize(s), seed))
 
-  /** Picks a random value from a list */
-  def oneOf[T](xs: Seq[T]): Gen[T] =
+  /** Picks a random value from a list. */
+  def oneOf[T](xs: Iterable[T]): Gen[T] =
     if (xs.isEmpty) {
       throw new IllegalArgumentException("oneOf called on empty collection")
     } else {
       val vector = xs.toVector
       choose(0, vector.size - 1).map(vector(_))
     }
+
+  /** Picks a random value from a list.
+   *  @todo Remove this overloaded method in the next major release. See #438.
+   */
+  def oneOf[T](xs: Seq[T]): Gen[T] =
+    oneOf(xs: Iterable[T])
 
   /** Picks a random value from a list */
   def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf(t0 +: t1 +: tn)

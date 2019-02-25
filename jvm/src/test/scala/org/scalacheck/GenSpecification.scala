@@ -58,6 +58,11 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
   }
 
+  property("frequency 4") =
+    Prop.throws(classOf[IllegalArgumentException]) {
+      frequency()
+    }
+
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
   property("wrap") = forAll((g: Gen[Int]) => delay(g) == g)
@@ -138,6 +143,13 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     Try(oneOf(l)) match {
       case Success(g) => forAll(g)(l.contains)
       case Failure(_) => Prop(l.isEmpty)
+    }
+  }
+
+  property("oneOf n in set") = forAll { (s: Set[Int]) =>
+    Try(oneOf(s)) match {
+      case Success(g) => forAll(g)(s.contains)
+      case Failure(_) => Prop(s.isEmpty)
     }
   }
 
