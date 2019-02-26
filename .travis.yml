@@ -30,7 +30,7 @@ env:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
     - PLATFORM=jvm SBT_PARALLEL=false WORKERS=4 DEPLOY=false
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
-    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M6
 sudo: false
 
 matrix:
@@ -49,7 +49,7 @@ matrix:
       - for d in */ ; do cd "$d" && sbt test:compile && cd ../ ; done
   exclude:
     - scala: 2.10.7
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M6
     - jdk: openjdk11
       scala: 2.10.7
     - jdk: openjdk11
