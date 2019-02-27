@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import scala.scalajs.reflect.Reflect
+
 import Test._
 
 private[scalacheck] object Platform {
@@ -21,11 +23,23 @@ private[scalacheck] object Platform {
     workerFun(0)
   }
 
-  def loadModule(name: String, loader: ClassLoader): AnyRef =
-    org.scalajs.testinterface.TestUtils.loadModule(name, loader)
+  def loadModule(name: String, loader: ClassLoader): AnyRef = {
+    Reflect
+      .lookupLoadableModuleClass(name + "$")
+      .getOrElse(throw new ClassNotFoundException(name + "$"))
+      .loadModule()
+      .asInstanceOf[AnyRef]
+  }
 
-  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
-    org.scalajs.testinterface.TestUtils.newInstance(name, loader, paramTypes)(args)
+  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef = {
+    Reflect
+      .lookupInstantiatableClass(name)
+      .getOrElse(throw new ClassNotFoundException(name))
+      .getConstructor(paramTypes: _*)
+      .getOrElse(throw new NoSuchMethodError(paramTypes.mkString("<init>(", ",", ")")))
+      .newInstance(args: _*)
+      .asInstanceOf[AnyRef]
+  }
 
   type EnableReflectiveInstantiation = scala.scalajs.reflect.annotation.EnableReflectiveInstantiation
 }
