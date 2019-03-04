@@ -483,6 +483,17 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   property("negative generators are negative") =
     Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
 
+  property("chooseNum edge cases") = {
+    val minT = -9
+    val maxT = 9
+    val specials = List(minT, -1, 0, 1, maxT);
+    Prop.forAllNoShrink(Gen.chooseNum(minT, maxT)) { x: Int =>
+      Prop.classify(specials.contains(x), "special", "non-special") {
+        true
+      }
+    }
+  }
+
   property("finite duration values are valid") =
     // just make sure it constructs valid finite values that don't throw exceptions
     Prop.forAll(Gen.finiteDuration) { _.isFinite }

@@ -832,7 +832,7 @@ object Gen extends GenArities with GenVersionSpecific {
     val basicsAndSpecials = for {
       t <- specials ++ basics if t >= minT && t <= maxT
     } yield (1, const(t))
-    val other = (basicsAndSpecials.length, c.choose(minT, maxT))
+    val other = (9 * basicsAndSpecials.length, c.choose(minT, maxT))
     val allGens = basicsAndSpecials :+ other
     frequency(allGens: _*)
   }
