@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -370,7 +370,7 @@ object Test {
   }
 
   /** Check a set of properties. */
-  def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
+  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
     val propertyFilter = prms.propFilter.map(_.r)
 

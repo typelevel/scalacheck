@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -66,7 +66,7 @@ sealed abstract class Prop extends Serializable { self =>
     this
   )
 
-  /** Convenience method that checks this property with the given parameters
+  /** Convenience method that checks this property
    *  and reports the result on the console. Should only be used when running
    *  tests interactively within the Scala REPL.
    *
@@ -387,7 +387,7 @@ object Prop {
   /** A property that denotes an exception */
   lazy val exception: Prop = exception(null)
 
-  /** Create a property that compares to values. If the values aren't equal,
+  /** Create a property that compares two values. If the values aren't equal,
    * the property will fail and report that first value doesn't match the
    * expected (second) value. */
   def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop =
@@ -397,7 +397,7 @@ object Prop {
       "Expected "+exp+" but got "+act
     }
 
-  /** Create a property that compares to values. If the values aren't equal,
+  /** Create a property that compares two values. If the values aren't equal,
    * the property will fail and report that second value doesn't match the
    * expected (first) value. */
   def =?[T](x: T, y: T)(implicit pp: T => Pretty): Prop = ?=(y, x)

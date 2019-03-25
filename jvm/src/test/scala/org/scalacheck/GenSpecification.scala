@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -18,7 +18,7 @@ import Shrink._
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
-object GenSpecification extends Properties("Gen") {
+object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
   implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
     arbitrary[Long] flatMap Seed.apply
@@ -54,9 +54,14 @@ object GenSpecification extends Properties("Gen") {
     forAll(g) { n => true }
   }
 
-  property("frequency 3") = forAll(choose(0,100000)) { n =>
+  property("frequency 3") = forAll(choose(1,100000)) { n =>
     forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
   }
+
+  property("frequency 4") =
+    Prop.throws(classOf[IllegalArgumentException]) {
+      frequency()
+    }
 
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
@@ -78,21 +83,6 @@ object GenSpecification extends Properties("Gen") {
 
   property("fail") = forAll { (prms: Parameters, seed: Seed) =>
     fail(prms, seed) == None
-  }
-
-  property("fromOption") = forAll { (prms: Parameters, seed: Seed, o: Option[Int]) =>
-    o match {
-      case Some(x) => fromOption(o)(prms, seed) == Some(x)
-      case None => fromOption(o)(prms, seed) == None
-    }
-  }
-
-  property("collect") = forAll { (prms: Parameters, o: Option[Int], seed: Seed) =>
-    val g = const(o).collect { case Some(n) => n }
-    o match {
-      case Some(x) => g(prms, seed) == Some(x)
-      case None => g(prms, seed) == None
-    }
   }
 
   property("choose-int") = forAll { (l: Int, h: Int) =>
@@ -118,7 +108,20 @@ object GenSpecification extends Properties("Gen") {
 
   import Double.{MinValue, MaxValue}
   property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
-    MinValue <= x && x <= MaxValue
+    MinValue <= x && x <= MaxValue && !x.isNaN
+  }
+
+  import Double.{NegativeInfinity, PositiveInfinity}
+  property("choose-infinite-double") = {
+    forAll(Gen.choose(NegativeInfinity, PositiveInfinity)) { x =>
+      NegativeInfinity <= x && x <= PositiveInfinity && !x.isNaN
+    }
+  }
+
+  property("choose-infinite-double-fix-zero-defect-379") = {
+    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
+      xs.exists(_ != 0d)
+    }
   }
 
   property("choose-xmap") = {
@@ -140,6 +143,13 @@ object GenSpecification extends Properties("Gen") {
     Try(oneOf(l)) match {
       case Success(g) => forAll(g)(l.contains)
       case Failure(_) => Prop(l.isEmpty)
+    }
+  }
+
+  property("oneOf n in set") = forAll { (s: Set[Int]) =>
+    Try(oneOf(s)) match {
+      case Success(g) => forAll(g)(s.contains)
+      case Failure(_) => Prop(s.isEmpty)
     }
   }
 
@@ -207,6 +217,10 @@ object GenSpecification extends Properties("Gen") {
     s.drop(n & 0xffff).nonEmpty
   }
 
+  property("infiniteLazyList") = forAll(infiniteLazyList(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+    s.drop(n & 0xffff).nonEmpty
+  }
+
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
@@ -225,7 +239,7 @@ object GenSpecification extends Properties("Gen") {
   property("distributed pick") = {
     val lst = (0 to 7).toIterable
     val n = 2
-    forAll(pick(n, lst)) { xs: Seq[Int] =>
+    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
           xs.size == n

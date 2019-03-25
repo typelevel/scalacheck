@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -63,7 +63,7 @@ private[scalacheck] object Platform {
 
   def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
     if(!args.isEmpty) ???
-    else Class.forName(name, true, loader).newInstance.asInstanceOf[AnyRef]
+    else Class.forName(name, true, loader).getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]
 
   def loadModule(name: String, loader: ClassLoader): AnyRef =
     Class.forName(name + "$", true, loader).getField("MODULE$").get(null)

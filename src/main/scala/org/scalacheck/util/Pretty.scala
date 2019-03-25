@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -56,7 +56,8 @@ object Pretty {
     else s.substring(0, length) / break(lead+s.substring(length), lead, length)
 
   def format(s: String, lead: String, trail: String, width: Int) =
-    s.lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
+    // was just `s.lines....`, but on JDK 11 we hit scala/bug#11125
+    Predef.augmentString(s).lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
 
   private def toStrOrNull(s: Any) = if (s == null) "null" else s.toString
 

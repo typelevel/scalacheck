@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -16,8 +16,7 @@ import language.reflectiveCalls
 import util.ConsoleReporter
 
 /** Represents a collection of properties, with convenient methods
- *  for checking all properties at once. This class is itself a property, which
- *  holds if and only if all of the contained properties hold.
+ *  for checking all properties at once.
  *  <p>Properties are added in the following way:</p>
  *
  *  {{{
@@ -41,7 +40,7 @@ class Properties(val name: String) {
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
-  def properties: Seq[(String,Prop)] = props
+  def properties: collection.Seq[(String,Prop)] = props
 
   /** Convenience method that checks the properties with the given parameters
    *  (or default parameters, if not specified)

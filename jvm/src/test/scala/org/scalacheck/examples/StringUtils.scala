@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -26,7 +26,7 @@ object StringUtils extends Properties("Examples.StringUtils") {
     }
 
     def tokenize(s: String, delim: Char) = {
-      val delimStr = new java.lang.Character(delim).toString
+      val delimStr = Character.valueOf(delim).toString
       val st = new java.util.StringTokenizer(s, delimStr)
       val tokens = Array.ofDim[String](st.countTokens)
       var i = 0;

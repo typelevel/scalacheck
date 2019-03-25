@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -11,6 +11,7 @@ package org.scalacheck
 
 import Prop.{forAll, forAllNoShrink, BooleanOperators}
 import Shrink.shrink
+import ScalaVersionSpecific._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 

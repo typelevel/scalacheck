@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
  **  ScalaCheck                                                             **
- **  Copyright (c) 2007-2017 Rickard Nilsson. All rights reserved.          **
+ **  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
  **  http://www.scalacheck.org                                              **
  **                                                                         **
  **  This software is released under the terms of the Revised BSD License.  **
@@ -15,6 +15,8 @@ import rng.Seed
 
 import util.Buildable
 import util.SerializableCanBuildFroms._
+import ScalaVersionSpecific._
+
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
@@ -81,10 +83,6 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     rt.flatMap(t => f(t).doApply(p, rt.seed))
   }
 
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def flatten[U](implicit asOption: T => Option[U]): Gen[U] =
-    map(asOption).collect{ case Some(t) => t }
-
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
@@ -96,13 +94,6 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  the generator fails (returns None). Also, make sure that the provided
    *  test property is side-effect free, eg it should not use external vars. */
   def filterNot(p: T => Boolean): Gen[T] = suchThat(x => !p(x))
-
-  /** Create a new generator that fails if the specified partial function
-   *  is undefined for this generator's value, otherwise returns the result
-   *  of the partial function applied to this generator's value. */
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def collect[U](pf: PartialFunction[T,U]): Gen[U] =
-    flatMap { t => Gen.fromOption(pf.lift(t)) }
 
   /** Creates a non-strict filtered version of this generator. */
   def withFilter(p: T => Boolean): WithFilter = new WithFilter(p)
@@ -209,7 +200,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
-object Gen extends GenArities{
+object Gen extends GenArities with GenVersionSpecific {
 
   //// Private interface ////
 
@@ -408,6 +399,12 @@ object Gen extends GenArities{
       new Choose[Double] {
         def choose(low: Double, high: Double) =
           if (low > high) throw new IllegalBoundsError(low, high)
+          else if (low == Double.NegativeInfinity)
+            frequency(1 -> const(Double.NegativeInfinity),
+                      9 -> choose(Double.MinValue, high))
+          else if (high == Double.PositiveInfinity)
+            frequency(1 -> const(Double.PositiveInfinity),
+                      9 -> choose(low, Double.MaxValue))
           else gen(chDbl(low,high))
       }
 
@@ -444,17 +441,9 @@ object Gen extends GenArities{
       val seed = seed0
     }
 
-  /** A generator that fails if the provided option value is undefined,
-   *  otherwise just returns the value. */
-  @deprecated("Empty generators are discouraged.", "1.14.0")
-  def fromOption[T](o: Option[T]): Gen[T] = o match {
-    case Some(t) => const(t)
-    case None => fail
-  }
-
   /** A generator that generates a random value in the given (inclusive)
-   *  range. If the range is invalid, the generator will not generate
-   *  any value. */
+   *  range. If the range is invalid, an IllegalBoundsError exception will be
+   *  thrown. */
   def choose[T](min: T, max: T)(implicit c: Choose[T]): Gen[T] =
     c.choose(min, max)
 
@@ -513,12 +502,6 @@ object Gen extends GenArities{
   }
 
   /** Wraps a generator for later evaluation. The given parameter is
-   *  evaluated each time the wrapper generator is evaluated.
-   *  This has been deprecated in favor of [[org.scalacheck.Gen.delay]]. */
-  @deprecated("Replaced with delay()", "1.13.0")
-  def wrap[T](g: => Gen[T]): Gen[T] = delay(g)
-
-  /** Wraps a generator for later evaluation. The given parameter is
    *  evaluated each time the wrapper generator is evaluated. */
   def delay[T](g: => Gen[T]): Gen[T] =
     gen { (p, seed) => g.doApply(p, seed) }
@@ -537,14 +520,20 @@ object Gen extends GenArities{
   /** Creates a resized version of a generator */
   def resize[T](s: Int, g: Gen[T]) = gen((p, seed) => g.doApply(p.withSize(s), seed))
 
-  /** Picks a random value from a list */
-  def oneOf[T](xs: Seq[T]): Gen[T] =
+  /** Picks a random value from a list. */
+  def oneOf[T](xs: Iterable[T]): Gen[T] =
     if (xs.isEmpty) {
       throw new IllegalArgumentException("oneOf called on empty collection")
     } else {
       val vector = xs.toVector
       choose(0, vector.size - 1).map(vector(_))
     }
+
+  /** Picks a random value from a list.
+   *  @todo Remove this overloaded method in the next major release. See #438.
+   */
+  def oneOf[T](xs: Seq[T]): Gen[T] =
+    oneOf(xs: Iterable[T])
 
   /** Picks a random value from a list */
   def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf(t0 +: t1 +: tn)
@@ -576,7 +565,7 @@ object Gen extends GenArities{
         builder += ((total, value))
       }
       val tree = builder.result
-      choose(1L, total).flatMap(r => tree.from(r).head._2).suchThat { x =>
+      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2).suchThat { x =>
         gs.exists(_._2.sieveCopy(x))
       }
     }
@@ -750,16 +739,16 @@ object Gen extends GenArities{
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
-   *  <code>containerOf[Map,T,U](g)</code>. */
+   *  <code>containerOf[Map,(T,U)](g)</code>. */
   def mapOf[T,U](g: => Gen[(T,U)]) = buildableOf[Map[T,U],(T,U)](g)
 
   /** Generates a non-empty map of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
-   *  <code>nonEmptyContainerOf[Map,T,U](g)</code>. */
+   *  <code>nonEmptyContainerOf[Map,(T,U)](g)</code>. */
   def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T,U],(T,U)](g)
 
   /** Generates a map with at most the given number of elements. This method
-   *  is equal to calling <code>containerOfN[Map,T,U](n,g)</code>. */
+   *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
 
   case class SetOfNException[T](produced: Set[T])
@@ -820,8 +809,11 @@ object Gen extends GenArities{
   def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
-  /** A generator that picks a given number of elements from a list, randomly */
-  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
+  /** A generator that randomly picks a given number of elements from a list
+   * 
+   * The elements are not guaranteed to be permuted in random order.
+   */
+  def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
     else gen { (p, seed0) =>
@@ -845,7 +837,10 @@ object Gen extends GenArities{
     }
   }
 
-  /** A generator that picks a given number of elements from a list, randomly */
+  /** A generator that randomly picks a given number of elements from a list
+   * 
+   * The elements are not guaranteed to be permuted in random order.
+   */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
     val gs = g1 +: g2 +: gn
     pick(n, 0 until gs.size).flatMap(idxs =>

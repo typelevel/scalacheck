@@ -69,7 +69,7 @@ directly, but it is also possible to create new properties by combining other
 properties, or to use any of the specialised methods in the `org.scalacheck.Prop`
 object.
 
-**Universally quantified properties**
+#### Universally quantified properties
 
 As mentioned before, `org.scalacheck.Prop.forAll` creates universally
 quantified properties. `forAll` takes a function as parameter, and creates a
@@ -116,8 +116,7 @@ the correct range. This way of using the `forAll` method is good to use when
 you want to control the data generation by specifying exactly which generator
 that should be used, and not rely on a default generator for the given type.
 
-
-**Conditional Properties**
+#### Conditional Properties
 
 Sometimes, a specification takes the form of an implication. In ScalaCheck,
 you can use the implication operator `==>`:
@@ -158,8 +157,7 @@ could also be undecided if the implication condition doesn't get fulfilled. In
 the section about test execution, the different results of property evaluations
 will be described in more detail.
 
-
-**Combining Properties**
+#### Combining Properties
 
 A third way of creating properties, is to combine existing properties into new ones.
 
@@ -184,7 +182,7 @@ either `p1` or `p2` holds, and `p5` will hold if `p1` holds exactly when `p2`
 holds and vice versa.
 
 
-**Grouping properties**
+#### Grouping properties
 
 Often you want to specify several related properties, perhaps for all methods
 in a class. ScalaCheck provides a simple way of doing this, through the
@@ -247,7 +245,7 @@ object MyAppSpecification extends Properties("MyApp") {
 }
 ```
 
-**Labeling Properties**
+#### Labeling Properties
 
 Sometimes it can be difficult to decide exactly what is wrong when a property
 fails, especially if the property is complex, with many conditions. In such
@@ -396,7 +394,7 @@ val vowel = Gen.frequency(
 Now, the `vowel` generator will generate E:s more often than Y:s. Roughly, 4/14
 of the values generated will be E:s, and 1/14 of them will be Y:s.
 
-**Generating Case Classes**
+#### Generating Case Classes
 
 It is very simple to generate random instances of case classes in ScalaCheck.
 Consider the following example where a binary integer tree is generated:
@@ -428,7 +426,7 @@ scala> genTree.sample
 res0: Option[Tree] = Some(Node(Leaf,Node(Node(Node(Node(Node(Node(Leaf,Leaf,-71),Node(Leaf,Leaf,-49),17),Leaf,-20),Leaf,-7),Node(Node(Leaf,Leaf,26),Leaf,-3),49),Leaf,84),-29))
 ```
 
-**Sized Generators**
+#### Sized Generators
 
 When ScalaCheck uses a generator to generate a value, it feeds it with some
 parameters. One of the parameters the generator is given, is a *size* value,
@@ -447,7 +445,7 @@ side is based on the generator size parameter. It uses the `Gen.listOfN` which
 creates a sequence of given length filled with values obtained from the given
 generator.
 
-**Conditional Generators**
+#### Conditional Generators
 
 Conditional generators can be defined using `Gen.suchThat` in the following
 way:
@@ -463,7 +461,7 @@ enough values, and it might report a property test as undecided. The
 half of the generated numbers, but one has to be careful when using the
 `suchThat` operator.
 
-**Generating Containers**
+#### Generating Containers
 
 There is a special generator, `Gen.containerOf`, that generates containers such
 as lists and arrays. They take another generator as argument, that is
@@ -471,22 +469,55 @@ responsible for generating the individual items. You can use it in the
 following way:
 
 ```scala
-val genIntList      = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
+val genIntList        = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
 
-val genStringStream = Gen.containerOf[Stream,String](Gen.alphaStr)
+val genStringLazyList = Gen.containerOf[LazyList,String](Gen.alphaStr)
 
-val genBoolArray    = Gen.containerOf[Array,Boolean](true)
+val genBoolArray      = Gen.containerOf[Array,Boolean](true)
 ```
 
-By default, ScalaCheck supports generation of `List`, `Stream`, `Set`, `Array`,
-and `ArrayList` (from `java.util`). You can add support for additional
-containers by adding implicit `Buildable` instances. See `Buildable.scala` for
-examples.
+By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
+2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array`, and
+`ArrayList` (from `java.util`). You can add support for additional containers
+by adding implicit `Buildable` instances. See `Buildable.scala` for examples.
 
 There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 `Gen.containerOfN` for generating containers of a given size.
 
-**The `arbitrary` Generator**
+To generate a container by picking an arbitrary number of elements use
+`Gen.someOf`, or by picking one or more elements with
+`Gen.atLeastOne`.
+
+```scala
+val zeroOrMoreDigits = Gen.someOf(1 to 9)
+
+val oneOrMoreDigits = Gen.atLeastOne(1 to 9)
+```
+
+Here are generators that randomly pick `n` elements from a container
+with `Gen.pick`:
+
+```scala
+val fiveDice: Gen[Seq[Int]] = Gen.pick(5, 1 to 6)
+
+val threeLetters: Gen[Seq[Char]] = Gen.pick(3, 'A' to 'Z')
+```
+
+Note that `Gen.someOf`, `Gen.atLeastOne`, and `Gen.pick` only randomly
+select elements.  They do not generate permutations of the result
+with elements in different orders.
+
+To make your generator artificially permute the order of elements, you
+can run `scala.util.Random.shuffle` on each of the generated containers
+with the `map` method.
+
+```scala
+import scala.util.Random
+
+val threeLettersPermuted = threeLetters.map(Random.shuffle(_))
+```
+
+#### The `arbitrary` Generator
 
 There is a special generator, `org.scalacheck.Arbitrary.arbitrary`, which
 generates arbitrary values of any supported type.
@@ -566,7 +597,7 @@ val propMergeTree = forAll( (t1: Tree[Int], t2: Tree[Int]) =>
   t1.size + t2.size == t1.merge(t2).size
 ```
 
-**Collecting Generated Test Data**
+#### Collecting Generated Test Data
 
 It is possible to collect statistics about what kind of test data that has been
 generated during property evaluation. This is useful if you want to inspect the
@@ -778,9 +809,9 @@ can also define default shrinking methods. This is done by defining an implicit
 method that returns a `Shrink[T]` instance. This is done by using the
 `Shrink(...)` factory method, which as its only parameter takes a function and
 returns an instance of `Shrink[T]`. In turn, the function should take a value
-of the given type `T`, and return a `Stream` of shrank variants of the given
-value. As an example, look at the implicit `Shrink` instance for a tuple as it
-is defined in ScalaCheck:
+of the given type `T`, and return a `Stream` of shrank
+variants of the given value. As an example, look at the implicit `Shrink` instance
+for a tuple as it is defined in ScalaCheck:
 
 ```scala
 /** Shrink instance of 2-tuple */
