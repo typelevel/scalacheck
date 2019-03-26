@@ -59,8 +59,6 @@ private abstract class ScalaCheckRunner extends Runner {
       case Left(prop) => Seq("" -> prop)
     }
 
-    val mprops: Map[String, Prop] = props.toMap
-
     val properties: Option[Properties] =
       loaded.right.toOption
 
@@ -100,6 +98,7 @@ private abstract class ScalaCheckRunner extends Runner {
       val propertyFilter = params.propFilter.map(_.r)
 
       if (single) {
+        val mprops: Map[String, Prop] = props.toMap
         taskDef.selectors.foreach {
           case ts: TestSelector =>
             val name = ts.testName
@@ -110,7 +109,7 @@ private abstract class ScalaCheckRunner extends Runner {
             ()
         }
       } else {
-        mprops.foreach { case (name, prop) =>
+        props.foreach { case (name, prop) =>
           executeInternal(prop, name, handler, loggers, propertyFilter)
         }
       }
