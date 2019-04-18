@@ -269,7 +269,7 @@ trait Commands {
     s: State, seqCmds: Commands, parCmds: List[Commands]
   )
 
-  private implicit val shrinkActions = Shrink[Actions] { as =>
+  private implicit val shrinkActions: Shrink[Actions] = Shrink[Actions] { as =>
     val shrinkedCmds: Stream[Actions] =
       Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
       Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
