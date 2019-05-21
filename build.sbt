@@ -132,6 +132,13 @@ lazy val js = project.in(file("js"))
   .settings(
     scalaJSStage in Global := FastOptStage,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
+    mimaPreviousArtifacts := {
+      val isScalaJSMilestone: Boolean =
+        Option(System.getenv("SCALAJS_VERSION")).filter(_.startsWith("1.0.0-M")).isDefined
+      // TODO: re-enable MiMa for 2.13 once there is a release out
+      if (scalaMajorVersion.value == 13 || isScalaJSMilestone) Set()
+      else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+    },
     // because Scala.js deprecated TestUtils but we haven't worked around that yet,
     // see https://github.com/rickynils/scalacheck/pull/435#issuecomment-430405390
     scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings"))
