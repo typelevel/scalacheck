@@ -51,9 +51,23 @@ object Pretty {
     if(s.length >= length) s
     else s + List.fill(length-s.length)(c).mkString
 
-  def break(s: String, lead: String, length: Int): String =
-    if(s.length <= length || length <= 0) s
-    else s.substring(0, length) / break(lead+s.substring(length), lead, length)
+  def break(s: String, lead: String, length: Int): String = {
+    require(lead.length < length, "`lead.length` must be shorter than line `length`")
+
+    @annotation.tailrec
+    def loop(s: String, lead: String, length: Int, result: StringBuilder): StringBuilder = {
+      if (s.length <= length || length <= 0) result.append(s)
+      else {
+        result.append(s.substring(0, length)).append("\n")
+        loop(lead + s.substring(length), lead, length, result)
+      }
+    }
+
+    val builder = new StringBuilder
+    loop(s, lead, length, builder)
+
+    builder.result()
+  }
 
   def format(s: String, lead: String, trail: String, width: Int) =
     // was just `s.lines....`, but on JDK 11 we hit scala/bug#11125
