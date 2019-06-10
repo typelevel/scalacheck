@@ -13,7 +13,7 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-RC2", scalaVersion.value),
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -68,11 +68,10 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xfuture",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen") ++ {
     val modern = Seq("-Xlint:-unused", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
-    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit")
+    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit", "-Xfuture")
     val removedModern = Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
     scalaMajorVersion.value match {
       case 10 => Seq("-Xfatal-warnings", "-Xlint") ++ removed
