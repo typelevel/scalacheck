@@ -450,7 +450,7 @@ object Prop {
 
   /** Collect data for presentation in test report */
   def collect[T, P](f: T => P)(implicit ev: P => Prop): T => Prop = t => Prop { prms =>
-    val prop = f(t)
+    val prop = ev(f(t))
     prop(prms).collect(t)
   }
 
@@ -470,7 +470,7 @@ object Prop {
   /** Wraps and protects a property, turning exceptions thrown
    *  by the property into test failures. */
   def secure[P](p: => P)(implicit ev: P => Prop): Prop =
-    try (p: Prop) catch { case e: Throwable => exception(e) }
+    try ev(p) catch { case e: Throwable => exception(e) }
 
   /** Wraps a property to delay its evaluation. The given parameter is
    *  evaluated each time the wrapper property is evaluated. */

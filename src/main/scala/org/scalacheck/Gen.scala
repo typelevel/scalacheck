@@ -599,7 +599,7 @@ object Gen extends GenArities with GenVersionSpecific {
   ): Gen[C] =
     sequence[C,T](Traversable.fill(n)(g)) suchThat { c =>
       // TODO: Can we guarantee c.size == n (See issue #89)?
-      c.forall(g.sieveCopy)
+      evt(c).forall(g.sieveCopy)
     }
 
   /** Generates a container of any Traversable type for which there exists an
@@ -610,7 +610,7 @@ object Gen extends GenArities with GenVersionSpecific {
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
     sized(s => choose(0, s max 0).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
-      if (c == null) g.sieveCopy(null) else c.forall(g.sieveCopy)
+      if (c == null) g.sieveCopy(null) else evt(c).forall(g.sieveCopy)
     }
 
   /** Generates a non-empty container of any Traversable type for which there
@@ -621,7 +621,7 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(_.size > 0)
+    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(c => evt(c).size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
