@@ -115,13 +115,13 @@ object Pretty {
   }
 
   implicit def prettyThrowable(e: Throwable): Pretty = Pretty { prms =>
-    val strs = e.getStackTrace.map { st =>
+    val strs = e.getStackTrace.toList.map { st =>
       import st._
       getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
     }
 
     val strs2 =
-      if(prms.verbosity <= 0) Array[String]()
+      if(prms.verbosity <= 0) List[String]()
       else if(prms.verbosity <= 1) strs.take(5)
       else strs
 
