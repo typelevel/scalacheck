@@ -103,6 +103,15 @@ object ShrinkSpecification extends Properties("Shrink") {
     shrink(e).forall(_.isRight)
   }
 
+  def evenLength(value: List[_]) = value.length % 2 == 0
+  val shrinkEvenLength: Shrink[List[Int]] = implicitly[Shrink[List[Int]]].suchThat(evenLength _)
+
+  property("list suchThat") = {
+    forAll { l: List[Int] =>
+      shrink(l)(shrinkEvenLength).forall(evenLength _)
+    }
+  }
+
   /* Ensure that shrink[T] terminates. (#244)
    *
    * Let's say shrinking "terminates" when the stream of values
