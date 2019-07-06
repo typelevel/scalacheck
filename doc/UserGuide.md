@@ -851,11 +851,11 @@ val shrinkEvenList: Shrink[List[Int]] =
 ```
 
 Note that if a property fails on a value generated through `suchThat`, and is
-later shrunk (see [test case minimisation](#test-case-minimisation) below, the
-value ultimately reported as failing might not satisfy the condition given to
-`suchThat`, although it doesn't change the fact that there _exists_ a failing
-case that does. To avoid confusion, the corresponding shrink for the type can
-use `suchThat` method too.
+later shrunk (see [test case minimisation](#test-case-minimisation) below),
+the value ultimately reported as failing might not satisfy the condition given
+to `suchThat`, although it doesn't change the fact that there _exists_ a
+failing case that does. To avoid confusion, the corresponding shrink for the
+type can use `suchThat` method too.
 
 ### Stateful Testing
 
