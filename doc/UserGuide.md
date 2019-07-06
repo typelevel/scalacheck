@@ -461,6 +461,13 @@ enough values, and it might report a property test as undecided. The
 half of the generated numbers, but one has to be careful when using the
 `suchThat` operator.
 
+Note that if a property fails on a value generated through `suchThat`, and is
+later shrunk (see [test case minimisation](#test-case-minimisation) below, the
+value ultimately reported as failing might not satisfy the condition given to
+`suchThat`, although it doesn't change the fact that there _exists_ a failing
+case that does. To avoid confusion, the corresponding shrink for the type can
+use `suchThat` method too.
+
 #### Generating Containers
 
 There is a special generator, `Gen.containerOf`, that generates containers such
@@ -826,6 +833,29 @@ When implementing a shrinking method, one has to be careful to only return
 *smaller* variants of the value, since the shrinking algorithm otherwise could
 loop. ScalaCheck has implicit shrinking methods for common types such as integers
 and lists.
+
+If the generator for a type is restricting the range of valid values by
+construction or using `Gen.suchThat`, the values that fail tests can still be
+shrunk without checking the condition. To avoid that, use `Shrink.suchThat`
+with the condition to be maintained:
+
+```scala
+/** Generate lists of an even length */
+val genEvenList: Gen[List[Int]] = Gen.sized { size =>
+  Gen.listOfN(size * 2, arbitrary[Int])
+}
+
+/** Shrink a list, maintaining even length */
+val shrinkEvenList: Shrink[List[Int]] =
+  implicitly[Shrink[List[Int]]].suchThat(_.length % 2 == 0)
+```
+
+Note that if a property fails on a value generated through `suchThat`, and is
+later shrunk (see [test case minimisation](#test-case-minimisation) below, the
+value ultimately reported as failing might not satisfy the condition given to
+`suchThat`, although it doesn't change the fact that there _exists_ a failing
+case that does. To avoid confusion, the corresponding shrink for the type can
+use `suchThat` method too.
 
 ### Stateful Testing
 
