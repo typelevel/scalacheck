@@ -104,7 +104,7 @@ object ShrinkSpecification extends Properties("Shrink") {
   }
 
   def evenLength(value: List[_]) = value.length % 2 == 0
-  val shrinkEvenLength: Shrink[List[Int]] = implicitly[Shrink[List[Int]]].suchThat(evenLength _)
+  def shrinkEvenLength[A]: Shrink[List[A]] = implicitly[Shrink[List[A]]].suchThat(evenLength _)
 
   property("list suchThat") = {
     forAll { l: List[Int] =>
