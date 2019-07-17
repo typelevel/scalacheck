@@ -23,6 +23,23 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
 
+  private final case class RecursiveOption(opt: Option[RecursiveOption])
+
+  implicit private[this] def arbRecursiveOption: Arbitrary[RecursiveOption] =
+    Arbitrary(genRecursiveOption)
+
+  private[this] def genRecursiveOption: Gen[RecursiveOption] =
+    Gen.oneOf(
+      Gen.const(RecursiveOption(None)),
+      Gen.delay(Arbitrary.arbitrary[Option[RecursiveOption]] // !
+        .map(RecursiveOption(_))))
+
+  property("arbitrary[RecursiveOption].passed") = {
+    Prop.forAll { recOpt: RecursiveOption =>
+      Prop.passed
+    }
+  }
+
   property("arbEnum") = {
     Gen.listOfN(100, arbitrary[TimeUnit]).sample.get.toSet == TimeUnit.values.toSet
   }
