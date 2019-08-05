@@ -62,23 +62,40 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-feature",
-    "-unchecked",
-    "-Xfuture",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen") ++ {
-    val modern = Seq("-Xlint:-unused", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
-    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit")
-    val removedModern = Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
-    scalaMajorVersion.value match {
-      case 10 => Seq("-Xfatal-warnings", "-Xlint") ++ removed
-      case 11 => Seq("-Xfatal-warnings", "-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import") ++ removed
-      case 12 => "-Xfatal-warnings" +: (modern ++ removed ++ removedModern)
-      case 13 => modern
-    }
+  scalacOptions ++= {
+    val all =
+      "-encoding" :: "UTF-8" ::
+      "-feature" ::
+      "-unchecked" ::
+      "-Ywarn-dead-code" ::
+      "-Ywarn-numeric-widen" ::
+      Nil
+
+    val before213 =
+      "-Ywarn-inaccessible" ::
+      "-Ywarn-nullary-override" ::
+      "-Ywarn-nullary-unit" ::
+      "-Xfuture" ::
+      "-Xfatal-warnings" ::
+      "-deprecation" ::
+      Nil
+
+    val only212 =
+      "-Ywarn-infer-any" ::
+      "-Ywarn-unused-import" ::
+      Nil
+
+    val since212 =
+      "-Xlint:-unused" ::
+      "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits" ::
+      Nil
+
+    all ::: (scalaMajorVersion.value match {
+      case 10 => "-Xlint" :: before213
+      case 11 => "-Xlint" :: "-Ywarn-infer-any" :: "-Ywarn-unused-import" :: before213
+      case 12 => before213 ::: only212 ::: since212
+      case 13 => since212
+    })
   },
 
   // HACK: without these lines, the console is basically unusable,
