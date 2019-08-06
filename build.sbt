@@ -64,22 +64,21 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   // 2.10 - 2.13
   scalacOptions ++= {
-    def mk(min: Int, max: Int)(strs: String*): (Int => Boolean, Seq[String]) =
-      ((n: Int) => min <= n && n <= max, strs)
+    def mk(r: Range)(strs: String*): Int => Seq[String] =
+      (n: Int) => if (r.contains(n)) strs else Seq.empty
 
-    val groups: Seq[(Int => Boolean, Seq[String])] = Seq(
-      mk(10, 11)("-Xlint"),
-      mk(10, 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+    val groups: Seq[Int => Seq[String]] = Seq(
+      mk(10 to 11)("-Xlint"),
+      mk(10 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
         "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation"),
-      mk(10, 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+      mk(10 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
         "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
-      mk(11, 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
-      mk(12, 13)("-Xlint:-unused",
+      mk(11 to 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
+      mk(12 to 13)("-Xlint:-unused",
         "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
     val n = scalaMajorVersion.value
-
-    groups.flatMap { case (p, strs) => if (p(n)) strs else Seq.empty }
+    groups.flatMap(f => f(n))
   },
 
   // HACK: without these lines, the console is basically unusable,
