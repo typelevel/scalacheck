@@ -62,23 +62,23 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-feature",
-    "-unchecked",
-    "-Xfuture",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen") ++ {
-    val modern = Seq("-Xlint:-unused", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
-    val removed = Seq("-Ywarn-inaccessible", "-Ywarn-nullary-override", "-Ywarn-nullary-unit")
-    val removedModern = Seq("-Ywarn-infer-any", "-Ywarn-unused-import")
-    scalaMajorVersion.value match {
-      case 10 => Seq("-Xfatal-warnings", "-Xlint") ++ removed
-      case 11 => Seq("-Xfatal-warnings", "-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import") ++ removed
-      case 12 => "-Xfatal-warnings" +: (modern ++ removed ++ removedModern)
-      case 13 => modern
-    }
+  // 2.10 - 2.13
+  scalacOptions ++= {
+    def mk(r: Range)(strs: String*): Int => Seq[String] =
+      (n: Int) => if (r.contains(n)) strs else Seq.empty
+
+    val groups: Seq[Int => Seq[String]] = Seq(
+      mk(10 to 11)("-Xlint"),
+      mk(10 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+        "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation"),
+      mk(10 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+        "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
+      mk(11 to 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
+      mk(12 to 13)("-Xlint:-unused",
+        "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
+
+    val n = scalaMajorVersion.value
+    groups.flatMap(f => f(n))
   },
 
   // HACK: without these lines, the console is basically unusable,
