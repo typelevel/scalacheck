@@ -23,6 +23,30 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
 
+  case class Recur(opt: Option[Recur])
+
+  property("arbitrary[Recur].passes") = {
+    implicit def arbRecur: Arbitrary[Recur] = Arbitrary {
+      Gen.delay(Arbitrary.arbitrary[Option[Recur]])
+        .map(Recur(_))
+    }
+    Prop.forAll { _: Recur =>
+      Prop.passed
+    }
+  }
+
+  property("arbitrary[Recur].throws[StackOverflowError]") = {
+    implicit def arbRecur: Arbitrary[Recur] = Arbitrary {
+      Arbitrary.arbitrary[Option[Recur]]
+        .map(Recur(_))
+    }
+    Prop.throws(classOf[java.lang.StackOverflowError]) {
+      Prop.forAll { _: Recur =>
+        Prop.passed
+      }
+    }
+  }
+
   property("arbEnum") = {
     Gen.listOfN(100, arbitrary[TimeUnit]).sample.get.toSet == TimeUnit.values.toSet
   }
