@@ -7,14 +7,24 @@
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
 
-package org.scalacheck.util
+package org.scalacheck
+package util
 
 import org.scalacheck.Properties
 
 object PrettySpecification extends Properties("Pretty") {
 
-  property("null") = Pretty.pretty(null) == "null"
+  property("prety(null)") = Pretty.pretty(null) == "null"
 
-  property("any null") = Pretty.pretty(null: Any) == "null"
+  property("pretty(null: Any)") = Pretty.pretty(null: Any) == "null"
 
+  property("break") = {
+    Prop.forAll { s: String =>
+      Prop.forAllNoShrink(Gen.oneOf("", "  ")) { lead =>
+        val length = 75
+        val result = Pretty.break(s, lead, length)
+        result.length >= s.length
+      }
+    }
+  }
 }
