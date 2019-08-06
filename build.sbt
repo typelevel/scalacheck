@@ -62,40 +62,24 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
+  // 2.10 - 2.13
   scalacOptions ++= {
-    val all =
-      "-encoding" :: "UTF-8" ::
-      "-feature" ::
-      "-unchecked" ::
-      "-Ywarn-dead-code" ::
-      "-Ywarn-numeric-widen" ::
-      Nil
+    def mk(min: Int, max: Int)(strs: String*): (Int => Boolean, Seq[String]) =
+      ((n: Int) => min <= n && n <= max, strs)
 
-    val before213 =
-      "-Ywarn-inaccessible" ::
-      "-Ywarn-nullary-override" ::
-      "-Ywarn-nullary-unit" ::
-      "-Xfuture" ::
-      "-Xfatal-warnings" ::
-      "-deprecation" ::
-      Nil
+    val groups: Seq[(Int => Boolean, Seq[String])] = Seq(
+      mk(10, 11)("-Xlint"),
+      mk(10, 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+        "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation"),
+      mk(10, 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+        "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
+      mk(11, 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
+      mk(12, 13)("-Xlint:-unused",
+        "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
-    val only212 =
-      "-Ywarn-infer-any" ::
-      "-Ywarn-unused-import" ::
-      Nil
+    val n = scalaMajorVersion.value
 
-    val since212 =
-      "-Xlint:-unused" ::
-      "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits" ::
-      Nil
-
-    all ::: (scalaMajorVersion.value match {
-      case 10 => "-Xlint" :: before213
-      case 11 => "-Xlint" :: "-Ywarn-infer-any" :: "-Ywarn-unused-import" :: before213
-      case 12 => before213 ::: only212 ::: since212
-      case 13 => since212
-    })
+    groups.flatMap { case (p, strs) => if (p(n)) strs else Seq.empty }
   },
 
   // HACK: without these lines, the console is basically unusable,
