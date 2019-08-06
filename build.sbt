@@ -90,7 +90,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // don't use fatal warnings in tests
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
-  mimaPreviousArtifacts := Set("org.scalacheck" %% "scalacheck" % "1.14.0"),
+  mimaPreviousArtifacts := {
+    val isScalaJSMilestone: Boolean =
+      Option(System.getenv("SCALAJS_VERSION")).filter(_.startsWith("1.0.0-M")).isDefined
+    // TODO: re-enable MiMa for 2.14 once there is a final version
+    if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+  },
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -142,6 +148,8 @@ lazy val native = project.in(file("native"))
   .settings(
     doc in Compile := (doc in Compile in jvm).value,
     scalaVersion := "2.11.12",
+    // TODO: re-enable MiMa for native once published
+    mimaPreviousArtifacts := Set(),
     libraryDependencies ++= Seq(
       "org.scala-native" %% "test-interface_native0.3" % nativeVersion
     )
