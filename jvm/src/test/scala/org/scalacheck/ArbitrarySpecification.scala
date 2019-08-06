@@ -23,6 +23,19 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
 
+  private[this] final case class Recur(opt: Option[Recur])
+
+  private[this] implicit def arbRecur: Arbitrary[Recur] = Arbitrary {
+    Arbitrary.arbitrary[Option[Recur]]
+      .map(Recur(_))
+  }
+    
+  property("arbitrary[Recur]") = {
+    Prop.forAll { recOpt: Recur =>
+      Prop.passed
+    }
+  }
+
   property("arbEnum") = {
     Gen.listOfN(100, arbitrary[TimeUnit]).sample.get.toSet == TimeUnit.values.toSet
   }

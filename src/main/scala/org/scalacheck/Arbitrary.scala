@@ -336,7 +336,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /** Arbitrary instance of the Option type */
   implicit def arbOption[T](implicit a: Arbitrary[T]): Arbitrary[Option[T]] =
-    Arbitrary(Gen.option(a.arbitrary))
+    Arbitrary(Gen.option(Gen.delay(a.arbitrary)))
 
   /** Arbitrary instance of the Either type */
   implicit def arbEither[T, U](implicit at: Arbitrary[T], au: Arbitrary[U]): Arbitrary[Either[T, U]] =
