@@ -484,11 +484,20 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
   ////
 
-  property("positive generators are positive #269") =
+  property("posNum[Int]") =
     Prop.forAll(Gen.posNum[Int]) { n => n > 0 }
 
-  property("negative generators are negative") =
+  property("negNum[Int]") =
     Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
+
+  property("posNum[Float]") =
+    Prop.forAll(Gen.posNum[Float]) { n => n > 0.0 }
+
+  property("negNum[Float]") =
+    Prop.forAll(Gen.negNum[Float]) { n => n < 0.0 }
+
+  property("posNum[Double] <= 1.0d") = // #439
+    Prop.forAll(Gen.resize(1, Gen.posNum[Double])) { _ <= 1.0d }
 
   property("finite duration values are valid") =
     // just make sure it constructs valid finite values that don't throw exceptions
