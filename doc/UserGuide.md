@@ -416,7 +416,7 @@ val genNode = for {
   right <- genTree
 } yield Node(left, right, v)
 
-def genTree: Gen[Tree] = oneOf(genLeaf, genNode)
+def genTree: Gen[Tree] = oneOf(genLeaf, lzy(genNode))
 ```
 
 We can now generate a sample tree:
