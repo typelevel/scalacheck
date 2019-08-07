@@ -215,14 +215,21 @@ object Test {
   }
 
   private def assertParams(prms: Parameters) = {
-    import prms._
-    if(
-      minSuccessfulTests <= 0 ||
-      maxDiscardRatio <= 0 ||
-      minSize < 0 ||
-      maxSize < minSize ||
-      workers <= 0
-    ) throw new IllegalArgumentException("Invalid test parameters")
+    if (prms.minSuccessfulTests <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: minSuccessfulTests (${prms.minSuccessfulTests}) <= 0")
+    else if (prms.maxDiscardRatio <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: maxDiscardRatio (${prms.maxDiscardRatio}) <= 0")
+    else if (prms.minSize < 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: minSize (${prms.minSize}) < 0")
+    else if (prms.maxSize < prms.minSize)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: maxSize (${prms.maxSize}) < minSize (${prms.minSize})")
+    else if (prms.workers <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: workers (${prms.workers}) <= 0")
   }
 
   private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
