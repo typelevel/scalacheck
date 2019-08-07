@@ -122,7 +122,7 @@ Sometimes, a specification takes the form of an implication. In ScalaCheck,
 you can use the implication operator `==>`:
 
 ```scala
-import org.scalacheck.Prop.{forAll, BooleanOperators}
+import org.scalacheck.Prop.{forAll, propBoolean}
 
 val propMakeList = forAll { n: Int =>
   (n >= 0 && n < 10000) ==> (List.fill(n)("").length == n)
@@ -138,7 +138,7 @@ property holds. In the following trivial example, all cases where `n` is
 non-zero will be thrown away:
 
 ```
-scala> import org.scalacheck.Prop.{forAll, BooleanOperators}
+scala> import org.scalacheck.Prop.{forAll, propBoolean}
 
 scala> val propTrivial = forAll { n: Int =>
      |  (n == 0) ==> (n == 0)
@@ -254,7 +254,7 @@ tell you exactly what part is failing. Look at the following example, where
 the different conditions of the property have been labeled differently:
 
 ```scala
-import org.scalacheck.Prop.{forAll, BooleanOperators}
+import org.scalacheck.Prop.{forAll, propBoolean}
 
 val complexProp = forAll { (m: Int, n: Int) =>
   val res = myMagicFunction(n, m)
@@ -281,7 +281,7 @@ scala> complexProp.check
 It is also possible to write the label before the conditions like this:
 
 ```scala
-import org.scalacheck.Prop.{forAll, BooleanOperators}
+import org.scalacheck.Prop.{forAll, propBoolean}
 
 val complexProp = forAll { (m: Int, n: Int) =>
   val res = myMagicFunction(n, m)
@@ -299,7 +299,7 @@ the value of an intermediate calculation. See the following example, which
 tries to specify multiplication in a somewhat naive way:
 
 ```scala
-import org.scalacheck.Prop.{forAll, BooleanOperators, all}
+import org.scalacheck.Prop.{forAll, propBoolean, all}
 
 val propMul = forAll { (n: Int, m: Int) =>
   val res = n*m

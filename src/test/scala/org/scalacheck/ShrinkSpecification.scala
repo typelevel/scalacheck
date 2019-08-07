@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Prop.{forAll, forAllNoShrink, BooleanOperators}
+import Prop.{forAll, forAllNoShrink, propBoolean}
 import Shrink.shrink
 
 import scala.concurrent.duration.{Duration, FiniteDuration}

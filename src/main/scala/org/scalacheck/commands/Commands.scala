@@ -127,7 +127,7 @@ trait Commands {
     /** Wraps the run and postCondition methods in order not to leak the
      *  dependant Result type. */
     private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
-      import Prop.BooleanOperators
+      import Prop.propBoolean
       val r = Try(run(sut))
       (r.map(_.toString), s => preCondition(s) ==> postCondition(s,r))
     }

@@ -52,7 +52,7 @@ object StringUtils extends Properties("Examples.StringUtils") {
   }
 
   property("truncate.precond") = Prop.forAll { (s: String, n: Int) =>
-    import Prop.BooleanOperators
+    import Prop.propBoolean
     (n >= 0) ==> {
       val t = StringUtils.truncate(s, n)
       (s.length <= n && t == s) ||
