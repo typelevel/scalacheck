@@ -13,9 +13,8 @@ import language.implicitConversions
 
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
-
-import math.round
-
+import scala.annotation.tailrec
+import scala.math.round
 
 sealed trait Pretty extends Serializable {
   def apply(prms: Pretty.Params): String
@@ -51,9 +50,37 @@ object Pretty {
     if(s.length >= length) s
     else s + List.fill(length-s.length)(c).mkString
 
-  def break(s: String, lead: String, length: Int): String =
-    if(s.length <= length || length <= 0) s
-    else s.substring(0, length) / break(lead+s.substring(length), lead, length)
+  /**
+   * Break a long string across lines.
+   *
+   * This method will wrap the given string at `length` characters,
+   * inserting newlines and an optional prefix (`lead`) on every line
+   * other than the first.
+   *
+   * All lines in the resulting string are guaranteed to be `length`
+   * or shorter.
+   *
+   * We require `lead.length < length`; otherwise it would be
+   * impossible to legally wrap lines.
+   */
+  def break(s: String, lead: String, length: Int): String = {
+    require(lead.length < length, s"lead ($lead) should be shorter than length ($length)")
+    val step = length - lead.length
+    val sb = new StringBuilder
+
+    @tailrec def loop(start: Int, limit: Int): Unit =
+      if (limit >= s.length) {
+        sb.append(s.substring(start))
+      } else {
+        sb.append(s.substring(start, limit))
+        sb.append("\n")
+        sb.append(lead)
+        loop(limit, limit + step)
+      }
+
+    loop(0, length)
+    sb.result
+  }
 
   def format(s: String, lead: String, trail: String, width: Int) =
     // was just `s.lines....`, but on JDK 11 we hit scala/bug#11125
