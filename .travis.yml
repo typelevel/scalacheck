@@ -41,7 +41,7 @@ matrix:
       sudo: required
       addons:
         apt:
-          update: true # https://github.com/rickynils/scalacheck/issues/412
+          update: true # https://github.com/typelevel/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - scala: 2.11.12
       before_script:

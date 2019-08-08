@@ -116,8 +116,8 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   pomExtra := {
     <scm>
-      <url>https://github.com/rickynils/scalacheck</url>
-      <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
+      <url>https://github.com/typelevel/scalacheck</url>
+      <connection>scm:git:git@github.com:typelevel/scalacheck.git</connection>
     </scm>
     <developers>
       <developer>

@@ -391,14 +391,14 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     _ == ((1,2,3,4,5,6,7,8,9))
   }
 
-  //// See https://github.com/rickynils/scalacheck/issues/79
+  //// See https://github.com/typelevel/scalacheck/issues/79
   property("issue #79") = {
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
     forAll(g) { o => o == 0 || o == "0" }
   }
   ////
 
-  //// See https://github.com/rickynils/scalacheck/issues/98
+  //// See https://github.com/typelevel/scalacheck/issues/98
   private val suchThatGen = arbitrary[String]
     .suchThat(!_.isEmpty)
     .suchThat(!_.contains(','))
@@ -450,7 +450,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
   }
 
-  //// See https://github.com/rickynils/scalacheck/issues/209
+  //// See https://github.com/typelevel/scalacheck/issues/209
   property("uniform double #209") =
     Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
