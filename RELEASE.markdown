@@ -22,7 +22,7 @@ your build definition to use the latest ScalaCheck release, but you might see
 compilation errors or deprecation warnings due to changes in ScalaCheck's API.
 
 For a detailed enumeration of what's new in ScalaCheck 1.14.0, see
-https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown
+https://github.com/typelevel/scalacheck/tree/1.14.0/CHANGELOG.markdown
 
 
 ## ScalaCheck highlights
@@ -52,7 +52,7 @@ https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown
 
   * Twitter: @scalacheck
 
-  * Source repository and bug reporting: https://github.com/rickynils/scalacheck
+  * Source repository and bug reporting: https://github.com/typelevel/scalacheck
 
   * SBT dependency
 
