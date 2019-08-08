@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -215,14 +215,21 @@ object Test {
   }
 
   private def assertParams(prms: Parameters) = {
-    import prms._
-    if(
-      minSuccessfulTests <= 0 ||
-      maxDiscardRatio <= 0 ||
-      minSize < 0 ||
-      maxSize < minSize ||
-      workers <= 0
-    ) throw new IllegalArgumentException("Invalid test parameters")
+    if (prms.minSuccessfulTests <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: minSuccessfulTests (${prms.minSuccessfulTests}) <= 0")
+    else if (prms.maxDiscardRatio <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: maxDiscardRatio (${prms.maxDiscardRatio}) <= 0")
+    else if (prms.minSize < 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: minSize (${prms.minSize}) < 0")
+    else if (prms.maxSize < prms.minSize)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: maxSize (${prms.maxSize}) < minSize (${prms.minSize})")
+    else if (prms.workers <= 0)
+      throw new IllegalArgumentException(
+        s"Invalid test parameter: workers (${prms.workers}) <= 0")
   }
 
   private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
@@ -370,7 +377,7 @@ object Test {
   }
 
   /** Check a set of properties. */
-  def checkProperties(prms: Parameters, ps: Properties): Seq[(String,Result)] = {
+  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String,Result)] = {
     val params = ps.overrideParameters(prms)
     val propertyFilter = prms.propFilter.map(_.r)
 

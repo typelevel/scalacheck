@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
  **  ScalaCheck                                                             **
- **  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+ **  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
  **  http://www.scalacheck.org                                              **
  **                                                                         **
  **  This software is released under the terms of the Revised BSD License.  **
@@ -28,12 +28,12 @@ sealed trait Cogen[T] extends Serializable {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities with CogenLowPriority {
+object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific {
 
   // for binary compatibility
   private[scalacheck] def apply[T](ev: Cogen[T]): Cogen[T] = ev
 
-  // https://github.com/rickynils/scalacheck/pull/395#issuecomment-383442015
+  // https://github.com/typelevel/scalacheck/pull/395#issuecomment-383442015
   def apply[T](implicit ev: Cogen[T], dummy: Cogen[T]): Cogen[T] = ev
 
   def apply[T](f: T => Long): Cogen[T] = new Cogen[T] {

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
  **  ScalaCheck                                                             **
- **  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+ **  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
  **  http://www.scalacheck.org                                              **
  **                                                                         **
  **  This software is released under the terms of the Revised BSD License.  **
@@ -15,6 +15,7 @@ import language.implicitConversions
 import rng.Seed
 import util.Buildable
 import util.SerializableCanBuildFroms._
+import ScalaVersionSpecific._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.TreeMap
@@ -200,7 +201,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     Gen.gen((p, seed) => doApply(p, f(seed)))
 }
 
-object Gen extends GenArities{
+object Gen extends GenArities with GenVersionSpecific {
 
   //// Private interface ////
 
@@ -520,14 +521,20 @@ object Gen extends GenArities{
   /** Creates a resized version of a generator */
   def resize[T](s: Int, g: Gen[T]) = gen((p, seed) => g.doApply(p.withSize(s), seed))
 
-  /** Picks a random value from a list */
-  def oneOf[T](xs: Seq[T]): Gen[T] =
+  /** Picks a random value from a list. */
+  def oneOf[T](xs: Iterable[T]): Gen[T] =
     if (xs.isEmpty) {
       throw new IllegalArgumentException("oneOf called on empty collection")
     } else {
       val vector = xs.toVector
       choose(0, vector.size - 1).map(vector(_))
     }
+
+  /** Picks a random value from a list.
+   *  @todo Remove this overloaded method in the next major release. See #438.
+   */
+  def oneOf[T](xs: Seq[T]): Gen[T] =
+    oneOf(xs: Iterable[T])
 
   /** Picks a random value from a list */
   def oneOf[T](t0: T, t1: T, tn: T*): Gen[T] = oneOf(t0 +: t1 +: tn)
@@ -546,6 +553,10 @@ object Gen extends GenArities{
   def some[T](g: Gen[T]): Gen[Option[T]] =
     g.map(Some.apply)
 
+  /** Generates a `Left` of `T` or a `Right` of `U` with equal probability. */
+  def either[T, U](gt: Gen[T], gu: Gen[U]): Gen[Either[T, U]] =
+    oneOf(gt.map(Left(_)), gu.map(Right(_)))
+
   /** Chooses one of the given generators with a weighted random distribution */
   def frequency[T](gs: (Int, Gen[T])*): Gen[T] = {
     val filtered = gs.iterator.filter(_._1 > 0).toVector
@@ -559,7 +570,7 @@ object Gen extends GenArities{
         builder += ((total, value))
       }
       val tree = builder.result
-      choose(1L, total).flatMap(r => tree.from(r).head._2).suchThat { x =>
+      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2).suchThat { x =>
         gs.exists(_._2.sieveCopy(x))
       }
     }
@@ -637,8 +648,8 @@ object Gen extends GenArities{
    *  `nonEmptyContainerOf[List,T](g)`. */
   def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T],T](g)
 
-  /** Generates a list of the given length. This method is equal to calling
-   *  `containerOfN[List,T](n,g)`. */
+  /** Generates a list with at most the given number of elements. This method
+   *  is equal to calling `containerOfN[List,T](n,g)`. */
   def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T],T](n,g)
 
   /** Generates a map of random length. The maximum length depends on the
@@ -690,7 +701,7 @@ object Gen extends GenArities{
    * 
    * The elements are not guaranteed to be permuted in random order.
    */
-  def pick[T](n: Int, l: Iterable[T]): Gen[Seq[T]] = {
+  def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
     else gen { (p, seed0) =>
@@ -803,14 +814,14 @@ object Gen extends GenArities{
    *  upper bound of the generation size parameter. */
   def posNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    sized(n => c.choose(one, max(fromInt(n), one)))
+    sized(n => c.choose(zero, max(fromInt(n), one)).suchThat(_ != zero))
   }
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
   def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    sized(n => c.choose(min(-fromInt(n), -one), -one))
+    sized(n => c.choose(min(-fromInt(n), -one), zero).suchThat(_ != zero))
   }
 
   /** Generates numbers within the given inclusive range, with

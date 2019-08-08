@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -51,7 +51,7 @@ private abstract class ScalaCheckRunner extends Runner {
   abstract class BaseTask(override val taskDef: TaskDef) extends Task {
     val tags: Array[String] = Array()
 
-    val props: Seq[(String,Prop)] = {
+    val props: collection.Seq[(String,Prop)] = {
       val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
       val obj = if (fp.isModule) Platform.loadModule(taskDef.fullyQualifiedName,loader)
                 else Platform.newInstance(taskDef.fullyQualifiedName, loader, Seq())(Seq())

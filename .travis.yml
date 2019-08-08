@@ -17,7 +17,7 @@ scala:
   - 2.10.7
   - 2.11.12
   - 2.12.6
-  - 2.13.0-M3
+  - 2.13.0
 jdk:
   - oraclejdk8
   - openjdk11
@@ -26,11 +26,8 @@ env:
     - secure: PwIb1un8vuuyoidnjHaKO81FD49n5ZTVEnf6hVKkMRe3hipr+WGWv19m92yE/n34ROFo1BM9DmfYxaexlE0pI2o/a5MV1i3kNSwUk+Yt8uU6F4+nyQKROQUe76UtAtXmsYgLqXaWSW0+EVidMyhSktkXXxiU5wCGLdKkPu3Vj9w=
     - secure: KeZRD91oE4UzwhSJfjllkwNXnerDGQJSIOuRLVtbLCq0JJnAfj6B7fvI2KyZqQwuhYrUyYOSbSLd6BAi75bBYMb3D1yNdyPA5gHDg5aj96ALojrOuU60+/dOQ0Rg6Pf2UiTlFAXzz1mud8+Q3svaeKX4JDVxj329T3ReBspjyBY=
   matrix:
-    - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
-    - PLATFORM=jvm SBT_PARALLEL=false WORKERS=4 DEPLOY=false
-    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
-    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
 sudo: false
 
 matrix:
@@ -39,6 +36,9 @@ matrix:
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       sudo: required
+      addons:
+        apt:
+          update: true # https://github.com/typelevel/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - env: EXAMPLES
       script:
@@ -46,8 +46,10 @@ matrix:
       - for d in */ ; do cd "$d" && sbt test:compile && cd ../ ; done
   exclude:
     - scala: 2.10.7
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M3
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=1.0.0-M8
     - jdk: openjdk11
       scala: 2.10.7
     - jdk: openjdk11
       scala: 2.11.12
+    - scala: 2.13.0
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true SCALAJS_VERSION=0.6.28

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -26,8 +26,8 @@ object PropertyFilterSpecification extends Properties("PropertyFilter") {
 
   val nl = System.lineSeparator
 
-  private def diff(filter: Option[String], actual: Seq[String],
-    expected: Seq[String]): String = {
+  private def diff(filter: Option[String], actual: collection.Seq[String],
+    expected: collection.Seq[String]): String = {
     s"filter: ${filter.getOrElse("not supplied")}" +
     s"${nl}expected values:$nl" +
     s"\t${expected.mkString(s"$nl\t")}" +
@@ -35,8 +35,8 @@ object PropertyFilterSpecification extends Properties("PropertyFilter") {
     s"\t${actual.mkString(s"$nl\t")}"
   }
 
-  private def prop(filter: Option[String], actualNames: Seq[String],
-    expectedNames: Seq[String]): Prop = {
+  private def prop(filter: Option[String], actualNames: collection.Seq[String],
+    expectedNames: collection.Seq[String]): Prop = {
     def lengthProp = actualNames.length == expectedNames.length
 
     def props = actualNames.forall(expectedNames.contains)

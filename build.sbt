@@ -1,5 +1,7 @@
 sourceDirectory := file("dummy source directory")
 
+val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
+
 scalaVersionSettings
 
 lazy val versionNumber = "1.14.1"
@@ -9,8 +11,14 @@ lazy val isRelease = false
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.13.0-M3", scalaVersion.value)
+  scalaVersion := "2.13.0",
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.8", scalaVersion.value),
+  scalaMajorVersion := {
+    val v = scalaVersion.value
+    CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
+      throw new RuntimeException(s"could not get Scala major version from $v")
+    }
+  }
 )
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
@@ -28,7 +36,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   organization := "org.scalacheck",
 
-  licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
+  licenses := Seq("BSD 3-clause" -> url("https://opensource.org/licenses/BSD-3-Clause")),
 
   homepage := Some(url("http://www.scalacheck.org")),
 
@@ -43,30 +51,34 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
+  unmanagedSourceDirectories in Compile += {
+    val s = if (scalaMajorVersion.value >= 13) "+" else "-"
+    (baseDirectory in LocalRootProject).value / "src" / "main" / s"scala-2.13$s"
+  },
+
   unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
   javacOptions += "-Xmx1024M",
 
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-feature",
-    "-unchecked",
-    "-Xfatal-warnings",
-    "-Xfuture",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-inaccessible",
-    "-Ywarn-nullary-override",
-    "-Ywarn-nullary-unit",
-    "-Ywarn-numeric-widen") ++ {
-    scalaBinaryVersion.value match {
-      case "2.10" => Seq("-Xlint")
-      case "2.11" => Seq("-Xlint", "-Ywarn-infer-any", "-Ywarn-unused-import")
-      case _      => Seq("-Xlint:-unused", "-Ywarn-infer-any", "-Ywarn-unused-import", "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits")
-    }
+  // 2.10 - 2.13
+  scalacOptions ++= {
+    def mk(r: Range)(strs: String*): Int => Seq[String] =
+      (n: Int) => if (r.contains(n)) strs else Seq.empty
+
+    val groups: Seq[Int => Seq[String]] = Seq(
+      mk(10 to 11)("-Xlint"),
+      mk(10 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+        "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation"),
+      mk(10 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+        "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
+      mk(11 to 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
+      mk(12 to 13)("-Xlint:-unused",
+        "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
+
+    val n = scalaMajorVersion.value
+    groups.flatMap(f => f(n))
   },
 
   // HACK: without these lines, the console is basically unusable,
@@ -78,7 +90,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // don't use fatal warnings in tests
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
-  mimaPreviousArtifacts := Set("org.scalacheck" %% "scalacheck" % "1.14.0"),
+  mimaPreviousArtifacts := {
+    val isScalaJSMilestone: Boolean =
+      Option(System.getenv("SCALAJS_VERSION")).filter(_.startsWith("1.0.0-M")).isDefined
+    // TODO: re-enable MiMa for 2.14 once there is a final version
+    if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+  },
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -98,8 +116,8 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   pomExtra := {
     <scm>
-      <url>https://github.com/rickynils/scalacheck</url>
-      <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
+      <url>https://github.com/typelevel/scalacheck</url>
+      <connection>scm:git:git@github.com:typelevel/scalacheck.git</connection>
     </scm>
     <developers>
       <developer>
@@ -121,6 +139,7 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
+    fork in Test := true,
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 
@@ -129,6 +148,8 @@ lazy val native = project.in(file("native"))
   .settings(
     doc in Compile := (doc in Compile in jvm).value,
     scalaVersion := "2.11.12",
+    // TODO: re-enable MiMa for native once published
+    mimaPreviousArtifacts := Set(),
     libraryDependencies ++= Seq(
       "org.scala-native" %% "test-interface_native0.3" % nativeVersion
     )

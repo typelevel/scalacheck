@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -18,7 +18,7 @@ import Shrink._
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
-object GenSpecification extends Properties("Gen") {
+object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
   implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
     arbitrary[Long] flatMap Seed.apply
@@ -54,9 +54,14 @@ object GenSpecification extends Properties("Gen") {
     forAll(g) { n => true }
   }
 
-  property("frequency 3") = forAll(choose(0,100000)) { n =>
+  property("frequency 3") = forAll(choose(1,100000)) { n =>
     forAll(frequency(List.fill(n)((1,const(0))): _*)) { _ == 0 }
   }
+
+  property("frequency 4") =
+    Prop.throws(classOf[IllegalArgumentException]) {
+      frequency()
+    }
 
   property("lzy") = forAll((g: Gen[Int]) => lzy(g) == g)
 
@@ -141,6 +146,13 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  property("oneOf n in set") = forAll { (s: Set[Int]) =>
+    Try(oneOf(s)) match {
+      case Success(g) => forAll(g)(s.contains)
+      case Failure(_) => Prop(s.isEmpty)
+    }
+  }
+
   property("oneOf 2") = forAll { (n1:Int, n2:Int) =>
     forAll(oneOf(n1, n2)) { n => n == n1 || n == n2 }
   }
@@ -183,6 +195,10 @@ object GenSpecification extends Properties("Gen") {
     s.drop(n & 0xffff).nonEmpty
   }
 
+  property("infiniteLazyList") = forAll(infiniteLazyList(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
+    s.drop(n & 0xffff).nonEmpty
+  }
+
   property("someOf") = forAll { l: List[Int] =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
@@ -198,10 +214,17 @@ object GenSpecification extends Properties("Gen") {
     }
   }
 
+  /**
+   * Expect:
+   * 25% 1, 2, 3
+   * 25% 1, 2, 4
+   * 25% 1, 4, 3
+   * 25% 4, 2, 3
+   */
   property("distributed pick") = {
-    val lst = (0 to 7).toIterable
-    val n = 2
-    forAll(pick(n, lst)) { xs: Seq[Int] =>
+    val lst = (1 to 4).toIterable
+    val n = 3
+    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
       xs.map { x: Int =>
         Prop.collect(x) {
           xs.size == n
@@ -368,14 +391,14 @@ object GenSpecification extends Properties("Gen") {
     _ == ((1,2,3,4,5,6,7,8,9))
   }
 
-  //// See https://github.com/rickynils/scalacheck/issues/79
+  //// See https://github.com/typelevel/scalacheck/issues/79
   property("issue #79") = {
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
     forAll(g) { o => o == 0 || o == "0" }
   }
   ////
 
-  //// See https://github.com/rickynils/scalacheck/issues/98
+  //// See https://github.com/typelevel/scalacheck/issues/98
   private val suchThatGen = arbitrary[String]
     .suchThat(!_.isEmpty)
     .suchThat(!_.contains(','))
@@ -427,7 +450,7 @@ object GenSpecification extends Properties("Gen") {
     Gen.oneOf(Arbitrary.arbitrary[Array[Byte]], Gen.const(null)).sample.isDefined
   }
 
-  //// See https://github.com/rickynils/scalacheck/issues/209
+  //// See https://github.com/typelevel/scalacheck/issues/209
   property("uniform double #209") =
     Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
@@ -461,11 +484,20 @@ object GenSpecification extends Properties("Gen") {
   }
   ////
 
-  property("positive generators are positive #269") =
+  property("posNum[Int]") =
     Prop.forAll(Gen.posNum[Int]) { n => n > 0 }
 
-  property("negative generators are negative") =
+  property("negNum[Int]") =
     Prop.forAll(Gen.negNum[Int]) { n => n < 0 }
+
+  property("posNum[Float]") =
+    Prop.forAll(Gen.posNum[Float]) { n => n > 0.0 }
+
+  property("negNum[Float]") =
+    Prop.forAll(Gen.negNum[Float]) { n => n < 0.0 }
+
+  property("posNum[Double] <= 1.0d") = // #439
+    Prop.forAll(Gen.resize(1, Gen.posNum[Double])) { _ <= 1.0d }
 
   property("finite duration values are valid") =
     // just make sure it constructs valid finite values that don't throw exceptions

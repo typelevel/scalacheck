@@ -416,7 +416,7 @@ val genNode = for {
   right <- genTree
 } yield Node(left, right, v)
 
-def genTree: Gen[Tree] = oneOf(genLeaf, genNode)
+def genTree: Gen[Tree] = oneOf(genLeaf, lzy(genNode))
 ```
 
 We can now generate a sample tree:
@@ -469,17 +469,17 @@ responsible for generating the individual items. You can use it in the
 following way:
 
 ```scala
-val genIntList      = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
+val genIntList        = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
 
-val genStringStream = Gen.containerOf[Stream,String](Gen.alphaStr)
+val genStringLazyList = Gen.containerOf[LazyList,String](Gen.alphaStr)
 
-val genBoolArray    = Gen.containerOf[Array,Boolean](true)
+val genBoolArray      = Gen.containerOf[Array,Boolean](true)
 ```
 
-By default, ScalaCheck supports generation of `List`, `Stream`, `Set`, `Array`,
-and `ArrayList` (from `java.util`). You can add support for additional
-containers by adding implicit `Buildable` instances. See `Buildable.scala` for
-examples.
+By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
+2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array`, and
+`ArrayList` (from `java.util`). You can add support for additional containers
+by adding implicit `Buildable` instances. See `Buildable.scala` for examples.
 
 There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 `Gen.containerOfN` for generating containers of a given size.
@@ -809,9 +809,9 @@ can also define default shrinking methods. This is done by defining an implicit
 method that returns a `Shrink[T]` instance. This is done by using the
 `Shrink(...)` factory method, which as its only parameter takes a function and
 returns an instance of `Shrink[T]`. In turn, the function should take a value
-of the given type `T`, and return a `Stream` of shrank variants of the given
-value. As an example, look at the implicit `Shrink` instance for a tuple as it
-is defined in ScalaCheck:
+of the given type `T`, and return a `Stream` of shrank
+variants of the given value. As an example, look at the implicit `Shrink` instance
+for a tuple as it is defined in ScalaCheck:
 
 ```scala
 /** Shrink instance of 2-tuple */
@@ -1040,7 +1040,7 @@ command sequences, where bugs may occur after a very specific sequence of
 commands that is hard to come up with when doing manual tests.
 
 You can find more examples of stateful specifications in the
-[examples](https://github.com/rickynils/scalacheck/tree/master/examples)
+[examples](https://github.com/typelevel/scalacheck/tree/master/examples)
 directory in the ScalaCheck repository. The
 [slides](http://scalacheck.org/files/scaladays2014/index.html) from the
 ScalaDays 2014 presentation about stateful testing in ScalaCheck are also

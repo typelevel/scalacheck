@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------*\
 **  ScalaCheck                                                             **
-**  Copyright (c) 2007-2018 Rickard Nilsson. All rights reserved.          **
+**  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
 **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
@@ -269,7 +269,7 @@ trait Commands {
     s: State, seqCmds: Commands, parCmds: List[Commands]
   )
 
-  private implicit val shrinkActions = Shrink[Actions] { as =>
+  private implicit val shrinkActions: Shrink[Actions] = Shrink[Actions] { as =>
     val shrinkedCmds: Stream[Actions] =
       Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
       Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
