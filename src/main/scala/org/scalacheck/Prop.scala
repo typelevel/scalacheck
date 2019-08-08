@@ -330,34 +330,13 @@ object Prop {
     def =?(y: T) = Prop.=?(x, y)
   }
 
-  /** A collection of property operators on `Boolean` values.
-   *  Import [[Prop.BooleanOperators]] to make the operators available. */
-  class ExtendedBoolean(b: => Boolean) {
-    /** See the documentation for [[org.scalacheck.Prop]] */
-    def ==>(p: => Prop) = Prop(b) ==> p
-    /** See the documentation for [[org.scalacheck.Prop]] */
-    def :|(l: String) = Prop(b) :| l
-    /** See the documentation for [[org.scalacheck.Prop]] */
-    def |:(l: String) = l |: Prop(b)
-    /** See the documentation for [[org.scalacheck.Prop]] */
-    def :|(l: Symbol) = Prop(b) :| l
-    /** See the documentation for [[org.scalacheck.Prop]] */
-    def |:(l: Symbol) = l |: Prop(b)
-  }
-
   /** Implicit method that makes a number of property operators on values of
    * type `Any` available in the current scope.
    * See [[Prop.ExtendedAny]] for documentation on the operators. */
   implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty) = new ExtendedAny[T](x)
 
-  /** Implicit method that makes a number of property operators on boolean
-   * values available in the current scope. See [[Prop.ExtendedBoolean]] for
-   * documentation on the operators. */
-  implicit def BooleanOperators(b: => Boolean) = new ExtendedBoolean(b)
-
   /** Implicit conversion of Boolean values to Prop values. */
-  implicit def propBoolean(b: Boolean): Prop = Prop(b)
-
+  implicit def BooleanOperators(b: Boolean): Prop = Prop(b)
 
   // Private support functions
 

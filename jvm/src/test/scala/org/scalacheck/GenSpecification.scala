@@ -12,7 +12,7 @@ package org.scalacheck
 import rng.Seed
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
+import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, BooleanOperators}
 import Arbitrary._
 import Shrink._
 import java.util.Date
