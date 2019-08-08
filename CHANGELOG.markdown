@@ -13,7 +13,7 @@
 
 ### Fixed
 
-* Deadlock in test runner (https://github.com/rickynils/scalacheck/issues/290).
+* Deadlock in test runner (https://github.com/typelevel/scalacheck/issues/290).
 
 * Distribution issues in `Gen.pick`.
 
@@ -35,6 +35,6 @@
 * New generators and `Arbitrary` instances for various types.
 
 * Support for filtering properties in the test runner
-  (https://github.com/rickynils/scalacheck/pull/267).
+  (https://github.com/typelevel/scalacheck/pull/267).
 
 * Support for setting the report column width used by the test runner.

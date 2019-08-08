@@ -1040,7 +1040,7 @@ command sequences, where bugs may occur after a very specific sequence of
 commands that is hard to come up with when doing manual tests.
 
 You can find more examples of stateful specifications in the
-[examples](https://github.com/rickynils/scalacheck/tree/master/examples)
+[examples](https://github.com/typelevel/scalacheck/tree/master/examples)
 directory in the ScalaCheck repository. The
 [slides](http://scalacheck.org/files/scaladays2014/index.html) from the
 ScalaDays 2014 presentation about stateful testing in ScalaCheck are also
