@@ -151,7 +151,7 @@ lazy val native = project.in(file("native"))
     // TODO: re-enable MiMa for native once published
     mimaPreviousArtifacts := Set(),
     libraryDependencies ++= Seq(
-      "org.scala-native" %% "test-interface_native0.3" % nativeVersion
+      "org.scala-native" %%% "test-interface" % nativeVersion
     )
   )
   .enablePlugins(ScalaNativePlugin)

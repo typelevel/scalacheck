@@ -7,6 +7,9 @@ val scalaJSVersion =
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion)
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.7")
+val scalaNativeVersion =
+  Option(System.getenv("SCALANATIVE_VERSION")).getOrElse("0.3.9")
+
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % scalaNativeVersion)
 
 scalacOptions += "-deprecation"
