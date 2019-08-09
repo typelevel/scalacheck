@@ -1,6 +1,6 @@
 name := "commands-redis"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.9"
 
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.14.0",
