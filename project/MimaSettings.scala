@@ -19,13 +19,16 @@ object MimaSettings {
   )
 
   private def removedPrivateMethods = Seq(
+    "org.scalacheck.Prop.propBoolean"
   )
 
   private def removedPrivateClasses = Seq(
-    "org.scalacheck.Platform$EnableReflectiveInstantiation"
+    "org.scalacheck.Platform$EnableReflectiveInstantiation",
+    "org.scalacheck.Prop$ExtendedBoolean"
   )
 
   private def otherProblems = Seq(
+    exclude[IncompatibleMethTypeProblem]("org.scalacheck.Prop.BooleanOperators")
   )
 
 }
