@@ -10,8 +10,8 @@ branches:
     - 1.14.x
 notifications:
   email:
-    - adriaan.moors@typesafe.com
     - rickynils@gmail.com
+    - seth.tisue@lightbend.com
 
 scala:
   - 2.10.7
