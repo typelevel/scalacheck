@@ -156,7 +156,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbDate: Arbitrary[java.util.Date] =
     Arbitrary(Gen.calendar.map(_.getTime))
 
-  /** Arbirtrary instance of Calendar */
+  /** Arbitrary instance of Calendar */
   implicit lazy val arbCalendar: Arbitrary[java.util.Calendar] =
     Arbitrary(Gen.calendar)
 

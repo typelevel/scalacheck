@@ -23,7 +23,7 @@ trait Commands {
   /** The abstract state type. Must be immutable.
    *  The [[State]] type should model the state of the system under
    *  test (SUT). It should only contain details needed for specifying
-   *  our pre- and postconditions, and for creating [[Sut]]
+   *  our pre- and post-conditions, and for creating [[Sut]]
    *  instances. */
   type State
 
@@ -77,7 +77,7 @@ trait Commands {
   def destroySut(sut: Sut): Unit
 
   /** The precondition for the initial state, when no commands yet have
-   *  run. This is used by ScalaCheck when command sequences are shrinked
+   *  run. This is used by ScalaCheck when command sequences are shrunk
    *  and the first state might differ from what is returned from
    *  [[genInitialState]]. */
   def initialPreCondition(state: State): Boolean
@@ -125,7 +125,7 @@ trait Commands {
     def postCondition(state: State, result: Try[Result]): Prop
 
     /** Wraps the run and postCondition methods in order not to leak the
-     *  dependant Result type. */
+     *  dependent Result type. */
     private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
       import Prop.BooleanOperators
       val r = Try(run(sut))
