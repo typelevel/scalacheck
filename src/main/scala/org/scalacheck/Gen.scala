@@ -87,13 +87,13 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
-   *  test property is side-effect free, eg it should not use external vars. */
+   *  test property is side-effect free, e.g. it should not use external vars. */
   def filter(p: T => Boolean): Gen[T] = suchThat(p)
 
   /** Create a new generator that uses this generator to produce a value
    *  that doesn't fulfill the given condition. If the condition is fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
-   *  test property is side-effect free, eg it should not use external vars. */
+   *  test property is side-effect free, e.g. it should not use external vars. */
   def filterNot(p: T => Boolean): Gen[T] = suchThat(x => !p(x))
 
   /** Creates a non-strict filtered version of this generator. */
@@ -102,7 +102,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Create a new generator that uses this generator to produce a value
    *  that fulfills the given condition. If the condition is not fulfilled,
    *  the generator fails (returns None). Also, make sure that the provided
-   *  test property is side-effect free, eg it should not use external vars.
+   *  test property is side-effect free, e.g. it should not use external vars.
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P, seed: Seed) =
@@ -488,7 +488,7 @@ object Gen extends GenArities with GenVersionSpecific {
       }
     }
 
-    // This is the "Reader-style" appoach to making a stack-safe loop:
+    // This is the "Reader-style" approach to making a stack-safe loop:
     // we put one outer closure around an explicitly tailrec loop
     gen[B] { (p: P, seed: Seed) =>
       tailRecMR(a0, seed, Set.empty) { (a, seed) => fn(a).doApply(p, seed) }
@@ -860,7 +860,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     // We want to be sure we always initialize the calendar's time. By
     // default, Calendar.getInstance uses the system time. We always
-    // overwrite it with a determinisitcally-geneated time to be sure
+    // overwrite it with a determinisitcally-generated time to be sure
     // that calendar generation is also deterministic.
     //
     // We limit the time (in milliseconds) because extreme values will

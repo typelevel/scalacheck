@@ -26,7 +26,7 @@ object TestSpecification extends Properties("Test") {
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val shrinked = forAll( (t: (Int,Int,Int)) => false )
+  val shrunk = forAll( (t: (Int,Int,Int)) => false )
 
   val propException = forAll { n:Int => throw new java.lang.Exception }
 
@@ -116,8 +116,8 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  property("propShrinked") = forAll { prms: Test.Parameters =>
-    Test.check(prms, shrinked).status match {
+  property("propShrunk") = forAll { prms: Test.Parameters =>
+    Test.check(prms, shrunk).status match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_,_,_)::Nil,_) =>
         x == 0 && y == 0 && z == 0
       case x => false
