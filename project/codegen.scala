@@ -1,5 +1,8 @@
 // Generates Arbitrary instance for tuples and functions
-// see src/main/scala/org/scalacheck/ArbitraryArities.scala
+
+case class GeneratedFile(name: String, code: String)
+
+object codegen {
 
 def csv(s: Seq[String]) = s mkString ", "
 def typed(s: Seq[(String,String)]) = s map { case (v,t) => s"$v:$t"}
@@ -152,15 +155,13 @@ ${(1 to i).map(stanza).mkString}
 """
 }
 
-
-println(
-  args(0) match {
-    case "Arbitrary" =>
-
+val genAll: Seq[GeneratedFile] = Seq(
+  GeneratedFile(
+    "ArbitraryArities.scala",
     s"""/**
 Defines implicit [[org.scalacheck.Arbitrary]] instances for tuples and functions
 
-Auto-generated using tools/codegen.sh
+Auto-generated using project/codegen.scala
 */
 package org.scalacheck
 
@@ -170,14 +171,13 @@ private[scalacheck] trait ArbitraryArities{
 
   // Tuples //
   ${1 to 22 map tuple mkString ""}
-}"""
-
-    case "Gen" =>
-
+}"""),
+  GeneratedFile(
+    "GenArities.scala",
     s"""/**
 Defines zip and resultOf for all arities
 
-Auto-generated using tools/codegen.sh
+Auto-generated using project/codegen.scala
 */
 package org.scalacheck
 private[scalacheck] trait GenArities{
@@ -193,11 +193,11 @@ ${1 to 22 map zip mkString ""}
   def resultOf[T,R](f: T => R)(implicit a: Arbitrary[T]): Gen[R]
 ${2 to 22 map resultOf mkString ""}
 }"""
-
-    case "Cogen" =>
-
+  ),
+  GeneratedFile(
+    "CogenArities.scala",
     s"""/**
-Auto-generated using tools/codegen.sh
+Auto-generated using project/codegen.scala
 */
 package org.scalacheck
 private[scalacheck] abstract class CogenArities{
@@ -211,7 +211,6 @@ private[scalacheck] abstract class CogenArities{
   ${1 to 22 map functionCogen mkString ""}
 
 }"""
-
-
-  }
+  )
 )
+}

@@ -51,6 +51,20 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
 
+  mappings in (Compile, packageSrc) ++= (managedSources in Compile).value.map{ f =>
+    // to merge generated sources into sources.jar as well
+    (f, f.relativeTo((sourceManaged in Compile).value).get.getPath)
+  },
+
+  sourceGenerators in Compile += task {
+    val dir = (sourceManaged in Compile).value / "org" / "scalacheck"
+    codegen.genAll.map { s =>
+      val f = dir / s.name
+      IO.write(f, s.code)
+      f
+    }
+  },
+
   unmanagedSourceDirectories in Compile += {
     val s = if (scalaMajorVersion.value >= 13) "+" else "-"
     (baseDirectory in LocalRootProject).value / "src" / "main" / s"scala-2.13$s"
