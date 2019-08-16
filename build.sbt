@@ -12,7 +12,7 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.13.0",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.9", scalaVersion.value),
+  crossScalaVersions := Seq("2.11.12", "2.12.9", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -76,18 +76,18 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   javacOptions += "-Xmx1024M",
 
-  // 2.10 - 2.13
+  // 2.11 - 2.13
   scalacOptions ++= {
     def mk(r: Range)(strs: String*): Int => Seq[String] =
       (n: Int) => if (r.contains(n)) strs else Seq.empty
 
     val groups: Seq[Int => Seq[String]] = Seq(
-      mk(10 to 11)("-Xlint"),
-      mk(10 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
-        "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation"),
-      mk(10 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+      mk(11 to 11)("-Xlint"),
+      mk(11 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+        "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation",
+        "-Ywarn-infer-any", "-Ywarn-unused-import"),
+      mk(11 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
         "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
-      mk(11 to 12)("-Ywarn-infer-any", "-Ywarn-unused-import"),
       mk(12 to 13)("-Xlint:-unused",
         "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
