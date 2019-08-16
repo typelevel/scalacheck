@@ -9,10 +9,10 @@ else
   TESTS=1000
 fi
 
-sbt_cmd+=("set parallelExecution in ThisBuild := $SBT_PARALLEL")
+sbt_cmd+=("set parallelExecution in ThisBuild := ${SBT_PARALLEL:-true}")
 
-for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues doc; do
-  sbt_cmd+=("$PLATFORM/$t")
+for t in clean compile "testOnly * -- -s $TESTS -w ${WORKERS:-1}" mimaReportBinaryIssues doc; do
+  sbt_cmd+=("${PLATFORM:-jvm}/$t")
 done
 
 echo "Running sbt: ${sbt_cmd[@]}"
