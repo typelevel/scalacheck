@@ -94,7 +94,8 @@ class Properties(val name: String) {
    */
   sealed class PropertySpecifier() {
     def update(propName: String, p: => Prop) = {
-      props += ((name+"."+propName, Prop.delay(p)))
+      val fullName = s"$name.$propName"
+      props += ((fullName, Prop.delay(p).viewSeed(fullName)))
     }
   }
 
