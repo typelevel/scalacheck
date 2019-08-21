@@ -2,7 +2,7 @@
 **  ScalaCheck                                                             **
 **  Copyright (c) 2007-2019 Rickard Nilsson. All rights reserved.          **
 **  http://www.scalacheck.org                                              **
-**                                                                         **
+    **                                                                         **
 **  This software is released under the terms of the Revised BSD License.  **
 **  There is NO WARRANTY. See the file LICENSE for the full text.          **
 \*------------------------------------------------------------------------ */
@@ -203,4 +203,25 @@ object PropSpecification extends Properties("Prop") {
       val r2 = p(params).success
       Prop(r1 == r2).label(s"$r1 == $r2")
     }
+
+
+  property("disabling shrinking works") = {
+
+    case class Bogus(x: Int)
+
+    object Bogus {
+      val gen: Gen[Bogus] =
+        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+
+      var shrunk: Boolean = false
+
+      implicit def shrinkBogus: Shrink[Bogus] = {
+        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+      }
+    }
+
+    val params = Gen.Parameters.default.withUseLegacyShrinking(false)
+    val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
+    Prop(prop(params).failure && !Bogus.shrunk)
+  }
 }

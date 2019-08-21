@@ -63,20 +63,29 @@ private[scalacheck] trait CmdLineParser {
 
     def parse(
       as: List[String], om: OptMap, us: List[String]
-    ): (OptMap, List[String]) = as match {
-      case Nil => (om, us)
-      case a::Nil => getOpt(a) match {
-        case Some(o: Flag) => parse(Nil, om.set((o,())), us)
-        case _ => (om, us :+ a)
+    ): (OptMap, List[String]) =
+      as match {
+        case Nil => (om, us)
+        case a::Nil =>
+          getOpt(a) match {
+            case Some(o: Flag) =>
+              parse(Nil, om.set(o -> ()), us)
+            case _ =>
+              (om, us :+ a)
+          }
+        case a1::a2::as => getOpt(a1) match {
+          case Some(o: Flag) =>
+            parse(a2 :: as, om.set(o -> ()), us)
+          case otherwise =>
+            (otherwise match {
+              case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
+              case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
+              case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
+              case Some(o: OpStrOpt) => getStr(a2).map(v => parse(as, om.set(o -> Option(v)), us))
+              case _ => None
+            }).getOrElse(parse(a2::as, om, us :+ a1))
+        }
       }
-      case a1::a2::as => (getOpt(a1) match {
-        case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
-        case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
-        case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
-        case Some(o: OpStrOpt) => getStr(a2).map(v => parse(as, om.set(o -> Option(v)), us))
-        case _ => None
-      }).getOrElse(parse(a2::as, om, us :+ a1))
-    }
 
     parse(args.toList, new OptMap(), Nil)
   }
