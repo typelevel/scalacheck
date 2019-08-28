@@ -283,8 +283,8 @@ object Gen extends GenArities with GenVersionSpecific {
      * Create a copy of this [[Gen.Parameters]] instance with
      * [[Gen.Parameters.size]] set to the specified value.
      */
-    def withSize(sz: Int): Parameters =
-      cpy(size0 = sz)
+    def withSize(size: Int): Parameters =
+      cpy(size0 = size)
 
     /**
      *

@@ -461,8 +461,8 @@ object Test {
     }
 
   /** Check a set of properties. */
-  def checkProperties(params0: Parameters, ps: Properties): collection.Seq[(String, Result)] = {
-    val params1 = ps.overrideParameters(params0)
+  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String, Result)] = {
+    val params1 = ps.overrideParameters(prms)
     val isMatch = buildPredicate(params1.propFilter)
     val props = ps.properties.filter { case (name, _) => isMatch(name) }
 
