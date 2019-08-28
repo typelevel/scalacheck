@@ -124,19 +124,23 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  property("disabling shrinking works") = {
-    case class Bogus(x: Int)
+  // previously this was defined inside of the following property
+  // where it is used. this causes bugs on 2.11 so we define it out
+  // here. however it's important that it not be used by other tests.
+  case class Bogus(x: Int)
 
-    object Bogus {
-      val gen: Gen[Bogus] =
-        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+  object Bogus {
+    val gen: Gen[Bogus] =
+      Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
 
-      var shrunk: Boolean = false
+    var shrunk: Boolean = false
 
-      implicit def shrinkBogus: Shrink[Bogus] = {
-        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
-      }
+    implicit def shrinkBogus: Shrink[Bogus] = {
+      Shrink { (b: Bogus) => shrunk = true; Stream.empty }
     }
+  }
+
+  property("disabling shrinking works") = {
 
     val prop = Prop.forAll[Bogus, Prop](Bogus.gen) { b => Prop(false) }
     val prms = Test.Parameters.default.withUseLegacyShrinking(false)

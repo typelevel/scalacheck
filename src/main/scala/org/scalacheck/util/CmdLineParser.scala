@@ -69,13 +69,13 @@ private[scalacheck] trait CmdLineParser {
         case a::Nil =>
           getOpt(a) match {
             case Some(o: Flag) =>
-              parse(Nil, om.set(o -> ()), us)
+              parse(Nil, om.set((o, ())), us)
             case _ =>
               (om, us :+ a)
           }
         case a1::a2::as => getOpt(a1) match {
           case Some(o: Flag) =>
-            parse(a2 :: as, om.set(o -> ()), us)
+            parse(a2 :: as, om.set((o, ())), us)
           case otherwise =>
             (otherwise match {
               case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
