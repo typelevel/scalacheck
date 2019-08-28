@@ -204,23 +204,20 @@ object PropSpecification extends Properties("Prop") {
       Prop(r1 == r2).label(s"$r1 == $r2")
     }
 
-  // previously this was defined inside of the following property
-  // where it is used. this causes bugs on 2.11 so we define it out
-  // here. however it's important that it not be used by other tests.
-  case class Bogus(x: Int)
-
-  object Bogus {
-    val gen: Gen[Bogus] =
-      Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
-
-    var shrunk: Boolean = false
-
-    implicit def shrinkBogus: Shrink[Bogus] = {
-      Shrink { (b: Bogus) => shrunk = true; Stream.empty }
-    }
-  }
-
   property("disabling shrinking works") = {
+
+    object Bogus {
+      val gen: Gen[Bogus] =
+        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+
+      var shrunk: Boolean = false
+
+      implicit def shrinkBogus: Shrink[Bogus] = {
+        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+      }
+    }
+
+    case class Bogus(x: Int)
 
     val params = Gen.Parameters.default.disableLegacyShrinking
     val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
