@@ -19,6 +19,8 @@ object MimaSettings {
   )
 
   private def removedPrivateMethods = Seq(
+    // lazy val cmdLineParser is now an object
+    "org.scalacheck.Test.cmdLineParser"
   )
 
   private def removedPrivateClasses = Seq(
@@ -26,7 +28,10 @@ object MimaSettings {
 
   private def otherProblems = Seq(
     // New issue added in MiMa 0.4.0
-    exclude[IncompatibleSignatureProblem]("org.scalacheck.*") 
+    exclude[IncompatibleSignatureProblem]("org.scalacheck.*"),
+    // Work around weird mima error after cmdLineParser was turned from a lazy
+    // val into an object.
+    exclude[InaccessibleMethodProblem]("java.lang.Object.<clinit>"),
   )
 
 }

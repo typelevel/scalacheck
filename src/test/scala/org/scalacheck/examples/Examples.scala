@@ -35,7 +35,7 @@ object Examples extends Properties("Examples") {
 
   import org.scalacheck.Arbitrary
 
-  implicit val arbPerson = Arbitrary(genPerson)
+  implicit val arbPerson: Arbitrary[Person] = Arbitrary(genPerson)
 
   property("ex1") = Prop.forAll { p: Person =>
     p.isTeenager == (p.age >= 13 && p.age <= 19)

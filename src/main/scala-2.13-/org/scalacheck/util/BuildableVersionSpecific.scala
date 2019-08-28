@@ -16,7 +16,7 @@ import generic.CanBuildFrom
 import scala.collection.mutable.Builder
 
 private[util] trait BuildableVersionSpecific {
-  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]) =
+  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]): Buildable[T,C] =
     new Buildable[T,C] {
       def builder = c.apply
     }

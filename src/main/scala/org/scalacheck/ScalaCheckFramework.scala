@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import sbt.testing._
-import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalacheck.Test.Parameters
@@ -193,7 +192,7 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
+    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
     val applyCmdParams = prms.andThen {
       p => p.withTestCallback(new Test.TestCallback {})
           .withCustomClassLoader(Some(loader))
@@ -225,7 +224,7 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val applyCmdParams = Test.cmdLineParser.parseParams(args)._1.andThen {
+    val applyCmdParams = Test.CmdLineParser.parseParams(args)._1.andThen {
       p => p.withTestCallback(new Test.TestCallback {})
           .withCustomClassLoader(Some(loader))
     }

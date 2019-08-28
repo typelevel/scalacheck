@@ -241,9 +241,9 @@ trait Commands {
                 true
               } else false
             }
-            if (doRun) runActions(sut,as, removeSut)
+            if (doRun) runActions(sut,as, removeSut())
             else {
-              removeSut
+              removeSut()
               Prop.undecided
             }
 
@@ -290,7 +290,7 @@ trait Commands {
   ): (Prop, List[List[(Command,Try[String])]]) = {
     import concurrent._
     val tp = java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
-    implicit val ec = ExecutionContext.fromExecutor(tp)
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
     val memo = collection.mutable.Map.empty[(State,List[Commands]), List[State]]
 
     def endStates(scss: (State, List[Commands])): List[State] = {
