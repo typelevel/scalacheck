@@ -152,6 +152,7 @@ object Test {
       }
 
     // no longer used, but preserved for binary compatibility
+    @deprecated("cp is deprecated. use cpy.", "1.14.1")
     private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,

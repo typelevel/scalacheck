@@ -315,6 +315,7 @@ object Gen extends GenArities with GenVersionSpecific {
       cpy(useLegacyShrinking0 = b)
 
     // no longer used, but preserved for binary compatibility
+    @deprecated("cp is deprecated. use cpy.", "1.14.1")
     private case class cp(size: Int = size, initialSeed: Option[Seed] = None) extends Parameters
   }
 
