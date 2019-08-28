@@ -33,7 +33,7 @@ object Pretty {
   def apply(f: Params => String): Pretty = new Pretty { def apply(p: Params) = f(p) }
 
   def pretty[T](t: T, prms: Params)(implicit ev: T => Pretty): String = {
-    val p = (t: Pretty) match {
+    val p = ev(t) match {
       case null => prettyAny(null)
       case p => p
     }
@@ -106,22 +106,22 @@ object Pretty {
     builder.result()
   }
 
-  implicit def prettyAny(t: Any) = Pretty { p => toStrOrNull(t) }
+  implicit def prettyAny(t: Any): Pretty = Pretty { p => toStrOrNull(t) }
 
-  implicit def prettyString(t: String) = Pretty { p => "\""++escapeControlChars(t)++"\"" }
+  implicit def prettyString(t: String): Pretty = Pretty { p => "\""++escapeControlChars(t)++"\"" }
 
-  implicit def prettyList(l: List[Any]) = Pretty { p =>
+  implicit def prettyList(l: List[Any]): Pretty = Pretty { p =>
     l.map("\""+_+"\"").mkString("List(", ", ", ")")
   }
 
-  implicit def prettyThrowable(e: Throwable) = Pretty { prms =>
-    val strs = e.getStackTrace.map { st =>
+  implicit def prettyThrowable(e: Throwable): Pretty = Pretty { prms =>
+    val strs = e.getStackTrace.toList.map { st =>
       import st._
       getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
     }
 
     val strs2 =
-      if(prms.verbosity <= 0) Array[String]()
+      if(prms.verbosity <= 0) List[String]()
       else if(prms.verbosity <= 1) strs.take(5)
       else strs
 
@@ -140,7 +140,7 @@ object Pretty {
     }.mkString("\n")
   }
 
-  implicit def prettyFreqMap(fm: FreqMap[Set[Any]]) = Pretty { prms =>
+  implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { prms =>
     if(fm.total == 0) ""
     else {
       "> Collected test data: " / {
@@ -153,7 +153,7 @@ object Pretty {
     }
   }
 
-  implicit def prettyTestRes(res: Test.Result) = Pretty { prms =>
+  implicit def prettyTestRes(res: Test.Result): Pretty = Pretty { prms =>
     def labels(ls: collection.immutable.Set[String]) =
       if(ls.isEmpty) ""
       else "> Labels of failing property: " / ls.mkString("\n")
@@ -180,7 +180,7 @@ object Pretty {
     else "%d min %.3f sec ".format(min, sec)
   }
 
-  implicit def prettyTestParams(prms: Test.Parameters) = Pretty { p =>
+  implicit def prettyTestParams(prms: Test.Parameters): Pretty = Pretty { p =>
     prms.toString
   }
 }

@@ -279,7 +279,7 @@ object Test {
         s"Invalid test parameter: workers (${prms.workers}) <= 0")
   }
 
-  private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
+  private[scalacheck] object CmdLineParser extends CmdLineParser {
     object OptMinSuccess extends IntOpt {
       val default = Parameters.default.minSuccessfulTests
       val names = Set("minSuccessfulTests", "s")

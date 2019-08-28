@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import sbt.testing._
-import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalacheck.Test.Parameters
@@ -196,7 +195,7 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
+    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
     val applyCmdParams = prms.andThen(sbtSetup(loader))
 
     def receiveMessage(msg: String): Option[String] = msg(0) match {
@@ -225,7 +224,8 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
+    
+    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
 
     if (unknownArgs.nonEmpty) {
       println(s"Warning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
