@@ -25,9 +25,8 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
-  import Gen.Parameters
 
-  def apply(prms: Parameters): Result
+  def apply(prms: Gen.Parameters): Result
 
   def viewSeed(name: String): Prop =
     Prop { prms0 =>
@@ -46,7 +45,7 @@ sealed abstract class Prop extends Serializable { self =>
   def useSeed(name: String, seed: Seed): Prop =
     Prop(prms0 => self(prms0.withInitialSeed(seed)))
 
-  def contramap(f: Parameters => Parameters): Prop =
+  def contramap(f: Gen.Parameters => Gen.Parameters): Prop =
     new PropFromFun(params => apply(f(params)))
 
   def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
@@ -166,9 +165,7 @@ sealed abstract class Prop extends Serializable { self =>
 
 object Prop {
 
-  import Gen.{fail, Parameters}
   import Arbitrary.{arbitrary}
-  import Shrink.{shrink}
 
   // Types
 
@@ -302,7 +299,7 @@ object Prop {
   }
 
   /** Create a new property from the given function. */
-  def apply(f: Parameters => Result): Prop = new PropFromFun(prms =>
+  def apply(f: Gen.Parameters => Result): Prop = new PropFromFun(prms =>
     try f(prms) catch {
       case e: Throwable => Result(status = Exception(e))
     }
@@ -437,11 +434,11 @@ object Prop {
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ == fail):_*)
+  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ == Gen.fail):_*)
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */
-  def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== fail):_*)
+  def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== Gen.fail):_*)
 
   /** Returns true if the given statement throws an exception
    *  of the specified type */
@@ -512,7 +509,7 @@ object Prop {
    * seed. In that case you should use `slideSeed` to update the
    * parameters.
    */
-  def startSeed(prms: Parameters): (Parameters, Seed) =
+  def startSeed(prms: Gen.Parameters): (Gen.Parameters, Seed) =
     prms.initialSeed match {
       case Some(seed) => (prms.withNoInitialSeed, seed)
       case None => (prms, Seed.random())
@@ -521,7 +518,7 @@ object Prop {
   /**
    *
    */
-  def slideSeed(prms: Parameters): Parameters =
+  def slideSeed(prms: Gen.Parameters): Gen.Parameters =
     prms.initialSeed match {
       case Some(seed) => prms.withInitialSeed(seed.slide)
       case None => prms
@@ -800,8 +797,8 @@ object Prop {
       case None => undecided(prms)
       case Some(x) =>
         val r = result(x)
-        if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
-        else shrinker(x,r,0,x)
+        if (r.failure && prms.useLegacyShrinking) shrinker(x,r,0,x)
+        else r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
     }
 
   }
@@ -814,7 +811,7 @@ object Prop {
     p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
+  ): Prop = forAllShrink[T1,P](g1, s1.shrink)(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -912,7 +909,7 @@ object Prop {
     f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
-  ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
+  ): Prop = forAllShrink(arbitrary[A1], s1.shrink)(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (
@@ -994,7 +991,7 @@ object Prop {
   /** Ensures that the property expression passed in completes within the given
    *  space of time. */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = {
-    @tailrec def attempt(prms: Parameters, endTime: Long): Result = {
+    @tailrec def attempt(prms: Gen.Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
         (if(result.failure) result else Result(status = False)).label("Timeout")

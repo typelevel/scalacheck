@@ -203,4 +203,24 @@ object PropSpecification extends Properties("Prop") {
       val r2 = p(params).success
       Prop(r1 == r2).label(s"$r1 == $r2")
     }
+
+  property("disabling shrinking works") = {
+
+    object Bogus {
+      val gen: Gen[Bogus] =
+        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+
+      var shrunk: Boolean = false
+
+      implicit def shrinkBogus: Shrink[Bogus] = {
+        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+      }
+    }
+
+    case class Bogus(x: Int)
+
+    val params = Gen.Parameters.default.disableLegacyShrinking
+    val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
+    Prop(prop(params).failure && !Bogus.shrunk)
+  }
 }

@@ -258,7 +258,7 @@ object Gen extends GenArities with GenVersionSpecific {
   //// Public interface ////
 
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
-  sealed abstract class Parameters extends Serializable {
+  sealed abstract class Parameters extends Serializable { outer =>
 
     /**
      * The size of the generated value. Generator implementations are
@@ -268,26 +268,40 @@ object Gen extends GenArities with GenVersionSpecific {
      */
     val size: Int
 
+    private[this] def cpy(
+      size0: Int = outer.size,
+      initialSeed0: Option[Seed] = outer.initialSeed,
+      useLegacyShrinking0: Boolean = outer.useLegacyShrinking
+    ): Parameters =
+      new Parameters {
+        val size: Int = size0
+        val initialSeed: Option[Seed] = initialSeed0
+        override val useLegacyShrinking: Boolean = useLegacyShrinking0
+      }
+
     /**
      * Create a copy of this [[Gen.Parameters]] instance with
      * [[Gen.Parameters.size]] set to the specified value.
      */
     def withSize(size: Int): Parameters =
-      cp(size = size)
+      cpy(size0 = size)
 
     /**
      *
      */
     val initialSeed: Option[Seed]
 
+    def withInitialSeed(o: Option[Seed]): Parameters =
+      cpy(initialSeed0 = o)
+
     def withInitialSeed(seed: Seed): Parameters =
-      cp(initialSeed = Some(seed))
+      cpy(initialSeed0 = Some(seed))
 
     def withInitialSeed(n: Long): Parameters =
-      cp(initialSeed = Some(Seed(n)))
+      cpy(initialSeed0 = Some(Seed(n)))
 
     def withNoInitialSeed: Parameters =
-      cp(initialSeed = None)
+      cpy(initialSeed0 = None)
 
     def useInitialSeed[A](seed: Seed)(f: (Parameters, Seed) => A): A =
       initialSeed match {
@@ -295,7 +309,19 @@ object Gen extends GenArities with GenVersionSpecific {
         case None => f(this, seed)
       }
 
-    // private since we can't guarantee binary compatibility for this one
+    val useLegacyShrinking: Boolean = true
+
+    def disableLegacyShrinking: Parameters =
+      withLegacyShrinking(false)
+
+    def enableLegacyShrinking: Parameters =
+      withLegacyShrinking(true)
+
+    def withLegacyShrinking(b: Boolean): Parameters =
+      cpy(useLegacyShrinking0 = b)
+
+    // no longer used, but preserved for binary compatibility
+    @deprecated("cp is deprecated. use cpy.", "1.14.1")
     private case class cp(size: Int = size, initialSeed: Option[Seed] = None) extends Parameters
   }
 

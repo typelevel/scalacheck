@@ -124,4 +124,47 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
+  property("disabling shrinking works") = {
+
+    object Bogus {
+      val gen: Gen[Bogus] =
+        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+
+      var shrunk: Boolean = false
+
+      implicit def shrinkBogus: Shrink[Bogus] = {
+        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+      }
+    }
+
+    case class Bogus(x: Int)
+
+    val prop = Prop.forAll[Bogus, Prop](Bogus.gen) { b => Prop(false) }
+    val prms = Test.Parameters.default.disableLegacyShrinking
+    val res = Test.check(prms, prop)
+    Prop(!res.passed && !Bogus.shrunk)
+  }
+
+  property("Properties.overrideParameters overrides Test.Parameters") = {
+
+    val seed0 = rng.Seed.fromBase64("aaaaa_mr05Z_DCbd2PyUolC0h93iH1MQwIdnH2UuI4L=").get
+    val seed1 = rng.Seed.fromBase64("zzzzz_mr05Z_DCbd2PyUolC0h93iH1MQwIdnH2UuI4L=").get
+
+    val myProps = new Properties("MyProps") {
+      override def overrideParameters(prms: Test.Parameters): Test.Parameters =
+        prms.withInitialSeed(Some(seed1))
+      property("initial seed matches") =
+        Prop { prms =>
+          val ok = prms.initialSeed == Some(seed1)
+          Prop.Result(status = if (ok) Prop.Proof else Prop.False)
+        }
+    }
+
+    Prop {
+      val prms = Test.Parameters.default.withInitialSeed(Some(seed0))
+      val results = Test.checkProperties(prms, myProps)
+      val ok = results.forall { case (_, res) => res.passed }
+      Prop.Result(status = if (ok) Prop.Proof else Prop.False)
+    }
+  }
 }
