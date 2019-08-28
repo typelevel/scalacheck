@@ -222,7 +222,7 @@ object PropSpecification extends Properties("Prop") {
 
   property("disabling shrinking works") = {
 
-    val params = Gen.Parameters.default.withUseLegacyShrinking(false)
+    val params = Gen.Parameters.default.disableLegacyShrinking
     val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
     Prop(prop(params).failure && !Bogus.shrunk)
   }

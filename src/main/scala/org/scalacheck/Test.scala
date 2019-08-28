@@ -107,7 +107,13 @@ object Test {
 
     val useLegacyShrinking: Boolean = true
 
-    def withUseLegacyShrinking(b: Boolean): Parameters =
+    def disableLegacyShrinking: Parameters =
+      withLegacyShrinking(false)
+
+    def enableLegacyShrinking: Parameters =
+      withLegacyShrinking(true)
+
+    def withLegacyShrinking(b: Boolean): Parameters =
       cpy(useLegacyShrinking0 = b)
 
     override def toString: String = {
@@ -362,7 +368,7 @@ object Test {
           .withMaxDiscardRatio(discardRatio0)
           .withPropFilter(propFilter0)
           .withInitialSeed(initialSeed0)
-          .withUseLegacyShrinking(useLegacyShrinking0)
+          .withLegacyShrinking(useLegacyShrinking0)
       }
       (params, us)
     }
@@ -393,7 +399,7 @@ object Test {
     var stop = false
 
     val genPrms = Gen.Parameters.default
-      .withUseLegacyShrinking(params.useLegacyShrinking)
+      .withLegacyShrinking(params.useLegacyShrinking)
       .withInitialSeed(params.initialSeed)
 
     def workerFun(workerIdx: Int): Result = {

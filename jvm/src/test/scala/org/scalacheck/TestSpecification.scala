@@ -143,7 +143,7 @@ object TestSpecification extends Properties("Test") {
   property("disabling shrinking works") = {
 
     val prop = Prop.forAll[Bogus, Prop](Bogus.gen) { b => Prop(false) }
-    val prms = Test.Parameters.default.withUseLegacyShrinking(false)
+    val prms = Test.Parameters.default.disableLegacyShrinking
     val res = Test.check(prms, prop)
     Prop(!res.passed && !Bogus.shrunk)
   }

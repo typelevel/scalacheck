@@ -311,7 +311,13 @@ object Gen extends GenArities with GenVersionSpecific {
 
     val useLegacyShrinking: Boolean = true
 
-    def withUseLegacyShrinking(b: Boolean): Parameters =
+    def disableLegacyShrinking: Parameters =
+      withLegacyShrinking(false)
+
+    def enableLegacyShrinking: Parameters =
+      withLegacyShrinking(true)
+
+    def withLegacyShrinking(b: Boolean): Parameters =
       cpy(useLegacyShrinking0 = b)
 
     // no longer used, but preserved for binary compatibility
