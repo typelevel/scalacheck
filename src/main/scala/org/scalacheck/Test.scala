@@ -93,26 +93,34 @@ object Test {
     /** Initial seed to use for testing. */
     val initialSeed: Option[rng.Seed]
 
+    /** Set initial seed to use. */
     def withInitialSeed(o: Option[rng.Seed]): Parameters =
       cpy(initialSeed0 = o)
 
+    /** Set initial seed to use. */
     def withInitialSeed(seed: rng.Seed): Parameters =
       cpy(initialSeed0 = Some(seed))
 
+    /** Set initial seed as long integer. */
     def withInitialSeed(n: Long): Parameters =
       cpy(initialSeed0 = Some(rng.Seed(n)))
 
+    /** Don't set an initial seed. */
     def withNoInitialSeed: Parameters =
       cpy(initialSeed0 = None)
 
+    /** Use legacy shrinking. */
     val useLegacyShrinking: Boolean = true
 
+    /** Disable legacy shrinking. */
     def disableLegacyShrinking: Parameters =
       withLegacyShrinking(false)
 
+    /** Enable legacy shrinking. */
     def enableLegacyShrinking: Parameters =
       withLegacyShrinking(true)
 
+    /** Set legacy shrinking. */
     def withLegacyShrinking(b: Boolean): Parameters =
       cpy(useLegacyShrinking0 = b)
 
