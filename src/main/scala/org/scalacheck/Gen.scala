@@ -724,7 +724,7 @@ object Gen extends GenArities with GenVersionSpecific {
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that randomly picks a given number of elements from a list
-   * 
+   *
    * The elements are not guaranteed to be permuted in random order.
    */
   def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
@@ -752,7 +752,7 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   /** A generator that randomly picks a given number of elements from a list
-   * 
+   *
    * The elements are not guaranteed to be permuted in random order.
    */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
@@ -796,6 +796,15 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Generates a ASCII printable character */
   def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
 
+  /** Generates a character that can represent a valid hexadecimal digit. This
+    * includes both upper and lower case values.
+    */
+  def hexChar: Gen[Char] =
+    Gen.oneOf(
+      Gen.oneOf("0123456789abcdef".toSeq),
+      Gen.oneOf("0123456789ABCDEF".toSeq)
+    )
+
   //// String Generators ////
 
   /** Generates a string that starts with a lower-case alpha character,
@@ -833,6 +842,11 @@ object Gen extends GenArities with GenVersionSpecific {
   def asciiPrintableStr: Gen[String] =
     listOf(asciiPrintableChar).map(_.mkString)
 
+  /** Generates a string that can represent a valid hexadecimal digit. This
+    * includes both upper and lower case values.
+    */
+  def hexStr: Gen[String] =
+    listOf(hexChar).map(_.mkString)
 
   //// Number Generators ////
 

@@ -277,6 +277,11 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
       charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
   }
 
+  property("hexChar") = forAll(hexChar){ ch =>
+    val l: Long = java.lang.Long.parseLong(ch.toString, 16)
+    l < 16 && l >= 0
+  }
+
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
     s.forall(_.isLetterOrDigit)
@@ -316,6 +321,18 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
         charType == Character.OTHER_PUNCTUATION ||
         charType == Character.MATH_SYMBOL || charType == Character.CURRENCY_SYMBOL ||
         charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
+    }
+  }
+
+  property("hexStr") = forAll(hexStr) { s =>
+    if (s.size > 0) {
+      Try(BigInt(new java.math.BigInteger(s, 16))) match {
+        case Success(bi) => bi >= BigInt(0L)
+        case _ => false
+      }
+    }
+    else {
+      true
     }
   }
 
