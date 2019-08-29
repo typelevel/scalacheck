@@ -31,8 +31,16 @@ class Properties(val name: String) {
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
   /**
-   * Changes to the test parameters that are specific to this class.
-   * Can be used to set custom parameter values for this test.
+   * Customize the parameters specific to this class.
+   * 
+   * After the command-line (either [[main]] above or sbt) modifies
+   * the default parameters, this method is called with the current
+   * state of the parameters.  This method must then return
+   * parameters.  The default implementation returns the parameters
+   * unchanged.  However, a user can override this method in a
+   * properties subclass.  Their method can modify the parameters.
+   * Those parameters will take precedence when the properties are
+   * executed.
    */
   def overrideParameters(p: Test.Parameters): Test.Parameters = p
 
