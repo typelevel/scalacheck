@@ -132,7 +132,8 @@ object Test {
       sb.toString
     }
 
-    def cpy(
+    /** Copy constructor with named default arguments */
+    private[this] def cpy(
       minSuccessfulTests0: Int = outer.minSuccessfulTests,
       minSize0: Int = outer.minSize,
       maxSize0: Int = outer.maxSize,
