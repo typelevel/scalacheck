@@ -51,6 +51,14 @@ matrix:
         apt:
           update: true # https://github.com/typelevel/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
+    - scala: 2.11.12
+      before_script:
+        - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+      sudo: required
+      addons:
+        apt:
+          update: true # https://github.com/rickynils/scalacheck/issues/412
+      env: PLATFORM=native SBT_PARALLEL=true SCALANATIVE_VERSION="0.4.0-M2" WORKERS=1 DEPLOY=true
     - env: EXAMPLES
       script:
       - cd examples
