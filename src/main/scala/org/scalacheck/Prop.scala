@@ -104,7 +104,7 @@ sealed abstract class Prop extends Serializable { self =>
         if (Test.check(params, this).passed) 0
         else 1
       case (_, os) =>
-        println(s"Incorrect options: $os")
+        println("Incorrect options:\n  " + os.mkString(", "))
         Test.CmdLineParser.printHelp()
         -1
     }
