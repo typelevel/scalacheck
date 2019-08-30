@@ -332,7 +332,7 @@ object Test {
     object OptInitialSeed extends OpStrOpt {
       val default = None
       val names = Set("initialSeed")
-      val help = ""
+      val help = "Use Base-64 seed for all properties"
     }
 
     object OptDisableLegacyShrinking extends Flag {
