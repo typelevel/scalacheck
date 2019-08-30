@@ -73,13 +73,13 @@ class Properties(val name: String) {
         val res = Test.checkProperties(params, this)
         val numFailed = res.count(!_._2.passed)
         if (numFailed > 0) {
-          println(s"Found $numFailed failing properties.")
+          Console.out.println(s"Found $numFailed failing properties.")
           System.exit(1)
         } else {
           System.exit(0)
         }
       case (_, os) =>
-        println("Incorrect options:\n  " + os.mkString(", "))
+        Console.out.println("Incorrect options:\n  " + os.mkString(", "))
         Test.CmdLineParser.printHelp()
         System.exit(-1)
     }
