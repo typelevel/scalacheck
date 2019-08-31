@@ -260,6 +260,15 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
   sealed abstract class Parameters extends Serializable { outer =>
 
+    override def toString: String = {
+      val sb = new StringBuilder
+      sb.append("Parameters(")
+      sb.append(s"size=$size, ")
+      sb.append(s"initialSeed=$initialSeed, ")
+      sb.append(s"useLegacyShrinking=$useLegacyShrinking)")
+      sb.toString
+    }
+
     /**
      * The size of the generated value. Generator implementations are
      * allowed to freely interpret (or ignore) this value. During test

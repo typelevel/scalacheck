@@ -50,7 +50,12 @@ sealed abstract class Prop extends Serializable { self =>
 
   def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
 
-  def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
+  def flatMap(f: Result => Prop): Prop =
+    Prop { prms0 =>
+      val res = this(prms0)
+      val prms1 = Prop.slideSeed(prms0)
+      f(res)(prms1)
+    }
 
   def combine(p: => Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
@@ -422,23 +427,23 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Prop*) = if(ps.isEmpty) proved else Prop(prms =>
-    ps.map(p => p(prms)).reduceLeft(_ && _)
-  )
+  def all(ps: Prop*): Prop =
+    ps.foldLeft(proved)(_ && _)
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Prop*) = if(ps.isEmpty) falsified else Prop(prms =>
-    ps.map(p => p(prms)).reduceLeft(_ || _)
-  )
+  def atLeastOne(ps: Prop*): Prop =
+    ps.foldLeft(falsified)(_ || _)
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ == Gen.fail):_*)
+  def someFailing[T](gs: Seq[Gen[T]]): Prop =
+    atLeastOne(gs.map(_ == Gen.fail):_*)
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */
-  def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== Gen.fail):_*)
+  def noneFailing[T](gs: Seq[Gen[T]]): Prop =
+    all(gs.map(_ !== Gen.fail):_*)
 
   /** Returns true if the given statement throws an exception
    *  of the specified type */

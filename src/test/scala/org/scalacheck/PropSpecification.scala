@@ -223,4 +223,9 @@ object PropSpecification extends Properties("Prop") {
     val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
     Prop(prop(params).failure && !Bogus.shrunk)
   }
+
+  // make sure the two forAlls are seeing independent values
+  property("regression #530: failure to slide seed") =
+    forAll((x: Int) => (x >= 0) ==> true) &&
+    forAll((x: Int) => (x < 0) ==> true)
 }
