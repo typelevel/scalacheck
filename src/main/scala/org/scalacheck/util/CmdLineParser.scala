@@ -51,9 +51,9 @@ private[scalacheck] trait CmdLineParser {
     else None
 
   def printHelp(): Unit = {
-    println("Available options:")
+    Console.out.println("Available options:")
     opts.foreach { opt =>
-      println("  " + opt.names.map("-"+_).mkString(", ") + ": " + opt.help)
+      Console.out.println("  " + opt.names.map("-"+_).mkString(", ") + ": " + opt.help)
     }
   }
 

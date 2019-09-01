@@ -26,11 +26,11 @@ class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
     if(verbosity > 0) {
       if(name == "") {
         val s = (if(res.passed) "+ " else "! ") + pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", columnWidth))
+        println(format(s, "", "", columnWidth))
       } else {
         val s = (if(res.passed) "+ " else "! ") + name + ": " +
           pretty(res, prettyPrms)
-        printf("\r%s\n", format(s, "", "", columnWidth))
+        println(format(s, "", "", columnWidth))
       }
     }
   }
