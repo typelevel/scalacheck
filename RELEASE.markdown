@@ -1,4 +1,4 @@
-# ScalaCheck 1.14.0 Release Notes
+# ScalaCheck 1.14.1 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -6,24 +6,26 @@ failing test cases. ScalaCheck started out as a straightforward Scala port of
 the Haskell library QuickCheck, and has since wandered off on its own. Most
 features of QuickCheck can be found in ScalaCheck and vice versa, though.
 
-## What's new in ScalaCheck 1.14.0?
+## What's new in ScalaCheck 1.14.1?
 
-ScalaCheck 1.14.0 is a major update from ScalaCheck 1.13.x, and it is not
-binary compatible with earlier versions of ScalaCheck. This means that if you
+ScalaCheck 1.14.1 is a minor update from ScalaCheck 1.14.0, and it is
+binary compatible. This means that if you
 are using any other framework in combination with ScalaCheck, like `ScalaTest`
-or `specs2` you can usually _not_ just bump the version of ScalaCheck in your
-build definition. You need to make sure that the combination of frameworks you
+or `specs2` you can typically just bump the version of ScalaCheck in your
+build definition or wait for those libraries to transitively do it for you in their next update.  You still need to make sure that the combination of frameworks you
 are using was built and tested together with each other, otherwise you can run
 into errors related to binary compatibility that are possibly very hard to
 debug.
 
 If you're using ScalaCheck as your only testing framework, you can safely update
-your build definition to use the latest ScalaCheck release, but you might see
-compilation errors or deprecation warnings due to changes in ScalaCheck's API.
+your build definition to use the latest ScalaCheck release, although you might not see
+compilation errors but there may be deprecation warnings due to expected changes in ScalaCheck's API.
 
-For a detailed enumeration of what's new in ScalaCheck 1.14.0, see
+For a detailed enumeration of what's new in ScalaCheck 1.14.1, see
+https://github.com/typelevel/scalacheck/tree/1.14.1/CHANGELOG.markdown
+
+For a detailed enumeration of what was new in ScalaCheck 1.14.0, see
 https://github.com/typelevel/scalacheck/tree/1.14.0/CHANGELOG.markdown
-
 
 ## ScalaCheck highlights
 
@@ -48,7 +50,7 @@ https://github.com/typelevel/scalacheck/tree/1.14.0/CHANGELOG.markdown
 
 ## ScalaCheck Resources
 
-  * Official documentation, downloads etc: http://www.scalacheck.org
+  * Official documentation, downloads etc: https://www.scalacheck.org
 
   * Twitter: @scalacheck
 
@@ -57,33 +59,33 @@ https://github.com/typelevel/scalacheck/tree/1.14.0/CHANGELOG.markdown
   * SBT dependency
 
     resolvers ++= Seq(
-      "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-      "releases"  at "http://oss.sonatype.org/content/repositories/releases"
+      "snapshots" at "https//oss.sonatype.org/content/repositories/snapshots",
+      "releases"  at "https//oss.sonatype.org/content/repositories/releases"
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.14.1" % "test"
     )
 
   * Maven dependency
 
-    Add this to your pom.xml (example for Scala 2.12):
+    Add this to your pom.xml (example for Scala 2.13):
 
     <repositories>
       <repository>
         <id>oss.sonatype.org</id>
         <name>releases</name>
-        <url>http://oss.sonatype.org/content/repositories/releases</url>
+        <url>https://oss.sonatype.org/content/repositories/releases</url>
       </repository>
       <repository>
         <id>oss.sonatype.org</id>
         <name>snapshots</name>
-        <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       </repository>
     </repositories>
 
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck_2.12</artifactId>
-      <version>1.14.0</version>
+      <artifactId>scalacheck_2.13</artifactId>
+      <version>1.14.1</version>
     </dependency>
