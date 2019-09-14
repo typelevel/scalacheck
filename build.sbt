@@ -145,6 +145,8 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
+    // remove scala 2.10 since scala.js dropped support
+    crossScalaVersions := Seq("2.11.12", "2.12.9", scalaVersion.value),
     scalaJSStage in Global := FastOptStage,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
@@ -162,6 +164,7 @@ lazy val native = project.in(file("native"))
   .settings(
     doc in Compile := (doc in Compile in jvm).value,
     scalaVersion := "2.11.12",
+    crossScalaVersions := Seq("2.11.12"),
     // TODO: re-enable MiMa for native once published
     mimaPreviousArtifacts := Set(),
     libraryDependencies ++= Seq(
