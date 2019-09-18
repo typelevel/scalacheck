@@ -12,7 +12,7 @@ lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.13.0",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.9", scalaVersion.value),
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.10", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -146,7 +146,7 @@ lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     // remove scala 2.10 since scala.js dropped support
-    crossScalaVersions := Seq("2.11.12", "2.12.9", scalaVersion.value),
+    crossScalaVersions := Seq("2.11.12", "2.12.10", scalaVersion.value),
     scalaJSStage in Global := FastOptStage,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
