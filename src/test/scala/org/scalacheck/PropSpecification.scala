@@ -12,7 +12,7 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, throws, BooleanOperators, secure, delay, lzy
+  Exception, Proof, throws, propBoolean, secure, delay, lzy
 }
 import Gen.{ const, fail, oneOf, listOf, Parameters }
 
@@ -59,10 +59,10 @@ object PropSpecification extends Properties("Prop") {
     forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { p: Prop =>
-    (p && propException) == exception
+    (p && propException()) == exception
   }
   property("Prop.&& Exception 2") = {
-    (passed && propException) == exception
+    (passed && propException()) == exception
   }
   property("Prop.&& Identity") = {
     val g = oneOf(proved,passed,falsified,undecided,exception)
@@ -203,4 +203,29 @@ object PropSpecification extends Properties("Prop") {
       val r2 = p(params).success
       Prop(r1 == r2).label(s"$r1 == $r2")
     }
+
+  property("disabling shrinking works") = {
+
+    object Bogus {
+      val gen: Gen[Bogus] =
+        Gen.choose(Int.MinValue, Int.MaxValue).map(Bogus(_))
+
+      var shrunk: Boolean = false
+
+      implicit def shrinkBogus: Shrink[Bogus] = {
+        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+      }
+    }
+
+    case class Bogus(x: Int)
+
+    val params = Gen.Parameters.default.disableLegacyShrinking
+    val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
+    Prop(prop(params).failure && !Bogus.shrunk)
+  }
+
+  // make sure the two forAlls are seeing independent values
+  property("regression #530: failure to slide seed") =
+    forAll((x: Int) => (x >= 0) ==> true) &&
+    forAll((x: Int) => (x < 0) ==> true)
 }

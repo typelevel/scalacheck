@@ -11,8 +11,6 @@ package org.scalacheck
 
 import org.scalacheck.rng.Seed
 
-import language.reflectiveCalls
-
 import util.ConsoleReporter
 
 /** Represents a collection of properties, with convenient methods
@@ -33,8 +31,16 @@ class Properties(val name: String) {
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
 
   /**
-   * Changes to the test parameters that are specific to this class.
-   * Can be used to set custom parameter values for this test.
+   * Customize the parameters specific to this class.
+   * 
+   * After the command-line (either [[main]] above or sbt) modifies
+   * the default parameters, this method is called with the current
+   * state of the parameters.  This method must then return
+   * parameters.  The default implementation returns the parameters
+   * unchanged.  However, a user can override this method in a
+   * properties subclass.  Their method can modify the parameters.
+   * Those parameters will take precedence when the properties are
+   * executed.
    */
   def overrideParameters(p: Test.Parameters): Test.Parameters = p
 
@@ -61,20 +67,20 @@ class Properties(val name: String) {
    *  as an application that checks itself on execution. Calls `System.exit`
    *  with the exit code set to the number of failed properties. */
   def main(args: Array[String]): Unit =
-    Test.cmdLineParser.parseParams(args) match {
+    Test.CmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
         val params = applyCmdParams(overrideParameters(Test.Parameters.default))
         val res = Test.checkProperties(params, this)
         val numFailed = res.count(!_._2.passed)
         if (numFailed > 0) {
-          println(s"Found $numFailed failing properties.")
+          Console.out.println(s"Found $numFailed failing properties.")
           System.exit(1)
         } else {
           System.exit(0)
         }
       case (_, os) =>
-        println(s"Incorrect options: $os")
-        Test.cmdLineParser.printHelp
+        Console.out.println("Incorrect options:\n  " + os.mkString(", "))
+        Test.CmdLineParser.printHelp()
         System.exit(-1)
     }
 
@@ -94,7 +100,8 @@ class Properties(val name: String) {
    */
   sealed class PropertySpecifier() {
     def update(propName: String, p: => Prop) = {
-      props += ((name+"."+propName, Prop.delay(p)))
+      val fullName = s"$name.$propName"
+      props += ((fullName, Prop.delay(p).viewSeed(fullName)))
     }
   }
 

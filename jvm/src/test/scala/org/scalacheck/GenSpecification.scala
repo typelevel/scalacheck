@@ -277,6 +277,11 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
       charType == Character.MODIFIER_SYMBOL || charType == Character.OTHER_SYMBOL
   }
 
+  property("hexChar") = forAll(hexChar){ ch =>
+    val l: Long = java.lang.Long.parseLong(ch.toString, 16)
+    l < 16 && l >= 0
+  }
+
   property("identifier") = forAll(identifier) { s =>
     s.length > 0 && s(0).isLetter && s(0).isLower &&
     s.forall(_.isLetterOrDigit)
@@ -319,6 +324,18 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("hexStr") = forAll(hexStr) { s =>
+    if (s.size > 0) {
+      Try(BigInt(new java.math.BigInteger(s, 16))) match {
+        case Success(bi) => bi >= BigInt(0L)
+        case _ => false
+      }
+    }
+    else {
+      true
+    }
+  }
+
   // BigDecimal generation is tricky; just ensure that the generator gives
   // its constructor valid values.
   property("BigDecimal") = forAll { _: BigDecimal => true }
@@ -332,7 +349,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("resultOf3") = {
     case class B(n: Int, s: String, b: Boolean)
-    implicit val arbB = Arbitrary(resultOf(B))
+    implicit val arbB: Arbitrary[B] = Arbitrary(resultOf(B))
     forAll { b:B => true }
   }
 
@@ -422,9 +439,8 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     i21:Int,i22:Int
   )
 
-  property("22 field case class works") = forAll(Gen.resultOf(Full22.tupled)){
-    Full22.unapply(_).get.isInstanceOf[Tuple22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]]
-  }
+  property("22 field case class works") =
+    forAll(Gen.resultOf(Full22.tupled)) { _ => true }
 
   type Trilean = Either[Unit, Boolean]
 

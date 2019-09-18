@@ -10,59 +10,56 @@
 package org.scalacheck
 
 import Prop.Arg
+import org.scalacheck.util.{FreqMap, CmdLineParser, ConsoleReporter}
+import scala.util.{Success, Failure}
+import scala.util.matching.Regex
 
 object Test {
 
-  import util.{FreqMap, CmdLineParser, ConsoleReporter}
 
   /** Test parameters used by the check methods. Default
    *  parameters are defined by [[Test.Parameters.default]]. */
-  sealed abstract class Parameters {
+  sealed abstract class Parameters { outer =>
     /** The minimum number of tests that must succeed for ScalaCheck to
      *  consider a property passed. */
     val minSuccessfulTests: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.minSuccessfulTests]] set to the specified value. */
-    def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters = cp(
-      minSuccessfulTests = minSuccessfulTests
-    )
+    def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters =
+      cpy(minSuccessfulTests0 = minSuccessfulTests)
 
     /** The starting size given as parameter to the generators. */
     val minSize: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.minSize]] set to the specified value. */
-    def withMinSize(minSize: Int): Parameters = cp(
-      minSize = minSize
-    )
+    def withMinSize(minSize: Int): Parameters =
+      cpy(minSize0 = minSize)
 
     /** The maximum size given as parameter to the generators. */
     val maxSize: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.maxSize]] set to the specified value. */
-    def withMaxSize(maxSize: Int): Parameters = cp(
-      maxSize = maxSize
-    )
+    def withMaxSize(maxSize: Int): Parameters =
+      cpy(maxSize0 = maxSize)
 
     /** The number of tests to run in parallel. */
     val workers: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.workers]] set to the specified value. */
-    def withWorkers(workers: Int): Parameters = cp(
-      workers = workers
-    )
+    def withWorkers(workers: Int): Parameters =
+      cpy(workers0 = workers)
 
     /** A callback that ScalaCheck calls each time a test is executed. */
     val testCallback: TestCallback
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.testCallback]] set to the specified value. */
-    def withTestCallback(testCallback: TestCallback): Parameters = cp(
-      testCallback = testCallback
-    )
+    def withTestCallback(testCallback: TestCallback): Parameters =
+      cpy(testCallback0 = testCallback)
 
     /** The maximum ratio between discarded and passed tests allowed before
      *  ScalaCheck gives up and discards the whole property (with status
@@ -73,19 +70,16 @@ object Test {
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.maxDiscardRatio]] set to the specified value. */
-    def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters = cp(
-      maxDiscardRatio = maxDiscardRatio
-    )
+    def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters =
+      cpy(maxDiscardRatio0 = maxDiscardRatio)
 
     /** A custom class loader that should be used during test execution. */
     val customClassLoader: Option[ClassLoader]
 
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.customClassLoader]] set to the specified value. */
-    def withCustomClassLoader(customClassLoader: Option[ClassLoader]
-    ): Parameters = cp(
-      customClassLoader = customClassLoader
-    )
+    def withCustomClassLoader(customClassLoader: Option[ClassLoader]): Parameters =
+      cpy(customClassLoader0 = customClassLoader)
 
     /** An optional regular expression to filter properties on. */
     val propFilter: Option[String]
@@ -93,23 +87,87 @@ object Test {
     /** Create a copy of this [[Test.Parameters]] instance with
      *  [[Test.Parameters.propFilter]] set to the specified regular expression
      *  filter. */
-    def withPropFilter(propFilter: Option[String]): Parameters = cp(
-      propFilter = propFilter
-    )
+    def withPropFilter(propFilter: Option[String]): Parameters =
+      cpy(propFilter0 = propFilter)
 
     /** Initial seed to use for testing. */
     val initialSeed: Option[rng.Seed]
 
+    /** Set initial seed to use. */
+    def withInitialSeed(o: Option[rng.Seed]): Parameters =
+      cpy(initialSeed0 = o)
+
+    /** Set initial seed to use. */
     def withInitialSeed(seed: rng.Seed): Parameters =
-      cp(initialSeed = Some(seed))
+      cpy(initialSeed0 = Some(seed))
 
+    /** Set initial seed as long integer. */
     def withInitialSeed(n: Long): Parameters =
-      cp(initialSeed = Some(rng.Seed(n)))
+      cpy(initialSeed0 = Some(rng.Seed(n)))
 
+    /** Don't set an initial seed. */
     def withNoInitialSeed: Parameters =
-      cp(initialSeed = None)
+      cpy(initialSeed0 = None)
 
-    // private since we can't guarantee binary compatibility for this one
+    /** Use legacy shrinking. */
+    val useLegacyShrinking: Boolean = true
+
+    /** Disable legacy shrinking. */
+    def disableLegacyShrinking: Parameters =
+      withLegacyShrinking(false)
+
+    /** Enable legacy shrinking. */
+    def enableLegacyShrinking: Parameters =
+      withLegacyShrinking(true)
+
+    /** Set legacy shrinking. */
+    def withLegacyShrinking(b: Boolean): Parameters =
+      cpy(useLegacyShrinking0 = b)
+
+    override def toString: String = {
+      val sb = new StringBuilder
+      sb.append("Parameters(")
+      sb.append(s"minSuccessfulTests=$minSuccessfulTests, ")
+      sb.append(s"minSize=$minSize, ")
+      sb.append(s"maxSize=$maxSize, ")
+      sb.append(s"workers=$workers, ")
+      sb.append(s"testCallback=$testCallback, ")
+      sb.append(s"maxDiscardRatio=$maxDiscardRatio, ")
+      sb.append(s"customClassLoader=$customClassLoader, ")
+      sb.append(s"propFilter=$propFilter, ")
+      sb.append(s"initialSeed=$initialSeed, ")
+      sb.append(s"useLegacyShrinking=$useLegacyShrinking)")
+      sb.toString
+    }
+
+    /** Copy constructor with named default arguments */
+    private[this] def cpy(
+      minSuccessfulTests0: Int = outer.minSuccessfulTests,
+      minSize0: Int = outer.minSize,
+      maxSize0: Int = outer.maxSize,
+      workers0: Int = outer.workers,
+      testCallback0: TestCallback = outer.testCallback,
+      maxDiscardRatio0: Float = outer.maxDiscardRatio,
+      customClassLoader0: Option[ClassLoader] = outer.customClassLoader,
+      propFilter0: Option[String] = outer.propFilter,
+      initialSeed0: Option[rng.Seed] = outer.initialSeed,
+      useLegacyShrinking0: Boolean = outer.useLegacyShrinking
+    ): Parameters =
+      new Parameters {
+        val minSuccessfulTests: Int = minSuccessfulTests0
+        val minSize: Int = minSize0
+        val maxSize: Int = maxSize0
+        val workers: Int = workers0
+        val testCallback: TestCallback = testCallback0
+        val maxDiscardRatio: Float = maxDiscardRatio0
+        val customClassLoader: Option[ClassLoader] = customClassLoader0
+        val propFilter: Option[String] = propFilter0
+        val initialSeed: Option[rng.Seed] = initialSeed0
+        override val useLegacyShrinking: Boolean = useLegacyShrinking0
+      }
+
+    // no longer used, but preserved for binary compatibility
+    @deprecated("cp is deprecated. use cpy.", "1.14.1")
     private case class cp(
       minSuccessfulTests: Int = minSuccessfulTests,
       minSize: Int = minSize,
@@ -121,8 +179,6 @@ object Test {
       propFilter: Option[String] = propFilter,
       initialSeed: Option[rng.Seed] = initialSeed
     ) extends Parameters
-
-    override def toString = s"Parameters${cp.toString.substring(2)}"
   }
 
   /** Test parameters used by the check methods. Default
@@ -232,7 +288,7 @@ object Test {
         s"Invalid test parameter: workers (${prms.workers}) <= 0")
   }
 
-  private[scalacheck] lazy val cmdLineParser = new CmdLineParser {
+  private[scalacheck] object CmdLineParser extends CmdLineParser {
     object OptMinSuccess extends IntOpt {
       val default = Parameters.default.minSuccessfulTests
       val names = Set("minSuccessfulTests", "s")
@@ -273,22 +329,56 @@ object Test {
       val help = "Regular expression to filter properties on"
     }
 
+    object OptInitialSeed extends OpStrOpt {
+      val default = None
+      val names = Set("initialSeed")
+      val help = "Use Base-64 seed for all properties"
+    }
+
+    object OptDisableLegacyShrinking extends Flag {
+      val default = ()
+      val names = Set("disableLegacyShrinking")
+      val help = "Disable legacy shrinking using Shrink instances"
+    }
+
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
       OptMaxSize, OptWorkers, OptVerbosity,
-      OptPropFilter
+      OptPropFilter, OptInitialSeed, OptDisableLegacyShrinking
     )
 
     def parseParams(args: Array[String]): (Parameters => Parameters, List[String]) = {
       val (optMap, us) = parseArgs(args)
-      val params = (p: Parameters) => p
-        .withMinSuccessfulTests(optMap(OptMinSuccess): Int)
-        .withMaxDiscardRatio(optMap(OptMaxDiscardRatio): Float)
-        .withMinSize(optMap(OptMinSize): Int)
-        .withMaxSize(optMap(OptMaxSize): Int)
-        .withWorkers(optMap(OptWorkers): Int)
-        .withPropFilter(optMap(OptPropFilter): Option[String])
-        .withTestCallback(ConsoleReporter(optMap(OptVerbosity)): TestCallback)
+      val minSuccess0: Int = optMap(OptMinSuccess)
+      val minSize0: Int = optMap(OptMinSize)
+      val maxSize0: Int = optMap(OptMaxSize)
+      val workers0: Int = optMap(OptWorkers)
+      val verbosity0 = optMap(OptVerbosity)
+      val discardRatio0: Float = optMap(OptMaxDiscardRatio)
+      val propFilter0: Option[String] = optMap(OptPropFilter)
+      val initialSeed0: Option[rng.Seed] =
+        optMap(OptInitialSeed).flatMap { str =>
+          rng.Seed.fromBase64(str) match {
+            case Success(seed) =>
+              Some(seed)
+            case Failure(_) =>
+              println(s"WARNING: ignoring invalid Base-64 seed ($str)")
+              None
+          }
+        }
+
+      val useLegacyShrinking0: Boolean = !optMap(OptDisableLegacyShrinking)
+      val params = { (p: Parameters) =>
+        p.withMinSuccessfulTests(minSuccess0)
+          .withMinSize(minSize0)
+          .withMaxSize(maxSize0)
+          .withWorkers(workers0)
+          .withTestCallback(ConsoleReporter(verbosity0))
+          .withMaxDiscardRatio(discardRatio0)
+          .withPropFilter(propFilter0)
+          .withInitialSeed(initialSeed0)
+          .withLegacyShrinking(useLegacyShrinking0)
+      }
       (params, us)
     }
   }
@@ -316,9 +406,10 @@ object Test {
     val iterations = math.ceil(minSuccessfulTests / workers.toDouble)
     val sizeStep = (maxSize-minSize) / (iterations*workers)
     var stop = false
-    //val seed = p.fixedSeed.getOrElse(rng.Seed.random)
-    //val genPrms = Gen.Parameters.default.withInitialSeed(seed)
+
     val genPrms = Gen.Parameters.default
+      .withLegacyShrinking(params.useLegacyShrinking)
+      .withInitialSeed(params.initialSeed)
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests
@@ -365,7 +456,6 @@ object Test {
     timedRes
   }
 
-  import scala.util.matching.Regex
   /** Returns the result of filtering a property name by a supplied regular expression.
     *
     *  @param propertyName The name of the property to be filtered.
@@ -376,24 +466,32 @@ object Test {
     regex.findFirstIn(propertyName).isDefined
   }
 
+  private def buildPredicate(o: Option[String]): String => Boolean =
+    o match {
+      case Some(expr) =>
+        val regex = expr.r
+        (s: String) => matchPropFilter(s, regex)
+      case None =>
+        (s: String) => true
+    }
+
   /** Check a set of properties. */
-  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String,Result)] = {
-    val params = ps.overrideParameters(prms)
-    val propertyFilter = prms.propFilter.map(_.r)
+  def checkProperties(prms: Parameters, ps: Properties): collection.Seq[(String, Result)] = {
+    val params1 = ps.overrideParameters(prms)
+    val isMatch = buildPredicate(params1.propFilter)
+    val props = ps.properties.filter { case (name, _) => isMatch(name) }
 
-    ps.properties.filter {
-      case (name, _) => propertyFilter.fold(true)(matchPropFilter(name, _))
-    } map {
-      case (name, p)  =>
-        val testCallback = new TestCallback {
+    props.map { case (name, prop) =>
+      val params2 = params1.withTestCallback(
+        new TestCallback {
           override def onPropEval(n: String, t: Int, s: Int, d: Int) =
-            params.testCallback.onPropEval(name,t,s,d)
+            params1.testCallback.onPropEval(name, t, s, d)
           override def onTestResult(n: String, r: Result) =
-            params.testCallback.onTestResult(name,r)
-        }
+            params1.testCallback.onTestResult(name, r)
+        })
 
-        val res = check(params.withTestCallback(testCallback), p)
-        (name,res)
+      val res = Test.check(params2, prop)
+      (name, res)
     }
   }
 }

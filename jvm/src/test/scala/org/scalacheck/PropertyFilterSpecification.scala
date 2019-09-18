@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Prop.BooleanOperators
+import Prop.propBoolean
 
 object PropertyFilterSampleSpecification extends Properties("PropertyFilterSample") {
 

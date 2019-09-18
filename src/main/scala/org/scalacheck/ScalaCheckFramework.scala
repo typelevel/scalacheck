@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import sbt.testing._
-import scala.language.reflectiveCalls
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalacheck.Test.Parameters
@@ -29,11 +28,7 @@ private abstract class ScalaCheckRunner extends Runner {
 
   def deserializeTask(task: String, deserializer: String => TaskDef): BaseTask = {
     val taskDef = deserializer(task)
-    val countTestSelectors = taskDef.selectors.toSeq.count {
-      case _:TestSelector => true
-      case _ => false
-    }
-    if (countTestSelectors == 0) rootTask(taskDef)
+    if (taskDef.selectors.isEmpty) rootTask(taskDef)
     else checkPropTask(taskDef, single = true)
   }
 
@@ -42,34 +37,40 @@ private abstract class ScalaCheckRunner extends Runner {
 
   def tasks(taskDefs: Array[TaskDef]): Array[Task] = {
     val isForked = taskDefs.exists(_.fingerprint().getClass.getName.contains("ForkMain"))
-    taskDefs.map { taskDef =>
-      if (isForked) checkPropTask(taskDef, single = false)
-      else rootTask(taskDef)
-    }
+    taskDefs.map(t => if (isForked) checkPropTask(t, single = false) else rootTask(t))
   }
+
+  protected def sbtSetup(loader: ClassLoader): Parameters => Parameters =
+    _.withTestCallback(new Test.TestCallback {}).withCustomClassLoader(Some(loader))
 
   abstract class BaseTask(override val taskDef: TaskDef) extends Task {
     val tags: Array[String] = Array()
 
-    val props: collection.Seq[(String,Prop)] = {
+    val loaded: Either[Prop, Properties] = {
       val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
       val obj = if (fp.isModule) Platform.loadModule(taskDef.fullyQualifiedName,loader)
                 else Platform.newInstance(taskDef.fullyQualifiedName, loader, Seq())(Seq())
       obj match {
-        case props: Properties => props.properties
-        case prop: Prop => Seq("" -> prop)
+        case props: Properties => Right(props)
+        case prop: Prop => Left(prop)
       }
     }
 
-    // TODO copypasted from props val
-    val properties: Option[Properties] = {
-      val fp = taskDef.fingerprint.asInstanceOf[SubclassFingerprint]
-      val obj = if (fp.isModule) Platform.loadModule(taskDef.fullyQualifiedName,loader)
-      else Platform.newInstance(taskDef.fullyQualifiedName, loader, Seq())(Seq())
-      obj match {
-        case props: Properties => Some(props)
-        case prop: Prop => None
-      }
+    val props: collection.Seq[(String, Prop)] = loaded match {
+      case Right(ps) => ps.properties
+      case Left(prop) => Seq("" -> prop)
+    }
+
+    val properties: Option[Properties] =
+      loaded.right.toOption
+
+    val params: Parameters = {
+      // apply global parameters first, then allow properties to
+      // override them. the other order does not work because
+      // applyCmdParams will unconditionally set parameters to default
+      // values, even when they were overridden.
+      val ps = applyCmdParams(Parameters.default)
+      properties.fold(ps)(_.overrideParameters(ps))
     }
 
     def log(loggers: Array[Logger], ok: Boolean, msg: String) =
@@ -85,7 +86,7 @@ private abstract class ScalaCheckRunner extends Runner {
     ): Unit  = continuation(execute(handler,loggers))
   }
 
-  def rootTask(td: TaskDef) = new BaseTask(td) {
+  def rootTask(td: TaskDef): BaseTask = new BaseTask(td) {
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
       props.map(_._1).toSet.toArray map { name =>
         checkPropTask(new TaskDef(td.fullyQualifiedName, td.fingerprint,
@@ -94,23 +95,25 @@ private abstract class ScalaCheckRunner extends Runner {
       }
   }
 
-  def checkPropTask(taskDef: TaskDef, single: Boolean) = new BaseTask(taskDef) {
+  def checkPropTask(taskDef: TaskDef, single: Boolean): BaseTask = new BaseTask(taskDef) {
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] = {
-      val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
       val propertyFilter = params.propFilter.map(_.r)
 
       if (single) {
-        val names = taskDef.selectors flatMap {
-          case ts: TestSelector => Array(ts.testName)
-          case _ => Array.empty[String]
-        }
-        names foreach { name =>
-          for ((`name`, prop) <- props)
-            executeInternal(prop, name, handler, loggers, propertyFilter)
+        val mprops: Map[String, Prop] = props.toMap
+        taskDef.selectors.foreach {
+          case ts: TestSelector =>
+            val name = ts.testName
+            mprops.get(name).foreach { prop =>
+              executeInternal(prop, name, handler, loggers, propertyFilter)
+            }
+          case _ =>
+            ()
         }
       } else {
-        for ((name, prop) <- props)
+        props.foreach { case (name, prop) =>
           executeInternal(prop, name, handler, loggers, propertyFilter)
+        }
       }
       Array.empty[Task]
     }
@@ -119,7 +122,6 @@ private abstract class ScalaCheckRunner extends Runner {
       if (propertyFilter.isEmpty || propertyFilter.exists(matchPropFilter(name, _))) {
 
         import util.Pretty.{pretty, Params}
-        val params = applyCmdParams(properties.foldLeft(Parameters.default)((params, props) => props.overrideParameters(params)))
         val result = Test.check(params, prop)
 
         val event = new Event {
@@ -193,11 +195,8 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val (prms,unknownArgs) = Test.cmdLineParser.parseParams(args)
-    val applyCmdParams = prms.andThen {
-      p => p.withTestCallback(new Test.TestCallback {})
-          .withCustomClassLoader(Some(loader))
-    }
+    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
+    val applyCmdParams = prms.andThen(sbtSetup(loader))
 
     def receiveMessage(msg: String): Option[String] = msg(0) match {
       case 'd' =>
@@ -225,10 +224,14 @@ final class ScalaCheckFramework extends Framework {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
-    val applyCmdParams = Test.cmdLineParser.parseParams(args)._1.andThen {
-      p => p.withTestCallback(new Test.TestCallback {})
-          .withCustomClassLoader(Some(loader))
+    
+    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
+
+    if (unknownArgs.nonEmpty) {
+      println(s"Warning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
     }
+
+    val applyCmdParams = prms.andThen(sbtSetup(loader))
 
     def receiveMessage(msg: String) = None
 
@@ -236,7 +239,5 @@ final class ScalaCheckFramework extends Framework {
       send(s"d$testCount,$successCount,$failureCount,$errorCount")
       ""
     }
-
   }
-
 }

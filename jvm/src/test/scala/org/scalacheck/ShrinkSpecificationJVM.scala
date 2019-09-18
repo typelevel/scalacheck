@@ -1,6 +1,6 @@
 package org.scalacheck
 
-import Prop.{forAll, BooleanOperators}
+import Prop.{forAll, propBoolean}
 import Shrink.shrink
 import ShrinkSpecification.shrinkClosure
 

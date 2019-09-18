@@ -10,7 +10,6 @@
 package org.scalacheck
 
 import language.implicitConversions
-import language.reflectiveCalls
 
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
@@ -26,9 +25,8 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
-  import Gen.Parameters
 
-  def apply(prms: Parameters): Result
+  def apply(prms: Gen.Parameters): Result
 
   def viewSeed(name: String): Prop =
     Prop { prms0 =>
@@ -47,12 +45,17 @@ sealed abstract class Prop extends Serializable { self =>
   def useSeed(name: String, seed: Seed): Prop =
     Prop(prms0 => self(prms0.withInitialSeed(seed)))
 
-  def contramap(f: Parameters => Parameters): Prop =
+  def contramap(f: Gen.Parameters => Gen.Parameters): Prop =
     new PropFromFun(params => apply(f(params)))
 
   def map(f: Result => Result): Prop = Prop(prms => f(this(prms)))
 
-  def flatMap(f: Result => Prop): Prop = Prop(prms => f(this(prms))(prms))
+  def flatMap(f: Result => Prop): Prop =
+    Prop { prms0 =>
+      val res = this(prms0)
+      val prms1 = Prop.slideSeed(prms0)
+      f(res)(prms1)
+    }
 
   def combine(p: => Prop)(f: (Result, Result) => Result) =
     for(r1 <- this; r2 <- p) yield f(r1,r2)
@@ -100,14 +103,14 @@ sealed abstract class Prop extends Serializable { self =>
    *  as an application that checks itself on execution. Calls `System.exit`
    *  with a non-zero exit code if the property check fails. */
   def main(args: Array[String]): Unit = {
-    val ret = Test.cmdLineParser.parseParams(args) match {
+    val ret = Test.CmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
         val params = applyCmdParams(Test.Parameters.default)
         if (Test.check(params, this).passed) 0
         else 1
       case (_, os) =>
-        println(s"Incorrect options: $os")
-        Test.cmdLineParser.printHelp
+        Console.out.println("Incorrect options:\n  " + os.mkString(", "))
+        Test.CmdLineParser.printHelp()
         -1
     }
     if (ret != 0) System.exit(ret)
@@ -167,9 +170,7 @@ sealed abstract class Prop extends Serializable { self =>
 
 object Prop {
 
-  import Gen.{fail, Parameters}
   import Arbitrary.{arbitrary}
-  import Shrink.{shrink}
 
   // Types
 
@@ -303,7 +304,7 @@ object Prop {
   }
 
   /** Create a new property from the given function. */
-  def apply(f: Parameters => Result): Prop = new PropFromFun(prms =>
+  def apply(f: Gen.Parameters => Result): Prop = new PropFromFun(prms =>
     try f(prms) catch {
       case e: Throwable => Result(status = Exception(e))
     }
@@ -331,7 +332,9 @@ object Prop {
   }
 
   /** A collection of property operators on `Boolean` values.
-   *  Import [[Prop.BooleanOperators]] to make the operators available. */
+   *  Import [[Prop.propBoolean]] to make the operators available.
+   *  The availability of this class as an implicit via
+   *  [[#BooleanOperators]] will be removed in 1.15.0. */
   class ExtendedBoolean(b: => Boolean) {
     /** See the documentation for [[org.scalacheck.Prop]] */
     def ==>(p: => Prop) = Prop(b) ==> p
@@ -348,12 +351,13 @@ object Prop {
   /** Implicit method that makes a number of property operators on values of
    * type `Any` available in the current scope.
    * See [[Prop.ExtendedAny]] for documentation on the operators. */
-  implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty) = new ExtendedAny[T](x)
+  implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty): ExtendedAny[T] = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on boolean
    * values available in the current scope. See [[Prop.ExtendedBoolean]] for
    * documentation on the operators. */
-  implicit def BooleanOperators(b: => Boolean) = new ExtendedBoolean(b)
+  @deprecated("Please import Prop.propBoolean instead", since="1.14.1")
+  implicit def BooleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
 
   /** Implicit conversion of Boolean values to Prop values. */
   implicit def propBoolean(b: Boolean): Prop = Prop(b)
@@ -423,23 +427,23 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Prop*) = if(ps.isEmpty) proved else Prop(prms =>
-    ps.map(p => p(prms)).reduceLeft(_ && _)
-  )
+  def all(ps: Prop*): Prop =
+    ps.foldLeft(proved)(_ && _)
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Prop*) = if(ps.isEmpty) falsified else Prop(prms =>
-    ps.map(p => p(prms)).reduceLeft(_ || _)
-  )
+  def atLeastOne(ps: Prop*): Prop =
+    ps.foldLeft(falsified)(_ || _)
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */
-  def someFailing[T](gs: Seq[Gen[T]]) = atLeastOne(gs.map(_ == fail):_*)
+  def someFailing[T](gs: Seq[Gen[T]]): Prop =
+    atLeastOne(gs.map(_ == Gen.fail):_*)
 
   /** A property that holds iff none of the given generators
    *  fails generating a value */
-  def noneFailing[T](gs: Seq[Gen[T]]) = all(gs.map(_ !== fail):_*)
+  def noneFailing[T](gs: Seq[Gen[T]]): Prop =
+    all(gs.map(_ !== Gen.fail):_*)
 
   /** Returns true if the given statement throws an exception
    *  of the specified type */
@@ -448,7 +452,7 @@ object Prop {
 
   /** Collect data for presentation in test report */
   def collect[T, P](f: T => P)(implicit ev: P => Prop): T => Prop = t => Prop { prms =>
-    val prop = f(t)
+    val prop = ev(f(t))
     prop(prms).collect(t)
   }
 
@@ -468,7 +472,7 @@ object Prop {
   /** Wraps and protects a property, turning exceptions thrown
    *  by the property into test failures. */
   def secure[P](p: => P)(implicit ev: P => Prop): Prop =
-    try (p: Prop) catch { case e: Throwable => exception(e) }
+    try ev(p) catch { case e: Throwable => exception(e) }
 
   /** Wraps a property to delay its evaluation. The given parameter is
    *  evaluated each time the wrapper property is evaluated. */
@@ -510,7 +514,7 @@ object Prop {
    * seed. In that case you should use `slideSeed` to update the
    * parameters.
    */
-  def startSeed(prms: Parameters): (Parameters, Seed) =
+  def startSeed(prms: Gen.Parameters): (Gen.Parameters, Seed) =
     prms.initialSeed match {
       case Some(seed) => (prms.withNoInitialSeed, seed)
       case None => (prms, Seed.random())
@@ -519,7 +523,7 @@ object Prop {
   /**
    *
    */
-  def slideSeed(prms: Parameters): Parameters =
+  def slideSeed(prms: Gen.Parameters): Gen.Parameters =
     prms.initialSeed match {
       case Some(seed) => prms.withInitialSeed(seed.slide)
       case None => prms
@@ -798,8 +802,8 @@ object Prop {
       case None => undecided(prms)
       case Some(x) =>
         val r = result(x)
-        if (!r.failure) r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
-        else shrinker(x,r,0,x)
+        if (r.failure && prms.useLegacyShrinking) shrinker(x,r,0,x)
+        else r.addArg(Arg(labels,x,0,x,pp(x),pp(x)))
     }
 
   }
@@ -812,7 +816,7 @@ object Prop {
     p: P => Prop,
     s1: Shrink[T1],
     pp1: T1 => Pretty
-  ): Prop = forAllShrink[T1,P](g1, shrink[T1])(f)
+  ): Prop = forAllShrink[T1,P](g1, s1.shrink)(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments
    *  with the default shrink function for the type */
@@ -910,7 +914,7 @@ object Prop {
     f: A1 => P)(implicit
     p: P => Prop,
     a1: Arbitrary[A1], s1: Shrink[A1], pp1: A1 => Pretty
-  ): Prop = forAllShrink(arbitrary[A1],shrink[A1])(f andThen p)
+  ): Prop = forAllShrink(arbitrary[A1], s1.shrink)(f andThen p)
 
   /** Converts a function into a universally quantified property */
   def forAll[A1,A2,P] (
@@ -992,7 +996,7 @@ object Prop {
   /** Ensures that the property expression passed in completes within the given
    *  space of time. */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = {
-    @tailrec def attempt(prms: Parameters, endTime: Long): Result = {
+    @tailrec def attempt(prms: Gen.Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
       if (System.currentTimeMillis > endTime) {
         (if(result.failure) result else Result(status = False)).label("Timeout")

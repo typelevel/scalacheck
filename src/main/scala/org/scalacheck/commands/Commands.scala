@@ -127,7 +127,7 @@ trait Commands {
     /** Wraps the run and postCondition methods in order not to leak the
      *  dependent Result type. */
     private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
-      import Prop.BooleanOperators
+      import Prop.propBoolean
       val r = Try(run(sut))
       (r.map(_.toString), s => preCondition(s) ==> postCondition(s,r))
     }
@@ -241,9 +241,9 @@ trait Commands {
                 true
               } else false
             }
-            if (doRun) runActions(sut,as, removeSut)
+            if (doRun) runActions(sut,as, removeSut())
             else {
-              removeSut
+              removeSut()
               Prop.undecided
             }
 
@@ -290,7 +290,7 @@ trait Commands {
   ): (Prop, List[List[(Command,Try[String])]]) = {
     import concurrent._
     val tp = java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
-    implicit val ec = ExecutionContext.fromExecutor(tp)
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
     val memo = collection.mutable.Map.empty[(State,List[Commands]), List[State]]
 
     def endStates(scss: (State, List[Commands])): List[State] = {

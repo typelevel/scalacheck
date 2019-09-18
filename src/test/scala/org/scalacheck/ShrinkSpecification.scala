@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Prop.{forAll, forAllNoShrink, BooleanOperators}
+import Prop.{forAll, forAllNoShrink, propBoolean}
 import Shrink.shrink
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -86,7 +86,7 @@ object ShrinkSpecification extends Properties("Shrink") {
     (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
-  implicit def vectorShrink[A: Shrink] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
+  implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
 
   property("either shrinks") = forAll { e: Either[Int, Long] =>
     !shrink(e).contains(e)

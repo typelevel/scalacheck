@@ -258,7 +258,16 @@ object Gen extends GenArities with GenVersionSpecific {
   //// Public interface ////
 
   /** Generator parameters, used by [[org.scalacheck.Gen.apply]] */
-  sealed abstract class Parameters extends Serializable {
+  sealed abstract class Parameters extends Serializable { outer =>
+
+    override def toString: String = {
+      val sb = new StringBuilder
+      sb.append("Parameters(")
+      sb.append(s"size=$size, ")
+      sb.append(s"initialSeed=$initialSeed, ")
+      sb.append(s"useLegacyShrinking=$useLegacyShrinking)")
+      sb.toString
+    }
 
     /**
      * The size of the generated value. Generator implementations are
@@ -268,26 +277,40 @@ object Gen extends GenArities with GenVersionSpecific {
      */
     val size: Int
 
+    private[this] def cpy(
+      size0: Int = outer.size,
+      initialSeed0: Option[Seed] = outer.initialSeed,
+      useLegacyShrinking0: Boolean = outer.useLegacyShrinking
+    ): Parameters =
+      new Parameters {
+        val size: Int = size0
+        val initialSeed: Option[Seed] = initialSeed0
+        override val useLegacyShrinking: Boolean = useLegacyShrinking0
+      }
+
     /**
      * Create a copy of this [[Gen.Parameters]] instance with
      * [[Gen.Parameters.size]] set to the specified value.
      */
     def withSize(size: Int): Parameters =
-      cp(size = size)
+      cpy(size0 = size)
 
     /**
      *
      */
     val initialSeed: Option[Seed]
 
+    def withInitialSeed(o: Option[Seed]): Parameters =
+      cpy(initialSeed0 = o)
+
     def withInitialSeed(seed: Seed): Parameters =
-      cp(initialSeed = Some(seed))
+      cpy(initialSeed0 = Some(seed))
 
     def withInitialSeed(n: Long): Parameters =
-      cp(initialSeed = Some(Seed(n)))
+      cpy(initialSeed0 = Some(Seed(n)))
 
     def withNoInitialSeed: Parameters =
-      cp(initialSeed = None)
+      cpy(initialSeed0 = None)
 
     def useInitialSeed[A](seed: Seed)(f: (Parameters, Seed) => A): A =
       initialSeed match {
@@ -295,7 +318,19 @@ object Gen extends GenArities with GenVersionSpecific {
         case None => f(this, seed)
       }
 
-    // private since we can't guarantee binary compatibility for this one
+    val useLegacyShrinking: Boolean = true
+
+    def disableLegacyShrinking: Parameters =
+      withLegacyShrinking(false)
+
+    def enableLegacyShrinking: Parameters =
+      withLegacyShrinking(true)
+
+    def withLegacyShrinking(b: Boolean): Parameters =
+      cpy(useLegacyShrinking0 = b)
+
+    // no longer used, but preserved for binary compatibility
+    @deprecated("cp is deprecated. use cpy.", "1.14.1")
     private case class cp(size: Int = size, initialSeed: Option[Seed] = None) extends Parameters
   }
 
@@ -599,7 +634,7 @@ object Gen extends GenArities with GenVersionSpecific {
   ): Gen[C] =
     sequence[C,T](Traversable.fill(n)(g)) suchThat { c =>
       // TODO: Can we guarantee c.size == n (See issue #89)?
-      c.forall(g.sieveCopy)
+      evt(c).forall(g.sieveCopy)
     }
 
   /** Generates a container of any Traversable type for which there exists an
@@ -610,7 +645,7 @@ object Gen extends GenArities with GenVersionSpecific {
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
     sized(s => choose(0, s max 0).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
-      if (c == null) g.sieveCopy(null) else c.forall(g.sieveCopy)
+      if (c == null) g.sieveCopy(null) else evt(c).forall(g.sieveCopy)
     }
 
   /** Generates a non-empty container of any Traversable type for which there
@@ -621,7 +656,7 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(_.size > 0)
+    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(c => evt(c).size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
@@ -698,7 +733,7 @@ object Gen extends GenArities with GenVersionSpecific {
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that randomly picks a given number of elements from a list
-   * 
+   *
    * The elements are not guaranteed to be permuted in random order.
    */
   def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
@@ -726,7 +761,7 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   /** A generator that randomly picks a given number of elements from a list
-   * 
+   *
    * The elements are not guaranteed to be permuted in random order.
    */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
@@ -770,6 +805,15 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Generates a ASCII printable character */
   def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
 
+  /** Generates a character that can represent a valid hexadecimal digit. This
+    * includes both upper and lower case values.
+    */
+  def hexChar: Gen[Char] =
+    Gen.oneOf(
+      Gen.oneOf("0123456789abcdef".toSeq),
+      Gen.oneOf("0123456789ABCDEF".toSeq)
+    )
+
   //// String Generators ////
 
   /** Generates a string that starts with a lower-case alpha character,
@@ -807,6 +851,11 @@ object Gen extends GenArities with GenVersionSpecific {
   def asciiPrintableStr: Gen[String] =
     listOf(asciiPrintableChar).map(_.mkString)
 
+  /** Generates a string that can represent a valid hexadecimal digit. This
+    * includes both upper and lower case values.
+    */
+  def hexStr: Gen[String] =
+    listOf(hexChar).map(_.mkString)
 
   //// Number Generators ////
 

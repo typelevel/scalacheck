@@ -41,7 +41,7 @@ private[scalacheck] object Platform {
     else {
       import concurrent._
       val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
-      implicit val ec = ExecutionContext.fromExecutor(tp)
+      implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
       try {
         val fs = List.range(0,workers) map (idx => Future {
           params.customClassLoader.map(
