@@ -56,13 +56,18 @@ case "$1" in
     *) echo "unknown argument: $1"; usage;;
 esac
 
+# first we clean everything to avoid stale artifacts.
+runsbt "+ clean"
+
 # step 4a: jvm release
 runsbt "+ jvm/$CMD"
 
-# step 4b: js releases
+# step 4b: js releases (clean versions)
 SCALAJS_VERSION="0.6.28" runsbt "+ js/$CMD"
+runsbt "+ js/clean"
 SCALAJS_VERSION="1.0.0-M8" runsbt "+ js/$CMD"
 
-# step 4c: native releases
+# step 4c: native releases (clean versions)
 SCALANATIVE_VERSION="0.3.9" runsbt "+ native/$CMD"
+runsbt "+ native/clean"
 SCALANATIVE_VERSION="0.4.0-M2" runsbt "+ native/$CMD"
