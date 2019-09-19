@@ -1,6 +1,6 @@
 # ScalaCheck CHANGELOG
 
-## 1.14.1 (UNRELEASED)
+## 1.14.1 (2019-09-18)
 
 * Binary compatible with 1.14.0 version of ScalaCheck.
 

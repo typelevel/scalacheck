@@ -10,8 +10,8 @@ features of QuickCheck can be found in ScalaCheck and vice versa, though.
 
 ScalaCheck 1.14.1 is a minor update from ScalaCheck 1.14.0, and it is
 binary compatible. This means that if you
-are using any other framework in combination with ScalaCheck, like `ScalaTest`
-or `specs2` you can typically just bump the version of ScalaCheck in your
+are using any other framework in combination with ScalaCheck, like [ScalaTest](http://www.scalatest.org/)
+or [specs2](http://specs2.org/) you can typically just bump the version of ScalaCheck in your
 build definition or wait for those libraries to transitively do it for you in their next update.  You still need to make sure that the combination of frameworks you
 are using was built and tested together with each other, otherwise you can run
 into errors related to binary compatibility that are possibly very hard to
