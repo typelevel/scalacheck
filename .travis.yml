@@ -40,6 +40,7 @@ cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
+    - $HOME/.cache/coursier
 
 matrix:
   include:
