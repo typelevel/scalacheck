@@ -111,7 +111,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
       Option(System.getenv("SCALAJS_VERSION")).filter(_.startsWith("1.0.0-M")).isDefined
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
-    else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.1")
   },
 
   publishTo := {
