@@ -21,6 +21,9 @@ lazy val scalaVersionSettings = Seq(
   }
 )
 
+lazy val scalaJSVersion =
+  Option(System.getenv("SCALAJS_VERSION")).getOrElse("0.6.29")
+
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   name := "scalacheck",
@@ -106,7 +109,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   mimaPreviousArtifacts := {
     val isScalaJSMilestone: Boolean =
-      Option(System.getenv("SCALAJS_VERSION")).filter(_.startsWith("1.0.0-M")).isDefined
+      scalaJSVersion.startsWith("1.0.0-M")
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
@@ -145,8 +148,11 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
-    // remove scala 2.10 since scala.js dropped support
-    crossScalaVersions := Seq("2.11.12", "2.12.9", scalaVersion.value),
+    // remove scala 2.10 since scala.js 1.0 dropped support
+    crossScalaVersions -= {
+      if (scalaJSVersion.startsWith("1.0")) "2.10.7"
+      else ""
+    },
     scalaJSStage in Global := FastOptStage,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
