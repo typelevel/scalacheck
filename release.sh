@@ -63,11 +63,11 @@ runsbt "+ clean"
 runsbt "+ jvm/$CMD"
 
 # step 4b: js releases (clean versions)
-SCALAJS_VERSION="0.6.28" runsbt "+ js/$CMD"
+runsbt "+ js/$CMD" # Scala.js 0.6.x
 runsbt "+ js/clean"
 SCALAJS_VERSION="1.0.0-M8" runsbt "+ js/$CMD"
 
 # step 4c: native releases (clean versions)
-SCALANATIVE_VERSION="0.3.9" runsbt "+ native/$CMD"
+runsbt "+ native/$CMD" # Scala Native 0.3.x
 runsbt "+ native/clean"
 SCALANATIVE_VERSION="0.4.0-M2" runsbt "+ native/$CMD"
