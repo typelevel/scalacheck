@@ -12,7 +12,6 @@
 # step 3: edit build.sbt
 #    a. set versionNumber to this release number (e.g. "1.14.2" or "1.14.3-M1")
 #       this version could include RC or M but should not include SNAPSHOT.
-#    b. set isRelease to true
 #
 # step 4: start the actual release
 #    a. run ./release.sh publishSigned
@@ -24,7 +23,6 @@
 # step 5: edit build.sbt again
 #    a. set versionNumber to the next release number (e.g. "1.14.3")
 #       note -- don't include SNAPSHOT, RC, or M in this version.
-#    b. set isRelease back to false
 
 usage() {
     echo "usage: $0 [compile | test | package | publishLocal | publishSigned]"
@@ -35,7 +33,7 @@ runsbt() {
     sbt "$1"
     RES=$?
     if [ $RES -ne 0 ]; then
-        echo "sbt '$1' failed: $RES"
+        echo "sbt 'set every isRelease := true' '$1' failed: $RES"
         exit $RES
     fi
 }
@@ -43,15 +41,7 @@ runsbt() {
 if [ $# -ne 1 ]; then usage; fi
 
 case "$1" in
-    compile|test|package|publishLocal)
-        CMD="$1";;
-    publishSigned)
-        egrep -q '^lazy val isRelease = true$' build.sbt
-        if [ $? -ne 0 ]; then
-            echo "isRelease is not true in build.sbt. fix this!"
-            echo "also make sure versionNumber is correct!"
-            usage
-        fi
+    compile|test|package|publishLocal|publishSigned)
         CMD="$1";;
     *) echo "unknown argument: $1"; usage;;
 esac

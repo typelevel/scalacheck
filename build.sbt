@@ -6,7 +6,7 @@ scalaVersionSettings
 
 lazy val versionNumber = "1.14.2"
 
-lazy val isRelease = false
+val isRelease = SettingKey[Boolean]("isRelease")
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
@@ -25,14 +25,16 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   name := "scalacheck",
 
+  isRelease := false,
+
   version := {
     val suffix =
-      if (isRelease) ""
+      if (isRelease.value) ""
       else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
     versionNumber + suffix
   },
 
-  isSnapshot := !isRelease,
+  isSnapshot := !isRelease.value,
 
   organization := "org.scalacheck",
 
@@ -122,7 +124,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   publishMavenStyle := true,
 
   // Travis should only publish snapshots
-  publishArtifact := !(isRelease && travisCommit.isDefined),
+  publishArtifact := !(isRelease.value && travisCommit.isDefined),
 
   publishArtifact in Test := false,
 
