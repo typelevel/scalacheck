@@ -29,6 +29,9 @@ env:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
+    - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.0-M8
 sudo: false
 
 before_cache:
@@ -69,15 +72,35 @@ matrix:
       - cd scalafix
       - sbt tests/test
   exclude:
+    - jdk: oraclejdk8
+      env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
+    - jdk: oraclejdk8
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
+    - jdk: oraclejdk8
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
+    - jdk: openjdk11
+      env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true
+    - jdk: openjdk11
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
+    - jdk: openjdk11
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.0-M8
     - scala: 2.10.7
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
+    - scala: 2.10.7
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.0-M8
     - scala: 2.11.12
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
+    - scala: 2.11.12
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.0-M8
     - jdk: openjdk11
       scala: 2.10.7
     - jdk: openjdk11
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
     - jdk: openjdk11
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
+    - jdk: openjdk11
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
+    - jdk: openjdk11
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.0-M8
     - jdk: openjdk11
       scala: 2.11.12
