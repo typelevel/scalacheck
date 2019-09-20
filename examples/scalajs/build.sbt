@@ -8,4 +8,4 @@ scalaVersion := "2.12.10"
 
 javacOptions += "-Xmx2048M"
 
-libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.0" % "test"
+libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.1" % "test"
