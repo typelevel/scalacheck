@@ -63,7 +63,7 @@ runsbt "+ clean"
 runsbt "+ jvm/$CMD"
 
 # step 4b: js releases (clean versions)
-SCALAJS_VERSION="0.6.28" runsbt "+ js/$CMD"
+SCALAJS_VERSION="0.6.29" runsbt "+ js/$CMD"
 runsbt "+ js/clean"
 SCALAJS_VERSION="1.0.0-M8" runsbt "+ js/$CMD"
 
