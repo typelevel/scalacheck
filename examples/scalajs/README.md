@@ -1,9 +1,9 @@
 # Using ScalaCheck with Scala.js
 
 ScalaCheck has experimental support for [Scala.js](http://www.scala-js.org/).
-The current master branch of ScalaCheck has been ported to work with Scala.js,
-and a snapshot version has been released. Not all parts of ScalaCheck works
-yet, but around 40% of ScalaCheck's own test suite runs fine under Scala.js.
+The current release of ScalaCheck has artifacts published to work with Scala.js.
+Not all parts of ScalaCheck work in Scala.js,
+but around 40% of ScalaCheck's own test suite runs fine under Scala.js.
 Feel free reporting issues when you find things that don't work as expected.
 
 ## Get started
@@ -24,14 +24,10 @@ The following is what you need to add to your `build.sbt` file to make the
 ScalaCheck test runner work:
 
 ```
-libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.0" % "test"
+libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.1" % "test"
 ```
 
 ## Limitations
-
-The ScalaCheck Scala.js test runner doesn't parse any options yet, so you can't
-change parameters like `minSuccessfulTests` yet. That parameter defaults to
-`10` for Scala.js tests, not the usual `100`.
 
 No attempts have yet been made on making ScalaCheck work together with other
 test frameworks for Scala.js.
