@@ -68,6 +68,8 @@ matrix:
       script:
       - cd scalafix
       - sbt tests/test
+    - scala: 0.18.1-RC1
+      env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
   exclude:
     - scala: 2.10.7
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8

@@ -417,7 +417,7 @@ object Gen extends GenArities with GenVersionSpecific {
       new Choose[Long] {
         def choose(low: Long, high: Long): Gen[Long] =
           if (low > high) throw new IllegalBoundsError(low, high)
-        else gen(chLng(low,high))
+          else gen(chLng(low,high))
       }
 
     implicit val chooseInt: Choose[Int] =

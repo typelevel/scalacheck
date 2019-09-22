@@ -19,6 +19,7 @@ object MimaSettings {
   )
 
   private def removedPrivateMethods = Seq(
+    "org.scalacheck.Prop.BooleanOperators"
   )
 
   private def removedPrivateClasses = Seq(

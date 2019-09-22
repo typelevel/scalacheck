@@ -334,7 +334,7 @@ object Prop {
   /** A collection of property operators on `Boolean` values.
    *  Import [[Prop.propBoolean]] to make the operators available.
    *  The availability of this class as an implicit via
-   *  [[#BooleanOperators]] will be removed in 1.15.0. */
+   *  `BooleanOperators` was removed in 1.15.0. */
   class ExtendedBoolean(b: => Boolean) {
     /** See the documentation for [[org.scalacheck.Prop]] */
     def ==>(p: => Prop) = Prop(b) ==> p
@@ -357,7 +357,7 @@ object Prop {
    * values available in the current scope. See [[Prop.ExtendedBoolean]] for
    * documentation on the operators. */
   @deprecated("Please import Prop.propBoolean instead", since="1.14.1")
-  implicit def BooleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
+  implicit private[this] def BooleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
 
   /** Implicit conversion of Boolean values to Prop values. */
   implicit def propBoolean(b: Boolean): Prop = Prop(b)

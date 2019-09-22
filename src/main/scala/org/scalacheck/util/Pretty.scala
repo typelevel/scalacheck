@@ -148,7 +148,7 @@ object Pretty {
           (xs,r) <- fm.getRatios
           ys = xs - (())
           if !ys.isEmpty
-        } yield round(r*100)+"% " + ys.mkString(", ")
+        } yield round(r*100).toString + "% " + ys.mkString(", ")
       }.mkString("\n")
     }
   }

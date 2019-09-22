@@ -16,7 +16,7 @@ import scala.collection.mutable.Builder
 
 
 private[util] trait BuildableVersionSpecific {
-  implicit def buildableFactory[T,C](implicit f: Factory[T,C]) =
+  implicit def buildableFactory[T,C](implicit f: Factory[T,C]): Buildable[T,C] =
     new Buildable[T,C] {
       def builder = f.newBuilder
     }
