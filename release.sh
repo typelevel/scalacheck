@@ -30,10 +30,10 @@ usage() {
 }
 
 runsbt() {
-    sbt "$1"
+    IS_RELEASE="true" sbt "$1"
     RES=$?
     if [ $RES -ne 0 ]; then
-        echo "sbt 'set every isRelease := true' '$1' failed: $RES"
+        echo "sbt '$1' failed: $RES"
         exit $RES
     fi
 }
