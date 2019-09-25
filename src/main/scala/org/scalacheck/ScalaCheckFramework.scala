@@ -28,7 +28,11 @@ private abstract class ScalaCheckRunner extends Runner {
 
   def deserializeTask(task: String, deserializer: String => TaskDef): BaseTask = {
     val taskDef = deserializer(task)
-    if (taskDef.selectors.isEmpty) rootTask(taskDef)
+    val countTestSelectors = taskDef.selectors.toSeq.count {
+      case _:TestSelector => true
+      case _ => false
+    }
+    if (countTestSelectors == 0) rootTask(taskDef)
     else checkPropTask(taskDef, single = true)
   }
 
