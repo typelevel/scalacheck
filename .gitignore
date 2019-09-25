@@ -5,19 +5,11 @@
 /build
 /.settings
 /dist
-/.Test.scala.swp
-target
 /lib_managed
 /src_managed
 
-# /project/
-/project/boot
-/project/project/
-/project/target/
-/project/build/target
-
-/examples/simple-sbt/project/
-/examples/simple-sbt/target/
+# sbt
+target/
 
 # Intellij
 .idea

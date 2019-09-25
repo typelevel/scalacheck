@@ -4,15 +4,15 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
-lazy val versionNumber = "1.14.1"
+lazy val versionNumber = "1.14.2"
 
-lazy val isRelease = false
+val isRelease = SettingKey[Boolean]("isRelease")
 
 lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.13.0",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.9", scalaVersion.value),
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.10", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -28,14 +28,16 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   name := "scalacheck",
 
+  isRelease := false,
+
   version := {
     val suffix =
-      if (isRelease) ""
+      if (isRelease.value) ""
       else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
     versionNumber + suffix
   },
 
-  isSnapshot := !isRelease,
+  isSnapshot := !isRelease.value,
 
   organization := "org.scalacheck",
 
@@ -112,7 +114,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
       scalaJSVersion.startsWith("1.0.0-M")
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
-    else Set("org.scalacheck" %%% "scalacheck" % "1.14.0")
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.1")
   },
 
   publishTo := {
@@ -125,7 +127,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   publishMavenStyle := true,
 
   // Travis should only publish snapshots
-  publishArtifact := !(isRelease && travisCommit.isDefined),
+  publishArtifact := !(isRelease.value && travisCommit.isDefined),
 
   publishArtifact in Test := false,
 

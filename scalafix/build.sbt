@@ -21,13 +21,13 @@ lazy val rules = project
 lazy val input = project
   .settings(
     skip in publish := true,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1",
   )
 
 lazy val output = project
   .settings(
     skip in publish := true,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1",
   )
 
 lazy val tests = project

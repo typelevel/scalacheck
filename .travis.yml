@@ -16,8 +16,8 @@ notifications:
 scala:
   - 2.10.7
   - 2.11.12
-  - 2.12.9
-  - 2.13.0
+  - 2.12.10
+  - 2.13.1
 jdk:
   - oraclejdk8
   - openjdk11
@@ -40,6 +40,7 @@ cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
+    - $HOME/.cache/coursier
 
 matrix:
   include:
