@@ -6,9 +6,12 @@ scalaVersionSettings
 
 lazy val versionNumber = "1.14.2"
 
-val isRelease = SettingKey[Boolean]("isRelease")
+def env(name: String): Option[String] =
+  Option(System.getenv(name))
 
-lazy val travisCommit = Option(System.getenv().get("TRAVIS_COMMIT"))
+val isRelease = env("IS_RELEASE").exists(_ == "true")
+
+lazy val travisCommit = env("TRAVIS_COMMIT")
 
 lazy val scalaVersionSettings = Seq(
   scalaVersion := "2.13.1",
@@ -22,22 +25,20 @@ lazy val scalaVersionSettings = Seq(
 )
 
 lazy val scalaJSVersion =
-  Option(System.getenv("SCALAJS_VERSION")).getOrElse("0.6.29")
+  env("SCALAJS_VERSION").getOrElse("0.6.29")
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   name := "scalacheck",
 
-  isRelease := false,
-
   version := {
     val suffix =
-      if (isRelease.value) ""
+      if (isRelease) ""
       else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
     versionNumber + suffix
   },
 
-  isSnapshot := !isRelease.value,
+  isSnapshot := !isRelease,
 
   organization := "org.scalacheck",
 
@@ -46,8 +47,8 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   homepage := Some(url("http://www.scalacheck.org")),
 
   credentials ++= (for {
-    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
-    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+    username <- env("SONATYPE_USERNAME")
+    password <- env("SONATYPE_PASSWORD")
   } yield Credentials(
     "Sonatype Nexus Repository Manager",
     "oss.sonatype.org",
@@ -127,7 +128,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   publishMavenStyle := true,
 
   // Travis should only publish snapshots
-  publishArtifact := !(isRelease.value && travisCommit.isDefined),
+  publishArtifact := !(isRelease && travisCommit.isDefined),
 
   publishArtifact in Test := false,
 
