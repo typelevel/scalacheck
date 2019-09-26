@@ -1,5 +1,43 @@
 # ScalaCheck CHANGELOG
 
+## 1.14.2 (2019-09-25)
+
+* Binary compatible with 1.14.1 version of ScalaCheck.
+
+### Changed
+
+* No user-visible changes.
+
+### Fixed
+
+* Tests are not being run at all on Scala.js
+  [#557](https://github.com/typelevel/scalacheck/issues/557)
+
+### Added
+
+* No added features.
+
+### Administrivia
+
+* Further improvements to ScalaCheck release script
+
+* Update build to sbt 1.3.2
+
+* Update MiMa plugin to 0.6.1
+
+* Update sbt-pgp to 2.0.0
+
+* Update Scala.js example project
+
+### Contributors
+
+This release was made possible by contributions from the following people:
+
+* Aaron S. Hawley
+* Erik Osheim
+* Scala Steward
+* Kenji Yoshida
+
 ## 1.14.1 (2019-09-18)
 
 * Binary compatible with 1.14.0 version of ScalaCheck.

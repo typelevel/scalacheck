@@ -118,6 +118,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.1")
   },
 
+  /* Snapshots are published after successful merges to master.
+   * Available with the following sbt snippet:
+   * resolvers +=
+   *   "Sonatype OSS Snapshots" at
+   *   "https://oss.sonatype.org/content/repositories/snapshots",
+   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1-7ad5373-SNAPSHOT" % "test",
+   */
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
