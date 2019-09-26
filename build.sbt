@@ -4,7 +4,7 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
-lazy val versionNumber = "1.14.2"
+lazy val versionNumber = "1.14.3"
 
 def env(name: String): Option[String] =
   Option(System.getenv(name))
@@ -115,7 +115,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
       scalaJSVersion.startsWith("1.0.0-M")
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
-    else Set("org.scalacheck" %%% "scalacheck" % "1.14.1")
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.2")
   },
 
   /* Snapshots are published after successful merges to master.
@@ -123,7 +123,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
    * resolvers +=
    *   "Sonatype OSS Snapshots" at
    *   "https://oss.sonatype.org/content/repositories/snapshots",
-   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1-7ad5373-SNAPSHOT" % "test",
+   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.2-64e1fc4-SNAPSHOT" % "test",
    */
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
