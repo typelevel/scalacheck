@@ -14,7 +14,5 @@ libraryDependencies ++= Seq(
 //  "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.1"
 )
 
-javacOptions ++= Seq("-Xmx1024M")
-
 // JNI workaround, http://stackoverflow.com/questions/19425613/unsatisfiedlinkerror-with-native-library-under-sbt
 fork := true

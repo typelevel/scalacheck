@@ -1,13 +1,11 @@
 language: scala
-dist: trusty
 script: ./tools/travis-script.sh
 after_success: ./tools/travis-deploy.sh
 branches:
   only:
     - master
-    - 1.12.x
-    - 1.13.x
     - 1.14.x
+    - 1.15.x
 notifications:
   email:
     - rickynils@gmail.com
@@ -19,7 +17,7 @@ scala:
   - 2.12.10
   - 2.13.1
 jdk:
-  - oraclejdk8
+  - openjdk8
   - openjdk11
 env:
   global:
@@ -50,18 +48,10 @@ matrix:
     - scala: 2.11.12
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
-      sudo: required
-      addons:
-        apt:
-          update: true # https://github.com/typelevel/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - scala: 2.11.12
       before_script:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
-      sudo: required
-      addons:
-        apt:
-          update: true # https://github.com/rickynils/scalacheck/issues/412
       env: PLATFORM=native SBT_PARALLEL=true SCALANATIVE_VERSION="0.4.0-M2" WORKERS=1 DEPLOY=true
     - env: EXAMPLES
       script:
@@ -72,11 +62,11 @@ matrix:
       - cd scalafix
       - sbt tests/test
   exclude:
-    - jdk: oraclejdk8
+    - jdk: openjdk8
       env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
-    - jdk: oraclejdk8
+    - jdk: openjdk8
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
-    - jdk: oraclejdk8
+    - jdk: openjdk8
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.0-M8
     - jdk: openjdk11
       env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true

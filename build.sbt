@@ -80,8 +80,6 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
-  javacOptions += "-Xmx1024M",
-
   // 2.10 - 2.13
   scalacOptions ++= {
     def mk(r: Range)(strs: String*): Int => Seq[String] =
@@ -141,18 +139,20 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   pomIncludeRepository := { _ => false },
 
-  pomExtra := {
-    <scm>
-      <url>https://github.com/typelevel/scalacheck</url>
-      <connection>scm:git:git@github.com:typelevel/scalacheck.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>rickynils</id>
-        <name>Rickard Nilsson</name>
-      </developer>
-    </developers>
-  }
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/typelevel/scalacheck"),
+      "scm:git:git@github.com:typelevel/scalacheck.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      id    = "rickynils",
+      name  = "Rickard Nilsson",
+      email = "rickynils@gmail.com",
+      url   = url("https://github.com/rickynils")
+    )
+  )
 )
 
 lazy val js = project.in(file("js"))
@@ -171,7 +171,11 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    fork in Test := true,
+    fork in Test := {
+      // Serialization issue in 2.13
+      scalaMajorVersion.value == 13 // ==> true
+      // else ==> false
+    },
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 

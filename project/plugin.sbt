@@ -27,5 +27,3 @@ val scalaNativeVersion = env("SCALANATIVE_VERSION") match {
 }
 
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % scalaNativeVersion)
-
-scalacOptions += "-deprecation"
