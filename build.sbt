@@ -72,7 +72,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   },
 
   unmanagedSourceDirectories in Compile += {
-    val s = if (scalaMajorVersion.value >= 13) "+" else "-"
+    val s = if (scalaMajorVersion.value >= 13 || isDotty.value) "+" else "-"
     (baseDirectory in LocalRootProject).value / "src" / "main" / s"scala-2.13$s"
   },
 
@@ -96,7 +96,10 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
         "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
     val n = scalaMajorVersion.value
-    groups.flatMap(f => f(n))
+    if (isDotty.value)
+      Seq("-language:Scala2")
+    else
+      groups.flatMap(f => f(n))
   },
 
   // HACK: without these lines, the console is basically unusable,
@@ -112,7 +115,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     val isScalaJSMilestone: Boolean =
       scalaJSVersion.startsWith("1.0.0-M")
     // TODO: re-enable MiMa for 2.14 once there is a final version
-    if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
+    if (scalaMajorVersion.value == 14 || isScalaJSMilestone || isDotty.value) Set()
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.2")
   },
 
@@ -166,6 +169,7 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
+    crossScalaVersions += "0.19.0-RC1",
     fork in Test := {
       // Serialization issue in 2.13
       scalaMajorVersion.value == 13 // ==> true
