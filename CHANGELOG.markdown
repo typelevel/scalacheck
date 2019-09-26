@@ -1,5 +1,9 @@
 # ScalaCheck CHANGELOG
 
+### Changed
+
+* Force posNum and negNum to retry if they produce an illegal value and otherwise would produce None, since 1.14.1.
+
 ## 1.14.2 (2019-09-25)
 
 * Binary compatible with 1.14.1 version of ScalaCheck.
