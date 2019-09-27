@@ -871,7 +871,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
-  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum[T].map(num.negate(_))
+  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate _)
 
   /** Generates numbers within the given inclusive range, with
    *  extra weight on zero, +/- unity, both extremities, and any special
