@@ -790,86 +790,120 @@ object Gen extends GenArities with GenVersionSpecific {
 
   //// Character Generators ////
 
+  private def charSample(cs: Array[Char]): Gen[Char] =
+    new Gen[Char] {
+      def doApply(p: P, seed0: Seed): Gen.R[Char] = {
+        val (x, seed1) = seed0.long
+        val i = ((x & Long.MaxValue) % cs.length).toInt
+        r(Some(cs(i)), seed1)
+      }
+    }
+
   /** Generates a numerical character */
   val numChar: Gen[Char] =
-    choose(48.toChar, 57.toChar)
+    charSample(('0' to '9').toArray)
 
   /** Generates an upper-case alpha character */
   val alphaUpperChar: Gen[Char] =
-    choose(65.toChar, 90.toChar)
+    charSample(('A' to 'Z').toArray)
 
   /** Generates a lower-case alpha character */
   val alphaLowerChar: Gen[Char] =
-    choose(97.toChar, 122.toChar)
+    charSample(('a' to 'z').toArray)
 
   /** Generates an alpha character */
-  val alphaChar: Gen[Char] =
-    frequency((1,alphaUpperChar), (9,alphaLowerChar))
+  val alphaChar =
+    charSample((('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates an alphanumerical character */
-  val alphaNumChar: Gen[Char] =
-    frequency((1,numChar), (9,alphaChar))
+  val alphaNumChar =
+    charSample((('0' to '9') ++ ('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates a ASCII character, with extra weighting for printable characters */
   val asciiChar: Gen[Char] =
-    chooseNum(0, 127, 32 to 126:_*).map(_.toChar)
+    charSample((0.toChar to 127.toChar).toArray)
 
   /** Generates a ASCII printable character */
   val asciiPrintableChar: Gen[Char] =
-    choose(32.toChar, 126.toChar)
+    charSample((32.toChar to 126.toChar).toArray)
 
   /** Generates a character that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
   val hexChar: Gen[Char] =
-    Gen.oneOf(
-      Gen.oneOf("0123456789abcdef".toSeq),
-      Gen.oneOf("0123456789ABCDEF".toSeq)
-    )
+    charSample("0123456789abcdef0123456789ABCDEF".toArray)
 
   //// String Generators ////
+
+  @tailrec private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] =
+    if (n <= 0) {
+      r(Some(sb.toString), seed0)
+    } else {
+      val res = gc.doApply(p, seed0)
+      res.retrieve match {
+        case Some(c) =>
+          sb += c
+        case None =>
+          ()
+      }
+      mkString(n - 1, sb, gc, p, res.seed)
+    }
+
+  def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
+    gen { (p, seed) =>
+      mkString(n, new StringBuilder, gc, p, seed)
+    }
+
+  def stringOf(gc: Gen[Char]): Gen[String] =
+    gen { (p, seed0) =>
+      val (n, seed1) = Gen.mkSize(p, seed0)
+      mkString(n, new StringBuilder, gc, p, seed1)
+    }
 
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
   val identifier: Gen[String] =
-    for {
-      c <- alphaLowerChar
-      cs <- listOf(alphaNumChar)
-    } yield (c::cs).mkString
+    gen { (p, seed0) =>
+      val (n, seed1) = Gen.mkSize(p, seed0)
+      val sb = new StringBuilder
+      val res1 = alphaLowerChar.doApply(p, seed1)
+      sb += res1.retrieve.get
+      mkString(n - 1, sb, alphaNumChar, p, res1.seed)
+    }
 
   /** Generates a string of digits */
   val numStr: Gen[String] =
-    listOf(numChar).map(_.mkString)
+    stringOf(numChar)
 
   /** Generates a string of upper-case alpha characters */
   val alphaUpperStr: Gen[String] =
-    listOf(alphaUpperChar).map(_.mkString)
+    stringOf(alphaUpperChar)
 
   /** Generates a string of lower-case alpha characters */
   val alphaLowerStr: Gen[String] =
-      listOf(alphaLowerChar).map(_.mkString)
+    stringOf(alphaLowerChar)
 
   /** Generates a string of alpha characters */
   val alphaStr: Gen[String] =
-    listOf(alphaChar).map(_.mkString)
+    stringOf(alphaChar)
 
   /** Generates a string of alphanumerical characters */
   val alphaNumStr: Gen[String] =
-    listOf(alphaNumChar).map(_.mkString)
+    stringOf(alphaNumChar)
 
   /** Generates a string of ASCII characters, with extra weighting for printable characters */
   val asciiStr: Gen[String] =
-    listOf(asciiChar).map(_.mkString)
+    stringOf(asciiChar)
 
   /** Generates a string of ASCII printable characters */
   val asciiPrintableStr: Gen[String] =
-    listOf(asciiPrintableChar).map(_.mkString)
+    stringOf(asciiPrintableChar)
 
   /** Generates a string that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
   val hexStr: Gen[String] =
-    listOf(hexChar).map(_.mkString)
+    stringOf(hexChar)
 
   //// Number Generators ////
 
@@ -1007,4 +1041,10 @@ object Gen extends GenArities with GenVersionSpecific {
     1 -> const(Duration.Undefined),
     1 -> const(Duration.Zero),
     6 -> finiteDuration)
+
+  private def mkSize(p: Gen.Parameters, seed0: Seed): (Int, Seed) = {
+    val maxSize = Integer.max(p.size + 1, 1)
+    val (x, seed1) = seed0.long
+    ((x % maxSize).toInt, seed1)
+  }
 }
