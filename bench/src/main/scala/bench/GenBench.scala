@@ -34,60 +34,56 @@ class GenBench {
     Gen.choose(Int.MinValue, Int.MaxValue)
 
   @Benchmark
-  def const_(): List[Option[Long]] =
-    seeds.map(s => Gen.const(999L)(params, s))
+  def const_(): List[Long] =
+    seeds.map(s => Gen.const(999L).pureApply(params, s))
 
   @Benchmark
-  def int_(): List[Option[Int]] =
-    seeds.map(s => Gen.choose(Int.MinValue, Int.MaxValue).apply(params, s))
+  def int_(): List[Int] =
+    seeds.map(s => Gen.choose(Int.MinValue, Int.MaxValue).pureApply(params, s))
 
   @Benchmark
-  def double_(): List[Option[Double]] =
-    seeds.map(s => Gen.choose(Double.MinValue, Double.MaxValue).apply(params, s))
+  def double_(): List[Double] =
+    seeds.map(s => Gen.choose(Double.MinValue, Double.MaxValue).pureApply(params, s))
 
   @Benchmark
-  def optionInt(): List[Option[Option[Int]]] =
-    seeds.map(s => Gen.option(genInt)(params, s))
+  def optionInt(): List[Option[Int]] =
+    seeds.map(s => Gen.option(genInt).pureApply(params, s))
 
   @Benchmark
-  def eitherIntInt(): List[Option[Either[Int, Int]]] =
-    seeds.map(s => Gen.either(genInt, genInt)(params, s))
+  def eitherIntInt(): List[Either[Int, Int]] =
+    seeds.map(s => Gen.either(genInt, genInt).pureApply(params, s))
 
   @Benchmark
-  def listOfInt(): List[Option[List[Int]]] =
-    seeds.map(s => Gen.listOf(genInt)(params, s))
+  def listOfInt(): List[List[Int]] =
+    seeds.map(s => Gen.listOf(genInt).pureApply(params, s))
 
   @Benchmark
-  def identifier(): List[Option[String]] =
-    seeds.map(s => Gen.identifier(params, s))
+  def identifier(): List[String] =
+    seeds.map(s => Gen.identifier.pureApply(params, s))
 
   @Benchmark
-  def asciiPrintableStr(): List[Option[String]] =
-    seeds.map(s => Gen.asciiPrintableStr(params, s))
-
-  // @Benchmark
-  // def unicodeStr(): List[Option[String]] =
-  //   seeds.map(s => Gen.unicodeStr(params, s))
+  def asciiPrintableStr(): List[String] =
+    seeds.map(s => Gen.asciiPrintableStr.pureApply(params, s))
 
   private val gens = Vector.fill(10)(genInt)
 
   @Benchmark
-  def sequence(): List[Option[Seq[Int]]] =
-    seeds.map(s => Gen.sequence[Vector[Int], Int](gens).apply(params, s))
+  def sequence(): List[Seq[Int]] =
+    seeds.map(s => Gen.sequence[Vector[Int], Int](gens).pureApply(params, s))
 
   private val items = (1 to 100).toVector
 
   @Benchmark
-  def oneOf(): List[Option[Int]] =
-    seeds.map(s => Gen.oneOf(items)(params, s))
+  def oneOf(): List[Int] =
+    seeds.map(s => Gen.oneOf(items).pureApply(params, s))
 
   @Benchmark
-  def zipIntInt(): List[Option[(Int, Int)]] =
-    seeds.map(s => Gen.zip(genInt, genInt)(params, s))
+  def zipIntInt(): List[(Int, Int)] =
+    seeds.map(s => Gen.zip(genInt, genInt).pureApply(params, s))
 
   @Benchmark
-  def mapOfIntInt(): List[Option[Map[Int, Int]]] =
-    seeds.map(s => Gen.mapOf(Gen.zip(genInt, genInt))(params, s))
+  def mapOfIntInt(): List[Map[Int, Int]] =
+    seeds.map(s => Gen.mapOf(Gen.zip(genInt, genInt)).pureApply(params, s))
 
   private val gf = {
     val g = Gen.listOf(genInt)
@@ -95,14 +91,14 @@ class GenBench {
   }
 
   @Benchmark
-  def staticFrequency(): List[Option[List[Int]]] =
-    seeds.map(s => gf(params, s))
+  def staticFrequency(): List[List[Int]] =
+    seeds.map(s => gf.pureApply(params, s))
 
   @Benchmark
-  def dynamicFrequency(): List[Option[List[Int]]] =
+  def dynamicFrequency(): List[List[Int]] =
     seeds.map { s =>
       val g = Gen.listOf(genInt)
       val gf = Gen.frequency(1 -> g, 2 -> g, 3 -> g, 4 -> g, 5 -> g)
-      gf(params, s)
+      gf.pureApply(params, s)
     }
 }
