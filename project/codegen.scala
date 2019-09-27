@@ -84,20 +84,13 @@ object codegen {
   
   def zip(i: Int) = {
     val gens = flatMappedGenerators(i, idents("t",i) zip idents("g",i))
-  
-    def sieveCopy = idents("g",i) zip idents("t",i) map { case (g,t) => s"$g.sieveCopy($t)" } mkString " && "
     s"""
         |  /** Combines the given generators into one generator that produces a
         |   *  tuple of their generated values. */
         |  def zip[${types(i)}](
         |    ${wrappedArgs("Gen",i)}
-        |  ): Gen[(${types(i)})] = {
-        |    val g = $gens
-        |    g.suchThat {
-        |      case (${vals(i)}) =>
-        |        ${sieveCopy}
-        |    }
-        |  }
+        |  ): Gen[(${types(i)})] =
+        |    $gens
         |""".stripMargin
   }
   

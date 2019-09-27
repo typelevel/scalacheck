@@ -22,9 +22,10 @@ trait Buildable[T,C] extends Serializable {
 
 object Buildable extends BuildableVersionSpecific {
   import java.util.ArrayList
-  implicit def buildableArrayList[T]: Buildable[T, ArrayList[T]] = new Buildable[T,ArrayList[T]] {
-    def builder = new ArrayListBuilder[T]
-  }
+  implicit def buildableArrayList[T]: Buildable[T, ArrayList[T]] =
+    new Buildable[T, ArrayList[T]] {
+      def builder = new ArrayListBuilder[T]
+    }
 
   implicit def buildableSeq[T]: Buildable[T, Seq[T]] =
     new Buildable[T, Seq[T]] {
@@ -32,29 +33,3 @@ object Buildable extends BuildableVersionSpecific {
         Seq.newBuilder[T]
     }
 }
-
-/*
-object Buildable2 {
-
-  implicit def buildableMutableMap[T,U] = new Buildable2[T,U,mutable.Map] {
-    def builder = mutable.Map.newBuilder
-  }
-
-  implicit def buildableImmutableMap[T,U] = new Buildable2[T,U,immutable.Map] {
-    def builder = immutable.Map.newBuilder
-  }
-
-  implicit def buildableMap[T,U] = new Buildable2[T,U,Map] {
-    def builder = Map.newBuilder
-  }
-
-  implicit def buildableImmutableSortedMap[T: Ordering, U] = new Buildable2[T,U,immutable.SortedMap] {
-    def builder = immutable.SortedMap.newBuilder
-  }
-
-  implicit def buildableSortedMap[T: Ordering, U] = new Buildable2[T,U,SortedMap] {
-    def builder = SortedMap.newBuilder
-  }
-
-}
-*/

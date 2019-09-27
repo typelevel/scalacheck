@@ -3,6 +3,7 @@ package org.scalacheck.bench
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.rng.Seed
 
@@ -110,6 +111,10 @@ class GenBench {
   def asciiPrintableStr(): List[String] =
     seeds.map(s => Gen.asciiPrintableStr.pureApply(params, s))
 
+  @Benchmark
+  def arbitraryString(): List[String] =
+    seeds.map(s => arbitrary[String].pureApply(params, s))
+
   private val gens = Vector.fill(10)(genInt)
 
   @Benchmark
@@ -145,5 +150,13 @@ class GenBench {
       val g = Gen.listOf(genInt)
       val gf = Gen.frequency(1 -> g, 2 -> g, 3 -> g, 4 -> g, 5 -> g)
       gf.pureApply(params, s)
+    }
+
+  private def fg = Gen.choose(1, 100).filter(_ >= 3)
+
+  @Benchmark
+  def testFilter(): List[List[Int]] =
+    seeds.map { s =>
+      Gen.listOfN(100, fg).pureApply(params, s)
     }
 }

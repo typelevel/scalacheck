@@ -779,7 +779,7 @@ object Prop {
     }
 
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
-      val xs = shrink(x).filter(gr.sieve)
+      val xs = shrink(x)
       val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
       if(xs.isEmpty) res else getFirstFailure(xs) match {
         case Right((x2,r2)) => res
