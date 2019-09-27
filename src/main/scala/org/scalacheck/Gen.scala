@@ -45,9 +45,9 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   /** A class supporting filtered operations. */
   final class WithFilter(p: T => Boolean) {
-    def map[U](f: T => U): Gen[U] = Gen.this.suchThat(p).map(f)
-    def flatMap[U](f: T => Gen[U]): Gen[U] = Gen.this.suchThat(p).flatMap(f)
-    def withFilter(q: T => Boolean): WithFilter = Gen.this.withFilter(x => p(x) && q(x))
+    def map[U](f: T => U): Gen[U] = self.suchThat(p).map(f)
+    def flatMap[U](f: T => Gen[U]): Gen[U] = self.suchThat(p).flatMap(f)
+    def withFilter(q: T => Boolean): WithFilter = self.withFilter(x => p(x) && q(x))
   }
 
   /** Evaluate this generator with the given parameters */
@@ -107,11 +107,11 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
     def doApply(p: P, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
-        val res = Gen.this.doApply(p0, s0)
-        res.copy(s = { (x: T) => res.sieve(x) && f(x) })
+        val res = self.doApply(p0, s0)
+        res.copy(s = { (x:T) => res.sieve(x) && f(x) })
       }
     override def sieveCopy(x: Any) =
-      try Gen.this.sieveCopy(x) && f(x.asInstanceOf[T])
+      try self.sieveCopy(x) && f(x.asInstanceOf[T])
       catch { case _: java.lang.ClassCastException => false }
   }
 
@@ -178,10 +178,10 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   def label(l: String): Gen[T] = new Gen[T] {
     def doApply(p: P, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
-        val r = Gen.this.doApply(p0, s0)
+        val r = self.doApply(p0, s0)
         r.copy(l = r.labels + l)
       }
-    override def sieveCopy(x: Any) = Gen.this.sieveCopy(x)
+    override def sieveCopy(x: Any) = self.sieveCopy(x)
   }
 
   /** Put a label on the generator to make test reports clearer */
