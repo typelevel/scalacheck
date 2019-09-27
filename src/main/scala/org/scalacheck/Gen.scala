@@ -770,12 +770,8 @@ object Gen extends GenArities with GenVersionSpecific {
    *
    * The elements are not guaranteed to be permuted in random order.
    */
-  def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
-    val gs = g1 +: g2 +: gn
-    pick(n, 0 until gs.size).flatMap(idxs =>
-      sequence[List[T],T](idxs.toList.map(gs(_)))
-    ).suchThat(_.forall(x => gs.exists(_.sieveCopy(x))))
-  }
+  def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] =
+    sequence[Seq[T], T](g1 +: g2 +: gn)
 
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
