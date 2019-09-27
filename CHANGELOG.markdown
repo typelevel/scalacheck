@@ -1,5 +1,10 @@
 # ScalaCheck CHANGELOG
 
+### Fixed
+
+* Ensure posNum and negNum always return values
+  [#568](https://github.com/typelevel/scalacheck/issues/568)
+
 ## 1.14.2 (2019-09-25)
 
 * Binary compatible with 1.14.1 version of ScalaCheck.

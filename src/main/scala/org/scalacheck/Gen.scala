@@ -863,15 +863,15 @@ object Gen extends GenArities with GenVersionSpecific {
    *  upper bound of the generation size parameter. */
   def posNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
     import num._
-    sized(n => c.choose(zero, max(fromInt(n), one)).suchThat(_ != zero))
+    num match {
+      case _: Fractional[_] => sized(n => c.choose(zero, max(fromInt(n), one)).suchThat(_ != zero))
+      case _ => sized(n => c.choose(one, max(fromInt(n), one)))
+    }
   }
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
-  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
-    import num._
-    sized(n => c.choose(min(-fromInt(n), -one), zero).suchThat(_ != zero))
-  }
+  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate _)
 
   /** Generates numbers within the given inclusive range, with
    *  extra weight on zero, +/- unity, both extremities, and any special
