@@ -1,8 +1,9 @@
 # ScalaCheck CHANGELOG
 
-### Changed
+### Fixed
 
-* Force posNum and negNum to retry if they produce an illegal value and otherwise would produce None, since 1.14.1.
+* Ensure posNum and negNum always return values
+  [#568](https://github.com/typelevel/scalacheck/issues/568)
 
 ## 1.14.2 (2019-09-25)
 
