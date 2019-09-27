@@ -187,3 +187,14 @@ lazy val native = project.in(file("native"))
     )
   )
   .enablePlugins(ScalaNativePlugin)
+
+lazy val bench = project.in(file("bench"))
+  .dependsOn(jvm)
+  .settings(scalaVersionSettings: _*)
+  .settings(
+    name := "scalacheck-bench",
+    fork := true,
+    skip in publish := true,
+    mimaPreviousArtifacts := Set.empty,
+  )
+  .enablePlugins(JmhPlugin)
