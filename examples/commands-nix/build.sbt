@@ -3,6 +3,6 @@ name := "commands-nix"
 scalaVersion := "2.12.10"
 
 libraryDependencies ++= Seq(
-  "org.scalacheck" %% "scalacheck" % "1.14.1",
+  "org.scalacheck" %% "scalacheck" % "1.14.2",
   "net.java.dev.jna" % "jna" % "4.5.1"
 )
