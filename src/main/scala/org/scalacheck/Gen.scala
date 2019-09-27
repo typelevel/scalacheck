@@ -156,7 +156,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
-  def ==[U](g: Gen[U]) = Prop { prms =>
+  def ==[U](g: Gen[U]): Prop = Prop { prms =>
     // test equality using a random seed
     val seed = Seed.random()
     val lhs = doApply(prms, seed).retrieve
@@ -164,9 +164,10 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     if (lhs == rhs) Prop.proved(prms) else Prop.falsified(prms)
   }
 
-  def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
+  def !=[U](g: Gen[U]): Prop =
+    Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
 
-  def !==[U](g: Gen[U]) = Prop { prms =>
+  def !==[U](g: Gen[U]): Prop = Prop { prms =>
     // test inequality using a random seed
     val seed = Seed.random()
     val lhs = doApply(prms, seed).retrieve
@@ -185,16 +186,16 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   }
 
   /** Put a label on the generator to make test reports clearer */
-  def :|(l: String) = label(l)
+  def :|(l: String): Gen[T] = label(l)
 
   /** Put a label on the generator to make test reports clearer */
-  def |:(l: String) = label(l)
+  def |:(l: String): Gen[T] = label(l)
 
   /** Put a label on the generator to make test reports clearer */
-  def :|(l: Symbol) = label(l.name)
+  def :|(l: Symbol): Gen[T] = label(l.name)
 
   /** Put a label on the generator to make test reports clearer */
-  def |:(l: Symbol) = label(l.name)
+  def |:(l: Symbol): Gen[T] = label(l.name)
 
   /** Perform some RNG perturbation before generating */
   def withPerturb(f: Seed => Seed): Gen[T] =
@@ -235,14 +236,17 @@ object Gen extends GenArities with GenVersionSpecific {
       val result = r
     }
 
-    def map[U](f: T => U): R[U] = r(retrieve.map(f), seed).copy(l = labels)
+    def map[U](f: T => U): R[U] =
+      r(retrieve.map(f), seed).copy(l = labels)
 
-    def flatMap[U](f: T => R[U]): R[U] = retrieve match {
-      case None => r(None, seed).copy(l = labels)
-      case Some(t) =>
-        val r = f(t)
-        r.copy(l = labels ++ r.labels, sd = r.seed)
-    }
+    def flatMap[U](f: T => R[U]): R[U] =
+      retrieve match {
+        case None =>
+          r(None, seed).copy(l = labels)
+        case Some(t) =>
+          val r = f(t)
+          r.copy(l = labels ++ r.labels, sd = r.seed)
+      }
   }
 
   private[scalacheck] def r[T](r: Option[T], sd: Seed): R[T] = new R[T] {
@@ -485,7 +489,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
+  def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T, C]): Gen[C] = {
     val g = gen { (p, seed) =>
       gs.foldLeft(r(Some(Vector.empty[T]), seed)) {
         case (rs,g) =>
@@ -598,7 +602,7 @@ object Gen extends GenArities with GenVersionSpecific {
     if (filtered.isEmpty) {
       throw new IllegalArgumentException("no items with positive weights")
     } else {
-    var total = 0L
+      var total = 0L
       val builder = TreeMap.newBuilder[Long, Gen[T]]
       filtered.foreach { case (weight, value) =>
         total += weight
@@ -644,7 +648,8 @@ object Gen extends GenArities with GenVersionSpecific {
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0, s max 0).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
+    sized(s => choose(0, Integer.max(s, 0)).flatMap(n => buildableOfN[C, T](n, g)(evb, evt)))
+    .suchThat { c =>
       if (c == null) g.sieveCopy(null) else evt(c).forall(g.sieveCopy)
     }
 
@@ -656,50 +661,50 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(c => evt(c).size > 0)
+    sized(s => choose(1, Integer.max(s, 1)).flatMap(n => buildableOfN[C, T](n, g)(evb, evt))).suchThat(c => evt(c).size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOfN[C[T],T](n,g)
+  ): Gen[C[T]] = buildableOfN(n, g)(evb, evt)
 
   /** A convenience method for calling `buildableOf[C[T],T](g)`. */
   def containerOf[C[_],T](g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOf[C[T],T](g)
+  ): Gen[C[T]] = buildableOf(g)(evb, evt)
 
   /** A convenience method for calling `nonEmptyBuildableOf[C[T],T](g)`. */
   def nonEmptyContainerOf[C[_],T](g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = nonEmptyBuildableOf[C[T],T](g)
+  ): Gen[C[T]] = nonEmptyBuildableOf[C[T], T](g)(evb, evt)
 
   /** Generates a list of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
    *  `containerOf[List,T](g)`. */
-  def listOf[T](g: => Gen[T]) = buildableOf[List[T],T](g)
+  def listOf[T](g: => Gen[T]) = buildableOf[List[T], T](g)
 
   /** Generates a non-empty list of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
    *  `nonEmptyContainerOf[List,T](g)`. */
-  def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T],T](g)
+  def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T], T](g)
 
   /** Generates a list with at most the given number of elements. This method
    *  is equal to calling `containerOfN[List,T](n,g)`. */
-  def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T],T](n,g)
+  def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T], T](n, g)
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
    *  <code>containerOf[Map,(T,U)](g)</code>. */
-  def mapOf[T,U](g: => Gen[(T,U)]) = buildableOf[Map[T,U],(T,U)](g)
+  def mapOf[T, U](g: => Gen[(T, U)]) = buildableOf[Map[T, U], (T, U)](g)
 
   /** Generates a non-empty map of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
    *  <code>nonEmptyContainerOf[Map,(T,U)](g)</code>. */
-  def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T,U],(T,U)](g)
+  def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T, U],(T, U)](g)
 
   /** Generates a map with at most the given number of elements. This method
    *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
-  def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
+  def mapOfN[T,U](n: Int, g: Gen[(T, U)]) = buildableOfN[Map[T, U],(T, U)](n, g)
 
   /** Generates an infinite stream. */
   def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
@@ -716,20 +721,21 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](l: Iterable[T]) = choose(0,l.size).flatMap(pick(_,l))
+  def someOf[T](l: Iterable[T]): Gen[collection.Seq[T]] =
+    choose(0, l.size).flatMap(pick(_,l))
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+  def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[collection.Seq[T]] =
     choose(0, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that picks at least one element from a list */
-  def atLeastOne[T](l: Iterable[T]) = {
+  def atLeastOne[T](l: Iterable[T]): Gen[collection.Seq[T]] = {
     require(l.size > 0, "There has to be at least one option to choose from")
     choose(1,l.size).flatMap(pick(_,l))
   }
 
   /** A generator that picks at least one element from a list */
-  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[collection.Seq[T]] =
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that randomly picks a given number of elements from a list
