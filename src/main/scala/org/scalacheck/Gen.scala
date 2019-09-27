@@ -33,10 +33,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Just an alias */
   private type P = Gen.Parameters
 
-  /** Should be a copy of R.sieve. Used internally in Gen when some generators
-   *  with suchThat-clause are created (when R is not available). This method
-   *  actually breaks covariance, but since this method will only ever be
-   *  called with a value of exactly type T, it is OK. */
+  // This is no long used but preserved here for binary compatibility.
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
   private[scalacheck] def doApply(p: P, seed: Seed): R[T]
@@ -45,9 +42,9 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   /** A class supporting filtered operations. */
   final class WithFilter(p: T => Boolean) {
-    def map[U](f: T => U): Gen[U] = Gen.this.suchThat(p).map(f)
-    def flatMap[U](f: T => Gen[U]): Gen[U] = Gen.this.suchThat(p).flatMap(f)
-    def withFilter(q: T => Boolean): WithFilter = Gen.this.withFilter(x => p(x) && q(x))
+    def map[U](f: T => U): Gen[U] = self.suchThat(p).map(f)
+    def flatMap[U](f: T => Gen[U]): Gen[U] = self.suchThat(p).flatMap(f)
+    def withFilter(q: T => Boolean): WithFilter = self.withFilter(x => p(x) && q(x))
   }
 
   /** Evaluate this generator with the given parameters */
@@ -104,16 +101,14 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  the generator fails (returns None). Also, make sure that the provided
    *  test property is side-effect free, e.g. it should not use external vars.
    *  This method is identical to [Gen.filter]. */
-  def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) =
-      p.useInitialSeed(seed) { (p0, s0) =>
-        val res = Gen.this.doApply(p0, s0)
-        res.copy(s = { x:T => res.sieve(x) && f(x) })
-      }
-    override def sieveCopy(x: Any) =
-      try Gen.this.sieveCopy(x) && f(x.asInstanceOf[T])
-      catch { case _: java.lang.ClassCastException => false }
-  }
+  def suchThat(f: T => Boolean): Gen[T] =
+    new Gen[T] {
+      def doApply(p: P, seed: Seed): Gen.R[T] =
+        p.useInitialSeed(seed) { (p0, s0) =>
+          val r = self.doApply(p0, s0)
+          r.copy(r = r.retrieve.filter(f))
+        }
+    }
 
   case class RetryUntilException(n: Int) extends RuntimeException(s"retryUntil failed after $n attempts")
 
@@ -156,7 +151,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Returns a new property that holds if and only if both this
    *  and the given generator generates the same result, or both
    *  generators generate no result.  */
-  def ==[U](g: Gen[U]) = Prop { prms =>
+  def ==[U](g: Gen[U]): Prop = Prop { prms =>
     // test equality using a random seed
     val seed = Seed.random()
     val lhs = doApply(prms, seed).retrieve
@@ -164,9 +159,10 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     if (lhs == rhs) Prop.proved(prms) else Prop.falsified(prms)
   }
 
-  def !=[U](g: Gen[U]) = Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
+  def !=[U](g: Gen[U]): Prop =
+    Prop.forAll(this)(r => Prop.forAll(g)(_ != r))
 
-  def !==[U](g: Gen[U]) = Prop { prms =>
+  def !==[U](g: Gen[U]): Prop = Prop { prms =>
     // test inequality using a random seed
     val seed = Seed.random()
     val lhs = doApply(prms, seed).retrieve
@@ -178,23 +174,22 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   def label(l: String): Gen[T] = new Gen[T] {
     def doApply(p: P, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
-        val r = Gen.this.doApply(p0, s0)
+        val r = self.doApply(p0, s0)
         r.copy(l = r.labels + l)
       }
-    override def sieveCopy(x: Any) = Gen.this.sieveCopy(x)
   }
 
   /** Put a label on the generator to make test reports clearer */
-  def :|(l: String) = label(l)
+  def :|(l: String): Gen[T] = label(l)
 
   /** Put a label on the generator to make test reports clearer */
-  def |:(l: String) = label(l)
+  def |:(l: String): Gen[T] = label(l)
 
   /** Put a label on the generator to make test reports clearer */
-  def :|(l: Symbol) = label(l.name)
+  def :|(l: Symbol): Gen[T] = label(l.name)
 
   /** Put a label on the generator to make test reports clearer */
-  def |:(l: Symbol) = label(l.name)
+  def |:(l: Symbol): Gen[T] = label(l.name)
 
   /** Perform some RNG perturbation before generating */
   def withPerturb(f: Seed => Seed): Gen[T] =
@@ -214,35 +209,36 @@ object Gen extends GenArities with GenVersionSpecific {
 
   private[scalacheck] trait R[+T] {
     def labels: Set[String] = Set()
-    def sieve[U >: T]: U => Boolean = _ => true
+    // sieve is no longer used but preserved for binary compatibility
+    final def sieve[U >: T]: U => Boolean = (_: U) => true
     protected def result: Option[T]
     def seed: Seed
 
-    def retrieve: Option[T] = result.filter(sieve)
+    def retrieve: Option[T] = result
 
     def copy[U >: T](
       l: Set[String] = this.labels,
+      // s is no longer used but preserved for binary compatibility
       s: U => Boolean = this.sieve,
       r: Option[U] = this.result,
       sd: Seed = this.seed
     ): R[U] = new R[U] {
       override val labels = l
-      override def sieve[V >: U] = { (x: Any) =>
-        try s(x.asInstanceOf[U])
-        catch { case _: java.lang.ClassCastException => false }
-      }
       val seed = sd
       val result = r
     }
 
-    def map[U](f: T => U): R[U] = r(retrieve.map(f), seed).copy(l = labels)
+    def map[U](f: T => U): R[U] =
+      r(retrieve.map(f), seed).copy(l = labels)
 
-    def flatMap[U](f: T => R[U]): R[U] = retrieve match {
-      case None => r(None, seed).copy(l = labels)
-      case Some(t) =>
-        val r = f(t)
-        r.copy(l = labels ++ r.labels, sd = r.seed)
-    }
+    def flatMap[U](f: T => R[U]): R[U] =
+      retrieve match {
+        case None =>
+          r(None, seed).copy(l = labels)
+        case Some(t) =>
+          val r = f(t)
+          r.copy(l = labels ++ r.labels, sd = r.seed)
+      }
   }
 
   private[scalacheck] def r[T](r: Option[T], sd: Seed): R[T] = new R[T] {
@@ -473,7 +469,6 @@ object Gen extends GenArities with GenVersionSpecific {
   private[scalacheck] def failed[T](seed0: Seed): R[T] =
     new R[T] {
       val result: Option[T] = None
-      override def sieve[U >: T]: U => Boolean = _ => false
       val seed = seed0
     }
 
@@ -485,7 +480,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Sequences generators. If any of the given generators fails, the
    *  resulting generator will also fail. */
-  def sequence[C,T](gs: Traversable[Gen[T]])(implicit b: Buildable[T,C]): Gen[C] = {
+  def sequence[C, T](gs: Traversable[Gen[T]])(implicit b: Buildable[T, C]): Gen[C] = {
     val g = gen { (p, seed) =>
       gs.foldLeft(r(Some(Vector.empty[T]), seed)) {
         case (rs,g) =>
@@ -577,7 +572,7 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Picks a random generator from a list */
   def oneOf[T](g0: Gen[T], g1: Gen[T], gn: Gen[T]*): Gen[T] = {
     val gs = g0 +: g1 +: gn
-    choose(0,gs.size-1).flatMap(gs(_)).suchThat(x => gs.exists(_.sieveCopy(x)))
+    choose(0, gs.size - 1).flatMap(i => gs(i))
   }
 
   /** Makes a generator result optional. Either `Some(T)` or `None` will be provided. */
@@ -598,16 +593,14 @@ object Gen extends GenArities with GenVersionSpecific {
     if (filtered.isEmpty) {
       throw new IllegalArgumentException("no items with positive weights")
     } else {
-    var total = 0L
+      var total = 0L
       val builder = TreeMap.newBuilder[Long, Gen[T]]
       filtered.foreach { case (weight, value) =>
         total += weight
         builder += ((total, value))
       }
       val tree = builder.result
-      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2).suchThat { x =>
-        gs.exists(_._2.sieveCopy(x))
-      }
+      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2)
     }
   }
 
@@ -631,11 +624,29 @@ object Gen extends GenArities with GenVersionSpecific {
    *  complete container generator will also fail. */
   def buildableOfN[C,T](n: Int, g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
-  ): Gen[C] =
-    sequence[C,T](Traversable.fill(n)(g)) suchThat { c =>
-      // TODO: Can we guarantee c.size == n (See issue #89)?
-      evt(c).forall(g.sieveCopy)
+  ): Gen[C] = {
+    require(n >= 0, s"invalid size given: $n")
+    gen { (p, seed0) =>
+      var seed: Seed = seed0
+      val bldr = evb.builder
+      val allowedFailures = Integer.max(10, n / 10)
+      var failures = 0
+      var count = 0
+      while (count < n && failures < allowedFailures) {
+        val gres = g.doApply(p, seed)
+        gres.retrieve match {
+          case Some(t) =>
+            bldr += t
+            count += 1
+          case None =>
+            failures += 1
+        }
+        seed = gres.seed
+      }
+      val res = if (count == n) Some(bldr.result) else None
+      r(res, seed)
     }
+  }
 
   /** Generates a container of any Traversable type for which there exists an
    *  implicit [[org.scalacheck.util.Buildable]] instance. The elements in the
@@ -644,9 +655,8 @@ object Gen extends GenArities with GenVersionSpecific {
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0, s max 0).flatMap(buildableOfN[C,T](_,g))) suchThat { c =>
-      if (c == null) g.sieveCopy(null) else evt(c).forall(g.sieveCopy)
-    }
+    sized(s => choose(0, Integer.max(s, 0)))
+      .flatMap(n => buildableOfN(n, g)(evb, evt))
 
   /** Generates a non-empty container of any Traversable type for which there
    *  exists an implicit [[org.scalacheck.util.Buildable]] instance. The
@@ -656,80 +666,84 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1, s max 1).flatMap(buildableOfN[C,T](_,g))) suchThat(c => evt(c).size > 0)
+    buildableOf(g)(evb, evt).suchThat(c => evt(c).size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOfN[C[T],T](n,g)
+  ): Gen[C[T]] = buildableOfN[C[T], T](n, g)(evb, evt)
 
   /** A convenience method for calling `buildableOf[C[T],T](g)`. */
   def containerOf[C[_],T](g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOf[C[T],T](g)
+  ): Gen[C[T]] = buildableOf[C[T], T](g)(evb, evt)
 
   /** A convenience method for calling `nonEmptyBuildableOf[C[T],T](g)`. */
   def nonEmptyContainerOf[C[_],T](g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = nonEmptyBuildableOf[C[T],T](g)
+  ): Gen[C[T]] = nonEmptyBuildableOf[C[T], T](g)(evb, evt)
 
   /** Generates a list of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
    *  `containerOf[List,T](g)`. */
-  def listOf[T](g: => Gen[T]) = buildableOf[List[T],T](g)
+  def listOf[T](g: => Gen[T]) = buildableOf[List[T], T](g)
 
   /** Generates a non-empty list of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
    *  `nonEmptyContainerOf[List,T](g)`. */
-  def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T],T](g)
+  def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T], T](g)
 
   /** Generates a list with at most the given number of elements. This method
    *  is equal to calling `containerOfN[List,T](n,g)`. */
-  def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T],T](n,g)
+  def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T], T](n, g)
 
   /** Generates a map of random length. The maximum length depends on the
    *  size parameter. This method is equal to calling
    *  <code>containerOf[Map,(T,U)](g)</code>. */
-  def mapOf[T,U](g: => Gen[(T,U)]) = buildableOf[Map[T,U],(T,U)](g)
+  def mapOf[T, U](g: => Gen[(T, U)]) = buildableOf[Map[T, U], (T, U)](g)
 
   /** Generates a non-empty map of random length. The maximum length depends
    *  on the size parameter. This method is equal to calling
    *  <code>nonEmptyContainerOf[Map,(T,U)](g)</code>. */
-  def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T,U],(T,U)](g)
+  def nonEmptyMap[T,U](g: => Gen[(T,U)]) = nonEmptyBuildableOf[Map[T, U],(T, U)](g)
 
   /** Generates a map with at most the given number of elements. This method
    *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
-  def mapOfN[T,U](n: Int, g: Gen[(T,U)]) = buildableOfN[Map[T,U],(T,U)](n,g)
+  def mapOfN[T,U](n: Int, g: Gen[(T, U)]) = buildableOfN[Map[T, U],(T, U)](n, g)
 
   /** Generates an infinite stream. */
   def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
-    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
-      case Some((h, s)) => h #:: unfold(s)(f)
-      case None => Stream.empty
+    def unfold(p: P, seed: Seed): Stream[T] = {
+      val r = g.doPureApply(p, seed)
+      r.retrieve match {
+        case Some(t) => t #:: unfold(p, r.seed)
+        case None => Stream.empty
+      }
     }
     gen { (p, seed0) =>
       new R[Stream[T]] {
-        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s) -> s.next)))
-        val seed: Seed = seed0.next
+        val result: Option[Stream[T]] = Some(unfold(p, seed0))
+        val seed: Seed = seed0.slide
       }
     }
   }
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](l: Iterable[T]) = choose(0,l.size).flatMap(pick(_,l))
+  def someOf[T](l: Iterable[T]): Gen[collection.Seq[T]] =
+    choose(0, l.size).flatMap(pick(_,l))
 
   /** A generator that picks a random number of elements from a list */
-  def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+  def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[collection.Seq[T]] =
     choose(0, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that picks at least one element from a list */
-  def atLeastOne[T](l: Iterable[T]) = {
+  def atLeastOne[T](l: Iterable[T]): Gen[collection.Seq[T]] = {
     require(l.size > 0, "There has to be at least one option to choose from")
     choose(1,l.size).flatMap(pick(_,l))
   }
 
   /** A generator that picks at least one element from a list */
-  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
+  def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[collection.Seq[T]] =
     choose(1, gs.length+2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that randomly picks a given number of elements from a list
@@ -764,12 +778,8 @@ object Gen extends GenArities with GenVersionSpecific {
    *
    * The elements are not guaranteed to be permuted in random order.
    */
-  def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] = {
-    val gs = g1 +: g2 +: gn
-    pick(n, 0 until gs.size).flatMap(idxs =>
-      sequence[List[T],T](idxs.toList.map(gs(_)))
-    ).suchThat(_.forall(x => gs.exists(_.sieveCopy(x))))
-  }
+  def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] =
+    sequence[Seq[T], T](g1 +: g2 +: gn)
 
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
@@ -784,78 +794,132 @@ object Gen extends GenArities with GenVersionSpecific {
 
   //// Character Generators ////
 
+  private def charSample(cs: Array[Char]): Gen[Char] =
+    new Gen[Char] {
+      def doApply(p: P, seed0: Seed): Gen.R[Char] = {
+        val (x, seed1) = seed0.long
+        val i = ((x & Long.MaxValue) % cs.length).toInt
+        r(Some(cs(i)), seed1)
+      }
+    }
+
   /** Generates a numerical character */
-  def numChar: Gen[Char] = choose(48.toChar, 57.toChar)
+  val numChar: Gen[Char] =
+    charSample(('0' to '9').toArray)
 
   /** Generates an upper-case alpha character */
-  def alphaUpperChar: Gen[Char] = choose(65.toChar, 90.toChar)
+  val alphaUpperChar: Gen[Char] =
+    charSample(('A' to 'Z').toArray)
 
   /** Generates a lower-case alpha character */
-  def alphaLowerChar: Gen[Char] = choose(97.toChar, 122.toChar)
+  val alphaLowerChar: Gen[Char] =
+    charSample(('a' to 'z').toArray)
 
   /** Generates an alpha character */
-  def alphaChar = frequency((1,alphaUpperChar), (9,alphaLowerChar))
+  val alphaChar: Gen[Char] =
+    charSample((('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates an alphanumerical character */
-  def alphaNumChar = frequency((1,numChar), (9,alphaChar))
+  val alphaNumChar: Gen[Char] =
+    charSample((('0' to '9') ++ ('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates a ASCII character, with extra weighting for printable characters */
-  def asciiChar: Gen[Char] = chooseNum(0, 127, 32 to 126:_*).map(_.toChar)
+  val asciiChar: Gen[Char] =
+    choose(0, 127).map(_.toChar)
 
   /** Generates a ASCII printable character */
-  def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
+  val asciiPrintableChar: Gen[Char] =
+    choose(32.toChar, 126.toChar)
 
   /** Generates a character that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
-  def hexChar: Gen[Char] =
-    Gen.oneOf(
-      Gen.oneOf("0123456789abcdef".toSeq),
-      Gen.oneOf("0123456789ABCDEF".toSeq)
-    )
+  val hexChar: Gen[Char] =
+    charSample("0123456789abcdef0123456789ABCDEF".toArray)
+
+  // valid ranges are [0x0000, 0xD7FF] and [0xE000, 0xFFFD].
+  //
+  // ((0xFFFD + 1) - 0xE000) + ((0xD7FF + 1) - 0x0000)
+  val unicodeChar: Gen[Char] =
+    choose(0, 63486).map { i =>
+      if (i <= 0xD7FF) i.toChar
+      else (i + 2048).toChar
+    }
 
   //// String Generators ////
 
+  @tailrec private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] =
+    if (n <= 0) {
+      r(Some(sb.toString), seed0)
+    } else {
+      val res = gc.doApply(p, seed0)
+      res.retrieve match {
+        case Some(c) =>
+          sb += c
+        case None =>
+          ()
+      }
+      mkString(n - 1, sb, gc, p, res.seed)
+    }
+
+  def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
+    gen { (p, seed) =>
+      mkString(n, new StringBuilder, gc, p, seed)
+    }
+
+  def stringOf(gc: Gen[Char]): Gen[String] =
+    gen { (p, seed0) =>
+      val (n, seed1) = Gen.mkSize(p, seed0)
+      mkString(n, new StringBuilder, gc, p, seed1)
+    }
+
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
-  def identifier: Gen[String] = (for {
-    c <- alphaLowerChar
-    cs <- listOf(alphaNumChar)
-  } yield (c::cs).mkString)
+  val identifier: Gen[String] =
+    gen { (p, seed0) =>
+      val (n, seed1) = Gen.mkSize(p, seed0)
+      val sb = new StringBuilder
+      val res1 = alphaLowerChar.doApply(p, seed1)
+      sb += res1.retrieve.get
+      mkString(n - 1, sb, alphaNumChar, p, res1.seed)
+    }
 
   /** Generates a string of digits */
-  def numStr: Gen[String] =
-    listOf(numChar).map(_.mkString)
+  val numStr: Gen[String] =
+    stringOf(numChar)
 
   /** Generates a string of upper-case alpha characters */
-  def alphaUpperStr: Gen[String] =
-    listOf(alphaUpperChar).map(_.mkString)
+  val alphaUpperStr: Gen[String] =
+    stringOf(alphaUpperChar)
 
   /** Generates a string of lower-case alpha characters */
-  def alphaLowerStr: Gen[String] =
-      listOf(alphaLowerChar).map(_.mkString)
+  val alphaLowerStr: Gen[String] =
+    stringOf(alphaLowerChar)
 
   /** Generates a string of alpha characters */
-  def alphaStr: Gen[String] =
-    listOf(alphaChar).map(_.mkString)
+  val alphaStr: Gen[String] =
+    stringOf(alphaChar)
 
   /** Generates a string of alphanumerical characters */
-  def alphaNumStr: Gen[String] =
-    listOf(alphaNumChar).map(_.mkString)
+  val alphaNumStr: Gen[String] =
+    stringOf(alphaNumChar)
 
   /** Generates a string of ASCII characters, with extra weighting for printable characters */
-  def asciiStr: Gen[String] =
-    listOf(asciiChar).map(_.mkString)
+  val asciiStr: Gen[String] =
+    stringOf(asciiChar)
 
   /** Generates a string of ASCII printable characters */
-  def asciiPrintableStr: Gen[String] =
-    listOf(asciiPrintableChar).map(_.mkString)
+  val asciiPrintableStr: Gen[String] =
+    stringOf(asciiPrintableChar)
 
   /** Generates a string that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
-  def hexStr: Gen[String] =
-    listOf(hexChar).map(_.mkString)
+  val hexStr: Gen[String] =
+    stringOf(hexChar)
+
+  val unicodeStr: Gen[String] =
+    stringOf(unicodeChar)
 
   //// Number Generators ////
 
@@ -993,4 +1057,10 @@ object Gen extends GenArities with GenVersionSpecific {
     1 -> const(Duration.Undefined),
     1 -> const(Duration.Zero),
     6 -> finiteDuration)
+
+  private def mkSize(p: Gen.Parameters, seed0: Seed): (Int, Seed) = {
+    val maxSize = Integer.max(p.size + 1, 1)
+    val (x, seed1) = seed0.long
+    ((x % maxSize).toInt, seed1)
+  }
 }

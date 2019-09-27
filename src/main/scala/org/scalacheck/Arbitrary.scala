@@ -120,37 +120,26 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   )
 
   /** Arbitrary instance of Char */
-  implicit lazy val arbChar: Arbitrary[Char] = Arbitrary {
-    // exclude 0xFFFE due to this bug: https://bit.ly/2pTpAu8
-    // also exclude 0xFFFF as it is not unicode: http://bit.ly/2cVBrzK
-    val validRangesInclusive = List[(Char, Char)](
-      (0x0000, 0xD7FF),
-      (0xE000, 0xFFFD)
-    )
-
-    Gen.frequency((validRangesInclusive.map {
-      case (first, last) => (last + 1 - first, Gen.choose[Char](first, last))
-    }: List[(Int, Gen[Char])]): _*)
-  }
+  implicit lazy val arbChar: Arbitrary[Char] =
+    Arbitrary(Gen.unicodeChar)
 
   /** Arbitrary instance of Byte */
-  implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(
-    Gen.chooseNum(Byte.MinValue, Byte.MaxValue)
-  )
+  implicit lazy val arbByte: Arbitrary[Byte] =
+    Arbitrary(Gen.chooseNum(Byte.MinValue, Byte.MaxValue))
 
   /** Arbitrary instance of Short */
-  implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(
-    Gen.chooseNum(Short.MinValue, Short.MaxValue)
-  )
+  implicit lazy val arbShort: Arbitrary[Short] =
+    Arbitrary(Gen.chooseNum(Short.MinValue, Short.MaxValue))
 
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
-  implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(const(()))
+  implicit lazy val arbUnit: Arbitrary[Unit] =
+    Arbitrary(Gen.const(()))
 
   /**** Arbitrary instances of other common types ****/
 
   /** Arbitrary instance of String */
   implicit lazy val arbString: Arbitrary[String] =
-    Arbitrary(arbitrary[List[Char]] map (_.mkString))
+    Arbitrary(Gen.unicodeStr)
 
   /** Arbitrary instance of Date */
   implicit lazy val arbDate: Arbitrary[java.util.Date] =
