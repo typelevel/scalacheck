@@ -237,7 +237,7 @@ object Gen extends GenArities with GenVersionSpecific {
           r(None, seed).copy(l = labels)
         case Some(t) =>
           val r = f(t)
-          r.copy(l = labels ++ r.labels, sd = r.seed)
+          r.copy(l = labels | r.labels, sd = r.seed)
       }
   }
 
@@ -626,25 +626,27 @@ object Gen extends GenArities with GenVersionSpecific {
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] = {
     require(n >= 0, s"invalid size given: $n")
-    gen { (p, seed0) =>
-      var seed: Seed = seed0
-      val bldr = evb.builder
-      val allowedFailures = Integer.max(10, n / 10)
-      var failures = 0
-      var count = 0
-      while (count < n && failures < allowedFailures) {
-        val gres = g.doApply(p, seed)
-        gres.retrieve match {
-          case Some(t) =>
-            bldr += t
-            count += 1
-          case None =>
-            failures += 1
+    new Gen[C] {
+      def doApply(p: P, seed0: Seed): R[C] = {
+        var seed: Seed = seed0
+        val bldr = evb.builder
+        val allowedFailures = Gen.collectionRetries(n)
+        var failures = 0
+        var count = 0
+        while (count < n) {
+          val res = g.doApply(p, seed)
+          res.retrieve match {
+            case Some(t) =>
+              bldr += t
+              count += 1
+            case None =>
+              failures += 1
+              if (failures >= allowedFailures) return r(None, res.seed)
+          }
+          seed = res.seed
         }
-        seed = gres.seed
+        r(Some(bldr.result), seed)
       }
-      val res = if (count == n) Some(bldr.result) else None
-      r(res, seed)
     }
   }
 
@@ -711,20 +713,27 @@ object Gen extends GenArities with GenVersionSpecific {
    *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T, U)]) = buildableOfN[Map[T, U],(T, U)](n, g)
 
-  /** Generates an infinite stream. */
+  /**
+   * Generates an infinite stream.
+   *
+   * Failures in the underlying generator may terminate the stream.
+   * Otherwise it will continue forever.
+   */
   def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
-    def unfold(p: P, seed: Seed): Stream[T] = {
-      val r = g.doPureApply(p, seed)
-      r.retrieve match {
-        case Some(t) => t #:: unfold(p, r.seed)
-        case None => Stream.empty
+    val attemptsPerItem = 10
+    def unfold(p: P, seed: Seed, attemptsLeft: Int): Stream[T] =
+      if (attemptsLeft <= 0) {
+        Stream.empty
+      } else {
+        val r = g.doPureApply(p, seed)
+        r.retrieve match {
+          case Some(t) => t #:: unfold(p, r.seed, attemptsPerItem)
+          case None => unfold(p, r.seed, attemptsLeft - 1)
+        }
       }
-    }
     gen { (p, seed0) =>
-      new R[Stream[T]] {
-        val result: Option[Stream[T]] = Some(unfold(p, seed0))
-        val seed: Seed = seed0.slide
-      }
+      val stream = unfold(p, seed0, attemptsPerItem)
+      r(Some(stream), seed0.slide)
     }
   }
 
@@ -765,7 +774,7 @@ object Gen extends GenArities with GenVersionSpecific {
           buf += t
         } else {
           val (x, s) = seed.long
-          val i = (x & 0x7fffffff).toInt % count
+          val i = (x & Long.MaxValue % count).toInt
           if (i < n) buf(i) = t
           seed = s
         }
@@ -848,19 +857,25 @@ object Gen extends GenArities with GenVersionSpecific {
 
   //// String Generators ////
 
-  @tailrec private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] =
-    if (n <= 0) {
-      r(Some(sb.toString), seed0)
-    } else {
-      val res = gc.doApply(p, seed0)
+  private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] = {
+    var seed: Seed = seed0
+    val allowedFailures = Gen.collectionRetries(n)
+    var failures = 0
+    var count = 0
+    while (count < n) {
+      val res = gc.doApply(p, seed)
       res.retrieve match {
         case Some(c) =>
           sb += c
+          count += 1
         case None =>
-          ()
+          failures += 1
+          if (failures >= allowedFailures) return r(None, res.seed)
       }
-      mkString(n - 1, sb, gc, p, res.seed)
+      seed = res.seed
     }
+    r(Some(sb.toString), seed)
+  }
 
   def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
     gen { (p, seed) =>
@@ -1058,9 +1073,14 @@ object Gen extends GenArities with GenVersionSpecific {
     1 -> const(Duration.Zero),
     6 -> finiteDuration)
 
+  // used to compute a uniformly-distributed size
   private def mkSize(p: Gen.Parameters, seed0: Seed): (Int, Seed) = {
     val maxSize = Integer.max(p.size + 1, 1)
     val (x, seed1) = seed0.long
-    ((x % maxSize).toInt, seed1)
+    (((x & Long.MaxValue) % maxSize).toInt, seed1)
   }
+
+  // used to calculate how many per-item retries we should allow.
+  private def collectionRetries(n: Int): Int =
+    Integer.max(10, n / 10)
 }

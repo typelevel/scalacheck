@@ -80,29 +80,22 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /**** Arbitrary instances for each AnyVal ****/
 
-  /** Arbitrary AnyVal */
-  implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
-    arbitrary[Unit], arbitrary[Boolean], arbitrary[Char], arbitrary[Byte],
-    arbitrary[Short], arbitrary[Int], arbitrary[Long], arbitrary[Float],
-    arbitrary[Double]
-  ))
-
   /** Arbitrary instance of Boolean */
-  implicit lazy val arbBool: Arbitrary[Boolean] =
+  implicit val arbBool: Arbitrary[Boolean] =
     Arbitrary(oneOf(true, false))
 
   /** Arbitrary instance of Int */
-  implicit lazy val arbInt: Arbitrary[Int] = Arbitrary(
+  implicit val arbInt: Arbitrary[Int] = Arbitrary(
     Gen.chooseNum(Int.MinValue, Int.MaxValue)
   )
 
   /** Arbitrary instance of Long */
-  implicit lazy val arbLong: Arbitrary[Long] = Arbitrary(
+  implicit val arbLong: Arbitrary[Long] = Arbitrary(
     Gen.chooseNum(Long.MinValue, Long.MaxValue)
   )
 
   /** Arbitrary instance of Float */
-  implicit lazy val arbFloat: Arbitrary[Float] = Arbitrary(
+  implicit val arbFloat: Arbitrary[Float] = Arbitrary(
     for {
       s <- choose(0, 1)
       e <- choose(0, 0xfe)
@@ -111,7 +104,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   )
 
   /** Arbitrary instance of Double */
-  implicit lazy val arbDouble: Arbitrary[Double] = Arbitrary(
+  implicit val arbDouble: Arbitrary[Double] = Arbitrary(
     for {
       s <- choose(0L, 1L)
       e <- choose(0L, 0x7feL)
@@ -120,53 +113,60 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   )
 
   /** Arbitrary instance of Char */
-  implicit lazy val arbChar: Arbitrary[Char] =
+  implicit val arbChar: Arbitrary[Char] =
     Arbitrary(Gen.unicodeChar)
 
   /** Arbitrary instance of Byte */
-  implicit lazy val arbByte: Arbitrary[Byte] =
+  implicit val arbByte: Arbitrary[Byte] =
     Arbitrary(Gen.chooseNum(Byte.MinValue, Byte.MaxValue))
 
   /** Arbitrary instance of Short */
-  implicit lazy val arbShort: Arbitrary[Short] =
+  implicit val arbShort: Arbitrary[Short] =
     Arbitrary(Gen.chooseNum(Short.MinValue, Short.MaxValue))
 
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
-  implicit lazy val arbUnit: Arbitrary[Unit] =
+  implicit val arbUnit: Arbitrary[Unit] =
     Arbitrary(Gen.const(()))
+
+  /** Arbitrary AnyVal */
+  implicit val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
+    arbitrary[Unit], arbitrary[Boolean], arbitrary[Char], arbitrary[Byte],
+    arbitrary[Short], arbitrary[Int], arbitrary[Long], arbitrary[Float],
+    arbitrary[Double]
+  ))
 
   /**** Arbitrary instances of other common types ****/
 
   /** Arbitrary instance of String */
-  implicit lazy val arbString: Arbitrary[String] =
+  implicit val arbString: Arbitrary[String] =
     Arbitrary(Gen.unicodeStr)
 
   /** Arbitrary instance of Date */
-  implicit lazy val arbDate: Arbitrary[java.util.Date] =
+  implicit val arbDate: Arbitrary[java.util.Date] =
     Arbitrary(Gen.calendar.map(_.getTime))
 
   /** Arbitrary instance of Calendar */
-  implicit lazy val arbCalendar: Arbitrary[java.util.Calendar] =
+  implicit val arbCalendar: Arbitrary[java.util.Calendar] =
     Arbitrary(Gen.calendar)
 
   /** Arbitrary instance of Throwable */
-  implicit lazy val arbThrowable: Arbitrary[Throwable] =
+  implicit val arbThrowable: Arbitrary[Throwable] =
     Arbitrary(oneOf(const(new Exception), const(new Error)))
 
   /** Arbitrary instance of Exception */
-  implicit lazy val arbException: Arbitrary[Exception] =
+  implicit val arbException: Arbitrary[Exception] =
     Arbitrary(const(new Exception))
 
   /** Arbitrary instance of Error */
-  implicit lazy val arbError: Arbitrary[Error] =
+  implicit val arbError: Arbitrary[Error] =
     Arbitrary(const(new Error))
 
   /** Arbitrary instance of UUID */
-  implicit lazy val arbUuid: Arbitrary[java.util.UUID] =
+  implicit val arbUuid: Arbitrary[java.util.UUID] =
     Arbitrary(Gen.uuid)
 
   /** Arbitrary BigInt */
-  implicit lazy val arbBigInt: Arbitrary[BigInt] = {
+  implicit val arbBigInt: Arbitrary[BigInt] = {
     val long: Gen[Long] =
       Gen.choose(Long.MinValue, Long.MaxValue).map(x => if (x == 0) 1L else x)
 
@@ -191,7 +191,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   }
 
   /** Arbitrary BigDecimal */
-  implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
+  implicit val arbBigDecimal: Arbitrary[BigDecimal] = {
     import java.math.MathContext, MathContext._
 
     val genMathContext0: Gen[MathContext] =
@@ -243,7 +243,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   }
 
   /** Arbitrary java.lang.Number */
-  implicit lazy val arbNumber: Arbitrary[Number] = {
+  implicit val arbNumber: Arbitrary[Number] = {
     val gen = Gen.oneOf(
       arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long],
       arbitrary[Float], arbitrary[Double]
@@ -254,7 +254,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   }
 
   /** Arbitrary instance of FiniteDuration */
-  implicit lazy val arbFiniteDuration: Arbitrary[FiniteDuration] =
+  implicit val arbFiniteDuration: Arbitrary[FiniteDuration] =
     Arbitrary(Gen.finiteDuration)
 
   /**
@@ -263,11 +263,11 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
    * In addition to `FiniteDuration` values, this can generate `Duration.Inf`,
    * `Duration.MinusInf`, and `Duration.Undefined`.
    */
-  implicit lazy val arbDuration: Arbitrary[Duration] =
+  implicit val arbDuration: Arbitrary[Duration] =
     Arbitrary(Gen.duration)
 
   /** Generates an arbitrary property */
-  implicit lazy val arbProp: Arbitrary[Prop] = {
+  implicit val arbProp: Arbitrary[Prop] = {
     import Prop._
     val undecidedOrPassed = forAll { b: Boolean =>
       b ==> true
@@ -283,7 +283,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   }
 
   /** Arbitrary instance of test parameters */
-  implicit lazy val arbTestParameters: Arbitrary[Test.Parameters] =
+  implicit val arbTestParameters: Arbitrary[Test.Parameters] =
     Arbitrary(for {
       _minSuccTests <- choose(10,200)
       _maxDiscardRatio <- choose(0.2f,10f)
@@ -300,7 +300,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     )
 
   /** Arbitrary instance of gen params */
-  implicit lazy val arbGenParams: Arbitrary[Gen.Parameters] =
+  implicit val arbGenParams: Arbitrary[Gen.Parameters] =
     Arbitrary(for {
       sz <- arbitrary[Int] suchThat (_ >= 0)
     } yield Gen.Parameters.default.withSize(sz))
@@ -309,7 +309,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   // Specialised collections //
 
   /** Arbitrary instance of scala.collection.BitSet */
-  implicit lazy val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
+  implicit val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
     buildableOf[collection.BitSet,Int](sized(sz => choose(0,sz)))
   )
 
