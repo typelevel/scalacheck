@@ -39,6 +39,9 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  called with a value of exactly type T, it is OK. */
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
+  // If you implement new Gen[_] directly (instead of using
+  // combinators), make sure to use p.initialSeed or p.useInitialSeed
+  // in the implementation, instead of using seed directly.
   private[scalacheck] def doApply(p: P, seed: Seed): R[T]
 
   //// Public interface ////
@@ -793,9 +796,10 @@ object Gen extends GenArities with GenVersionSpecific {
   private def charSample(cs: Array[Char]): Gen[Char] =
     new Gen[Char] {
       def doApply(p: P, seed0: Seed): Gen.R[Char] = {
-        val (x, seed1) = seed0.long
+        val seed1 = p.initialSeed.getOrElse(seed0)
+        val (x, seed2) = seed1.long
         val i = ((x & Long.MaxValue) % cs.length).toInt
-        r(Some(cs(i)), seed1)
+        r(Some(cs(i)), seed2)
       }
     }
 
@@ -812,11 +816,11 @@ object Gen extends GenArities with GenVersionSpecific {
     charSample(('a' to 'z').toArray)
 
   /** Generates an alpha character */
-  val alphaChar =
+  val alphaChar: Gen[Char] =
     charSample((('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates an alphanumerical character */
-  val alphaNumChar =
+  val alphaNumChar: Gen[Char] =
     charSample((('0' to '9') ++ ('A' to 'Z') ++ ('a' to 'z')).toArray)
 
   /** Generates a ASCII character, with extra weighting for printable characters */
