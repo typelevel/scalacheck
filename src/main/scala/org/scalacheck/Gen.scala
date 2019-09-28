@@ -868,19 +868,25 @@ object Gen extends GenArities with GenVersionSpecific {
 
   //// String Generators ////
 
-  @tailrec private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] =
-    if (n <= 0) {
-      r(Some(sb.toString), seed0)
-    } else {
-      val res = gc.doApply(p, seed0)
+  private def mkString(n: Int, sb: StringBuilder, gc: Gen[Char], p: P, seed0: Seed): R[String] = {
+    var seed: Seed = seed0
+    val allowedFailures = Gen.collectionRetries(n)
+    var failures = 0
+    var count = 0
+    while (count < n) {
+      val res = gc.doApply(p, seed)
       res.retrieve match {
         case Some(c) =>
           sb += c
+          count += 1
         case None =>
-          ()
+          failures += 1
+          if (failures >= allowedFailures) return r(None, res.seed)
       }
-      mkString(n - 1, sb, gc, p, res.seed)
+      seed = res.seed
     }
+    r(Some(sb.toString), seed)
+  }
 
   def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
     gen { (p, seed) =>
@@ -1075,10 +1081,11 @@ object Gen extends GenArities with GenVersionSpecific {
     1 -> const(Duration.Zero),
     6 -> finiteDuration)
 
+  // used to compute a uniformly-distributed size
   private def mkSize(p: Gen.Parameters, seed0: Seed): (Int, Seed) = {
     val maxSize = Integer.max(p.size + 1, 1)
     val (x, seed1) = seed0.long
-    ((x % maxSize).toInt, seed1)
+    (((x & Long.MaxValue) % maxSize).toInt, seed1)
   }
 
   // used to calculate how many per-item retries we should allow.
