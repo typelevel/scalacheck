@@ -36,6 +36,9 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   // This is no long used but preserved here for binary compatibility.
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
+  // If you implement new Gen[_] directly (instead of using
+  // combinators), make sure to use p.initialSeed or p.useInitialSeed
+  // in the implementation, instead of using seed directly.
   private[scalacheck] def doApply(p: P, seed: Seed): R[T]
 
   //// Public interface ////
@@ -628,7 +631,7 @@ object Gen extends GenArities with GenVersionSpecific {
     require(n >= 0, s"invalid size given: $n")
     new Gen[C] {
       def doApply(p: P, seed0: Seed): R[C] = {
-        var seed: Seed = seed0
+        var seed: Seed = p.initialSeed.getOrElse(seed0)
         val bldr = evb.builder
         val allowedFailures = Gen.collectionRetries(n)
         var failures = 0
@@ -806,9 +809,10 @@ object Gen extends GenArities with GenVersionSpecific {
   private def charSample(cs: Array[Char]): Gen[Char] =
     new Gen[Char] {
       def doApply(p: P, seed0: Seed): Gen.R[Char] = {
-        val (x, seed1) = seed0.long
+        val seed1 = p.initialSeed.getOrElse(seed0)
+        val (x, seed2) = seed1.long
         val i = ((x & Long.MaxValue) % cs.length).toInt
-        r(Some(cs(i)), seed1)
+        r(Some(cs(i)), seed2)
       }
     }
 
