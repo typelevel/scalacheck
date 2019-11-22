@@ -176,8 +176,8 @@ lazy val jvm = project.in(file("jvm"))
     },
     crossScalaVersions += "0.19.0-RC1",
     fork in Test := {
-      // Serialization issue in 2.13
-      scalaMajorVersion.value == 13 // ==> true
+      // Serialization issue in 2.13 and later
+      scalaMajorVersion.value == 13 || isDotty.value // ==> true
       // else ==> false
     },
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
