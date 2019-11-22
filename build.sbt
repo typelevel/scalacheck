@@ -169,6 +169,11 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
+    publishArtifact in (Compile, packageDoc) := {
+      // dotty-doc defect https://github.com/lampepfl/dotty/issues/7326
+      !isDotty.value // ==> true
+      // else ==> false
+    },
     crossScalaVersions += "0.19.0-RC1",
     fork in Test := {
       // Serialization issue in 2.13
