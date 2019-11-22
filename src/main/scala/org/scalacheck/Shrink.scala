@@ -51,7 +51,7 @@ object Shrink extends ShrinkLowPriority {
   /** Shrink instance of container */
   implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
     b: Buildable[T,C[T]]
-  ): Shrink[C[T]] = Shrink { xs: C[T] =>
+  ): Shrink[C[T]] = Shrink { (xs: C[T]) =>
     val ys = v(xs)
     val zs = ys.toStream
     removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
@@ -60,7 +60,7 @@ object Shrink extends ShrinkLowPriority {
   /** Shrink instance of container2 */
   implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
     b: Buildable[(T,U),C[T,U]]
-  ): Shrink[C[T,U]] = Shrink { xs: C[T,U] =>
+  ): Shrink[C[T,U]] = Shrink { (xs: C[T,U]) =>
     val ys = v(xs)
     val zs = ys.toStream
     removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
@@ -227,7 +227,7 @@ object Shrink extends ShrinkLowPriority {
   /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
     *  whose relationship is described by the provided transformation functions.
     *  (exponential functor map) */
-  def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { u: U =>
+  def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { (u: U) =>
     st.shrink(to(u)).map(from)
   }
 }

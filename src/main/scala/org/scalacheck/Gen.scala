@@ -108,7 +108,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     def doApply(p: P, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
         val res = Gen.this.doApply(p0, s0)
-        res.copy(s = { x:T => res.sieve(x) && f(x) })
+        res.copy(s = { (x: T) => res.sieve(x) && f(x) })
       }
     override def sieveCopy(x: Any) =
       try Gen.this.sieveCopy(x) && f(x.asInstanceOf[T])
