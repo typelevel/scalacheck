@@ -11,7 +11,7 @@ fi
 
 sbt_cmd+=("set parallelExecution in ThisBuild := $SBT_PARALLEL")
 
-for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues doc; do
+for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues package; do
   sbt_cmd+=("$PLATFORM/$t")
 done
 
