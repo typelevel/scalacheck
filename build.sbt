@@ -112,10 +112,9 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   mimaPreviousArtifacts := {
-    val isScalaJSMilestone: Boolean =
-      scalaJSVersion.startsWith("1.0.0-M")
+    val isScalaJSReleaseCandidate: Boolean = scalaJSVersion.startsWith("1.0.0-RC")
     // TODO: re-enable MiMa for 2.14 once there is a final version
-    if (scalaMajorVersion.value == 14 || isScalaJSMilestone || isDotty.value) Set()
+    if (scalaMajorVersion.value == 14 || isScalaJSReleaseCandidate || isDotty.value) Set()
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.2")
   },
 
