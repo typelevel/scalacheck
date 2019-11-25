@@ -22,7 +22,7 @@ object PropSpecification extends Properties("Prop") {
     throw new java.lang.Exception("exception")
   }
 
-  property("Prop.==> undecided") = forAll { p1: Prop =>
+  property("Prop.==> undecided") = forAll { (p1: Prop) =>
     val g = oneOf(falsified,undecided)
     forAll(g) { p2 =>
       val p3 = (p2 ==> p1)
@@ -39,7 +39,7 @@ object PropSpecification extends Properties("Prop") {
     }
   }
 
-  property("Prop.==> short circuit") = forAll { n: Int =>
+  property("Prop.==> short circuit") = forAll { (n: Int) =>
     def positiveDomain(n: Int): Boolean = n match {
       case n if n > 0 => true
       case n if (n & 1) == 0 => throw new java.lang.Exception("exception")
@@ -58,7 +58,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,falsified,undecided,exception)
     forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
   }
-  property("Prop.&& Exception") = forAll { p: Prop =>
+  property("Prop.&& Exception") = forAll { (p: Prop) =>
     (p && propException()) == exception
   }
   property("Prop.&& Exception 2") = {
@@ -68,7 +68,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,falsified,undecided,exception)
     forAll(g)(p => (p && proved) == p)
   }
-  property("Prop.&& False") = forAll { p: Prop =>
+  property("Prop.&& False") = forAll { (p: Prop) =>
     val q = p && falsified
     q == falsified || (q == exception && p == exception)
   }
@@ -85,7 +85,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,falsified,undecided,exception)
     forAll(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
   }
-  property("Prop.|| Exception") = forAll { p: Prop =>
+  property("Prop.|| Exception") = forAll { (p: Prop) =>
     (p || propException()) == exception
   }
   property("Prop.|| Identity") = {
@@ -105,7 +105,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,falsified,undecided,exception)
     forAll(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
   }
-  property("Prop.++ Exception") = forAll { p: Prop =>
+  property("Prop.++ Exception") = forAll { (p: Prop) =>
     (p ++ propException()) == exception
   }
   property("Prop.++ Identity 1") = {
@@ -121,11 +121,11 @@ object PropSpecification extends Properties("Prop") {
     forAll(g)(p => (p ++ falsified) == falsified)
   }
 
-  property("undecided") = forAll { prms: Parameters =>
+  property("undecided") = forAll { (prms: Parameters) =>
     undecided(prms).status == Undecided
   }
 
-  property("falsified") = forAll { prms: Parameters =>
+  property("falsified") = forAll { (prms: Parameters) =>
     falsified(prms).status == False
   }
 

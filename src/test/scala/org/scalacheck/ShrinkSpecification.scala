@@ -22,82 +22,82 @@ object ShrinkSpecification extends Properties("Shrink") {
     else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
-  property("byte") = forAll { n: Byte =>
+  property("byte") = forAll { (n: Byte) =>
     !shrink(n).contains(n)
   }
 
-  property("short") = forAll { n: Short =>
+  property("short") = forAll { (n: Short) =>
     !shrink(n).contains(n)
   }
 
-  property("int") = forAll { n: Int =>
+  property("int") = forAll { (n: Int) =>
     !shrink(n).contains(n)
   }
 
-  property("long") = forAll { n: Long =>
+  property("long") = forAll { (n: Long) =>
     !shrink(n).contains(n)
   }
 
-  property("float") = forAll { n: Float =>
+  property("float") = forAll { (n: Float) =>
     !shrink(n).contains(n)
   }
 
-  property("double") = forAll { n: Double =>
+  property("double") = forAll { (n: Double) =>
     !shrink(n).contains(n)
   }
 
-  property("duration") = forAll { n: Duration =>
+  property("duration") = forAll { (n: Duration) =>
     !shrink(n).contains(n)
   }
 
-  property("finite duration") = forAll { n: FiniteDuration =>
+  property("finite duration") = forAll { (n: FiniteDuration) =>
     !shrink(n).contains(n)
   }
 
-  property("non-zero byte") = forAll { n: Byte =>
+  property("non-zero byte") = forAll { (n: Byte) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero short") = forAll { n: Short =>
+  property("non-zero short") = forAll { (n: Short) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero int") = forAll { n: Int =>
+  property("non-zero int") = forAll { (n: Int) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero long") = forAll { n: Long =>
+  property("non-zero long") = forAll { (n: Long) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero float") = forAll { n: Float =>
+  property("non-zero float") = forAll { (n: Float) =>
     (math.abs(n) > 1E-5f) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero double") = forAll { n: Double =>
+  property("non-zero double") = forAll { (n: Double) =>
     (math.abs(n) > 1E-5d) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero finite duration") = forAll { n: FiniteDuration =>
+  property("non-zero finite duration") = forAll { (n: FiniteDuration) =>
     (n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
-  property("non-zero duration") = forAll { n: Duration =>
+  property("non-zero duration") = forAll { (n: Duration) =>
     (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
   implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
 
-  property("either shrinks") = forAll { e: Either[Int, Long] =>
+  property("either shrinks") = forAll { (e: Either[Int, Long]) =>
     !shrink(e).contains(e)
   }
 
-  property("either left") = forAll { i: Int =>
+  property("either left") = forAll { (i: Int) =>
     val e: Either[Int, Long] = Left(i)
     shrink(e).forall(_.isLeft)
   }
 
-  property("either right") = forAll { i: Int =>
+  property("either right") = forAll { (i: Int) =>
     val e: Either[Long, Int] = Right(i)
     shrink(e).forall(_.isRight)
   }

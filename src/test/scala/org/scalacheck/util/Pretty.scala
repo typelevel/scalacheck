@@ -19,7 +19,7 @@ object PrettySpecification extends Properties("Pretty") {
   property("pretty(null: Any)") = Pretty.pretty(null: Any) == "null"
 
   property("break") = {
-    Prop.forAll { s: String =>
+    Prop.forAll { (s: String) =>
       Prop.forAllNoShrink(Gen.oneOf("", "  ")) { lead =>
         val length = 75
         val result = Pretty.break(s, lead, length)

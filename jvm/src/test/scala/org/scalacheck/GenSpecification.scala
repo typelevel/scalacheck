@@ -199,7 +199,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     s.drop(n & 0xffff).nonEmpty
   }
 
-  property("someOf") = forAll { l: List[Int] =>
+  property("someOf") = forAll { (l: List[Int]) =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }
 
@@ -224,8 +224,8 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   property("distributed pick") = {
     val lst = (1 to 4).toIterable
     val n = 3
-    forAll(pick(n, lst)) { xs: collection.Seq[Int] =>
-      xs.map { x: Int =>
+    forAll(pick(n, lst)) { (xs: collection.Seq[Int]) =>
+      xs.map { (x: Int) =>
         Prop.collect(x) {
           xs.size == n
         }
@@ -338,22 +338,22 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   // BigDecimal generation is tricky; just ensure that the generator gives
   // its constructor valid values.
-  property("BigDecimal") = forAll { _: BigDecimal => true }
+  property("BigDecimal") = forAll { (_: BigDecimal) => true }
 
   property("resultOf1") = forAll(resultOf((m: Int) => 0))(_ == 0)
 
   property("resultOf2") = {
     case class A(m: Int, s: String)
-    forAll(resultOf(A)) { a:A => true }
+    forAll(resultOf(A)) { (a:A) => true }
   }
 
   property("resultOf3") = {
     case class B(n: Int, s: String, b: Boolean)
     implicit val arbB: Arbitrary[B] = Arbitrary(resultOf(B))
-    forAll { b:B => true }
+    forAll { (b:B) => true }
   }
 
-  property("option") = forAll { n: Int =>
+  property("option") = forAll { (n: Int) =>
     forAll(option(n)) {
       case Some(m) if m == n => true
       case None => true
@@ -361,7 +361,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
-  property("some") = forAll { n: Int =>
+  property("some") = forAll { (n: Int) =>
     forAll(some(n)) {
       case Some(m) => m == n
       case _ => false
@@ -420,15 +420,15 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     .suchThat(!_.isEmpty)
     .suchThat(!_.contains(','))
 
-  property("suchThat combined #98") = forAll(suchThatGen) { str: String =>
+  property("suchThat combined #98") = forAll(suchThatGen) { (str: String) =>
     !(str.isEmpty || str.contains(','))
   }
 
-  property("suchThat 1 #98") = forAll(suchThatGen) { str: String =>
+  property("suchThat 1 #98") = forAll(suchThatGen) { (str: String) =>
     !str.isEmpty
   }
 
-  property("suchThat 2 #98") = forAll(suchThatGen) { str: String =>
+  property("suchThat 2 #98") = forAll(suchThatGen) { (str: String) =>
     !str.contains(',')
   }
   ////

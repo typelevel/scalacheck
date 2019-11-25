@@ -70,7 +70,7 @@ object PropertyFilterSpecification extends Properties("PropertyFilter") {
                   "PropertyFilterSample.negative numbers"
                 )
 
-                prop(pf, propNames, expected)
+              prop(pf, propNames, expected)
             } else if (pf.exists(_.contains("*alpha"))) {
               val expected = Seq("PropertyFilterSample.lowercase alpha characters")
 

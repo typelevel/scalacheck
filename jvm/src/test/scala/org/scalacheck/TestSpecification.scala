@@ -28,7 +28,7 @@ object TestSpecification extends Properties("Test") {
 
   val shrunk = forAll( (t: (Int,Int,Int)) => false )
 
-  val propException = forAll { n:Int => throw new java.lang.Exception }
+  val propException = forAll { (n:Int) => throw new java.lang.Exception }
 
   val undefinedInt = for{
     n <- arbitrary[Int]
@@ -36,7 +36,7 @@ object TestSpecification extends Properties("Test") {
 
   val genException = forAll(undefinedInt)((n: Int) => true)
 
-  property("workers") = forAll { prms: Test.Parameters =>
+  property("workers") = forAll { (prms: Test.Parameters) =>
     var res = true
 
     val cb = new Test.TestCallback {
@@ -75,48 +75,48 @@ object TestSpecification extends Properties("Test") {
     }
   }
 
-  property("size") = forAll { prms: Test.Parameters =>
+  property("size") = forAll { (prms: Test.Parameters) =>
     val p = sizedProp { sz => sz >= prms.minSize && sz <= prms.maxSize }
     Test.check(prms, p).status == Passed
   }
 
-  property("propFailing") = forAll { prms: Test.Parameters =>
+  property("propFailing") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, failing).status match {
       case _:Failed => true
       case _ => false
     }
   }
 
-  property("propPassing") = forAll { prms: Test.Parameters =>
+  property("propPassing") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, passing).status == Passed
   }
 
-  property("propProved") = forAll { prms: Test.Parameters =>
+  property("propProved") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, proved).status match {
       case _:Test.Proved => true
       case _ => false
     }
   }
 
-  property("propExhausted") = forAll { prms: Test.Parameters =>
+  property("propExhausted") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, exhausted).status == Exhausted
   }
 
-  property("propPropException") = forAll { prms: Test.Parameters =>
+  property("propPropException") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, propException).status match {
       case _:PropException => true
       case _ => false
     }
   }
 
-  property("propGenException") = forAll { prms: Test.Parameters =>
+  property("propGenException") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, genException).status match {
       case x:PropException => true :| x.toString
       case x => false :| x.toString
     }
   }
 
-  property("propShrunk") = forAll { prms: Test.Parameters =>
+  property("propShrunk") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, shrunk).status match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_,_,_)::Nil,_) =>
         x == 0 && y == 0 && z == 0

@@ -30,7 +30,7 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
       Gen.delay(Arbitrary.arbitrary[Option[Recur]])
         .map(Recur(_))
     }
-    Prop.forAll { _: Recur =>
+    Prop.forAll { (_: Recur) =>
       Prop.passed
     }
   }
@@ -41,7 +41,7 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
         .map(Recur(_))
     }
     Prop.throws(classOf[java.lang.StackOverflowError]) {
-      Prop.forAll { _: Recur =>
+      Prop.forAll { (_: Recur) =>
         Prop.passed
       }
     }
