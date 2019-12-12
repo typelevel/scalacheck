@@ -4,7 +4,9 @@
 
 ### Changed
 
-* Update Scala.js 1.0.0-RC2, previously was 1.0.0-M8
+* Update Scala.js to 1.0.0-RC2, previously was 1.0.0-M8.
+
+* Update Scala.js to 0.6.31, previously was 0.6.29.
 
 ### Fixed
 
