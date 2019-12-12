@@ -4,7 +4,7 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
-lazy val versionNumber = "1.14.2"
+lazy val versionNumber = "1.14.3"
 
 def env(name: String): Option[String] =
   Option(System.getenv(name))
