@@ -1,4 +1,4 @@
-# ScalaCheck 1.14.2 Release Notes
+# ScalaCheck 1.14.3 Release Notes
 
 ScalaCheck is a powerful tool for property-based testing of Scala and Java
 programs. It features automatic test case generation and simplification of
@@ -6,9 +6,9 @@ failing test cases. ScalaCheck started out as a straightforward Scala port of
 the Haskell library QuickCheck, and has since wandered off on its own. Most
 features of QuickCheck can be found in ScalaCheck and vice versa, though.
 
-## What's new in ScalaCheck 1.14.2?
+## What's new in ScalaCheck 1.14.3?
 
-ScalaCheck 1.14.2 is a minor update from ScalaCheck 1.14.1, and it is
+ScalaCheck 1.14.3 is a minor update from ScalaCheck 1.14.2, and it is
 binary compatible. This means that if you are using any other
 framework in combination with ScalaCheck, like
 [ScalaTest](http://www.scalatest.org/) or [specs2](http://specs2.org/)
@@ -24,8 +24,8 @@ safely update your build definition to use the latest ScalaCheck
 release, although you might not see compilation errors but there may be
 deprecation warnings due to expected changes in ScalaCheck's API.
 
-For a detailed enumeration of what's new in ScalaCheck 1.14.2, see
-https://github.com/typelevel/scalacheck/tree/1.14.2/CHANGELOG.markdown
+For a detailed enumeration of what's new in ScalaCheck 1.14.3, see
+https://github.com/typelevel/scalacheck/tree/1.14.3/CHANGELOG.markdown
 
 ## ScalaCheck highlights
 
@@ -64,7 +64,7 @@ https://github.com/typelevel/scalacheck/tree/1.14.2/CHANGELOG.markdown
     )
 
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.14.2" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.14.3" % "test"
     )
 
   * Maven dependency
@@ -87,5 +87,5 @@ https://github.com/typelevel/scalacheck/tree/1.14.2/CHANGELOG.markdown
     <dependency>
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_2.13</artifactId>
-      <version>1.14.2</version>
+      <version>1.14.3</version>
     </dependency>

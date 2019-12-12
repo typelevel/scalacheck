@@ -1,9 +1,19 @@
 # ScalaCheck CHANGELOG
 
+## 1.14.3 (2019-12-13)
+
+### Changed
+
+* Update Scala.js 1.0.0-RC2, previously was 1.0.0-M8
+
 ### Fixed
 
 * Ensure posNum and negNum always return values
   [#568](https://github.com/typelevel/scalacheck/issues/568)
+
+### Added
+
+* No added features.
 
 ## 1.14.2 (2019-09-25)
 
