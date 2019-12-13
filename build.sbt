@@ -112,11 +112,9 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   mimaPreviousArtifacts := {
-    val isScalaJSMilestone: Boolean =
-      scalaJSVersion.startsWith("1.0.0-M")
     // TODO: re-enable MiMa for 2.14 once there is a final version
-    if (scalaMajorVersion.value == 14 || isScalaJSMilestone || isDotty.value) Set()
-    else Set("org.scalacheck" %%% "scalacheck" % "1.14.2")
+    if (scalaMajorVersion.value == 14 || isDotty.value) Set()
+    else Set("org.scalacheck" %%% "scalacheck" % "1.14.3")
   },
 
   /* Snapshots are published after successful merges to master.
@@ -124,7 +122,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
    * resolvers +=
    *   "Sonatype OSS Snapshots" at
    *   "https://oss.sonatype.org/content/repositories/snapshots",
-   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.2-64e1fc4-SNAPSHOT" % "test",
+   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.0-a794907-SNAPSHOT" % "test",
    */
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
