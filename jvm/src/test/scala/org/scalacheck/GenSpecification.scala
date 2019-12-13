@@ -191,6 +191,32 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     l.length == 0
   }
 
+  property("listOf(posNum)") = {
+    forAll(listOf(posNum[Int])) { l =>
+      l.length >= 0 && l.forall(_ > 0)
+    }
+  }
+
+  property("listOf(listOf(posNum)") = { // #568
+    forAll(listOf(listOf(posNum[Int]))) { ll =>
+      ll.length >= 0 && ll.forall(_.length >= 0)
+    }
+  }
+
+  property("nonEmptyListOf(nonEmptyListOf(posNum))") = { // #568
+    forAll(nonEmptyListOf(nonEmptyListOf(posNum[Int]))) { ll =>
+      ll.length > 0 && ll.forall(_.length > 0)
+    }
+  }
+
+  property("listOfN(listOfN(posNum))") = sizedProp { sz => // #568
+    forAll(choose(0, sz), choose(0, sz)) { (m: Int, n: Int) =>
+      forAll(listOfN(m, listOfN(n, posNum[Int]))) { ll =>
+        ll.length == m && ll.forall(_.length == n)
+      }
+    }
+  }
+
   property("infiniteStream") = forAll(infiniteStream(arbitrary[Int]), arbitrary[Short]) { (s, n) =>
     s.drop(n & 0xffff).nonEmpty
   }
