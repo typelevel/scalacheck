@@ -21,20 +21,20 @@ lazy val rules = project
 lazy val input = project
   .settings(
     skip in publish := true,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.2",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3",
   )
 
 lazy val output = project
   .settings(
     skip in publish := true,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.2",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3",
   )
 
 lazy val tests = project
   .settings(
     skip in publish := true,
     libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % V.scalafixVersion % Test cross CrossVersion.full,
-    compile.in(Compile) := 
+    compile.in(Compile) :=
       compile.in(Compile).dependsOn(compile.in(input, Compile)).value,
     scalafixTestkitOutputSourceDirectories :=
       sourceDirectories.in(output, Compile).value,
