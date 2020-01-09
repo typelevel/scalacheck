@@ -791,30 +791,37 @@ object Gen extends GenArities with GenVersionSpecific {
   //// Character Generators ////
 
   /** Generates a numerical character */
-  def numChar: Gen[Char] = choose(48.toChar, 57.toChar)
+  val numChar: Gen[Char] =
+    choose(48.toChar, 57.toChar)
 
   /** Generates an upper-case alpha character */
-  def alphaUpperChar: Gen[Char] = choose(65.toChar, 90.toChar)
+  val alphaUpperChar: Gen[Char] =
+    choose(65.toChar, 90.toChar)
 
   /** Generates a lower-case alpha character */
-  def alphaLowerChar: Gen[Char] = choose(97.toChar, 122.toChar)
+  val alphaLowerChar: Gen[Char] =
+    choose(97.toChar, 122.toChar)
 
   /** Generates an alpha character */
-  def alphaChar = frequency((1,alphaUpperChar), (9,alphaLowerChar))
+  val alphaChar: Gen[Char] =
+    frequency((1,alphaUpperChar), (9,alphaLowerChar))
 
   /** Generates an alphanumerical character */
-  def alphaNumChar = frequency((1,numChar), (9,alphaChar))
+  val alphaNumChar: Gen[Char] =
+    frequency((1,numChar), (9,alphaChar))
 
   /** Generates a ASCII character, with extra weighting for printable characters */
-  def asciiChar: Gen[Char] = chooseNum(0, 127, 32 to 126:_*).map(_.toChar)
+  val asciiChar: Gen[Char] =
+    chooseNum(0, 127, 32 to 126:_*).map(_.toChar)
 
   /** Generates a ASCII printable character */
-  def asciiPrintableChar: Gen[Char] = choose(32.toChar, 126.toChar)
+  val asciiPrintableChar: Gen[Char] =
+    choose(32.toChar, 126.toChar)
 
   /** Generates a character that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
-  def hexChar: Gen[Char] =
+  val hexChar: Gen[Char] =
     Gen.oneOf(
       Gen.oneOf("0123456789abcdef".toSeq),
       Gen.oneOf("0123456789ABCDEF".toSeq)
@@ -824,43 +831,44 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
-  def identifier: Gen[String] = (for {
-    c <- alphaLowerChar
-    cs <- listOf(alphaNumChar)
-  } yield (c::cs).mkString)
+  val identifier: Gen[String] =
+    for {
+      c <- alphaLowerChar
+      cs <- listOf(alphaNumChar)
+    } yield (c::cs).mkString
 
   /** Generates a string of digits */
-  def numStr: Gen[String] =
+  val numStr: Gen[String] =
     listOf(numChar).map(_.mkString)
 
   /** Generates a string of upper-case alpha characters */
-  def alphaUpperStr: Gen[String] =
+  val alphaUpperStr: Gen[String] =
     listOf(alphaUpperChar).map(_.mkString)
 
   /** Generates a string of lower-case alpha characters */
-  def alphaLowerStr: Gen[String] =
+  val alphaLowerStr: Gen[String] =
       listOf(alphaLowerChar).map(_.mkString)
 
   /** Generates a string of alpha characters */
-  def alphaStr: Gen[String] =
+  val alphaStr: Gen[String] =
     listOf(alphaChar).map(_.mkString)
 
   /** Generates a string of alphanumerical characters */
-  def alphaNumStr: Gen[String] =
+  val alphaNumStr: Gen[String] =
     listOf(alphaNumChar).map(_.mkString)
 
   /** Generates a string of ASCII characters, with extra weighting for printable characters */
-  def asciiStr: Gen[String] =
+  val asciiStr: Gen[String] =
     listOf(asciiChar).map(_.mkString)
 
   /** Generates a string of ASCII printable characters */
-  def asciiPrintableStr: Gen[String] =
+  val asciiPrintableStr: Gen[String] =
     listOf(asciiPrintableChar).map(_.mkString)
 
   /** Generates a string that can represent a valid hexadecimal digit. This
     * includes both upper and lower case values.
     */
-  def hexStr: Gen[String] =
+  val hexStr: Gen[String] =
     listOf(hexChar).map(_.mkString)
 
   //// Number Generators ////
@@ -900,7 +908,7 @@ object Gen extends GenArities with GenVersionSpecific {
   //// Misc Generators ////
 
   /** Generates a version 4 (random) UUID. */
-  lazy val uuid: Gen[UUID] = for {
+  lazy val uuid: Gen[UUID] = for {  // FIXME: Remove lazy
     l1 <- Gen.choose(Long.MinValue, Long.MaxValue)
     l2 <- Gen.choose(Long.MinValue, Long.MaxValue)
     y <- Gen.oneOf('8', '9', 'a', 'b')
@@ -908,7 +916,7 @@ object Gen extends GenArities with GenVersionSpecific {
     new UUID(l1,l2).toString.updated(14, '4').updated(19, y)
   )
 
-  lazy val calendar: Gen[Calendar] = {
+  lazy val calendar: Gen[Calendar] = { // FIXME: Remove lazy
     import Calendar._
 
     def adjust(c: Calendar)(f: Calendar => Unit): Calendar = { f(c); c }
