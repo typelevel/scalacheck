@@ -134,17 +134,16 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   }
 
   /** Arbitrary instance of Byte */
-  implicit lazy val arbByte: Arbitrary[Byte] = Arbitrary(
-    Gen.chooseNum(Byte.MinValue, Byte.MaxValue)
-  )
+  implicit lazy val arbByte: Arbitrary[Byte] =
+    Arbitrary(Gen.chooseNum(Byte.MinValue, Byte.MaxValue))
 
   /** Arbitrary instance of Short */
-  implicit lazy val arbShort: Arbitrary[Short] = Arbitrary(
-    Gen.chooseNum(Short.MinValue, Short.MaxValue)
-  )
+  implicit lazy val arbShort: Arbitrary[Short] =
+    Arbitrary(Gen.chooseNum(Short.MinValue, Short.MaxValue))
 
   /** Absolutely, totally, 100% arbitrarily chosen Unit. */
-  implicit lazy val arbUnit: Arbitrary[Unit] = Arbitrary(const(()))
+  implicit lazy val arbUnit: Arbitrary[Unit] =
+    Arbitrary(Gen.const(()))
 
   /**** Arbitrary instances of other common types ****/
 
