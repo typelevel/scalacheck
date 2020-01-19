@@ -2,7 +2,7 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
 
-addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.3.4")
+addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.0")
 
 def env(name: String): Option[String] =
   Option(System.getenv(name))
