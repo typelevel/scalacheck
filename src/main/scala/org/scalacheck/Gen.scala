@@ -473,6 +473,23 @@ object Gen extends GenArities with GenVersionSpecific {
   /** A generator that never generates a value */
   def fail[T]: Gen[T] = gen((p, seed) => failed[T](seed))
 
+
+  /**
+   * A fixed point generator. This is useful for making recusive structures
+   * e.g.
+   *
+   * Gen.fix[List[Int]] { recurse =>
+   *   Gen.choose(0, 10).flatMap { idx =>
+   *     if (idx < 5) recurse.map(idx :: _)
+   *     else Gen.const(idx :: Nil)
+   *   }
+   * }
+   */
+  def fix[A](fn: Gen[A] => Gen[A]): Gen[A] = {
+    lazy val result: Gen[A] = lzy(fn(result))
+    result
+  }
+
   /** A result that never contains a value */
   private[scalacheck] def failed[T](seed0: Seed): R[T] =
     new R[T] {
