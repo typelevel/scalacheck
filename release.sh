@@ -55,7 +55,7 @@ runsbt "+ jvm/$CMD"
 # step 4b: js releases (clean versions)
 SCALAJS_VERSION="0.6.31" runsbt "+ js/$CMD"
 runsbt "+ js/clean"
-SCALAJS_VERSION="1.0.0-RC2" runsbt "+ js/$CMD"
+SCALAJS_VERSION="1.0.0" runsbt "+ js/$CMD"
 
 # step 4c: native releases (clean versions)
 SCALANATIVE_VERSION="0.3.9" runsbt "+ native/$CMD"
