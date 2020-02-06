@@ -112,8 +112,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   mimaPreviousArtifacts := {
     val isScalaJSMilestone: Boolean =
-      scalaJSVersion.startsWith("1.0.0-M") ||
-      scalaJSVersion.startsWith("1.0.0-RC")
+      scalaJSVersion == "1.0.0"
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isScalaJSMilestone) Set()
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.2")
