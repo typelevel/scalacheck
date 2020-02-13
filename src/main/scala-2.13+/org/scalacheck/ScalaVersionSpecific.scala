@@ -38,3 +38,8 @@ private[scalacheck] trait CogenVersionSpecific {
   implicit def cogenLazyList[A: Cogen]: Cogen[LazyList[A]] =
     Cogen.it(_.iterator)
 }
+
+private[scalacheck] trait ShrinkVersionSpecific {
+  /** Forward to Shrink instance factory */
+  def withLazyList[T](s: T => LazyList[T]): Shrink[T] = Shrink(s.andThen(_.toStream))
+}

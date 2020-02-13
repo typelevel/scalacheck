@@ -37,3 +37,5 @@ private[scalacheck] trait CogenVersionSpecific
 private[scalacheck] trait GenSpecificationVersionSpecific {
   def infiniteLazyList[T](g: => Gen[T]): Gen[Stream[T]] = Gen.infiniteStream(g)
 }
+
+private[scalacheck] trait ShrinkVersionSpecific
