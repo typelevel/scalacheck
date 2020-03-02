@@ -836,7 +836,8 @@ and lists.
 
 If the generator for a type is restricting the range of valid values by
 construction or using `Gen.suchThat`, the values that fail tests can still be
-shrunk without checking the condition. To avoid that, use `Shrink.suchThat`
+shrunk without checking the condition, and then ultimately be reported as
+failing even though they do not satisfy it. To avoid that, use `Shrink.suchThat`
 with the condition to be maintained:
 
 ```scala
@@ -849,13 +850,6 @@ val genEvenList: Gen[List[Int]] = Gen.sized { size =>
 val shrinkEvenList: Shrink[List[Int]] =
   implicitly[Shrink[List[Int]]].suchThat(_.length % 2 == 0)
 ```
-
-Note that if a property fails on a value generated through `suchThat`, and is
-later shrunk (see [test case minimisation](#test-case-minimisation) below),
-the value ultimately reported as failing might not satisfy the condition given
-to `suchThat`, although it doesn't change the fact that there _exists_ a
-failing case that does. To avoid confusion, the corresponding shrink for the
-type can use `suchThat` method too.
 
 ### Stateful Testing
 
