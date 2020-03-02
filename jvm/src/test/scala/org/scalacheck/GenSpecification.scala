@@ -420,6 +420,28 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("fix is like lzy") = forAll { (seeds: List[Seed]) =>
+    lazy val lzyGen: Gen[List[Int]] = {
+      Gen.choose(0, 10).flatMap { idx =>
+        if (idx < 5) lzyGen.map(idx :: _)
+        else Gen.const(idx :: Nil)
+      }
+    }
+
+    val fixGen =
+      Gen.fix[List[Int]] { recurse =>
+        Gen.choose(0, 10).flatMap { idx =>
+          if (idx < 5) recurse.map(idx :: _)
+          else Gen.const(idx :: Nil)
+        }
+      }
+
+    val params = Gen.Parameters.default
+    seeds.forall { seed =>
+      lzyGen.pureApply(params, seed) == fixGen.pureApply(params, seed)
+    }
+  }
+
   property("uuid version 4") = forAll(uuid) { _.version == 4 }
 
   property("uuid unique") = forAll(uuid, uuid) {
