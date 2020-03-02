@@ -417,6 +417,12 @@ object Gen extends GenArities with GenVersionSpecific {
       }
     }
 
+    @tailrec
+    private def chBigInt(l: BigInt, h: BigInt)(p: P, seed: Seed): R[BigInt] = {
+      val (x, seed2) = seed.bigInt((h - l).bitLength)
+      if (x > h) chBigInt(l, h)(p, seed2) else r(Some(x), seed2)
+    }
+
     implicit val chooseLong: Choose[Long] =
       new Choose[Long] {
         def choose(low: Long, high: Long): Gen[Long] =
@@ -453,6 +459,11 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit val chooseFiniteDuration: Choose[FiniteDuration] =
       Choose.xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
+
+    implicit object chooseBigInt extends Choose[BigInt] {
+      def choose(low: BigInt, high: BigInt): Gen[BigInt] =
+        gen(chBigInt(low, high))
+    }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
      *  types whose relationship is described by the provided transformation

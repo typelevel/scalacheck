@@ -94,6 +94,26 @@ sealed abstract class Seed extends Serializable {
    * The values will be uniformly distributed, and will be contained
    * in the interval [0.0, 1.0). */
   def double: (Double, Seed) = ((d >>> 11) * 1.1102230246251565e-16, next)
+
+  /**
+   * Generates a big integer value.
+   *
+   * The values will be uniformly distributed, and will be contained in
+   * the interval [0, 2 ^ bitLength).
+   * */
+  def bigInt(bitLength: Int): (BigInt, Seed) = bigInt(0, bitLength)
+
+  @tailrec
+  private def bigInt(acc: BigInt, bitLength: Int): (BigInt, Seed) = {
+    val blockLength = 64
+    val (raw, next) = long
+    val block = (BigInt(raw) - Long.MinValue) >> (blockLength - bitLength)
+    if (bitLength <= blockLength) {
+      (acc + block, next)
+    } else {
+      next.bigInt(block << blockLength, bitLength - blockLength)
+    }
+  }
 }
 
 object Seed {
