@@ -126,8 +126,9 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("choose-big-int") = forAll { (l: BigInt, h: BigInt) =>
     Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { l <= x && x <= h }
-      case Failure(_) => l > h
+      case Success(g) => forAll(g) { x => l <= x && x <= h }
+      case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
+      case Failure(e) => throw e
     }
   }
 

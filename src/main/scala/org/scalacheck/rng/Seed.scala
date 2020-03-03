@@ -104,19 +104,24 @@ sealed abstract class Seed extends Serializable {
   def bigInt(bitLength: Int): (BigInt, Seed) = bigInt(0, bitLength)
 
   @tailrec
-  private def bigInt(acc: BigInt, bitLength: Int): (BigInt, Seed) = {
-    val blockLength = 64
-    val (raw, next) = long
-    val block = (BigInt(raw) - Long.MinValue) >> (blockLength - bitLength)
-    if (bitLength <= blockLength) {
-      (acc + block, next)
-    } else {
-      next.bigInt(block << blockLength, bitLength - blockLength)
-    }
+  private def bigInt(acc: BigInt, bitLength: Int): (BigInt, Seed) = bitLength match {
+    case 0 => (acc, this)
+    case n =>
+      val (block, nextSeed) = bigIntBlock
+      val blockPos = n - Seed.bigIntBlockLength
+      nextSeed.bigInt(acc + (block << blockPos), Math.max(0, blockPos))
+  }
+
+  /** Generates a positive big integer up to 64 bits long */
+  private def bigIntBlock: (BigInt, Seed) = {
+    val (raw, nextSeed) = long
+    (BigInt(raw) - Long.MinValue, nextSeed)
   }
 }
 
 object Seed {
+
+  val bigIntBlockLength = 64
 
   private case class apply(a: Long, b: Long, c: Long, d: Long) extends Seed {
     override def toString: String = s"""Seed.fromBase64("$toBase64")"""

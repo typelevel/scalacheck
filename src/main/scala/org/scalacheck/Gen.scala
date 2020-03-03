@@ -419,8 +419,9 @@ object Gen extends GenArities with GenVersionSpecific {
 
     @tailrec
     private def chBigInt(l: BigInt, h: BigInt)(p: P, seed: Seed): R[BigInt] = {
-      val (x, seed2) = seed.bigInt((h - l).bitLength)
-      if (x > h) chBigInt(l, h)(p, seed2) else r(Some(x), seed2)
+      val range = h - l
+      val (x, seed2) = seed.bigInt(range.bitLength)
+      if (x > range) chBigInt(l, h)(p, seed2) else r(Some(x + l), seed2)
     }
 
     implicit val chooseLong: Choose[Long] =
@@ -447,10 +448,10 @@ object Gen extends GenArities with GenVersionSpecific {
           if (low > high) throw new IllegalBoundsError(low, high)
           else if (low == Double.NegativeInfinity)
             frequency(1 -> const(Double.NegativeInfinity),
-                      9 -> choose(Double.MinValue, high))
+              9 -> choose(Double.MinValue, high))
           else if (high == Double.PositiveInfinity)
             frequency(1 -> const(Double.PositiveInfinity),
-                      9 -> choose(low, Double.MaxValue))
+              9 -> choose(low, Double.MaxValue))
           else gen(chDbl(low,high))
       }
 
@@ -462,7 +463,8 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit object chooseBigInt extends Choose[BigInt] {
       def choose(low: BigInt, high: BigInt): Gen[BigInt] =
-        gen(chBigInt(low, high))
+        if (low > high) throw new IllegalBoundsError(low, high)
+        else gen(chBigInt(low, high))
     }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
