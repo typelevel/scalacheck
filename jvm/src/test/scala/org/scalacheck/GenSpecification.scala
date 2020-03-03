@@ -124,7 +124,10 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
-  property("choose-big-int") = forAll { (l: BigInt, h: BigInt) =>
+  property("choose-big-int") = forAll(
+    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_)),
+    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_))
+  ) { (l: BigInt, h: BigInt) =>
     Try(choose(l, h)) match {
       case Success(g) => forAll(g) { x => l <= x && x <= h }
       case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
