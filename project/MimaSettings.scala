@@ -16,6 +16,9 @@ object MimaSettings {
   )
 
   private def newMethods = Seq(
+    "org.scalacheck.commands.Commands.shrinkCommand",
+    "org.scalacheck.commands.Commands.shrinkSequentialCommands",
+    "org.scalacheck.commands.Commands.shrinkParallelCommands",
   )
 
   private def removedPrivateMethods = Seq(
