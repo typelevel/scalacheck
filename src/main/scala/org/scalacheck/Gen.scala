@@ -417,13 +417,6 @@ object Gen extends GenArities with GenVersionSpecific {
       }
     }
 
-    @tailrec
-    private def chBigInt(l: BigInt, h: BigInt)(p: P, seed: Seed): R[BigInt] = {
-      val range = h - l
-      val (x, seed2) = seed.bigInt(range.bitLength)
-      if (x > range) chBigInt(l, h)(p, seed2) else r(Some(x + l), seed2)
-    }
-
     implicit val chooseLong: Choose[Long] =
       new Choose[Long] {
         def choose(low: Long, high: Long): Gen[Long] =
@@ -462,9 +455,35 @@ object Gen extends GenArities with GenVersionSpecific {
       Choose.xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
 
     implicit object chooseBigInt extends Choose[BigInt] {
+
+      private val blockLength = 64
+
       def choose(low: BigInt, high: BigInt): Gen[BigInt] =
         if (low > high) throw new IllegalBoundsError(low, high)
         else gen(chBigInt(low, high))
+
+      @tailrec
+      private def chBigInt(l: BigInt, h: BigInt)(p: P, seed: Seed): R[BigInt] = {
+        val range = h - l
+        val (x, seed2) = offset(l=l, bits=range.bitLength, seed)
+        if (x > h) chBigInt(l, h)(p, seed2) else r(Some(x), seed2)
+      }
+
+      @tailrec
+      private def offset(l: BigInt, bits: Int, seed: Seed): (BigInt, Seed) =
+        bits match {
+          case 0 => (l, seed)
+          case n =>
+            val (b, nextSeed) = block(seed)
+            val pos = n - blockLength
+            offset(l + (b << pos), Math.max(0, pos), nextSeed)
+        }
+
+      /** Generates a positive big integer up to 64 bits long */
+      private def block(seed: Seed): (BigInt, Seed) = {
+        val (raw, nextSeed) = seed.long
+        (BigInt(raw) - Long.MinValue, nextSeed)
+      }
     }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
