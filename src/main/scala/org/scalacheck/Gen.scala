@@ -441,10 +441,10 @@ object Gen extends GenArities with GenVersionSpecific {
           if (low > high) throw new IllegalBoundsError(low, high)
           else if (low == Double.NegativeInfinity)
             frequency(1 -> const(Double.NegativeInfinity),
-              9 -> choose(Double.MinValue, high))
+                      9 -> choose(Double.MinValue, high))
           else if (high == Double.PositiveInfinity)
             frequency(1 -> const(Double.PositiveInfinity),
-              9 -> choose(low, Double.MaxValue))
+                      9 -> choose(low, Double.MaxValue))
           else gen(chDbl(low,high))
       }
 
