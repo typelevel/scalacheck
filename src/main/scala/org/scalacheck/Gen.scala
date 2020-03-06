@@ -23,6 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import java.util.{ Calendar, UUID }
+import java.nio.ByteBuffer
 
 sealed abstract class Gen[+T] extends Serializable { self =>
 
@@ -455,35 +456,20 @@ object Gen extends GenArities with GenVersionSpecific {
       Choose.xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
 
     implicit object chooseBigInt extends Choose[BigInt] {
-
-      private val blockLength = 64
-
       def choose(low: BigInt, high: BigInt): Gen[BigInt] =
         if (low > high) throw new IllegalBoundsError(low, high)
-        else gen(chBigInt(low, high))
-
-      @tailrec
-      private def chBigInt(l: BigInt, h: BigInt)(p: P, seed: Seed): R[BigInt] = {
-        val range = h - l
-        val (x, seed2) = offset(l=l, bits=range.bitLength, seed)
-        if (x > h) chBigInt(l, h)(p, seed2) else r(Some(x), seed2)
-      }
-
-      @tailrec
-      private def offset(l: BigInt, bits: Int, seed: Seed): (BigInt, Seed) =
-        bits match {
-          case 0 => (l, seed)
-          case n =>
-            val (b, nextSeed) = block(seed)
-            val pos = n - blockLength
-            offset(l + (b << pos), Math.max(0, pos), nextSeed)
+        else {
+          val range = high - low
+          Gen.containerOfN[Array, Long](
+            (range.bitLength + 64 - 1) / 64,
+            Gen.choose(Long.MinValue, Long.MaxValue)
+          ).map(longs => {
+            longs(0) = longs(0) & (-1L >>> (64 - range.bitLength % 64))
+            val bb = ByteBuffer.allocate(longs.length * 8)
+            longs.foreach(bb.putLong)
+            BigInt(1, bb.array()) + low
+          }).filter(n => high >= n)
         }
-
-      /** Generates a positive big integer up to 64 bits long */
-      private def block(seed: Seed): (BigInt, Seed) = {
-        val (raw, nextSeed) = seed.long
-        (BigInt(raw) - Long.MinValue, nextSeed)
-      }
     }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic

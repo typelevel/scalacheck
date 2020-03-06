@@ -135,6 +135,14 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
+    val (l, h) = (BigInt(-2).pow(262143),
+      BigInt( 2).pow(262143))
+    Prop.forAllNoShrink(Gen.choose(l, h)) { x =>
+      l <= x && x <= h
+    }
+  }
+
   property("choose-xmap") = {
     implicit val chooseDate: Choose[Date] =
       Choose.xmap[Long, Date](new Date(_), _.getTime)
