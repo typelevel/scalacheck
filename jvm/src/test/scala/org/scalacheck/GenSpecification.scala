@@ -420,7 +420,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
-  property("fix is like lzy") = forAll { (seeds: List[Seed]) =>
+ property("recursive == lzy") = forAll { (seeds: List[Seed]) =>
     lazy val lzyGen: Gen[List[Int]] = {
       Gen.choose(0, 10).flatMap { idx =>
         if (idx < 5) lzyGen.map(idx :: _)
@@ -428,8 +428,8 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
       }
     }
 
-    val fixGen =
-      Gen.fix[List[Int]] { recurse =>
+    val recGen =
+      Gen.recursive[List[Int]] { recurse =>
         Gen.choose(0, 10).flatMap { idx =>
           if (idx < 5) recurse.map(idx :: _)
           else Gen.const(idx :: Nil)
@@ -438,7 +438,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
     val params = Gen.Parameters.default
     seeds.forall { seed =>
-      lzyGen.pureApply(params, seed) == fixGen.pureApply(params, seed)
+      lzyGen.pureApply(params, seed) == recGen.pureApply(params, seed)
     }
   }
 

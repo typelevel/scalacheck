@@ -478,14 +478,14 @@ object Gen extends GenArities with GenVersionSpecific {
    * A fixed point generator. This is useful for making recusive structures
    * e.g.
    *
-   * Gen.fix[List[Int]] { recurse =>
+   * Gen.recursive[List[Int]] { recurse =>
    *   Gen.choose(0, 10).flatMap { idx =>
    *     if (idx < 5) recurse.map(idx :: _)
    *     else Gen.const(idx :: Nil)
    *   }
    * }
    */
-  def fix[A](fn: Gen[A] => Gen[A]): Gen[A] = {
+  def recursive[A](fn: Gen[A] => Gen[A]): Gen[A] = {
     lazy val result: Gen[A] = lzy(fn(result))
     result
   }
