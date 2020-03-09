@@ -458,6 +458,7 @@ object Gen extends GenArities with GenVersionSpecific {
     implicit object chooseBigInt extends Choose[BigInt] {
       def choose(low: BigInt, high: BigInt): Gen[BigInt] =
         if (low > high) throw new IllegalBoundsError(low, high)
+        else if (low == high) BigInt(low)
         else {
           val range = high - low
           Gen.containerOfN[Array, Long](
