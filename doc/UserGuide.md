@@ -843,12 +843,12 @@ with the condition to be maintained:
 ```scala
 /** Generate lists of an even length */
 val genEvenList: Gen[List[Int]] = Gen.sized { size =>
-  Gen.listOfN(size * 2, arbitrary[Int])
+  Gen.listOfN(size * 2, Arbitrary.arbitrary[Int])
 }
 
 /** Shrink a list, maintaining even length */
-val shrinkEvenList: Shrink[List[Int]] =
-  implicitly[Shrink[List[Int]]].suchThat(_.length % 2 == 0)
+implicit val shrinkEvenList: Shrink[List[Int]] =
+  Shrink.shrinkContainer[List,Int].suchThat(_.length % 2 == 0)
 ```
 
 ### Stateful Testing
