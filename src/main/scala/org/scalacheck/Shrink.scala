@@ -17,6 +17,11 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
+
+  /** Create a new shrink that only produces values satisfying the given
+   *  condition.
+   */
+  def suchThat(f: T => Boolean): Shrink[T] = Shrink(v => this.shrink(v).filter(f))
 }
 
 trait ShrinkLowPriority {
