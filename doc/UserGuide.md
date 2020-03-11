@@ -462,9 +462,9 @@ half of the generated numbers, but one has to be careful when using the
 `suchThat` operator.
 
 Note that if a property fails on a value generated through `suchThat`, and is
-later shrunk (see [test case minimisation](#test-case-minimisation) below, the
+later shrunk (see [test case minimisation](#test-case-minimisation) below), the
 value ultimately reported as failing might not satisfy the condition given to
-`suchThat`, although it doesn't change the fact that there _exists_ a failing
+`suchThat`. Although, it doesn't change the fact that there _exists_ a failing
 case that does. To avoid confusion, the corresponding shrink for the type can
 use `suchThat` method too.
 
@@ -555,7 +555,7 @@ To get support for your own type `T` you need to define an implicit `def` or
 the `Arbitrary` instance. This method takes one parameter of type `Gen[T]` and
 returns an instance of `Arbitrary[T]`.
 
-Now, lets say you have a custom type `Tree[T]` that you want to use as a
+Now, let's say you have a custom type `Tree[T]` that you want to use as a
 parameter in your properties:
 
 ```scala
@@ -652,11 +652,11 @@ Here ScalaCheck tells us that the property hasn't been tested with any large
 and ordered list (which is no surprise, since the lists are randomised).
 Maybe we need to use a special generator that generates also large ordered
 lists, if that is important for testing our method thoroughly. In this
-particular case it doesn't matter, since the implementation of `reverse`
+particular case, it doesn't matter, since the implementation of `reverse`
 probably doesn't care about whether the list is sorted or not.
 
 We can also collect data directly, using the `Prop.collect` method. In this
-dummy property we just want to see if ScalaCheck distributes the generated
+dummy property, we just want to see if ScalaCheck distributes the generated
 data evenly:
 
 ```
@@ -863,7 +863,7 @@ system's *state* throughout time.
 
 An example could be to specify the workflow of an ATM. You'd want to state
 requirements such as that the user has to enter the correct PIN code before any
-money could be withdrawn, or that entering an erronous PIN code three times
+money could be withdrawn, or that entering an erroneous PIN code three times
 would make the machine confiscate the credit card.
 
 Formalising such command sequences using ScalaCheck's property combinators is a
@@ -893,7 +893,7 @@ will be set to `Counter`.
 We will also need a type encoding the state of the system under test. This is
 represented by the abstract type `Commands.State`. The `State` type should
 describe enough of the actual system's state for us to be able to define
-properties about the various commands. In our case we will set `State = Int`,
+properties about the various commands. In our case, we will set `State = Int`,
 and this actually models the real system state exactly. This is a coincidence
 caused by the simplicity of our `Counter` implementation. A realistic system
 would probably have other internal state that we wouldn't need (or even know
@@ -1039,7 +1039,7 @@ class Counter {
 }
 ```
 
-Lets test it again:
+Let's test it again:
 
 ```
 scala> CounterSpecification.property().check
