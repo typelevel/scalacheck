@@ -309,7 +309,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   property("identifier") = forAll(identifier) { s =>
-    s.length > 0 && s(0).isLetter && s(0).isLower &&
+    s.length > 0 && s.charAt(0).isLetter && s.charAt(0).isLower &&
     s.forall(_.isLetterOrDigit)
   }
 
