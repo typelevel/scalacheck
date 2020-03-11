@@ -106,7 +106,7 @@ object ShrinkSpecification extends Properties("Shrink") {
   def shrinkEvenLength[A]: Shrink[List[A]] = implicitly[Shrink[List[A]]].suchThat(evenLength _)
 
   property("list suchThat") = {
-    forAll { l: List[Int] =>
+    forAll { (l: List[Int]) =>
       shrink(l)(shrinkEvenLength).forall(evenLength _)
     }
   }
