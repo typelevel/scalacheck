@@ -22,82 +22,82 @@ object ShrinkSpecification extends Properties("Shrink") {
     else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
-  property("byte") = forAll { (n: Byte) =>
+  property("shrink[Byte]") = forAll { (n: Byte) =>
     !shrink(n).contains(n)
   }
 
-  property("short") = forAll { (n: Short) =>
+  property("shrink[Short]") = forAll { (n: Short) =>
     !shrink(n).contains(n)
   }
 
-  property("int") = forAll { (n: Int) =>
+  property("shrink[Int]") = forAll { (n: Int) =>
     !shrink(n).contains(n)
   }
 
-  property("long") = forAll { (n: Long) =>
+  property("shrink[Long]") = forAll { (n: Long) =>
     !shrink(n).contains(n)
   }
 
-  property("float") = forAll { (n: Float) =>
+  property("shrink[Float]") = forAll { (n: Float) =>
     !shrink(n).contains(n)
   }
 
-  property("double") = forAll { (n: Double) =>
+  property("shrink[Double]") = forAll { (n: Double) =>
     !shrink(n).contains(n)
   }
 
-  property("duration") = forAll { (n: Duration) =>
+  property("shrink[Duration]") = forAll { (n: Duration) =>
     !shrink(n).contains(n)
   }
 
-  property("finite duration") = forAll { (n: FiniteDuration) =>
+  property("shrink[FiniteDuration]") = forAll { (n: FiniteDuration) =>
     !shrink(n).contains(n)
   }
 
-  property("non-zero byte") = forAll { (n: Byte) =>
+  property("shrink[Byte] != 0") = forAll { (n: Byte) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero short") = forAll { (n: Short) =>
+  property("shrink[Short] != 0") = forAll { (n: Short) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero int") = forAll { (n: Int) =>
+  property("shrink[Int] != 0") = forAll { (n: Int) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero long") = forAll { (n: Long) =>
+  property("shrink[Long] != 0") = forAll { (n: Long) =>
     (n != 0) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero float") = forAll { (n: Float) =>
+  property("shrink[Float] != 0") = forAll { (n: Float) =>
     (math.abs(n) > 1E-5f) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero double") = forAll { (n: Double) =>
+  property("shrink[Double] != 0") = forAll { (n: Double) =>
     (math.abs(n) > 1E-5d) ==> shrinkClosure(n).contains(0)
   }
 
-  property("non-zero finite duration") = forAll { (n: FiniteDuration) =>
+  property("shrink[FiniteDuration] != 0") = forAll { (n: FiniteDuration) =>
     (n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
-  property("non-zero duration") = forAll { (n: Duration) =>
+  property("shrink[Duration] != 0") = forAll { (n: Duration) =>
     (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
   implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
 
-  property("either shrinks") = forAll { (e: Either[Int, Long]) =>
+  property("shrink[Either]") = forAll { (e: Either[Int, Long]) =>
     !shrink(e).contains(e)
   }
 
-  property("either left") = forAll { (i: Int) =>
+  property("shrink[Left]") = forAll { (i: Int) =>
     val e: Either[Int, Long] = Left(i)
     shrink(e).forall(_.isLeft)
   }
 
-  property("either right") = forAll { (i: Int) =>
+  property("shrink[Right]") = forAll { (i: Int) =>
     val e: Either[Long, Int] = Right(i)
     shrink(e).forall(_.isRight)
   }
@@ -116,7 +116,7 @@ object ShrinkSpecification extends Properties("Shrink") {
   def shrinkEvenLength[A]: Shrink[List[A]] =
     Shrink.shrinkContainer[List,A].suchThat(evenLength _)
 
-  property("[List[Int].suchThat") = {
+  property("shrink[List[Int].suchThat") = {
     forAll { (l: List[Int]) =>
       shrink(l)(shrinkEvenLength).forall(evenLength _)
     }
@@ -136,59 +136,59 @@ object ShrinkSpecification extends Properties("Shrink") {
    * Similarly, shrink(Double.MinValue).size gives us 2081.
    */
 
-  property("Shrink[Byte] terminates") =
+  property("shrink[Byte].nonEmpty") =
     forAllNoShrink((n: Byte) => Shrink.shrink(n).drop(15).isEmpty)
 
-  property("Shrink[Char] terminates") =
+  property("shrink[Char].nonEmpty") =
     forAllNoShrink((n: Char) => Shrink.shrink(n).drop(16).isEmpty)
 
-  property("Shrink[Short] terminates") =
+  property("shrink[Short].nonEmpty") =
     forAllNoShrink((n: Short) => Shrink.shrink(n).drop(31).isEmpty)
 
-  property("Shrink[Int] terminates") =
+  property("shrink[Int].nonEmpty") =
     forAllNoShrink((n: Int) => Shrink.shrink(n).drop(63).isEmpty)
 
-  property("Shrink[Long] terminates") =
+  property("shrink[Long].nonEmpty") =
     forAllNoShrink((n: Long) => Shrink.shrink(n).drop(127).isEmpty)
 
-  property("Shrink[Float] terminates") =
+  property("shrink[Float].nonEmpty") =
     forAllNoShrink((n: Float) => Shrink.shrink(n).drop(2081).isEmpty)
 
-  property("Shrink[Double] terminates") =
+  property("shrink[Double].nonEmpty") =
     forAllNoShrink((n: Double) => Shrink.shrink(n).drop(2081).isEmpty)
 
-  property("Shrink[FiniteDuration] terminates") =
+  property("shrink[FiniteDuration].nonEmpty") =
     forAllNoShrink((n: FiniteDuration) => Shrink.shrink(n).drop(2081).isEmpty)
 
-  property("Shrink[Duration] terminates") =
+  property("shrink[Duration].nonEmpty") =
     forAllNoShrink((n: Duration) => Shrink.shrink(n).drop(2081).isEmpty)
 
   // make sure we handle sentinel values appropriately for Float/Double.
 
-  property("Shrink[Float] handles PositiveInfinity") =
+  property("shrink(Float.PositiveInfinity)") =
     Prop(Shrink.shrink(Float.PositiveInfinity).isEmpty)
 
-  property("Shrink[Float] handles NegativeInfinity") =
+  property("shrink(Float.NegativeInfinity)") =
     Prop(Shrink.shrink(Float.NegativeInfinity).isEmpty)
 
-  property("Shrink[Float] handles NaN") =
+  property("shrink(Float.NaN)") =
     Prop(Shrink.shrink(Float.NaN).isEmpty)
 
-  property("Shrink[Double] handles PositiveInfinity") =
+  property("shrink(Double.PositiveInfinity)") =
     Prop(Shrink.shrink(Double.PositiveInfinity).isEmpty)
 
-  property("Shrink[Double] handles NegativeInfinity") =
+  property("shrink(Double.NegativeInfinity)") =
     Prop(Shrink.shrink(Double.NegativeInfinity).isEmpty)
 
-  property("Shrink[Double] handles NaN") =
+  property("shrink(Double.NaN)") =
     Prop(Shrink.shrink(Double.NaN).isEmpty)
 
-  property("Shrink[Duration] handles Inf") =
+  property("shrink(Duration.Inf)") =
     Prop(Shrink.shrink(Duration.Inf: Duration).isEmpty)
 
-  property("Shrink[Duration] handles MinusInf") =
+  property("shrink(Duration.MinusInf)") =
     Prop(Shrink.shrink(Duration.MinusInf: Duration).isEmpty)
 
-  property("Shrink[Duration] handles Undefined") =
+  property("shrink(Duration.Undefined)") =
     Prop(Shrink.shrink(Duration.Undefined: Duration).isEmpty)
 }
