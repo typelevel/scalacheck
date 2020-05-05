@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import Prop.Arg
+import java.lang.Math
 import org.scalacheck.util.{FreqMap, CmdLineParser, ConsoleReporter}
 import scala.util.{Success, Failure}
 import scala.util.matching.Regex
@@ -400,16 +401,11 @@ object Test {
   /** Tests a property with the given testing parameters, and returns
    *  the test results. */
   def check(params: Parameters, p: Prop): Result = {
-    import params._
     assertParams(params)
 
-    val iterations = math.ceil(minSuccessfulTests / workers.toDouble)
-    val sizeStep = (maxSize-minSize) / (iterations*workers)
+    val iterations = Math.ceil(params.minSuccessfulTests / params.workers.toDouble)
+    val sizeStep = (params.maxSize - params.minSize) / (iterations * params.workers)
     var stop = false
-
-    val genPrms = Gen.Parameters.default
-      .withLegacyShrinking(params.useLegacyShrinking)
-      .withInitialSeed(params.initialSeed)
 
     def workerFun(workerIdx: Int): Result = {
       var n = 0  // passed tests
@@ -417,20 +413,38 @@ object Test {
       var res: Result = null
       var fm = FreqMap.empty[Set[Any]]
 
-      def isExhausted = d > minSuccessfulTests * maxDiscardRatio
+      def isExhausted = d > params.minSuccessfulTests * params.maxDiscardRatio
+
+      var seed = {
+        val seed0 = params.initialSeed.getOrElse(rng.Seed.random)
+        if (workerIdx == 0) seed0 else seed0.reseed(workerIdx.toLong)
+        //seed0.reseed(workerIdx.toLong)
+      }
 
       while(!stop && res == null && n < iterations) {
-        val size = minSize.toDouble + (sizeStep * (workerIdx + (workers*(n+d))))
-        val propRes = p(genPrms.withSize(size.round.toInt))
-        fm = if(propRes.collected.isEmpty) fm else fm + propRes.collected
+
+        val count = workerIdx + (params.workers * (n + d))
+        val size = params.minSize.toDouble + (sizeStep * count)
+        val genPrms = Gen.Parameters.default
+          .withLegacyShrinking(params.useLegacyShrinking)
+          .withInitialSeed(Some(seed))
+          .withSize(size.round.toInt)
+
+        seed = seed.slide
+
+        val propRes = p(genPrms)
+        if (propRes.collected.nonEmpty) {
+          fm = fm + propRes.collected
+        }
+
         propRes.status match {
           case Prop.Undecided =>
             d += 1
-            testCallback.onPropEval("", workerIdx, n, d)
+            params.testCallback.onPropEval("", workerIdx, n, d)
             if (isExhausted) res = Result(Exhausted, n, d, fm)
           case Prop.True =>
             n += 1
-            testCallback.onPropEval("", workerIdx, n, d)
+            params.testCallback.onPropEval("", workerIdx, n, d)
           case Prop.Proof =>
             n += 1
             res = Result(Proved(propRes.args), n, d, fm)
@@ -449,9 +463,10 @@ object Test {
       } else res
     }
 
-    val start = System.currentTimeMillis
+    val t0 = System.nanoTime()
     val r = Platform.runWorkers(params, workerFun, () => stop = true)
-    val timedRes = r.copy(time = System.currentTimeMillis-start)
+    val millis = (System.nanoTime() - t0) / 1000000L
+    val timedRes = r.copy(time = millis)
     params.testCallback.onTestResult("", timedRes)
     timedRes
   }
