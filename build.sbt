@@ -172,7 +172,7 @@ lazy val jvm = project.in(file("jvm"))
       !isDotty.value // ==> true
       // else ==> false
     },
-    crossScalaVersions += "0.23.0-RC1",
+    crossScalaVersions += "0.24.0-RC1",
     fork in Test := {
       // Serialization issue in 2.13 and later
       scalaMajorVersion.value == 13 || isDotty.value // ==> true
