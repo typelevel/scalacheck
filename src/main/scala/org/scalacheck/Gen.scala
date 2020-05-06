@@ -33,12 +33,12 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Just an alias */
   private type P = Gen.Parameters
 
-  /** Should be a copy of R.sieve. Used internally in Gen when some generators
-   *  with suchThat-clause are created (when R is not available). This method
-   *  actually breaks covariance, but since this method will only ever be
-   *  called with a value of exactly type T, it is OK. */
+  // This is no longer used but preserved here for binary compatibility.
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
+  // If you implement new Gen[_] directly (instead of using
+  // combinators), make sure to use p.initialSeed or p.useInitialSeed
+  // in the implementation, instead of using seed directly.
   private[scalacheck] def doApply(p: P, seed: Seed): R[T]
 
   //// Public interface ////
@@ -104,16 +104,14 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  the generator fails (returns None). Also, make sure that the provided
    *  test property is side-effect free, e.g. it should not use external vars.
    *  This method is identical to [Gen.filter]. */
-  def suchThat(f: T => Boolean): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) =
-      p.useInitialSeed(seed) { (p0, s0) =>
-        val res = self.doApply(p0, s0)
-        res.copy(s = { (x:T) => res.sieve(x) && f(x) })
-      }
-    override def sieveCopy(x: Any) =
-      try self.sieveCopy(x) && f(x.asInstanceOf[T])
-      catch { case _: java.lang.ClassCastException => false }
-  }
+  def suchThat(f: T => Boolean): Gen[T] =
+    new Gen[T] {
+      def doApply(p: P, seed: Seed): Gen.R[T] =
+        p.useInitialSeed(seed) { (p0, s0) =>
+          val r = self.doApply(p0, s0)
+          r.copy(r = r.retrieve.filter(f))
+        }
+    }
 
   case class RetryUntilException(n: Int) extends RuntimeException(s"retryUntil failed after $n attempts")
 
@@ -182,7 +180,6 @@ sealed abstract class Gen[+T] extends Serializable { self =>
         val r = self.doApply(p0, s0)
         r.copy(l = r.labels + l)
       }
-    override def sieveCopy(x: Any) = self.sieveCopy(x)
   }
 
   /** Put a label on the generator to make test reports clearer */
@@ -215,23 +212,21 @@ object Gen extends GenArities with GenVersionSpecific {
 
   private[scalacheck] trait R[+T] {
     def labels: Set[String] = Set()
-    def sieve[U >: T]: U => Boolean = _ => true
+    // sieve is no longer used but preserved for binary compatibility
+    final def sieve[U >: T]: U => Boolean = (_: U) => true
     protected def result: Option[T]
     def seed: Seed
 
-    def retrieve: Option[T] = result.filter(sieve)
+    def retrieve: Option[T] = result
 
     def copy[U >: T](
       l: Set[String] = this.labels,
+      // s is no longer used but preserved for binary compatibility
       s: U => Boolean = this.sieve,
       r: Option[U] = this.result,
       sd: Seed = this.seed
     ): R[U] = new R[U] {
       override val labels = l
-      override def sieve[V >: U] = { (x: Any) =>
-        try s(x.asInstanceOf[U])
-        catch { case _: java.lang.ClassCastException => false }
-      }
       val seed = sd
       val result = r
     }
@@ -245,7 +240,7 @@ object Gen extends GenArities with GenVersionSpecific {
           r(None, seed).copy(l = labels)
         case Some(t) =>
           val r = f(t)
-          r.copy(l = labels ++ r.labels, sd = r.seed)
+          r.copy(l = labels | r.labels, sd = r.seed)
       }
   }
 
@@ -494,7 +489,6 @@ object Gen extends GenArities with GenVersionSpecific {
   private[scalacheck] def failed[T](seed0: Seed): R[T] =
     new R[T] {
       val result: Option[T] = None
-      override def sieve[U >: T]: U => Boolean = _ => false
       val seed = seed0
     }
 
@@ -598,7 +592,7 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Picks a random generator from a list */
   def oneOf[T](g0: Gen[T], g1: Gen[T], gn: Gen[T]*): Gen[T] = {
     val gs = g0 +: g1 +: gn
-    choose(0,gs.size-1).flatMap(gs(_)).suchThat(x => gs.exists(_.sieveCopy(x)))
+    choose(0, gs.size - 1).flatMap(i => gs(i))
   }
 
   /** Makes a generator result optional. Either `Some(T)` or `None` will be provided. */
@@ -626,9 +620,7 @@ object Gen extends GenArities with GenVersionSpecific {
         builder += ((total, value))
       }
       val tree = builder.result
-      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2).suchThat { x =>
-        gs.exists(_._2.sieveCopy(x))
-      }
+      choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2)
     }
   }
 
@@ -652,11 +644,31 @@ object Gen extends GenArities with GenVersionSpecific {
    *  complete container generator will also fail. */
   def buildableOfN[C,T](n: Int, g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
-  ): Gen[C] =
-    sequence[C,T](Traversable.fill(n)(g)) suchThat { c =>
-      // TODO: Can we guarantee c.size == n (See issue #89)?
-      evt(c).forall(g.sieveCopy)
+  ): Gen[C] = {
+    require(n >= 0, s"invalid size given: $n")
+    new Gen[C] {
+      def doApply(p: P, seed0: Seed): R[C] = {
+        var seed: Seed = p.initialSeed.getOrElse(seed0)
+        val bldr = evb.builder
+        val allowedFailures = Gen.collectionRetries(n)
+        var failures = 0
+        var count = 0
+        while (count < n) {
+          val res = g.doApply(p, seed)
+          res.retrieve match {
+            case Some(t) =>
+              bldr += t
+              count += 1
+            case None =>
+              failures += 1
+              if (failures >= allowedFailures) return r(None, res.seed)
+          }
+          seed = res.seed
+        }
+        r(Some(bldr.result), seed)
+      }
     }
+  }
 
   /** Generates a container of any Traversable type for which there exists an
    *  implicit [[org.scalacheck.util.Buildable]] instance. The elements in the
@@ -665,10 +677,8 @@ object Gen extends GenArities with GenVersionSpecific {
   def buildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(0, Integer.max(s, 0)).flatMap(n => buildableOfN[C, T](n, g)(evb, evt)))
-    .suchThat { c =>
-      if (c == null) g.sieveCopy(null) else evt(c).forall(g.sieveCopy)
-    }
+    sized(s => choose(0, Integer.max(s, 0)))
+      .flatMap(n => buildableOfN(n, g)(evb, evt))
 
   /** Generates a non-empty container of any Traversable type for which there
    *  exists an implicit [[org.scalacheck.util.Buildable]] instance. The
@@ -678,17 +688,17 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    sized(s => choose(1, Integer.max(s, 1)).flatMap(n => buildableOfN[C, T](n, g)(evb, evt))).suchThat(c => evt(c).size > 0)
+    buildableOf(g)(evb, evt).suchThat(c => evt(c).size > 0)
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOfN(n, g)(evb, evt)
+  ): Gen[C[T]] = buildableOfN[C[T], T](n, g)(evb, evt)
 
   /** A convenience method for calling `buildableOf[C[T],T](g)`. */
   def containerOf[C[_],T](g: Gen[T])(implicit
     evb: Buildable[T,C[T]], evt: C[T] => Traversable[T]
-  ): Gen[C[T]] = buildableOf(g)(evb, evt)
+  ): Gen[C[T]] = buildableOf[C[T], T](g)(evb, evt)
 
   /** A convenience method for calling `nonEmptyBuildableOf[C[T],T](g)`. */
   def nonEmptyContainerOf[C[_],T](g: Gen[T])(implicit
@@ -723,17 +733,27 @@ object Gen extends GenArities with GenVersionSpecific {
    *  is equal to calling <code>containerOfN[Map,(T,U)](n,g)</code>. */
   def mapOfN[T,U](n: Int, g: Gen[(T, U)]) = buildableOfN[Map[T, U],(T, U)](n, g)
 
-  /** Generates an infinite stream. */
+  /**
+   * Generates an infinite stream.
+   *
+   * Failures in the underlying generator may terminate the stream.
+   * Otherwise it will continue forever.
+   */
   def infiniteStream[T](g: => Gen[T]): Gen[Stream[T]] = {
-    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
-      case Some((h, s)) => h #:: unfold(s)(f)
-      case None => Stream.empty
-    }
-    gen { (p, seed0) =>
-      new R[Stream[T]] {
-        val result: Option[Stream[T]] = Some(unfold(seed0)(s => Some(g.pureApply(p, s) -> s.next)))
-        val seed: Seed = seed0.next
+    val attemptsPerItem = 10
+    def unfold(p: P, seed: Seed, attemptsLeft: Int): Stream[T] =
+      if (attemptsLeft <= 0) {
+        Stream.empty
+      } else {
+        val r = g.doPureApply(p, seed)
+        r.retrieve match {
+          case Some(t) => t #:: unfold(p, r.seed, attemptsPerItem)
+          case None => unfold(p, r.seed, attemptsLeft - 1)
+        }
       }
+    gen { (p, seed0) =>
+      val stream = unfold(p, seed0, attemptsPerItem)
+      r(Some(stream), seed0.slide)
     }
   }
 
@@ -774,7 +794,7 @@ object Gen extends GenArities with GenVersionSpecific {
           buf += t
         } else {
           val (x, s) = seed.long
-          val i = (x & 0x7fffffff).toInt % count
+          val i = (x & Long.MaxValue % count).toInt
           if (i < n) buf(i) = t
           seed = s
         }
@@ -1020,4 +1040,8 @@ object Gen extends GenArities with GenVersionSpecific {
     1 -> const(Duration.Undefined),
     1 -> const(Duration.Zero),
     6 -> finiteDuration)
+
+  // used to calculate how many per-item retries we should allow.
+  private def collectionRetries(n: Int): Int =
+    Integer.max(10, n / 10)
 }
