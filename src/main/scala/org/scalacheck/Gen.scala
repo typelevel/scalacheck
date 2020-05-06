@@ -33,7 +33,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
   /** Just an alias */
   private type P = Gen.Parameters
 
-  // This is no long used but preserved here for binary compatibility.
+  // This is no longer used but preserved here for binary compatibility.
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
   // If you implement new Gen[_] directly (instead of using
