@@ -99,13 +99,13 @@ private abstract class ScalaCheckRunner extends Runner {
       }
   }
 
-  def checkPropTask(taskDef: TaskDef, single: Boolean): BaseTask = new BaseTask(taskDef) {
+  def checkPropTask(taskDef: TaskDef, single: Boolean): BaseTask = new BaseTask(taskDef) { self =>
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] = {
       val propertyFilter = params.propFilter.map(_.r)
 
       if (single) {
         val mprops: Map[String, Prop] = props.toMap
-        taskDef.selectors.foreach {
+        self.taskDef.selectors.foreach {
           case ts: TestSelector =>
             val name = ts.testName
             mprops.get(name).foreach { prop =>
@@ -143,9 +143,9 @@ private abstract class ScalaCheckRunner extends Runner {
             )
             case _ => new OptionalThrowable()
           }
-          val fullyQualifiedName = taskDef.fullyQualifiedName
+          val fullyQualifiedName = self.taskDef.fullyQualifiedName
           val selector = new TestSelector(name)
-          val fingerprint = taskDef.fingerprint
+          val fingerprint = self.taskDef.fingerprint
           val duration = -1L
         }
 
@@ -166,7 +166,7 @@ private abstract class ScalaCheckRunner extends Runner {
           args.grouped(2).filter(twos => verbosityOpts(twos.head))
             .toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
         val s = if (result.passed) "+" else "!"
-        val n = if (name.isEmpty) taskDef.fullyQualifiedName else name
+        val n = if (name.isEmpty) self.taskDef.fullyQualifiedName else name
         val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
         log(loggers, result.passed, logMsg)
       }

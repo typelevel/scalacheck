@@ -420,7 +420,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
- property("recursive == lzy") = forAll { (seeds: List[Seed]) =>
+  property("recursive == lzy") = forAll { (seeds: List[Seed]) =>
     lazy val lzyGen: Gen[List[Int]] = {
       Gen.choose(0, 10).flatMap { idx =>
         if (idx < 5) lzyGen.map(idx :: _)
