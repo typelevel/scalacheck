@@ -418,7 +418,6 @@ object Test {
       var seed = {
         val seed0 = params.initialSeed.getOrElse(rng.Seed.random())
         if (workerIdx == 0) seed0 else seed0.reseed(workerIdx.toLong)
-        //seed0.reseed(workerIdx.toLong)
       }
 
       while(!stop && res == null && n < iterations) {
