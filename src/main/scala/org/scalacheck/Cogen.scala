@@ -167,8 +167,6 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
     while (i < as.length) { s = A.perturb(s, as(i)); i += 1 }
     s.next
   }
-
-  def domainOf[A, B](f: A => B)(implicit B: Cogen[B]): Cogen[A] = B.contramap(f)
 }
 
 trait CogenLowPriority {
