@@ -25,7 +25,7 @@ lazy val scalaVersionSettings = Seq(
 )
 
 lazy val scalaJSVersion =
-  env("SCALAJS_VERSION").getOrElse("0.6.33")
+  env("SCALAJS_VERSION").getOrElse("1.0.1")
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
