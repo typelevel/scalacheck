@@ -30,16 +30,13 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   import Gen.{R, gen}
 
-  /** Just an alias */
-  private type P = Gen.Parameters
-
   // This is no longer used but preserved here for binary compatibility.
   private[scalacheck] def sieveCopy(x: Any): Boolean = true
 
   // If you implement new Gen[_] directly (instead of using
   // combinators), make sure to use p.initialSeed or p.useInitialSeed
   // in the implementation, instead of using seed directly.
-  private[scalacheck] def doApply(p: P, seed: Seed): R[T]
+  private[scalacheck] def doApply(p: Gen.Parameters, seed: Seed): R[T]
 
   //// Public interface ////
 
@@ -106,7 +103,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    *  This method is identical to [Gen.filter]. */
   def suchThat(f: T => Boolean): Gen[T] =
     new Gen[T] {
-      def doApply(p: P, seed: Seed): Gen.R[T] =
+      def doApply(p: Gen.Parameters, seed: Seed): Gen.R[T] =
         p.useInitialSeed(seed) { (p0, s0) =>
           val r = self.doApply(p0, s0)
           r.copy(r = r.retrieve.filter(f))
@@ -126,7 +123,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
    */
   def retryUntil(p: T => Boolean, maxTries: Int): Gen[T] = {
     require(maxTries > 0)
-    def loop(params: P, seed: Seed, tries: Int): R[T] =
+    def loop(params: Gen.Parameters, seed: Seed, tries: Int): R[T] =
       if (tries > maxTries) throw RetryUntilException(tries) else {
         val r = self.doApply(params, seed)
         if (r.retrieve.exists(p)) r else loop(params, r.seed, tries + 1)
@@ -175,7 +172,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
 
   /** Put a label on the generator to make test reports clearer */
   def label(l: String): Gen[T] = new Gen[T] {
-    def doApply(p: P, seed: Seed) =
+    def doApply(p: Gen.Parameters, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
         val r = self.doApply(p0, s0)
         r.copy(l = r.labels + l)
@@ -240,7 +237,7 @@ object Gen extends GenArities with GenVersionSpecific {
           r(None, seed).copy(l = labels)
         case Some(t) =>
           val r = f(t)
-          r.copy(l = labels | r.labels, sd = r.seed)
+          r.copy(l = labels | r.labels)
       }
   }
 
@@ -946,6 +943,158 @@ object Gen extends GenArities with GenVersionSpecific {
     stringOf(hexChar)
 
   //// Number Generators ////
+
+  /**
+   * Generate a uniformly-distributed Long.
+   *
+   * This method has an equally likely method of generating every
+   * possible Long value.
+   */
+  val long: Gen[Long] =
+    gen { (_, s0) =>
+      val (n, s1) = s0.long
+      r(Some(n), s1)
+    }
+
+  /**
+   * Generate a Double uniformly-distributed in [0, 1).
+   *
+   * This method will generate one of 2^53 distinct Double values in
+   * the unit interval.
+   */
+  val double: Gen[Double] =
+    gen { (_, s0) =>
+      val (x, s1) = s0.double
+      r(Some(x), s1)
+    }
+
+  /**
+   * Generates a Boolean which has the given chance to be true.
+   *
+   *  - prob(1.0) is always true
+   *  - prob(0.5) is true 50% of the time
+   *  - prob(0.1) is true 10% of the time
+   *  - prob(0.0) is never true
+   */
+  def prob(chance: Double): Gen[Boolean] =
+    if (chance <= 0.0) Gen.const(false)
+    else if (chance >= 1.0) Gen.const(true)
+    else gen { (_, s0) =>
+      val (x, s1) = s0.double
+      r(Some(x < chance), s1)
+    }
+
+  /**
+   * Generates Double values according to the given gaussian
+   * distribution, specified by its mean and standard deviation.
+   *
+   * Gaussian distributions are also called normal distributions.
+   *
+   * The range of values is theoretically (-∞, ∞) but 99.7% of all
+   * values will be contained within (mean ± 3 * stdDev).
+   */
+  def gaussian(mean: Double, stdDev: Double): Gen[Double] = {
+    def loop(s0: Seed): R[Double] = {
+      val (x0, s1) = s0.double
+      val (y0, s2) = s1.double
+      val x = x0 * 2.0 - 1.0
+      val y = y0 * 2.0 - 1.0
+      val s = x * x + y * y
+      if (s >= 1.0 || s == 0.0) {
+        loop(s2)
+      } else {
+        val scale = stdDev * Math.sqrt(-2.0 * Math.log(s) / s)
+        val res = x * scale + mean // dropping y * scale + mean
+        r(Some(res), s2)
+      }
+    }
+    gen((_, seed) => loop(seed))
+  }
+
+  /**
+   * Generates Double values according to the given exponential
+   * distribution, specified by its rate parameter.
+   *
+   * The mean and standard deviation are both equal to 1/rate.
+   *
+   * The range of values is [0, ∞).
+   */
+  def exponential(rate: Double): Gen[Double] = {
+    require(rate > 0.0, s"rate must be positive (got: $rate)")
+    val mean = 1.0 / rate
+    gen { (_, s0) =>
+      val (x, s1) = s0.double
+      r(Some(-Math.log(x) * mean), s1)
+    }
+  }
+
+  /**
+   * Generates Int values according to the given geometric
+   * distribution, specified by its mean.
+   *
+   * This distribution represents the expected number of failures
+   * before a successful test, where the probability of a successful
+   * test is p = 1 / (mean + 1).
+   *
+   * The ideal range of values is [0, ∞), although the largest value
+   * that can be produced here is 2147483647 (Int.MaxValue).
+   */
+  def geometric(mean: Double): Gen[Int] = {
+    require(mean > 0.0, s"mean must be positive (got: $mean)")
+    val p = 1.0 / (mean + 1.0)
+    val lognp = Math.log1p(-p) // log(1 - p)
+    gen { (_, s0) =>
+      val (u, s1) = s0.double
+      r(Some(Math.floor(Math.log(u) / lognp).toInt), s1)
+    }
+  }
+
+  /**
+   * Generates Int values according to the given Poisson distribution,
+   * specified by its rate parameters.
+   *
+   * The mean equals the rate; the standard deviation is sqrt(rate).
+   *
+   * In principle any positive value is a valid rate parameter.
+   * However, our method of generating values cannot handle large
+   * rates, so we require rate <= 745.
+   */
+  def poisson(rate: Double): Gen[Int] = {
+    require(0 < rate && rate <= 745.0, s"rate must be between 0 and 745 (got $rate)")
+    val L = Math.exp(-rate)
+    def loop(s0: Seed, k: Int, p: Double): R[Int] =
+      if (p <= L) {
+        r(Some(k - 1), s0)
+      } else {
+        val (x, s1) = s0.double
+        loop(s1, k + 1, p * x)
+      }
+
+    gen((_, s) => loop(s, 0, 1.0))
+  }
+
+  /**
+   * Generates Int values according to the given binomial
+   * distribution, specified by the number of trials to conduct, and
+   * the probability of a true test.
+   *
+   * This distribution counts the number of trials which were
+   * successful according to a given test probability.
+   *
+   * The range of values is [0, trials].
+   */
+  def binomial(test: Gen[Boolean], trials: Int): Gen[Int] = {
+    def loop(ps: Gen.Parameters, s: Seed, i: Int, n: Int): R[Int] =
+      if (i >= trials) {
+        r(Some(n), s)
+      } else {
+        val r = test.doPureApply(ps, s)
+        val success = r.retrieve.get
+        loop(ps, r.seed, i + 1, if (success) n + 1 else n)
+      }
+    gen((ps, s) => loop(ps, s, 0, 0))
+  }
+
 
   /** Generates positive numbers of uniform distribution, with an
    *  upper bound of the generation size parameter. */
