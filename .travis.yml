@@ -25,10 +25,10 @@ env:
   matrix:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=false
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
-    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.1
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=0.6.33
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
-    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.1
+    - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=0.6.33
 sudo: false
 
 before_cache:
@@ -71,24 +71,24 @@ matrix:
     - jdk: openjdk8
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
     - jdk: openjdk8
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=0.6.33
     - jdk: openjdk11
       env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true
     - jdk: openjdk11
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - jdk: openjdk11
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=0.6.33
     - scala: 2.11.12
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=0.6.33
     - scala: 2.11.12
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=0.6.33
     - jdk: openjdk11
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false
     - jdk: openjdk11
       env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - jdk: openjdk11
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=false SCALAJS_VERSION=0.6.33
     - jdk: openjdk11
-      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=1.0.1
+      env: PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=0.6.33
     - jdk: openjdk11
       scala: 2.11.12

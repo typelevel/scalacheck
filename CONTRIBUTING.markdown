@@ -23,11 +23,11 @@ use the `jvm` project:
 
     > jvm/console
 
-By default, the Scala.js version is usually the latest 0.6 release.
+By default, the Scala.js version is usually the latest 1.0 release.
 If you want to override the version, you can use the `SCALAJS_VERSION`
 environment variable.
 
-    $ env SCALAJS_VERSION=1.0.1 sbt
+    $ env SCALAJS_VERSION=0.6.33 sbt
 
 The releases are done with the `release.sh` script.  If you change the
 script, you can test it still works, but not publish artifacts, by
