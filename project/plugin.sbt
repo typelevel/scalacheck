@@ -14,7 +14,7 @@ def printAndDie(msg: String): Nothing = {
 
 // Update SCALAJS_VERSION in release.sh, as well
 val scalaJSVersion = env("SCALAJS_VERSION") match {
-  case Some("0.6.32") => "0.6.32"
+  case Some("0.6.33") => "0.6.33"
   case Some("1.1.0") | None => "1.1.0"
   case Some(v) => printAndDie(s"unsupported scala.js version: $v")
 }
