@@ -124,6 +124,25 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("choose-big-int") = forAll(
+    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_)),
+    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_))
+  ) { (l: BigInt, h: BigInt) =>
+    Try(choose(l, h)) match {
+      case Success(g) => forAll(g) { x => l <= x && x <= h }
+      case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
+      case Failure(e) => throw e
+    }
+  }
+
+  property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
+    val (l, h) = (BigInt(-2).pow(262143),
+      BigInt( 2).pow(262143))
+    Prop.forAllNoShrink(Gen.choose(l, h)) { x =>
+      l <= x && x <= h
+    }
+  }
+
   property("choose-xmap") = {
     implicit val chooseDate: Choose[Date] =
       Choose.xmap[Long, Date](new Date(_), _.getTime)

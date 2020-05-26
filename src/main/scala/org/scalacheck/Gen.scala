@@ -23,6 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import java.util.{ Calendar, UUID }
+import java.nio.ByteBuffer
 
 sealed abstract class Gen[+T] extends Serializable { self =>
 
@@ -445,6 +446,24 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit val chooseFiniteDuration: Choose[FiniteDuration] =
       Choose.xmap[Long, FiniteDuration](Duration.fromNanos, _.toNanos)
+
+    implicit object chooseBigInt extends Choose[BigInt] {
+      def choose(low: BigInt, high: BigInt): Gen[BigInt] =
+        if (low > high) throw new IllegalBoundsError(low, high)
+        else if (low == high) low
+        else {
+          val range = high - low
+          Gen.containerOfN[Array, Long](
+            (range.bitLength + 64 - 1) / 64,
+            Gen.choose(Long.MinValue, Long.MaxValue)
+          ).map(longs => {
+            longs(0) = longs(0) & (-1L >>> (64 - range.bitLength % 64))
+            val bb = ByteBuffer.allocate(longs.length * 8)
+            longs.foreach(bb.putLong)
+            BigInt(1, bb.array()) + low
+          }).filter(n => high >= n)
+        }
+    }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
      *  types whose relationship is described by the provided transformation
