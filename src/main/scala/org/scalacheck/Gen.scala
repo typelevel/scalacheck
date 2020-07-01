@@ -23,7 +23,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import java.util.{ Calendar, UUID }
-import java.nio.ByteBuffer
 import java.math.{BigInteger, BigDecimal => JavaDecimal}
 
 sealed abstract class Gen[+T] extends Serializable { self =>
