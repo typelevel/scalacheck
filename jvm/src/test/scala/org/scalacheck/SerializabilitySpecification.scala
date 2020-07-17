@@ -85,11 +85,15 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableArbitrary[Boolean]("Boolean")
   serializableArbitrary[Int => Int]("Int => Int")
   serializableArbitrary[List[Int]]("List[Int]")
+  serializableArbitrary[(String,Int)]("(String,Int)")
+  serializableArbitrary[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int]")
+  serializableArbitrary[List[(String,Int)]]("List[(String,Int)]")
 
   serializableGen("identifier", Gen.identifier)
   serializableGen("oneOf", Gen.oneOf(true, false))
   serializableGen("choose", Gen.choose(1, 10))
   serializableGen("function1", Gen.function1[Int, Int](Gen.choose(1, 10)))
+  serializableGen("zip(String,Int)", Gen.zip(Arbitrary.arbitrary[String], Arbitrary.arbitrary[Int]))
 
   serializableCogen[String]("String")
   serializableCogen[Int]("Int")
@@ -97,6 +101,9 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableCogen[Boolean]("Boolean")
   serializableCogen[Int => Int]("Int => Int")
   serializableCogen[List[Int]]("List[Int]")
+  serializableCogen[(String,Int)]("(String,Int)")
+  serializableCogen[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int]")
+  serializableCogen[List[(String,Int)]]("List[(String,Int)]")
 
   serializableShrink[String]("String")
   serializableShrink[Int]("Int")
@@ -104,6 +111,9 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableShrink[Boolean]("Boolean")
   serializableShrink[Int => Int]("Int => Int")
   serializableShrink[List[Int]]("List[Int]")
+  serializableShrink[(String,Int)]("(String,Int)")
+  serializableShrink[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int])")
+  serializableShrink[List[(String,Int)]]("List[(String,Int)]")
 
   property("Seed serializability") = {
     assert(serializable(rng.Seed(1L)))
