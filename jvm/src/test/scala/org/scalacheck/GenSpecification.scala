@@ -15,6 +15,7 @@ import Gen._
 import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
@@ -633,4 +634,43 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("Gen.choose(1, 10000) is deterministic") =
     testDeterministicGen(Gen.choose(1, 10000))
+
+  def testSerializable(obj: Any): Prop = {
+    val t = Try({
+      val baos = new ByteArrayOutputStream()
+      val oos = new ObjectOutputStream(baos)
+      oos.writeObject(obj)
+      oos.close()
+
+      // Reading it back in shouldn't throw, but we don't expect equality.
+      val bais = new ByteArrayInputStream(baos.toByteArray())
+      new ObjectInputStream(bais).readObject()
+      ()
+    })
+    t match {
+      case Success(_) => Prop(true)
+      case _          => Prop(false) :| s"Fail to serialize $obj"
+    }
+  }
+
+  def testSerializableGenAndValues[A](gen: Gen[A]): Prop =
+    testSerializable(gen) && forAll(gen)(testSerializable)
+
+  property("arbitrary[(String, Int)] and its produced values are serializable") =
+    testSerializableGenAndValues(arbitrary[(String, Int)])
+
+  property("cogen[(String, Int]) is serializable") =
+    testSerializable(Cogen[(String, Int)])
+
+  property("arbitrary[(String, Int, Int)] and its produced values are serializable") =
+    testSerializableGenAndValues(arbitrary[(String, Int, Int)])
+
+  property("arbitrary[List[Int] => List[(String, Int)]] and its produced values are serializable") =
+    testSerializableGenAndValues(arbitrary[List[Int] => List[(String, Int)]])
+
+  property("arbitrary[List[(String, Int)] => List[Int]] and its produced values are serializable") =
+    testSerializableGenAndValues(arbitrary[List[(String, Int)] => List[Int]])
+
+  property("arbitrary[List[(Int, (String, Int))] => List[(String, Int)]] and its produced values are serializable") =
+    testSerializableGenAndValues(arbitrary[List[(Int, (String, Int))] => List[(String, Int)]])
 }

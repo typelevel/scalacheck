@@ -25,8 +25,7 @@ object codegen {
   def flatMappedGenerators(i: Int, s: Seq[(String,String)]): String =
     s.init.foldRight(s"${s.last._2}.map { ${s.last._1} => (${vals(i)}) }") {
       case ((t, g), acc) =>
-        val T = t.toUpperCase
-        s"${g}.flatMap(new Function1[${T}, Gen[(${types(i)})]] { def apply(${t}: ${T}): Gen[(${types(i)})] = $acc })"
+        s"${g}.flatMap(${t} => $acc)"
     }
   
   def vals(i: Int) = csv(idents("t",i))
