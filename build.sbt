@@ -14,7 +14,7 @@ val isRelease = env("IS_RELEASE").exists(_ == "true")
 lazy val travisCommit = env("TRAVIS_COMMIT")
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.3",
   crossScalaVersions := Seq("2.11.12", "2.12.10", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
