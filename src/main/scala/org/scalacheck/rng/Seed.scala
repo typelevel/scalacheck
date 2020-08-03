@@ -99,6 +99,9 @@ sealed abstract class Seed extends Serializable {
 object Seed {
 
   private case class apply(a: Long, b: Long, c: Long, d: Long) extends Seed {
+    if (a == 0 && b == 0 && c == 0 && d == 0) {
+      throw new IllegalArgumentException("illegal Seed(0, 0, 0, 0)")
+    }
     override def toString: String = s"""Seed.fromBase64("$toBase64")"""
   }
 
