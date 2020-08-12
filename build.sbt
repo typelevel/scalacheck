@@ -78,6 +78,13 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
 
+  unmanagedSourceDirectories in Test += {
+    val s = if (scalaMajorVersion.value >= 13 || isDotty.value) "+" else "-"
+    (baseDirectory in LocalRootProject).value / "src" / "test" / s"scala-2.13$s"
+  },
+
+  libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test",
+
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
   // 2.11 - 2.13
