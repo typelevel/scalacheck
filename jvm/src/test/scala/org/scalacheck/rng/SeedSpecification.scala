@@ -77,4 +77,6 @@ object SeedSpecification extends Properties("Seed") {
     forAll { (s: String) =>
       Seed.fromBase64(s).isFailure
     }
+
+  property("illegal seed") = Prop.throws(classOf[IllegalArgumentException])(Seed.fromLongs(0, 0, 0, 0))
 }
