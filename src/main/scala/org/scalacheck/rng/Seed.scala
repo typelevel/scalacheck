@@ -99,9 +99,6 @@ sealed abstract class Seed extends Serializable {
 object Seed {
 
   private case class apply(a: Long, b: Long, c: Long, d: Long) extends Seed {
-    if (a == 0 && b == 0 && c == 0 && d == 0) {
-      throw new IllegalArgumentException("illegal Seed(0, 0, 0, 0)")
-    }
     override def toString: String = s"""Seed.fromBase64("$toBase64")"""
   }
 
@@ -121,8 +118,12 @@ object Seed {
    * `Seed(Long)` if you aren't sure whether these will be good seed
    * values.
    */
-  def fromLongs(a: Long, b: Long, c: Long, d: Long): Seed =
+  def fromLongs(a: Long, b: Long, c: Long, d: Long): Seed = {
+    if (a == 0 && b == 0 && c == 0 && d == 0) {
+      throw new IllegalArgumentException("illegal Seed.fromLongs(0, 0, 0, 0)")
+    }
     apply(a, b, c, d)
+  }
 
   /**
    * Alphabet of characters used by the `toBase64` method.
