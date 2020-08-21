@@ -29,6 +29,7 @@ import util.ConsoleReporter
 class Properties(val name: String) {
 
   private val props = new scala.collection.mutable.ListBuffer[(String,Prop)]
+  private var frozen = false
 
   /**
    * Customize the parameters specific to this class.
@@ -46,7 +47,10 @@ class Properties(val name: String) {
 
   /** Returns all properties of this collection in a list of name/property
    *  pairs.  */
-  def properties: collection.Seq[(String,Prop)] = props
+  def properties: collection.Seq[(String,Prop)] = {
+    frozen = true // once the properties have been exposed, they must be frozen
+    props
+  }
 
   /** Convenience method that checks the properties with the given parameters
    *  (or default parameters, if not specified)
@@ -100,6 +104,7 @@ class Properties(val name: String) {
    */
   sealed class PropertySpecifier() {
     def update(propName: String, p: => Prop) = {
+      if (frozen) throw new IllegalStateException("cannot nest properties or create properties during execution")
       val fullName = s"$name.$propName"
       props += ((fullName, Prop.delay(p).viewSeed(fullName)))
     }
