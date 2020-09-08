@@ -1,4 +1,4 @@
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.7.0")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.0")
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
 
