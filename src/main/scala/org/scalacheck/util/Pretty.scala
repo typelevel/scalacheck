@@ -16,6 +16,7 @@ import org.scalacheck.Test
 import scala.annotation.tailrec
 import scala.math.round
 
+@FunctionalInterface
 sealed trait Pretty extends Serializable {
   def apply(prms: Pretty.Params): String
 

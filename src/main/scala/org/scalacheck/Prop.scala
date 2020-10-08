@@ -22,6 +22,7 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 }
 
 @Platform.EnableReflectiveInstantiation
+@FunctionalInterface
 sealed abstract class Prop extends Serializable { self =>
 
   import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
