@@ -4,7 +4,7 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
-lazy val versionNumber = "1.15.0"
+lazy val versionNumber = "1.15.0-M1"
 
 def env(name: String): Option[String] =
   Option(System.getenv(name))
@@ -172,7 +172,7 @@ lazy val jvm = project.in(file("jvm"))
       !isDotty.value // ==> true
       // else ==> false
     },
-    crossScalaVersions += "0.24.0-RC1",
+    //crossScalaVersions += "0.24.0-RC1", // disable dotty for 1.15.0-M1
     fork in Test := {
       // Serialization issue in 2.13 and later
       scalaMajorVersion.value == 13 || isDotty.value // ==> true
