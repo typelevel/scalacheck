@@ -63,7 +63,7 @@ matrix:
       script:
       - cd scalafix
       - sbt tests/test
-    - scala: 0.24.0-RC1
+    - scala: 0.27.0-RC1
       env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
   exclude:
     - jdk: openjdk8
