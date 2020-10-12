@@ -55,15 +55,15 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     username, password
   )).toSeq,
 
-  unmanagedSourceDirectories in Compile += (baseDirectory in LocalRootProject).value / "src" / "main" / "scala",
+  Compile / unmanagedSourceDirectories += (LocalRootProject / baseDirectory).value / "src" / "main" / "scala",
 
-  mappings in (Compile, packageSrc) ++= (managedSources in Compile).value.map{ f =>
+  Compile / packageSrc / mappings ++= (Compile / managedSources).value.map{ f =>
     // to merge generated sources into sources.jar as well
-    (f, f.relativeTo((sourceManaged in Compile).value).get.getPath)
+    (f, f.relativeTo((Compile / sourceManaged).value).get.getPath)
   },
 
-  sourceGenerators in Compile += task {
-    val dir = (sourceManaged in Compile).value / "org" / "scalacheck"
+  Compile / sourceGenerators += task {
+    val dir = (Compile / sourceManaged).value / "org" / "scalacheck"
     codegen.genAll.map { s =>
       val f = dir / s.name
       IO.write(f, s.code)
@@ -71,12 +71,12 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     }
   },
 
-  unmanagedSourceDirectories in Compile += {
+  Compile / unmanagedSourceDirectories += {
     val s = if (scalaMajorVersion.value >= 13 || isDotty.value) "+" else "-"
-    (baseDirectory in LocalRootProject).value / "src" / "main" / s"scala-2.13$s"
+    (LocalRootProject / baseDirectory).value / "src" / "main" / s"scala-2.13$s"
   },
 
-  unmanagedSourceDirectories in Test += (baseDirectory in LocalRootProject).value / "src" / "test" / "scala",
+  Test / unmanagedSourceDirectories += (LocalRootProject / baseDirectory).value / "src" / "test" / "scala",
 
   resolvers += "sonatype" at "https://oss.sonatype.org/content/repositories/releases",
 
@@ -105,11 +105,11 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // HACK: without these lines, the console is basically unusable,
   // since all imports are reported as being unused (and then become
   // fatal errors).
-  scalacOptions in (Compile, console) ~= {_.filterNot("-Ywarn-unused-import" == _)},
-  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
+  Compile / console / scalacOptions ~= {_.filterNot("-Ywarn-unused-import" == _)},
+  Test / console / scalacOptions := (Compile / console / scalacOptions).value,
 
   // don't use fatal warnings in tests
-  scalacOptions in Test ~= (_ filterNot (_ == "-Xfatal-warnings")),
+  Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   mimaPreviousArtifacts := {
     // TODO: re-enable MiMa for 2.14 once there is a final version
@@ -136,7 +136,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // Travis should only publish snapshots
   publishArtifact := !(isRelease && travisCommit.isDefined),
 
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
 
   pomIncludeRepository := { _ => false },
 
@@ -159,7 +159,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
-    scalaJSStage in Global := FastOptStage,
+    Global / scalaJSStage := FastOptStage,
     libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
   )
   .enablePlugins(ScalaJSPlugin)
@@ -167,11 +167,12 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    sources in (Compile, doc) := {
-      if (isDotty.value) Seq() else (sources in (Compile, doc)).value
+    Compile / doc / sources := {
+      if (isDotty.value) Seq()
+      else (Compile / doc/ sources).value
     },
     crossScalaVersions += "0.27.0-RC1",
-    fork in Test := {
+    Test / fork := {
       // Serialization issue in 2.13 and later
       scalaMajorVersion.value == 13 || isDotty.value // ==> true
       // else ==> false
@@ -182,7 +183,7 @@ lazy val jvm = project.in(file("jvm"))
 lazy val native = project.in(file("native"))
   .settings(sharedSettings: _*)
   .settings(
-    doc in Compile := (doc in Compile in jvm).value,
+    Compile / doc := (jvm / Compile / doc).value,
     scalaVersion := "2.11.12",
     crossScalaVersions := Seq("2.11.12"),
     // TODO: re-enable MiMa for native once published
@@ -199,7 +200,7 @@ lazy val bench = project.in(file("bench"))
   .settings(
     name := "scalacheck-bench",
     fork := true,
-    skip in publish := true,
+    publish / skip := true,
     mimaPreviousArtifacts := Set.empty,
   )
   .enablePlugins(JmhPlugin)
