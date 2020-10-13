@@ -12,7 +12,7 @@ package org.scalacheck
 import Prop.{
   forAll, falsified, undecided, exception, passed, proved, all,
   atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, throws, propBoolean, secure, delay, lzy
+  Exception, Proof, throws, propBoolean, secure, delay, lzy, collect
 }
 import Gen.{ const, fail, oneOf, listOf, Parameters }
 
@@ -176,6 +176,19 @@ object PropSpecification extends Properties("Prop") {
   property("delay") = { delay(???); proved }
 
   property("lzy") = { lzy(???); proved }
+
+  property("collect(t)") = {
+    forAll(collect(_: Boolean)(passed))
+  }
+
+  /* [warn] method Prop.collect is deprecated (since 1.16.0): Use
+   * Prop.forAll(t => Prop.collect(t)(prop))
+   * instead of
+   * Prop.forAll(Prop.collect(prop))
+   */
+  property("collect(t => Prop") = {
+    forAll(collect((_: Boolean) => passed))
+  }
 
   property("Gen.Parameters.withInitialSeed is deterministic") =
     forAll { (p: Prop) =>

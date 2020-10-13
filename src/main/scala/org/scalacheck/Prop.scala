@@ -451,6 +451,7 @@ object Prop {
     try { x; false } catch { case e if c.isInstance(e) => true }
 
   /** Collect data for presentation in test report */
+  @deprecated("Use Prop.forAll(t => Prop.collect(t)(...)) instead of Prop.forAll(Prop.collect(t => ...))", "1.15.0")
   def collect[T, P](f: T => P)(implicit ev: P => Prop): T => Prop = t => Prop { prms =>
     val prop = ev(f(t))
     prop(prms).collect(t)
