@@ -17,7 +17,7 @@ setting `scalaJSStage` to `FastOptStage`.  For example, for a project `js` this
 can be set on the command line with:
 
 ```
-set scalaJSStage in js := FastOptStage
+set js / scalaJSStage := FastOptStage
 ```
 
 The following is what you need to add to your `build.sbt` file to make the

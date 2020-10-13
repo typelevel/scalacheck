@@ -10,7 +10,7 @@ inThisBuild(
   )
 )
 
-skip in publish := true
+publish / skip := true
 
 lazy val rules = project
   .settings(
@@ -20,19 +20,19 @@ lazy val rules = project
 
 lazy val input = project
   .settings(
-    skip in publish := true,
+    publish / skip := true,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3",
   )
 
 lazy val output = project
   .settings(
-    skip in publish := true,
+    publish / skip := true,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3",
   )
 
 lazy val tests = project
   .settings(
-    skip in publish := true,
+    publish / skip := true,
     libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % V.scalafixVersion % Test cross CrossVersion.full,
     compile.in(Compile) :=
       compile.in(Compile).dependsOn(compile.in(input, Compile)).value,
