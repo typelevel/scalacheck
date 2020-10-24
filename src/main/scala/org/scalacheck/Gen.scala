@@ -23,7 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import java.util.{ Calendar, UUID }
-import java.nio.ByteBuffer
+import java.math.{BigInteger, BigDecimal => JavaDecimal}
 
 sealed abstract class Gen[+T] extends Serializable { self =>
 
@@ -410,6 +410,65 @@ object Gen extends GenArities with GenVersionSpecific {
       }
     }
 
+    /**
+     * Generate a random BigInt within [lower, lower + span).
+     *
+     * Note that unlike the choose method, whose bounds are inclusive,
+     * this method's upper bound is exclusive. We determine how many
+     * random bits we need (bitLen), and then round up to the nearest
+     * number of bytes (byteLen). We generate the bytes, possibly
+     * truncating the most significant byte (bytes(0)) if bitLen is
+     * not evenly-divisible by 8.
+     *
+     * Finally, we check to see if the BigInt we ended up with is in
+     * our range. If it is not, we restart this method. The likelihood
+     * of needing to restart depends on span. In the worst case we
+     * have almost a 50% chance of this (which occurs when span is a
+     * power of 2 + 1) and in the best case we never restart (which
+     * occurs when span is a power of 2).
+     */
+    private def chBigInteger(lower: BigInteger, span: BigInteger, seed0: Seed): R[BigInteger] = {
+      val bitLen = span.bitLength
+      val byteLen = (bitLen + 7) / 8
+      val bytes = new Array[Byte](byteLen)
+      var seed = seed0
+      var i = 0
+      while (i < bytes.length) {
+
+        // generate a random long value (i.e. 8 random bytes)
+        val (x0, seed1) = seed.long
+        var x = x0
+        seed = seed1
+
+        // extract each byte in turn and add them to our byte array
+        var j = 0
+        while (j < 8 && i < bytes.length) {
+          val b = (x & 0xff).toByte
+          bytes(i) = b
+          x = x >>> 8
+          i += 1
+          j += 1
+        }
+      }
+
+      // we may not need all 8 bits of our most significant byte. if
+      // not, mask off any unneeded upper bits.
+      val bitRem = bitLen & 7
+      if (bitRem != 0) {
+        val mask = 0xff >>> (8 - bitRem)
+        bytes(0) = (bytes(0) & mask).toByte
+      }
+
+      // construct a BigInteger and see if its valid. if so, we're
+      // done. otherwise, we need to restart using our new seed.
+      val big = new BigInteger(1, bytes)
+      if (big.compareTo(span) < 0) {
+        r(Some(big.add(lower)), seed)
+      } else {
+        chBigInteger(lower, span, seed)
+      }
+    }
+
     implicit val chooseLong: Choose[Long] =
       new Choose[Long] {
         def choose(low: Long, high: Long): Gen[Long] =
@@ -449,21 +508,84 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit object chooseBigInt extends Choose[BigInt] {
       def choose(low: BigInt, high: BigInt): Gen[BigInt] =
-        if (low > high) throw new IllegalBoundsError(low, high)
-        else if (low == high) low
-        else {
-          val range = high - low
-          Gen.containerOfN[Array, Long](
-            (range.bitLength + 64 - 1) / 64,
-            Gen.choose(Long.MinValue, Long.MaxValue)
-          ).map(longs => {
-            longs(0) = longs(0) & (-1L >>> (64 - range.bitLength % 64))
-            val bb = ByteBuffer.allocate(longs.length * 8)
-            longs.foreach(bb.putLong)
-            BigInt(1, bb.array()) + low
-          }).filter(n => high >= n)
+        chooseBigInteger
+          .choose(low.bigInteger, high.bigInteger)
+          .map(BigInt(_))
+    }
+
+    implicit object chooseBigInteger extends Choose[BigInteger] {
+      def choose(low: BigInteger, high: BigInteger): Gen[BigInteger] =
+        (low compareTo high) match {
+          case n if n > 0 => throw new IllegalBoundsError(low, high)
+          case 0 => Gen.const(low)
+          case _ => /* n < 0 */
+            val span = high.subtract(low).add(BigInteger.ONE)
+            gen((_, seed) => chBigInteger(low, span, seed))
         }
     }
+
+    /**
+     * Choose a BigDecimal number between two given numbers.
+     *
+     * The minimum scale used will be 34. That means that the
+     * fractional part will have at least 34 digits (more if one of
+     * the given numbers has a scale larger than 34).
+     *
+     * The minimum scale was chosen based on Scala's default scale for
+     * expanding infinite fractions:
+     *
+     *   BigDecimal(1) / 3   // 0.3333333333333333333333333333333333
+     *
+     * See chooseBigDecimalScale for more information about scale.
+     */
+    implicit val chooseBigDecimal: Choose[BigDecimal] =
+      chooseBigDecimalScale(minScale = 34)
+
+    /**
+     * The "scale" of a decimal number refers to the number of digits
+     * in the fractional part. For example, 3.0000 has a scale of 4.
+     *
+     * We can generate an arbitrary number of digits in the decimal
+     * expansion of a number, so if a user calls choose(0, 1) we need
+     * to decide "how much" work to do. The minScale ensures that we
+     * do "enough" work to generate interesting numbers.
+     *
+     * The implicit instance fixes this value, but since users may
+     * want to use other scales we expose this method as well.
+     */
+    private[this] def chooseBigDecimalScale(minScale: Int): Choose[BigDecimal] =
+      new Choose[BigDecimal] {
+        private val c = chooseJavaBigDecimalScale(minScale)
+        def choose(low: BigDecimal, high: BigDecimal): Gen[BigDecimal] =
+          c.choose(low.bigDecimal, high.bigDecimal).map(BigDecimal(_))
+      }
+
+    /**
+     * Choose a java.math.BigDecimal number between two given numbers.
+     *
+     * See chooseBigDecimal and chooseBigDecimalScale for more comments.
+     */
+    implicit val chooseJavaBigDecimal: Choose[JavaDecimal] =
+      chooseJavaBigDecimalScale(minScale = 34)
+
+    /**
+     * See chooseBigDecimalScale for comments.
+     */
+    private[this] def chooseJavaBigDecimalScale(minScale: Int): Choose[JavaDecimal] =
+      new Choose[JavaDecimal] {
+        def choose(low: JavaDecimal, high: JavaDecimal): Gen[JavaDecimal] =
+        (low compareTo high) match {
+          case n if n > 0 => throw new IllegalBoundsError(low, high)
+          case 0 => Gen.const(low)
+          case _ => /* n < 0 */
+            val s = (low.scale max high.scale) max minScale
+            val x = if (low.scale < s) low.setScale(s) else low
+            val y = if (high.scale < s) high.setScale(s) else high
+            chooseBigInteger
+              .choose(x.unscaledValue, y.unscaledValue)
+              .map(n => new JavaDecimal(n, s))
+        }
+      }
 
     /** Transform a Choose[T] to a Choose[U] where T and U are two isomorphic
      *  types whose relationship is described by the provided transformation

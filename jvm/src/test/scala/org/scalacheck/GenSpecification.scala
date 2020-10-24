@@ -124,24 +124,54 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
-  property("choose-big-int") = forAll(
-    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_)),
+  val manualBigInt: Gen[BigInt] =
     nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_))
-  ) { (l: BigInt, h: BigInt) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
-      case Failure(e) => throw e
+
+  property("choose-big-int") =
+    forAll(manualBigInt, manualBigInt) { (l: BigInt, h: BigInt) =>
+      Try(choose(l, h)) match {
+        case Success(g) => forAll(g) { x => l <= x && x <= h }
+        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
+        case Failure(e) => throw e
+      }
     }
-  }
+
+  property("choose-java-big-int") =
+    forAll(manualBigInt, manualBigInt) { (x0: BigInt, y0: BigInt) =>
+      val (x, y) = (x0.bigInteger, y0.bigInteger)
+      Try(choose(x, y)) match {
+        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
+        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
+        case Failure(e) => throw e
+      }
+    }
 
   property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
-    val (l, h) = (BigInt(-2).pow(262143),
-      BigInt( 2).pow(262143))
+    val (l, h) = (BigInt(-2).pow(262143), BigInt(2).pow(262143))
     Prop.forAllNoShrink(Gen.choose(l, h)) { x =>
       l <= x && x <= h
     }
   }
+
+  property("choose-big-decimal") =
+    forAll { (x0: Double, y0: Double) =>
+      val (x, y) = (BigDecimal(x0), BigDecimal(y0))
+      Try(choose(x, y)) match {
+        case Success(g) => forAll(g) { n => x <= n && n <= y }
+        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x > y)
+        case Failure(e) => throw e
+      }
+    }
+
+  property("choose-java-big-decimal") =
+    forAll { (x0: Double, y0: Double) =>
+      val (x, y) = (BigDecimal(x0).bigDecimal, BigDecimal(y0).bigDecimal)
+      Try(choose(x, y)) match {
+        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
+        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
+        case Failure(e) => throw e
+      }
+    }
 
   property("choose-xmap") = {
     implicit val chooseDate: Choose[Date] =
