@@ -553,7 +553,7 @@ object Gen extends GenArities with GenVersionSpecific {
      * The implicit instance fixes this value, but since users may
      * want to use other scales we expose this method as well.
      */
-    def chooseBigDecimalScale(minScale: Int): Choose[BigDecimal] =
+    private[this] def chooseBigDecimalScale(minScale: Int): Choose[BigDecimal] =
       new Choose[BigDecimal] {
         private val c = chooseJavaBigDecimalScale(minScale)
         def choose(low: BigDecimal, high: BigDecimal): Gen[BigDecimal] =
@@ -571,7 +571,7 @@ object Gen extends GenArities with GenVersionSpecific {
     /**
      * See chooseBigDecimalScale for comments.
      */
-    def chooseJavaBigDecimalScale(minScale: Int): Choose[JavaDecimal] =
+    private[this] def chooseJavaBigDecimalScale(minScale: Int): Choose[JavaDecimal] =
       new Choose[JavaDecimal] {
         def choose(low: JavaDecimal, high: JavaDecimal): Gen[JavaDecimal] =
         (low compareTo high) match {
