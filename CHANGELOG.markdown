@@ -1,5 +1,73 @@
 # ScalaCheck CHANGELOG
 
+## 1.15.0 (to be released)
+
+* Binary compatible with 1.14.3 version of ScalaCheck.
+
+### Changed
+
+* Dropped support for Scala 2.10.x
+
+* Added support for Dotty (currently 0.27)
+
+* Various improvements to `Gen` and `Arbitrary`
+  * [#603](https://github.com/typelevel/scalacheck/pull/603)
+  * [#604](https://github.com/typelevel/scalacheck/pull/604)
+  * [#605](https://github.com/typelevel/scalacheck/pull/605)
+  * [#606](https://github.com/typelevel/scalacheck/pull/606)
+  * [#607](https://github.com/typelevel/scalacheck/pull/607)
+  * [#610](https://github.com/typelevel/scalacheck/pull/610)
+
+* Improvements to `Char` and `String` generators
+  * [#653](https://github.com/typelevel/scalacheck/pull/653)
+
+* Single-argument `Prop.collect` is deprecated
+  [#449](https://github.com/typelevel/scalacheck/pull/449)
+
+### Fixed
+
+* Prevent nesting properties
+  [#677](https://github.com/typelevel/scalacheck/pull/677)
+
+* Seed with four zeroes is not allowed
+  [#674](https://github.com/typelevel/scalacheck/pull/674)
+
+* Printing order of shrunk values
+  [#635](https://github.com/typelevel/scalacheck/pull/635)
+
+* Initial seed was reused
+  [#651](https://github.com/typelevel/scalacheck/pull/651)
+
+### Added
+
+* `Choose[BigDecimal]`
+  [#670](https://github.com/typelevel/scalacheck/pull/670)
+
+* `Choose[BigInt]`
+  [#636](https://github.com/typelevel/scalacheck/pull/636)
+
+* Statistical distributions (e.g. Gaussian, Poisson)
+  [#656](https://github.com/typelevel/scalacheck/pull/656)
+
+* Shrinking with `LazyList` for Scala 2.13 compatibility
+  [#626](https://github.com/typelevel/scalacheck/issues/626)
+  [#627](https://github.com/typelevel/scalacheck/pull/627)
+
+* `Shrink.suchThat`
+  [#484](https://github.com/typelevel/scalacheck/pull/484)
+
+* `Gen.recursive` for recursive generators
+  [#616](https://github.com/typelevel/scalacheck/pull/616)
+  [#639](https://github.com/typelevel/scalacheck/pull/639)
+
+## 1.14.3 (2019-12-13)
+
+### Changed
+
+* Update Scala.js to 1.0.0-RC2, previously was 1.0.0-M8.
+
+* Update Scala.js to 0.6.31, previously was 0.6.29.
+
 ### Fixed
 
 * Ensure posNum and negNum always return values
