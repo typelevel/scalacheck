@@ -289,6 +289,19 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("pick with gen") = forAll { (x: Int, y: Int, rest: List[Int]) =>
+    val lst = x :: y :: rest
+    forAll(choose(-1, 2 * lst.length)) { n =>
+      val gs = rest.map(Gen.const)
+      Try(pick(n, Gen.const(x), Gen.const(y), gs: _*)) match {
+        case Success(g) =>
+          forAll(g) { m => m.length == n && m.forall(lst.contains) }
+        case Failure(_) =>
+          Prop(n < 0 || n > lst.length)
+      }
+    }
+  }
+
   /**
    * Expect:
    * 25% 1, 2, 3

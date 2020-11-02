@@ -946,7 +946,7 @@ object Gen extends GenArities with GenVersionSpecific {
    * The elements are not guaranteed to be permuted in random order.
    */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] =
-    sequence[Seq[T], T](g1 +: g2 +: gn)
+    pick(n, g1 +: g2 +: gn).flatMap(sequence[Seq[T], T](_))
 
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
