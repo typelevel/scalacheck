@@ -4,6 +4,10 @@
 
 * Binary compatible with 1.14.3 version of ScalaCheck.
 
+* Source incompatible type signatures of `Gen.atLeastOne` and
+  `Gen.someOf` in Scala 2.13 artifact(s) of 1.14.3 version of
+  ScalaCheck that will be fixed in 1.15.1.
+
 ### Changed
 
 * Dropped support for Scala 2.10.x
