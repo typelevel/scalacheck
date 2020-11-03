@@ -29,7 +29,7 @@ env:
     - PLATFORM=jvm SBT_PARALLEL=true  WORKERS=4 DEPLOY=true
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
     - PLATFORM=js  SBT_PARALLEL=true  WORKERS=1 DEPLOY=true  SCALAJS_VERSION=0.6.33
-sudo: false
+dist: xenial
 
 before_cache:
   - rm -fv $HOME/.ivy2/.sbt.ivy.lock
