@@ -8,6 +8,10 @@
 
 * Dropped support for Scala 2.10.x
 
+* Remove implicit for `Prop.BooleanOperators` which was deprecated in
+  1.14.1 in favor of `Prop.propBoolean`
+  [#667](https://github.com/typelevel/scalacheck/pull/667)
+
 * Added support for Dotty (currently 0.27)
 
 * Various improvements to `Gen` and `Arbitrary`
