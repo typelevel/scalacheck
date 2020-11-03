@@ -1,5 +1,28 @@
 # ScalaCheck CHANGELOG
 
+## 1.15.1 (UNRELEASED)
+
+* Binary compatible with 1.15.0 version of ScalaCheck.
+
+### Changed
+
+* No user-visible changes.
+
+### Fixed
+
+* Return types of `Gen.someOf` and `Gen.atLeastOne` corrected to
+  preserve source compatibility with Scala 2.13 artifact for
+  1.14.3 ScalaCheck.
+  [#696](https://github.com/typelevel/scalacheck/issues/696)
+
+* Fix breakage with version of `Gen.pick` that takes multiple
+  arguments of `Gen[T]`.
+  [#695](https://github.com/typelevel/scalacheck/pull/695)
+
+### Added
+
+* No added features.
+
 ## 1.15.0 (2020-10-31)
 
 * Binary compatible with 1.14.3 version of ScalaCheck.
