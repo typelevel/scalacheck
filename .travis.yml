@@ -59,10 +59,6 @@ matrix:
     - env: BENCH
       script:
       - sbt "+bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"
-    - env: SCALAFIX
-      script:
-      - cd scalafix
-      - sbt tests/test
     - scala: 0.27.0-RC1
       env: PLATFORM=jvm SBT_PARALLEL=true  WORKERS=1 DEPLOY=true
   exclude:
