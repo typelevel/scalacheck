@@ -4,6 +4,89 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
+val Scala211 = "2.11.12"
+val Scala212 = "2.12.10"
+val Scala213 = "2.13.3"
+val DottyOld = "0.27.0-RC1"
+val DottyNew = "3.0.0-M1"
+
+ThisBuild / scalaVersion := Scala213
+ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala211, Scala212, scalaVersion.value)
+
+ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+
+val PrimaryOS = "ubuntu-latest"
+ThisBuild / githubWorkflowOSes := Seq(PrimaryOS)
+
+val Java8 = "adopt@1.8"
+
+ThisBuild / githubWorkflowJavaVersions := Seq(Java8, "adopt@1.11")
+
+// we don't need this since we aren't publishing
+ThisBuild / githubWorkflowArtifactUpload := false
+
+ThisBuild / githubWorkflowBuildMatrixAdditions +=
+  "platform" -> List("jvm")
+
+ThisBuild / githubWorkflowBuildMatrixInclusions ++=
+  crossScalaVersions.value.filterNot(Set(Scala211)) map { scala =>
+    MatrixInclude(
+      Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
+      Map("platform" -> "js", "pluginversion" -> "1.3.0"))
+  }
+
+ThisBuild / githubWorkflowBuildMatrixInclusions +=
+  MatrixInclude(
+    Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> Scala211),
+    Map("platform" -> "js", "pluginversion" -> "0.6.33"))
+
+ThisBuild / githubWorkflowBuildMatrixInclusions ++=
+  Seq("0.3.9", "0.4.0-M2") map { v =>
+    MatrixInclude(
+      Map(
+        "os" -> PrimaryOS,
+        "scala" -> Scala211,
+        "java" -> Java8),
+      Map("platform" -> "native", "pluginversion" -> v))
+  }
+
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Run(
+    List("sudo apt install clang libunwind-dev libgc-dev libre2-dev"),
+    name = Some("Setup scala native dependencies"),
+    cond = Some("matrix.platform == 'native'"))
+
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Run(
+    List("./tools/travis-script.sh"),
+    name = Some("Run the build script"),
+    env = Map(
+      "PLATFORM" -> "${{ matrix.platform }}",
+      "PLUGIN_VERSION" -> "${{ matrix.pluginversion }}")))
+
+ThisBuild / githubWorkflowAddedJobs ++= Seq(
+  WorkflowJob(
+    "examples",
+    "Examples",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Run(
+        List(
+          "cd examples",
+          "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
+        name = Some("Build examples"))),
+    javas = List(Java8),
+    scalas = List(scalaVersion.value)),
+
+  WorkflowJob(
+    "bench",
+    "Bench",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Sbt(
+        List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
+        name = Some("Run dubious benchmark suite"))),
+    javas = List(Java8),
+    scalas = crossScalaVersions.value.toList))
+
 lazy val versionNumber = "1.15.1"
 
 def env(name: String): Option[String] =
@@ -14,8 +97,6 @@ val isRelease = env("IS_RELEASE").exists(_ == "true")
 lazy val travisCommit = env("TRAVIS_COMMIT")
 
 lazy val scalaVersionSettings = Seq(
-  scalaVersion := "2.13.3",
-  crossScalaVersions := Seq("2.11.12", "2.12.10", scalaVersion.value),
   scalaMajorVersion := {
     val v = scalaVersion.value
     CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
@@ -161,7 +242,8 @@ lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
   .settings(
     Global / scalaJSStage := FastOptStage,
-    libraryDependencies += "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion
+    libraryDependencies +=
+      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value)
   )
   .enablePlugins(ScalaJSPlugin)
 

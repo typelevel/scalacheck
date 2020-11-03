@@ -1,6 +1,12 @@
 #!/bin/bash
 set -evu
 
+if [[ "$PLATFORM" == "js" ]]; then
+  export SCALAJS_VERSION="$PLUGIN_VERSION"
+else
+  export SCALANATIVE_VERSION="$PLUGIN_VERSION"
+fi
+
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
