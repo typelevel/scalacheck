@@ -25,8 +25,6 @@ object MimaSettings {
   )
 
   private def otherProblems = Seq(
-    // New issue added in MiMa 0.4.0
-    exclude[IncompatibleSignatureProblem]("org.scalacheck.*"),
   )
 
 }

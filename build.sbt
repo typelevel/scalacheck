@@ -111,6 +111,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   // don't use fatal warnings in tests
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
+  mimaReportSignatureProblems := true,
   mimaPreviousArtifacts := {
     // TODO: re-enable MiMa for 2.14 once there is a final version
     if (scalaMajorVersion.value == 14 || isDotty.value) Set()
