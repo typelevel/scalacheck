@@ -15,8 +15,6 @@ else
   TESTS=1000
 fi
 
-sbt_cmd+=("set ThisBuild / parallelExecution := $SBT_PARALLEL")
-
 for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues package; do
   sbt_cmd+=("$PLATFORM/$t")
 done

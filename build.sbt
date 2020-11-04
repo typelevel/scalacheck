@@ -10,8 +10,8 @@ val Scala213 = "2.13.3"
 val DottyOld = "0.27.0-RC1"
 val DottyNew = "3.0.0-M1"
 
-ThisBuild / scalaVersion := Scala213
-ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala211, Scala212, scalaVersion.value)
+ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala211, Scala212, Scala213)
+ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 
@@ -25,11 +25,11 @@ ThisBuild / githubWorkflowJavaVersions := Seq(Java8, "adopt@1.11")
 // we don't need this since we aren't publishing
 ThisBuild / githubWorkflowArtifactUpload := false
 
-ThisBuild / githubWorkflowBuildMatrixAdditions +=
-  "platform" -> List("jvm")
+ThisBuild / githubWorkflowBuildMatrixAdditions += "platform" -> List("jvm")
+ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  crossScalaVersions.value.filterNot(Set(Scala211)) map { scala =>
+  crossScalaVersions.value.filterNot(Set(Scala211, DottyNew)) map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
       Map("platform" -> "js", "pluginversion" -> "1.3.0"))
@@ -62,7 +62,9 @@ ThisBuild / githubWorkflowBuild := Seq(
     name = Some("Run the build script"),
     env = Map(
       "PLATFORM" -> "${{ matrix.platform }}",
-      "PLUGIN_VERSION" -> "${{ matrix.pluginversion }}")))
+      "PLUGIN_VERSION" -> "${{ matrix.pluginversion }}",
+      "TRAVIS_SCALA_VERSION" -> "${{ matrix.scala }}",
+      "WORKERS" -> "${{ matrix.workers }}")))
 
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
@@ -75,7 +77,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
           "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
         name = Some("Build examples"))),
     javas = List(Java8),
-    scalas = List(scalaVersion.value)),
+    scalas = List(crossScalaVersions.value.last)),
 
   WorkflowJob(
     "bench",
