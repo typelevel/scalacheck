@@ -32,13 +32,13 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   crossScalaVersions.value.filterNot(Set(Scala211, DottyNew)) map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
-      Map("platform" -> "js", "pluginversion" -> "1.3.0"))
+      Map("platform" -> "js", "pluginversion" -> "1.3.0", "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildMatrixInclusions +=
   MatrixInclude(
     Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> Scala211),
-    Map("platform" -> "js", "pluginversion" -> "0.6.33"))
+    Map("platform" -> "js", "pluginversion" -> "0.6.33", "workers" -> "1"))
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   Seq("0.3.9", "0.4.0-M2") map { v =>
@@ -47,7 +47,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
         "os" -> PrimaryOS,
         "scala" -> Scala211,
         "java" -> Java8),
-      Map("platform" -> "native", "pluginversion" -> v))
+      Map("platform" -> "native", "pluginversion" -> v, "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildPreamble +=
