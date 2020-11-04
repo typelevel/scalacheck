@@ -1,0 +1,40 @@
+name: Examples CI
+
+on:
+  push:
+    branches:
+    - master
+    - 1.14.x
+    - 1.15.x
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: before cache
+      continue-on-error: true
+      run: |
+        rm -fv ~/.ivy2/.sbt.ivy.lock 
+        find ~/.ivy2/cache -name 'ivydata-*.properties' -print -delete
+        find ~/.sbt        -name '*.lock'               -print -delete
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.ivy2/cache
+          ~/.coursier/cache/v1
+        key: ${{ runner.os }}-sbt-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-sbt-
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build the examples
+      run: |
+        cd examples
+        for d in */ ; do cd "$d" && sbt test:compile && cd ../ ; done
