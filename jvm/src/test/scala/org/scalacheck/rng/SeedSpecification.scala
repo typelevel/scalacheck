@@ -37,7 +37,7 @@ object SeedSpecification extends Properties("Seed") {
       Arbitrary(Gen.choose(2, 100).map(Base(_)))
   }
 
-  property("longs are evenly-distributed") =
+  propertyWithSeed("longs are evenly-distributed", Some("-aQhCwV8oBUYlWwee46hAk7cDCysDENMKQKEw-FnwEC=")) =
     forAll { (seed: Seed, b: Base) =>
       val base = b.value
 
