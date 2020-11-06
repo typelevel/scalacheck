@@ -13,3 +13,6 @@ target/
 
 # Intellij
 .idea
+
+# bloop
+/.bsp/
