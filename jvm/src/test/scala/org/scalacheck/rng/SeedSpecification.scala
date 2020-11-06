@@ -8,10 +8,10 @@
 \*------------------------------------------------------------------------ */
 
 package org.scalacheck
+package rng
 
 import Prop.forAll
 import Arbitrary.arbitrary
-import rng.Seed
 import scala.util.Try
 
 object SeedSpecification extends Properties("Seed") {
