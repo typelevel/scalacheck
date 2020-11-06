@@ -826,7 +826,8 @@ object Gen extends GenArities with GenVersionSpecific {
   def nonEmptyBuildableOf[C,T](g: Gen[T])(implicit
     evb: Buildable[T,C], evt: C => Traversable[T]
   ): Gen[C] =
-    buildableOf(g)(evb, evt).suchThat(c => evt(c).size > 0)
+    sized(s => choose(1, Integer.max(s, 1)))
+      .flatMap(n => buildableOfN(n, g)(evb, evt))
 
   /** A convenience method for calling `buildableOfN[C[T],T](n,g)`. */
   def containerOfN[C[_],T](n: Int, g: Gen[T])(implicit
