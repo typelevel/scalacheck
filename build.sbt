@@ -32,13 +32,8 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   crossScalaVersions.value.filterNot(Set(Scala211, DottyNew)) map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
-      Map("platform" -> "js", "pluginversion" -> "1.3.0", "workers" -> "1"))
+      Map("platform" -> "js", "workers" -> "1"))
   }
-
-ThisBuild / githubWorkflowBuildMatrixInclusions +=
-  MatrixInclude(
-    Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> Scala211),
-    Map("platform" -> "js", "pluginversion" -> "0.6.33", "workers" -> "1"))
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   Seq("0.3.9", "0.4.0-M2") map { v =>
@@ -106,9 +101,6 @@ lazy val scalaVersionSettings = Seq(
     }
   }
 )
-
-lazy val scalaJSVersion =
-  env("SCALAJS_VERSION").getOrElse("1.3.0")
 
 lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
