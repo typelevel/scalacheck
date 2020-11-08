@@ -29,7 +29,7 @@ ThisBuild / githubWorkflowBuildMatrixAdditions += "platform" -> List("jvm")
 ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  crossScalaVersions.value.filterNot(Set(Scala211, DottyNew)) map { scala =>
+  crossScalaVersions.value.filterNot(Set(Scala211)) map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
       Map("platform" -> "js", "workers" -> "1"))
@@ -183,6 +183,14 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   Compile / console / scalacOptions ~= {_.filterNot("-Ywarn-unused-import" == _)},
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
 
+  Compile / doc / sources := {
+    val old = (Compile / doc / sources).value
+    if (isDotty.value)
+      Seq()
+    else
+      old
+  },
+
   // don't use fatal warnings in tests
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
@@ -237,7 +245,11 @@ lazy val js = project.in(file("js"))
   .settings(
     Global / scalaJSStage := FastOptStage,
     libraryDependencies +=
-      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value)
+      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value),
+
+    scalacOptions ++= {
+      if (scalaVersion.value == "3.0.0-M1") Seq("-Yskip:explicitJSClasses") else Nil
+    },
   )
   .enablePlugins(ScalaJSPlugin)
 
@@ -248,7 +260,6 @@ lazy val jvm = project.in(file("jvm"))
       if (isDotty.value) Seq()
       else (Compile / doc/ sources).value
     },
-    crossScalaVersions += "0.27.0-RC1",
     Test / fork := {
       // Serialization issue in 2.13 and later
       scalaMajorVersion.value == 13 || isDotty.value // ==> true

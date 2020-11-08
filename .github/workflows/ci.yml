@@ -35,6 +35,11 @@ jobs:
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
+            scala: 3.0.0-M1
+            platform: js
+          - workers: 1
+            os: ubuntu-latest
+            java: adopt@1.8
             scala: 2.12.10
             platform: js
           - workers: 1
