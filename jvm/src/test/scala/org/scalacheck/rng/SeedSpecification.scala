@@ -44,7 +44,7 @@ object SeedSpecification extends Properties("Seed") {
       def countZeros(s0: Seed, i: Int, seen0: Int): Int =
         if (i <= 0) seen0 else {
           val (x, s1) = s0.long
-          val n = (x & 0x7fffffff).toInt % base
+          val n = x % base
           val seen = if (n == 0) seen0 + 1 else seen0
           countZeros(s1, i - 1, seen)
         }
