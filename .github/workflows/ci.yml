@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.0-M1, 3.0.0-M2, 2.11.12, 2.12.10, 2.13.3]
+        scala: [3.0.0-M2, 3.0.0-M3, 2.11.12, 2.12.10, 2.13.3]
         java: [adopt@1.8, adopt@1.11]
         platform: [jvm]
         workers: [1, 4]
@@ -30,12 +30,12 @@ jobs:
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 3.0.0-M1
+            scala: 3.0.0-M2
             platform: js
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 3.0.0-M2
+            scala: 3.0.0-M3
             platform: js
           - workers: 1
             os: ubuntu-latest
@@ -139,7 +139,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.0-M1, 3.0.0-M2, 2.11.12, 2.12.10, 2.13.3]
+        scala: [3.0.0-M2, 3.0.0-M3, 2.11.12, 2.12.10, 2.13.3]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
