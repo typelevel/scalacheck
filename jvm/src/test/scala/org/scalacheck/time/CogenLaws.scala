@@ -1,9 +1,6 @@
 package org.scalacheck.time
 
 import java.time._
-import org.scalacheck.Gen._
-import org.scalacheck.Prop._
-import org.scalacheck.Shrink._
 import org.scalacheck._
 import scala.util._
 

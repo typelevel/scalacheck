@@ -7,7 +7,7 @@ import org.scalacheck.Shrink._
 import org.scalacheck._
 import scala.util._
 
-object GenSpecification extends Properties("java.time Gen"){
+object GenSpecification extends Properties("java.time Gen") with OrphanInstances {
 
   private[this] def chooseProp[A](implicit C: Choose[A], A: Arbitrary[A], O: Ordering[A]): Prop = {
     import O.mkOrderingOps

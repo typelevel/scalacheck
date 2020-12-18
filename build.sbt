@@ -265,6 +265,10 @@ lazy val jvm = project.in(file("jvm"))
       scalaMajorVersion.value == 13 || isDotty.value // ==> true
       // else ==> false
     },
+  Test / unmanagedSourceDirectories += {
+    val s = if (scalaMajorVersion.value >= 13) "+" else "-"
+    baseDirectory.value / "src" / "test" / s"scala-2.13$s"
+  },
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 
