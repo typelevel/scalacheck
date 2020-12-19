@@ -416,8 +416,7 @@ private[time] trait JavaTimeInstances {
     }
   }
 
-  implicit final lazy val chooseOffsetTime: Choose[OffsetTime] = {
-    val epochDate: LocalDate = LocalDate.ofEpochDay(0L)
+  implicit final lazy val chooseOffsetTime: Choose[OffsetTime] =
     new Choose[OffsetTime] {
       override def choose(min: OffsetTime, max: OffsetTime): Gen[OffsetTime] =
         min.compareTo(max) match {
@@ -429,7 +428,6 @@ private[time] trait JavaTimeInstances {
             }
         }
     }
-  }
 
   implicit final lazy val arbOffsetTime: Arbitrary[OffsetTime] =
     Arbitrary(Gen.choose(OffsetTime.MIN, OffsetTime.MAX))
