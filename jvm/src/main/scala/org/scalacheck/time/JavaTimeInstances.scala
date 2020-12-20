@@ -364,12 +364,12 @@ private[time] trait JavaTimeInstances {
 
   // This type can be particularly mind bending. Because OffsetTime values
   // have no associated date, and because the Duration between OffsetTime.MIN
-  // and OffsetTime.MAX is 36 hours it can be difficult to write Choose for
-  // OffsetTime. One has to be careful to perturb both the LocalTime value and
-  // the ZoneOffset in such a way as to not accidentally create an OffsetTime
-  // value which is < one of the bounds. This is the reason that there are
-  // more helper functions for this type than others. It is an effort to keep
-  // clear what is going on.
+  // and OffsetTime.MAX is 59 hours (and change) it can be difficult to write
+  // Choose for OffsetTime. One has to be careful to perturb both the
+  // LocalTime value and the ZoneOffset in such a way as to not accidentally
+  // create an OffsetTime value which is < one of the bounds. This is the
+  // reason that there are more helper functions for this type than others. It
+  // is an effort to keep clear what is going on.
 
   private def secondsUntilOffsetRollover(value: OffsetTime): Int =
     value.getOffset().getTotalSeconds()
