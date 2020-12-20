@@ -1,5 +1,26 @@
 # ScalaCheck CHANGELOG
 
+## 1.15.2 (2020-12-07)
+
+* Binary compatible with 1.15.1 version of ScalaCheck.
+
+### Changed
+
+* Avoid filtering in `nonEmptyBuildableOf`
+  [#709](https://github.com/typelevel/scalacheck/pull/709)
+
+* Drop support for Scala.js 0.6
+  [#713](https://github.com/typelevel/scalacheck/pull/713)
+
+* Add support for Scala.js on Scala 3
+  [#713](https://github.com/typelevel/scalacheck/pull/712)
+
+### Fixed
+
+* Regression in `Gen.nonEmptyBuildableOf` and dependent methods
+  * [#708](https://github.com/typelevel/scalacheck/issues/708)
+  * [#714](https://github.com/typelevel/scalacheck/issues/714)
+
 ## 1.15.1 (2020-11-06)
 
 * Binary compatible with 1.15.0 version of ScalaCheck.
