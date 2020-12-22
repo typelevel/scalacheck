@@ -109,7 +109,7 @@ object CommandsShrinkSpecification extends Properties("Commands Shrinking") {
         Gen.const(Capacity),
         Gen.const(Size),
         Gen.const(Dequeue),
-        Gen.resultOf(Enqueue)
+        Arbitrary.arbitrary[Element].map(Enqueue(_))
       ).retryUntil(_.preCondition(state), 100)
 
     def newSut(state: State): Sut =
