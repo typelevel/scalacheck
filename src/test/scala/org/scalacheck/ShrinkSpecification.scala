@@ -143,41 +143,42 @@ object ShrinkSpecification extends Properties("Shrink") {
    *
    * Also, for each shrinkee the stream of shrunk values must be finite.  We
    * can empirically determine the length of the longest possible stream for a
-   * given type.  Usually this involves using the type's MinValue.
+   * given type.  Usually this involves using the type's MinValue in the case
+   * of fractional types, or MinValue + 1 for integral types.
    *
-   * For example, shrink(Byte.MinValue).toList gives us 15 values:
+   * For example, shrink(Byte.MinValue + 1).toList gives us 8 values:
    *
-   *   List(-64, 64, -32, 32, -16, 16, -8, 8, -4, 4, -2, 2, -1, 1, 0)
+   *   List(127, 0, -64, -96, -112, -120, -124, -126)
    *
    * Similarly, shrink(Double.MinValue).size gives us 2081.
    */
 
   property("shrink[Byte].nonEmpty") =
-    forAllNoShrink((n: Byte) => Shrink.shrink(n).drop(15).isEmpty)
+    forAllNoShrink((n: Byte) => Shrink.shrink(n).drop(8).isEmpty)
 
   property("shrink[Char].nonEmpty") =
     forAllNoShrink((n: Char) => Shrink.shrink(n).drop(16).isEmpty)
 
   property("shrink[Short].nonEmpty") =
-    forAllNoShrink((n: Short) => Shrink.shrink(n).drop(31).isEmpty)
+    forAllNoShrink((n: Short) => Shrink.shrink(n).drop(16).isEmpty)
 
   property("shrink[Int].nonEmpty") =
-    forAllNoShrink((n: Int) => Shrink.shrink(n).drop(63).isEmpty)
+    forAllNoShrink((n: Int) => Shrink.shrink(n).drop(32).isEmpty)
 
   property("shrink[Long].nonEmpty") =
-    forAllNoShrink((n: Long) => Shrink.shrink(n).drop(127).isEmpty)
+    forAllNoShrink((n: Long) => Shrink.shrink(n).drop(64).isEmpty)
 
   property("shrink[Float].nonEmpty") =
-    forAllNoShrink((n: Float) => Shrink.shrink(n).drop(2081).isEmpty)
+    forAllNoShrink((n: Float) => Shrink.shrink(n).drop(289).isEmpty)
 
   property("shrink[Double].nonEmpty") =
     forAllNoShrink((n: Double) => Shrink.shrink(n).drop(2081).isEmpty)
 
   property("shrink[FiniteDuration].nonEmpty") =
-    forAllNoShrink((n: FiniteDuration) => Shrink.shrink(n).drop(2081).isEmpty)
+    forAllNoShrink((n: FiniteDuration) => Shrink.shrink(n).drop(64).isEmpty)
 
   property("shrink[Duration].nonEmpty") =
-    forAllNoShrink((n: Duration) => Shrink.shrink(n).drop(2081).isEmpty)
+    forAllNoShrink((n: Duration) => Shrink.shrink(n).drop(64).isEmpty)
 
   // make sure we handle sentinel values appropriately for Float/Double.
 

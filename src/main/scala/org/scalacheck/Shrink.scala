@@ -238,26 +238,26 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific {
 }
 
 final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
-  import ev.{ fromInt, gteq, quot, negate, equiv, zero, one }
+  import ev.{ fromInt, quot, negate, equiv, zero, one, lt, minus, times }
 
   val two = fromInt(2)
 
-  // see if T supports negative values or not. this makes some
-  // assumptions about how Integral[T] is defined, which work for
-  // Integral[Char] at least. we can't be sure user-defined
-  // Integral[T] instances will be reasonable.
-  val skipNegation = gteq(negate(one), one)
+  // We assume that if y > |x| then quot(x, y) == 0, and that 2^k > |x| for
+  // some value of k, unless 2^k overflows first (which we cope with).
 
-  // assumes x is non-zero.
-  private def halves(x: T): Stream[T] = {
-    val q = quot(x, two)
-    if (equiv(q, zero)) Stream(zero)
-    else if (skipNegation) q #:: halves(q)
-    else q #:: negate(q) #:: halves(q)
+  private def approachFromBelow(x: T, i: T): Stream[T] = {
+    val head = minus(x, quot(x, i)) // approximately x * (1 - 1/2^k)
+    if (equiv(head, x)) Stream.empty else head #:: {
+      val j = times(i, two) // i = 1, 2, ..., 2^step
+      if (lt(i, j)) approachFromBelow(x, j) else Stream.empty
+    }
   }
 
-  def shrink(x: T): Stream[T] =
-    if (equiv(x, zero)) Stream.empty[T] else halves(x)
+  def shrink(x: T): Stream[T] = {
+    lazy val approach = approachFromBelow(x, one)
+    if (lt(x, zero) && lt(zero, negate(x))) negate(x) #:: approach
+    else approach
+  }
 }
 
 final class ShrinkFractional[T](implicit ev: Fractional[T]) extends Shrink[T] {
