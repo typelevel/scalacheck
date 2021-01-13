@@ -28,7 +28,7 @@ sealed trait Cogen[T] extends Serializable {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific {
+object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific with time.JavaTimeCogen {
 
   def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
 

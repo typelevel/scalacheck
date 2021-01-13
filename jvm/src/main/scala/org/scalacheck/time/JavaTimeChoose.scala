@@ -2,32 +2,18 @@ package org.scalacheck.time
 
 import org.scalacheck._
 import java.time._
-import java.time.temporal._
 import org.scalacheck.Gen.Choose
 
-/** Instances for `java.time` types. */
-private[time] trait JavaTimeInstances {
-
-  // temporal.ChronoUnit
-  //
-  // Arbitrary and Choose instances are already provided by Java enum support.
-
-  implicit final lazy val cogenChronoUnit: Cogen[ChronoUnit] =
-    Cogen[Int].contramap(_.ordinal)
+/** [[Gen#Choose]] instances for `java.time` types.
+  *
+  * @note [[Gen#Choose]] instances for `java.time` types which are Java enum
+  *       types are provided by ScalaCheck's general Java enum support.
+  */
+private[scalacheck] trait JavaTimeChoose {
 
   // Duration
 
-  // Java duration values are conceptually infinite, thus they do not expose
-  // Duration.MAX/Duration.MIN values, but in practice they are finite,
-  // restricted by their underlying representation a long and an int.
-
-  private final lazy val minDuration: Duration =
-    Duration.ofSeconds(Long.MinValue)
-
-  private final lazy val maxDuration: Duration =
-    Duration.ofSeconds(Long.MaxValue, 999999999L)
-
-  implicit final lazy val chooseDuration: Choose[Duration] =
+  implicit final lazy val chooseJavaDuration: Choose[Duration] =
     new Choose[Duration] {
       override def choose(min: Duration, max: Duration): Gen[Duration] = {
         min.compareTo(max) match {
@@ -54,22 +40,6 @@ private[time] trait JavaTimeInstances {
               )
             }
         }
-      }
-    }
-
-  implicit final lazy val arbDuration: Arbitrary[Duration] =
-    Arbitrary(Gen.choose(minDuration, maxDuration))
-
-  implicit final lazy val cogenDuration: Cogen[Duration] =
-    Cogen[(Long, Int)].contramap(value => (value.getSeconds, value.getNano))
-
-  implicit final lazy val shrinkDuration: Shrink[Duration] =
-    Shrink[Duration]{value =>
-      val q: Duration = value.dividedBy(2)
-      if (q == Duration.ZERO) {
-        Stream(Duration.ZERO)
-      } else {
-        q #:: q.negated #:: shrinkDuration.shrink(q)
       }
     }
 
@@ -102,12 +72,6 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbInstant: Arbitrary[Instant] =
-    Arbitrary(Gen.choose(Instant.MIN, Instant.MAX))
-
-  implicit final lazy val cogenInstant: Cogen[Instant] =
-    Cogen[(Long, Int)].contramap(value => (value.getEpochSecond, value.getNano))
-
   // Month
 
   implicit final lazy val chooseMonth: Choose[Month] =
@@ -115,9 +79,6 @@ private[time] trait JavaTimeInstances {
       value => Month.of((value % 12) + 1),
       _.ordinal
     )
-
-  implicit final lazy val cogenMonth: Cogen[Month] =
-    Cogen[Int].contramap(_.ordinal)
 
   // Year
 
@@ -131,12 +92,6 @@ private[time] trait JavaTimeInstances {
             Gen.choose(min.getValue, max.getValue).map(value => Year.of(value))
         }
     }
-
-  implicit final lazy val arbYear: Arbitrary[Year] =
-    Arbitrary(Gen.choose(Year.of(Year.MIN_VALUE), Year.of(Year.MIN_VALUE)))
-
-  implicit final lazy val cogenYear: Cogen[Year] =
-    Cogen[Int].contramap(_.getValue)
 
   // LocalDate
 
@@ -183,27 +138,15 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbLocalDate: Arbitrary[LocalDate] =
-    Arbitrary(Gen.choose(LocalDate.MIN, LocalDate.MAX))
-
-  implicit final lazy val cogenLocalDate: Cogen[LocalDate] =
-    Cogen[(Int, Int, Int)].contramap(value => (value.getYear, value.getMonthValue, value.getDayOfMonth))
-
   // LocalTime
 
   implicit final lazy val chooseLocalTime: Choose[LocalTime] =
     new Choose[LocalTime] {
-      def choose(min: LocalTime, max: LocalTime): Gen[LocalTime] =
+      override def choose(min: LocalTime, max: LocalTime): Gen[LocalTime] =
         Gen.choose(min.toNanoOfDay, max.toNanoOfDay).map(nano =>
           LocalTime.ofNanoOfDay(nano)
         )
     }
-
-  implicit final lazy val arbLocalTime: Arbitrary[LocalTime] =
-    Arbitrary(Gen.choose(LocalTime.MIN, LocalTime.MAX))
-
-  implicit final lazy val cogenLocalTime: Cogen[LocalTime] =
-    Cogen[Long].contramap(_.toNanoOfDay)
 
   // LocalDateTime
 
@@ -239,12 +182,6 @@ private[time] trait JavaTimeInstances {
       }
     }
 
-  implicit final lazy val arbLocalDateTime: Arbitrary[LocalDateTime] =
-    Arbitrary(Gen.choose(LocalDateTime.MIN, LocalDateTime.MAX))
-
-  implicit final lazy val cogenLocalDateTime: Cogen[LocalDateTime] =
-    Cogen[(LocalDate, LocalTime)].contramap(value => (value.toLocalDate, value.toLocalTime))
-
   // MonthDay
 
   implicit final lazy val chooseMonthDay: Choose[MonthDay] =
@@ -276,12 +213,6 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbMonthDay: Arbitrary[MonthDay] =
-    Arbitrary(Gen.choose(MonthDay.of(Month.JANUARY, 1), MonthDay.of(Month.DECEMBER, 31)))
-
-  implicit final lazy val cogenMonthDay: Cogen[MonthDay] =
-    Cogen[(Month, Int)].contramap(value => (value.getMonth, value.getDayOfMonth))
-
   // ZoneOffset
 
   /** ZoneOffset values have some unusual semantics when it comes to
@@ -296,7 +227,7 @@ private[time] trait JavaTimeInstances {
     * of day around the world. Thus, an offset of +10:00 comes before an
     * offset of +09:00 and so on down to -18:00."
     *
-    * This has the following surprising implication,
+    * This has the following implication,
     *
     * {{{
     *  scala> ZoneOffset.MIN
@@ -315,7 +246,7 @@ private[time] trait JavaTimeInstances {
     */
   implicit final lazy val chooseZoneOffset: Choose[ZoneOffset] =
     new Choose[ZoneOffset] {
-      def choose(min: ZoneOffset, max: ZoneOffset): Gen[ZoneOffset] =
+      override def choose(min: ZoneOffset, max: ZoneOffset): Gen[ZoneOffset] =
         min.compareTo(max) match {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
@@ -324,41 +255,6 @@ private[time] trait JavaTimeInstances {
             Gen.choose(max.getTotalSeconds, min.getTotalSeconds).map(value => ZoneOffset.ofTotalSeconds(value))
         }
     }
-
-  implicit final lazy val arbZoneOffset: Arbitrary[ZoneOffset] =
-    Arbitrary(
-      Gen.oneOf(
-        Gen.oneOf(ZoneOffset.MAX, ZoneOffset.MIN, ZoneOffset.UTC),
-        Gen.choose(ZoneOffset.MAX, ZoneOffset.MIN) // These look flipped, but they are not.
-      )
-    )
-
-  implicit final lazy val cogenZoneOffset: Cogen[ZoneOffset] =
-    Cogen[Int].contramap(_.getTotalSeconds)
-
-  // ZoneId
-
-  /** ''Technically'' the available zone ids can change at runtime, so we store
-    * an immutable snapshot in time here. We avoid going through the
-    * scala/java collection converters to avoid having to deal with the scala
-    * 2.13 changes and adding a dependency on the collection compatibility
-    * library.
-    */
-  private final lazy val availableZoneIds: Set[ZoneId] =
-    ZoneId.getAvailableZoneIds.toArray(Array.empty[String]).toSet.map((value: String) => ZoneId.of(value))
-
-  // ZoneIds by themselves do not describe an offset from UTC (ZoneOffset
-  // does), so there isn't a meaningful way to define a choose as they can not
-  // be reasonably ordered.
-
-  implicit final lazy val arbZoneId: Arbitrary[ZoneId] =
-    Arbitrary(Gen.oneOf(Gen.oneOf(availableZoneIds), arbZoneOffset.arbitrary))
-
-  implicit final lazy val cogenZoneId: Cogen[ZoneId] =
-    Cogen[String].contramap(_.toString) // This may seem contrived, and in a
-                                        // way it is, but ZoneId values
-                                        // _without_ offsets are basically
-                                        // just newtypes of String.
 
   // OffsetTime
 
@@ -429,12 +325,6 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbOffsetTime: Arbitrary[OffsetTime] =
-    Arbitrary(Gen.choose(OffsetTime.MIN, OffsetTime.MAX))
-
-  implicit final lazy val cogenOffsetTime: Cogen[OffsetTime] =
-    Cogen[(LocalTime, ZoneOffset)].contramap(value => (value.toLocalTime, value.getOffset))
-
   // OffsetDateTime
 
   implicit final lazy val chooseOffsetDateTime: Choose[OffsetDateTime] =
@@ -452,38 +342,11 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbOffsetDateTime: Arbitrary[OffsetDateTime] =
-    Arbitrary(Gen.choose(OffsetDateTime.MIN, OffsetDateTime.MAX))
-
-  implicit final lazy val cogenOffsetDateTime: Cogen[OffsetDateTime] =
-    Cogen[(LocalDateTime, ZoneOffset)].contramap(value => (value.toLocalDateTime, value.getOffset))
-
-  // Period
-
-  implicit final lazy val arbPeriod: Arbitrary[Period] =
-    Arbitrary(
-      for {
-        years <- Arbitrary.arbitrary[Int]
-        months <- Arbitrary.arbitrary[Int]
-        days <- Arbitrary.arbitrary[Int]
-      } yield Period.of(years, months, days))
-
-  implicit final lazy val cogenPeriod: Cogen[Period] =
-    Cogen[(Int, Int, Int)].contramap(value => (value.getYears, value.getMonths, value.getDays))
-
-  implicit final lazy val shrinkPeriod: Shrink[Period] =
-    Shrink.xmap[(Int, Int, Int), Period](
-      {
-        case (y, m, d) => Period.of(y, m, d)
-      },
-      value => (value.getYears, value.getMonths, value.getDays)
-    )
-
   // YearMonth
 
   implicit final lazy val chooseYearMonth: Choose[YearMonth] =
     new Choose[YearMonth] {
-      def choose(min: YearMonth, max: YearMonth): Gen[YearMonth] =
+      override def choose(min: YearMonth, max: YearMonth): Gen[YearMonth] =
         min.compareTo(max) match {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
@@ -510,17 +373,11 @@ private[time] trait JavaTimeInstances {
         }
     }
 
-  implicit final lazy val arbYearMonth: Arbitrary[YearMonth] =
-    Arbitrary(Gen.choose(YearMonth.of(Year.MIN_VALUE, Month.JANUARY), YearMonth.of(Year.MAX_VALUE, Month.DECEMBER)))
-
-  implicit final lazy val cogenYearMonth: Cogen[YearMonth] =
-    Cogen[(Int, Month)].contramap(value => (value.getYear, value.getMonth))
-
   // ZonedDateTime
 
   implicit final lazy val chooseZonedDateTime: Choose[ZonedDateTime] =
     new Choose[ZonedDateTime] {
-      def choose(min: ZonedDateTime, max: ZonedDateTime): Gen[ZonedDateTime] =
+      override def choose(min: ZonedDateTime, max: ZonedDateTime): Gen[ZonedDateTime] =
         min.compareTo(max) match {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
@@ -532,23 +389,4 @@ private[time] trait JavaTimeInstances {
             )
         }
     }
-
-  implicit final lazy val arbZonedDateTime: Arbitrary[ZonedDateTime] =
-    // The ZoneOffset's here look flipped by they are
-    // not. ZonedDateTime.of(LocalDateTime.MIN, ZoneOffset.MAX) is _older_
-    // than ZonedDateTime.of(LocalDateTime, ZoneOffset.MIN).
-    Arbitrary(Gen.choose(ZonedDateTime.of(LocalDateTime.MIN, ZoneOffset.MAX), ZonedDateTime.of(LocalDateTime.MAX, ZoneOffset.MIN)))
-
-  implicit final lazy val cogenZonedDateTime: Cogen[ZonedDateTime] =
-    Cogen[(LocalDateTime, ZoneOffset)].contramap(value => (value.toLocalDateTime, value.getOffset))
-
-  // DayOfWeek
-
-  implicit final lazy val cogenDayOfWeek: Cogen[DayOfWeek] =
-    Cogen[Int].contramap(_.ordinal)
-
-  // temporal.ChronoField
-
-  implicit final lazy val cogenChronoField: Cogen[ChronoField] =
-    Cogen[Int].contramap(_.ordinal)
 }
