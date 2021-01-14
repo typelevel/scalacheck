@@ -188,6 +188,44 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
 
+  property("resize(sz, posNum)") = forAll { (sz: Int) =>
+    val g = Gen.resize(sz, Gen.posNum[Int])
+    Prop.forAllNoShrink(g) { n =>
+      if (sz > 0) n <= sz && n >= 0
+      else        n == 1
+    }
+  }
+
+  property("resize(sz, negNum)") = forAll { (sz: Int) =>
+    val g = Gen.resize(sz, Gen.negNum[Int])
+    Prop.forAllNoShrink(g) { n =>
+      if (sz > 0) n >= -sz && n <= 0
+      else        n == -1
+    }
+  }
+
+  property("resize(sz, buildableOf)") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    val gs = Gen.buildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
+    Prop.forAll(g) { (sz: Int) =>
+      Prop.forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+        if (sz > 0) l.size <= sz && l.size >= 0
+        else        l.size == 0
+      }
+    }
+  }
+
+  property("resize(sz, nonEmptyBuilableOf)") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    val gs = Gen.nonEmptyBuildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
+    Prop.forAll(g) { (sz: Int) =>
+      Prop.forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+        if (sz > 0) l.size <= sz && l.size >= 1
+        else        l.size == 1
+      }
+    }
+  }
+
   property("oneOf n") = forAll { (l: List[Int]) =>
     Try(oneOf(l)) match {
       case Success(g) => forAll(g)(l.contains)
