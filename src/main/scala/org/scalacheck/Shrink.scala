@@ -29,7 +29,7 @@ trait ShrinkLowPriority {
   implicit def shrinkAny[T]: Shrink[T] = Shrink(_ => Stream.empty)
 }
 
-object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific {
+object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.JavaTimeShrink {
 
   import Stream.{cons, empty}
   import scala.collection._

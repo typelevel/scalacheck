@@ -347,7 +347,7 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
-  object Choose {
+  object Choose extends time.JavaTimeChoose {
 
     class IllegalBoundsError[A](low: A, high: A)
         extends IllegalArgumentException(s"invalid bounds: low=$low, high=$high")

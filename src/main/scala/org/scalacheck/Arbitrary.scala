@@ -59,7 +59,7 @@ sealed abstract class Arbitrary[T] extends Serializable {
  *  generators.
  *  </p>
  */
-object Arbitrary extends ArbitraryLowPriority with ArbitraryArities {
+object Arbitrary extends ArbitraryLowPriority with ArbitraryArities with time.JavaTimeArbitrary {
 
   /** Arbitrary instance of the Function0 type. */
   implicit def arbFunction0[T](implicit a: Arbitrary[T]): Arbitrary[() => T] =
