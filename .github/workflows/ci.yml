@@ -58,7 +58,7 @@ jobs:
             java: adopt@1.8
             scala: 2.11.12
             platform: native
-            pluginversion: 0.4.0-M2
+            pluginversion: 0.4.0
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)

@@ -36,7 +36,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   }
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  Seq("0.3.9", "0.4.0-M2") map { v =>
+  Seq("0.3.9", "0.4.0") map { v =>
     MatrixInclude(
       Map(
         "os" -> PrimaryOS,

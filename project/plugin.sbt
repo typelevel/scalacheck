@@ -17,7 +17,7 @@ def printAndDie(msg: String): Nothing = {
 // Update SCALANATIVE_VERSION in release.sh, as well
 val scalaNativeVersion = env("SCALANATIVE_VERSION") match {
   case Some("0.3.9") | Some("") | None => "0.3.9"
-  case Some("0.4.0-M2") => "0.4.0-M2"
+  case Some("0.4.0") => "0.4.0"
   case Some(v) => printAndDie(s"unsupported scala native version: $v")
 }
 
