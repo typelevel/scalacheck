@@ -52,7 +52,7 @@ jobs:
             java: adopt@1.8
             scala: 2.11.12
             platform: native
-            pluginversion: 0.3.9
+            pluginversion: 0.4.0
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
