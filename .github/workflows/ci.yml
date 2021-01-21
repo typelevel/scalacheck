@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.0-M2, 3.0.0-M3, 2.11.12, 2.12.13, 2.13.3]
+        scala: [3.0.0-M2, 3.0.0-M3, 2.12.13, 2.13.4]
         java: [adopt@1.8, adopt@1.11]
         platform: [jvm]
         workers: [1, 4]
@@ -45,20 +45,18 @@ jobs:
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 2.13.3
+            scala: 2.13.4
             platform: js
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 2.11.12
+            scala: 2.12.13
             platform: native
-            pluginversion: 0.3.9
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 2.11.12
+            scala: 2.13.4
             platform: native
-            pluginversion: 0.4.0
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -93,7 +91,6 @@ jobs:
       - name: Run the build script
         env:
           PLATFORM: ${{ matrix.platform }}
-          PLUGIN_VERSION: ${{ matrix.pluginversion }}
           TRAVIS_SCALA_VERSION: ${{ matrix.scala }}
           WORKERS: ${{ matrix.workers }}
         run: ./tools/travis-script.sh
@@ -103,7 +100,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.3]
+        scala: [2.13.4]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -139,7 +136,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.0-M2, 3.0.0-M3, 2.11.12, 2.12.13, 2.13.3]
+        scala: [3.0.0-M2, 3.0.0-M3, 2.12.13, 2.13.4]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:

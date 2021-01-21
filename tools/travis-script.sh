@@ -1,8 +1,6 @@
 #!/bin/bash
 set -evu
 
-export SCALANATIVE_VERSION="$PLUGIN_VERSION"
-
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
