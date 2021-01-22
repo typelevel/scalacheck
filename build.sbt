@@ -4,13 +4,12 @@ val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
 
 scalaVersionSettings
 
-val Scala211 = "2.11.12"
 val Scala212 = "2.12.13"
-val Scala213 = "2.13.3"
+val Scala213 = "2.13.4"
 val DottyOld = "3.0.0-M2"
 val DottyNew = "3.0.0-M3"
 
-ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala211, Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
@@ -29,20 +28,20 @@ ThisBuild / githubWorkflowBuildMatrixAdditions += "platform" -> List("jvm")
 ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  crossScalaVersions.value.filterNot(Set(Scala211)) map { scala =>
+  crossScalaVersions.value map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
       Map("platform" -> "js", "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  Seq("0.3.9", "0.4.0-M2") map { v =>
+  crossScalaVersions.value.filter(_.startsWith("2.")) map { scala =>
     MatrixInclude(
       Map(
         "os" -> PrimaryOS,
-        "scala" -> Scala211,
+        "scala" -> scala,
         "java" -> Java8),
-      Map("platform" -> "native", "pluginversion" -> v, "workers" -> "1"))
+      Map("platform" -> "native", "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildPreamble +=
@@ -57,7 +56,6 @@ ThisBuild / githubWorkflowBuild := Seq(
     name = Some("Run the build script"),
     env = Map(
       "PLATFORM" -> "${{ matrix.platform }}",
-      "PLUGIN_VERSION" -> "${{ matrix.pluginversion }}",
       "TRAVIS_SCALA_VERSION" -> "${{ matrix.scala }}",
       "WORKERS" -> "${{ matrix.workers }}")))
 
@@ -161,13 +159,11 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
       (n: Int) => if (r.contains(n)) strs else Seq.empty
 
     val groups: Seq[Int => Seq[String]] = Seq(
-      mk(11 to 11)("-Xlint"),
-      mk(11 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
+      mk(12 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
         "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation",
         "-Ywarn-infer-any", "-Ywarn-unused-import"),
-      mk(11 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
-        "-Ywarn-dead-code", "-Ywarn-numeric-widen"),
-      mk(12 to 13)("-Xlint:-unused",
+      mk(12 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
+        "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Xlint:-unused",
         "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
     val n = scalaMajorVersion.value
@@ -245,11 +241,7 @@ lazy val js = project.in(file("js"))
   .settings(
     Global / scalaJSStage := FastOptStage,
     libraryDependencies +=
-      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value),
-
-    scalacOptions ++= {
-      if (scalaVersion.value == "3.0.0-M1") Seq("-Yskip:explicitJSClasses") else Nil
-    },
+      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value)
   )
   .enablePlugins(ScalaJSPlugin)
 
@@ -276,8 +268,8 @@ lazy val native = project.in(file("native"))
   .settings(sharedSettings: _*)
   .settings(
     Compile / doc := (jvm / Compile / doc).value,
-    scalaVersion := "2.11.12",
-    crossScalaVersions := Seq("2.11.12"),
+    scalaVersion := Scala212,
+    crossScalaVersions := Seq(Scala212, Scala213),
     // TODO: re-enable MiMa for native once published
     mimaPreviousArtifacts := Set(),
     libraryDependencies ++= Seq(

@@ -1,8 +1,6 @@
 #!/bin/bash
 set -evu
 
-export SCALANATIVE_VERSION="$PLUGIN_VERSION"
-
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
 if [[ "$PLATFORM" == "js" ]]; then
@@ -11,7 +9,7 @@ else
   TESTS=1000
 fi
 
-for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues package; do
+for t in clean compile "testOnly * -- \"-s $TESTS -w $WORKERS\"" mimaReportBinaryIssues package; do
   sbt_cmd+=("$PLATFORM/$t")
 done
 

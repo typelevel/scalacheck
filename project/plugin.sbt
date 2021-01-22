@@ -14,14 +14,7 @@ def printAndDie(msg: String): Nothing = {
   sys.error(msg)
 }
 
-// Update SCALANATIVE_VERSION in release.sh, as well
-val scalaNativeVersion = env("SCALANATIVE_VERSION") match {
-  case Some("0.3.9") | Some("") | None => "0.3.9"
-  case Some("0.4.0-M2") => "0.4.0-M2"
-  case Some(v) => printAndDie(s"unsupported scala native version: $v")
-}
-
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % scalaNativeVersion)
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.0")
 
