@@ -190,9 +190,14 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   mimaReportSignatureProblems := true,
   mimaPreviousArtifacts := {
-    // TODO: re-enable MiMa for 2.14 once there is a final version
-    if (scalaMajorVersion.value == 14 || isDotty.value) Set()
-    else Set("org.scalacheck" %%% "scalacheck" % "1.14.3")
+    // TODO: re-enable MiMa for Dotty once there is a final version
+    if (isDotty.value) Set()
+    else Set(
+      "1.14.3",
+      "1.15.1",
+      "1.15.2",
+      "1.15.3"
+    ).map(v => "org.scalacheck" %%% "scalacheck" % v)
   },
 
   publishTo := {
