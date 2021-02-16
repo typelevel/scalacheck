@@ -6,8 +6,8 @@ scalaVersionSettings
 
 val Scala212 = "2.12.13"
 val Scala213 = "2.13.4"
-val DottyOld = "3.0.0-M2"
-val DottyNew = "3.0.0-M3"
+val DottyOld = "3.0.0-M3"
+val DottyNew = "3.0.0-RC1"
 
 ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
