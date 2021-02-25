@@ -15,6 +15,7 @@ import scala.collection.immutable.BitSet
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
+import java.util.UUID
 import rng.Seed
 
 sealed trait Cogen[T] extends Serializable {
@@ -157,6 +158,11 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
 
   implicit def cogenPartialFunction[A: Arbitrary, B: Cogen]: Cogen[PartialFunction[A, B]] =
     Cogen[A => Option[B]].contramap(_.lift)
+
+  implicit val cogenUUID: Cogen[UUID] =
+    Cogen[(Long, Long)].contramap(value =>
+      (value.getLeastSignificantBits, value.getMostSignificantBits)
+    )
 
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)
