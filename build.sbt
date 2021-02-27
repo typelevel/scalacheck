@@ -202,7 +202,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
    * resolvers +=
    *   "Sonatype OSS Snapshots" at
    *   "https://oss.sonatype.org/content/repositories/snapshots",
-   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.0-a794907-SNAPSHOT" % "test",
+   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.0-a794907-SNAPSHOT" % Test,
    */
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
