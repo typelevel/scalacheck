@@ -6,6 +6,7 @@ import org.scalacheck.commands.Commands
 
 import scala.util.{Try, Success}
 import scala.collection.immutable.Map
+import scala.collection.Seq
 
 import com.redis.RedisClient
 
@@ -130,7 +131,7 @@ object RedisSpec extends Commands {
     type Result = Option[Long]
     def run(sut: Sut) =
       if(keys.isEmpty) Some(0)
-      else sut.del(keys.head, keys.tail: _*)
+      else sut.del(keys.head, keys.tail.toSeq: _*)
     def preCondition(state: State) = state.connected
     def nextState(state: State) = state.copy(
       contents = state.contents -- keys,
