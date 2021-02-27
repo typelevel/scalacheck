@@ -20,6 +20,8 @@ import ScalaVersionSpecific._
 import scala.util.Try
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
+import java.util.UUID
+
 object CogenSpecification extends Properties("Cogen") {
 
   // We need a customized definition of equality for some of our tests.
@@ -162,4 +164,5 @@ object CogenSpecification extends Properties("Cogen") {
   include(cogenLaws[Seq[Int]], "cogenSeq.")
   include(cogenLaws[Duration], "cogenDuration.")
   include(cogenLaws[FiniteDuration], "cogenFiniteDuration.")
+  include(cogenLaws[UUID], "cogenUUID.")
 }
