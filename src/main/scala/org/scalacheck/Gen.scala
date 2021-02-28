@@ -608,7 +608,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
 
   /**
-   * A fixed point generator. This is useful for making recusive structures
+   * A fixed point generator. This is useful for making recursive structures
    * e.g.
    *
    * Gen.recursive[List[Int]] { recurse =>
@@ -1288,7 +1288,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     // We want to be sure we always initialize the calendar's time. By
     // default, Calendar.getInstance uses the system time. We always
-    // overwrite it with a determinisitcally-generated time to be sure
+    // overwrite it with a deterministically-generated time to be sure
     // that calendar generation is also deterministic.
     //
     // We limit the time (in milliseconds) because extreme values will
