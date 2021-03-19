@@ -1126,6 +1126,9 @@ object Gen extends GenArities with GenVersionSpecific {
       r(Some(x < chance), s1)
     }
 
+  /** Generates a Boolean. */
+  def bool: Gen[Boolean] = prob(0.5)
+
   /**
    * Generates Double values according to the given gaussian
    * distribution, specified by its mean and standard deviation.

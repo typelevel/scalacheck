@@ -462,6 +462,10 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("bool") = forAll(bool) { b =>
+    b || true
+  }
+
   // BigDecimal generation is tricky; just ensure that the generator gives
   // its constructor valid values.
   property("BigDecimal") = forAll { (_: BigDecimal) => true }
