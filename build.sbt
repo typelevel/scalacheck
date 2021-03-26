@@ -89,8 +89,6 @@ def env(name: String): Option[String] =
 
 val isRelease = env("IS_RELEASE").exists(_ == "true")
 
-lazy val travisCommit = env("TRAVIS_COMMIT")
-
 lazy val scalaVersionSettings = Seq(
   scalaMajorVersion := {
     val v = scalaVersion.value
@@ -107,7 +105,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   version := {
     val suffix =
       if (isRelease) ""
-      else travisCommit.map("-" + _.take(7)).getOrElse("") + "-SNAPSHOT"
+      else "-SNAPSHOT"
     versionNumber + suffix
   },
 
@@ -197,13 +195,6 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
     else Set("org.scalacheck" %%% "scalacheck" % "1.14.3")
   },
 
-  /* Snapshots are published after successful merges to master.
-   * Available with the following sbt snippet:
-   * resolvers +=
-   *   "Sonatype OSS Snapshots" at
-   *   "https://oss.sonatype.org/content/repositories/snapshots",
-   * libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.0-a794907-SNAPSHOT" % Test,
-   */
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
@@ -213,8 +204,7 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
 
   publishMavenStyle := true,
 
-  // Travis should only publish snapshots
-  publishArtifact := !(isRelease && travisCommit.isDefined),
+  publishArtifact := true,
 
   Test / publishArtifact := false,
 
