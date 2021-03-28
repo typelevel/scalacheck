@@ -144,11 +144,11 @@ object ShrinkSpecification extends Properties("Shrink") {
    * Also, for each shrinkee the stream of shrunk values must be finite.  We
    * can empirically determine the length of the longest possible stream for a
    * given type.  Usually this involves using the type's MinValue in the case
-   * of fractional types, or MinValue + 1 for integral types.
+   * of fractional types, or MinValue for integral types.
    *
-   * For example, shrink(Byte.MinValue + 1).toList gives us 8 values:
+   * For example, shrink(Byte.MinValue).toList gives us 8 values:
    *
-   *   List(127, 0, -64, -96, -112, -120, -124, -126)
+   *   List(0, -64, -96, -112, -120, -124, -126, -127)
    *
    * Similarly, shrink(Double.MinValue).size gives us 2081.
    */
@@ -301,4 +301,79 @@ object ShrinkSpecification extends Properties("Shrink") {
     forAllNoShrink { (x: FiniteDuration) =>
       shrink(x).forall(y => twosComplementMayShrinkTo(x.toNanos, y.toNanos))
     }
+
+  // Recursive integral shrinking stops at a success/failure boundary,
+  // i.e. some m such that m fails and m-1 succeeds if 0 < m and m+1
+  // succeeds if m < 0, or shrinks to 0.
+  //
+  // Test that shrink(n) contains n-1 if positive or n+1 if negative.
+  //
+  // From this our conclusion follows:
+  //  - If 0 < n and n fails and n-1 fails then we can shrink to n-1.
+  //  - If n < 0 and n fails and n+1 fails then we can shrink to n+1.
+  // In neither case do we stop shrinking at n.
+  //
+  // Since shrinking only stops at failing values, we stop shrinking at:
+  //  - Some n such that 0 < n and n fails and n-1 succeeds
+  //  - Some n such that n < 0 and n fails and n+1 succeeds
+  //  - 0
+  // which is exactly what we wanted to conclude.
+
+  def stepsByOne[T: Arbitrary: Numeric: Shrink]: Prop = {
+    val num = implicitly[Numeric[T]]
+    import num.{equiv, lt, negate, one, plus, zero}
+    val minusOne = negate(one)
+
+    forAll {
+      (n: T) => (!equiv(n, zero)) ==> {
+        val delta = if (lt(n, zero)) one else minusOne
+        shrink(n).contains(plus(n, delta))
+      }
+    }
+  }
+
+  property("shrink[Byte](n).contains(n - |n|/n)") = stepsByOne[Byte]
+  property("shrink[Short](n).contains(n - |n|/n)") = stepsByOne[Short]
+  property("shrink[Char](n).contains(n - |n|/n)") = stepsByOne[Char]
+  property("shrink[Int](n).contains(n - |n|/n)") = stepsByOne[Int]
+  property("shrink[Long](n).contains(n - |n|/n)") = stepsByOne[Long]
+  property("shrink[BigInt](n).contains(n - |n|/n)") = stepsByOne[BigInt]
+
+  // As a special case of the above, if n succeeds iff lo < n < hi for some
+  // pair of limits lo <= 0 <= hi, then shrinking stops at lo or hi.  Let's
+  // test this concrete consequence.
+
+  def minimalCounterexample[T: Shrink](ok: T => Boolean, x: T): T =
+    shrink(x).dropWhile(ok).headOption.fold(x)(minimalCounterexample(ok, _))
+
+  def findsBoundary[T: Arbitrary: Numeric: Shrink]: Prop = {
+    val num = implicitly[Numeric[T]]
+    import num.{lt, lteq, zero}
+
+    def valid(lo: T, hi: T, start: T): Boolean =
+      lteq(lo, zero) && lteq(zero, hi) && (lteq(start, lo) || lteq(hi, start))
+
+    forAll(Arbitrary.arbitrary[(T, T, T)].retryUntil((valid _).tupled)) {
+      case (lo, hi, start) => valid(lo, hi, start) ==> {
+        val ok = (n: T) => lt(lo, n) && lt(n, hi)
+        val stop = minimalCounterexample[T](ok, start)
+        s"($lo, $hi, $start) => $stop" |: (stop == lo || stop == hi)
+      }
+    }
+  }
+
+  property("shrink finds the exact boundary: Byte")   = findsBoundary[Byte]
+  property("shrink finds the exact boundary: Short")  = findsBoundary[Short]
+  property("shrink finds the exact boundary: Int")    = findsBoundary[Int]
+  property("shrink finds the exact boundary: Long")   = findsBoundary[Long]
+  property("shrink finds the exact boundary: BigInt") = findsBoundary[BigInt]
+
+  // Unsigned types are one-sided.  Test on the range (0 until limit).
+  property("shrink finds the exact boundary: Char")   = forAll {
+    (a: Char, b: Char) =>
+    val (limit, start) = (a min b, a max b)
+    require(limit <= start)
+    val result = minimalCounterexample[Char](_ < limit, start)
+    s"(${limit.toInt}, ${start.toInt}) => ${result.toInt}" |: result == limit
+  }
 }
