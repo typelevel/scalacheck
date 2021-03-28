@@ -212,6 +212,9 @@ object ShrinkSpecification extends Properties("Shrink") {
   // That was finiteness of a single step of shrinking.  Now let's prove that
   // you cannot shrink for infinitely many steps, by showing that shrinking
   // always goes to smaller values, ordered by magnitude and then sign.
+  // This is a strict partial ordering, hence there can be no cycles.  It is
+  // also a well-ordering on BigInt, and all other types we test are finite,
+  // hence there can be no infinite regress.
 
   def orderByMagnitudeAndSign[T](
     abs: T => T,
