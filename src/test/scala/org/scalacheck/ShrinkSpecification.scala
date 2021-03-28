@@ -216,21 +216,14 @@ object ShrinkSpecification extends Properties("Shrink") {
   // also a well-ordering on BigInt, and all other types we test are finite,
   // hence there can be no infinite regress.
 
-  def orderByMagnitudeAndSign[T: Numeric](n: T, m: T): Boolean = {
+  def numericMayShrinkTo[T: Numeric](n: T, m: T): Boolean = {
     val num = implicitly[Numeric[T]]
     import num.{abs, equiv, lt, zero}
     lt(abs(m), abs(n)) || (lt(n, zero) && equiv(m, abs(n)))
   }
 
-  def fractionalMayShrinkTo[T: Fractional](n: T, m: T): Boolean = {
-    orderByMagnitudeAndSign(n, m)
-  }
-
-  def rawIntegralMayShrinkTo[T: Integral](n: T, m: T): Boolean = {
-    orderByMagnitudeAndSign(n, m)
-  }
-
-  def integralMayShrinkTo[T: Integral: TwosComplement](n: T, m: T): Boolean = {
+  def twosComplementMayShrinkTo[T: Integral: TwosComplement](n: T, m: T): Boolean =
+  {
     val lowerBound = implicitly[TwosComplement[T]].minValue
     val integral = implicitly[Integral[T]]
     import integral.{abs, equiv, lt, zero}
@@ -242,7 +235,7 @@ object ShrinkSpecification extends Properties("Shrink") {
     // Due to this algebraic issue, we have to special case `lowerBound`
     if (n == lowerBound) m != lowerBound
     else if (m == lowerBound) false
-    else rawIntegralMayShrinkTo(n, m) // simple algebra Just Works(TM)
+    else numericMayShrinkTo(n, m) // simple algebra Just Works(TM)
   }
 
   case class TwosComplement[T](minValue: T)
@@ -252,60 +245,60 @@ object ShrinkSpecification extends Properties("Shrink") {
   implicit val minLong: TwosComplement[Long] = TwosComplement(Long.MinValue)
 
   // Let's first verify that this is in fact a strict partial ordering.
-  property("integralMayShrinkTo is antireflexive") =
-    forAllNoShrink { (n: Int) => !integralMayShrinkTo(n, n) }
+  property("twosComplementMayShrinkTo is antireflexive") =
+    forAllNoShrink { (n: Int) => !twosComplementMayShrinkTo(n, n) }
 
   val transitive = for {
     a <- Arbitrary.arbitrary[Int]
     b <- Arbitrary.arbitrary[Int]
-    if integralMayShrinkTo(a, b)
+    if twosComplementMayShrinkTo(a, b)
     c <- Arbitrary.arbitrary[Int]
-    if integralMayShrinkTo(b, c)
-  } yield integralMayShrinkTo(a, c)
+    if twosComplementMayShrinkTo(b, c)
+  } yield twosComplementMayShrinkTo(a, c)
 
-  property("integralMayShrinkTo is transitive") =
+  property("twosComplementMayShrinkTo is transitive") =
     forAllNoShrink(transitive.retryUntil(Function.const(true)))(identity)
 
   // let's now show that shrinks are acyclic for integral types
 
   property("shrink[Byte] is acyclic") = forAllNoShrink { (n: Byte) =>
-    shrink(n).forall(integralMayShrinkTo(n, _))
+    shrink(n).forall(twosComplementMayShrinkTo(n, _))
   }
 
   property("shrink[Short] is acyclic") = forAllNoShrink { (n: Short) =>
-    shrink(n).forall(integralMayShrinkTo(n, _))
+    shrink(n).forall(twosComplementMayShrinkTo(n, _))
   }
 
   property("shrink[Char] is acyclic") = forAllNoShrink { (n: Char) =>
-    shrink(n).forall(rawIntegralMayShrinkTo(n, _))
+    shrink(n).forall(numericMayShrinkTo(n, _))
   }
 
   property("shrink[Int] is acyclic") = forAllNoShrink { (n: Int) =>
-    shrink(n).forall(integralMayShrinkTo(n, _))
+    shrink(n).forall(twosComplementMayShrinkTo(n, _))
   }
 
   property("shrink[Long] is acyclic") = forAllNoShrink { (n: Long) =>
-    shrink(n).forall(integralMayShrinkTo(n, _))
+    shrink(n).forall(twosComplementMayShrinkTo(n, _))
   }
 
   property("shrink[BigInt] is acyclic") = forAllNoShrink { (n: BigInt) =>
-    shrink(n).forall(rawIntegralMayShrinkTo(n, _))
+    shrink(n).forall(numericMayShrinkTo(n, _))
   }
 
   property("shrink[Float] is acyclic") = forAllNoShrink { (x: Float) =>
-    shrink(x).forall(fractionalMayShrinkTo(x, _))
+    shrink(x).forall(numericMayShrinkTo(x, _))
   }
 
   property("shrink[Double] is acyclic") = forAllNoShrink { (x: Double) =>
-    shrink(x).forall(fractionalMayShrinkTo(x, _))
+    shrink(x).forall(numericMayShrinkTo(x, _))
   }
 
   property("shrink[Duration] is acyclic") = forAllNoShrink { (x: Duration) =>
-    shrink(x).forall(y => integralMayShrinkTo(x.toNanos, y.toNanos))
+    shrink(x).forall(y => twosComplementMayShrinkTo(x.toNanos, y.toNanos))
   }
 
   property("shrink[FiniteDuration] is acyclic") =
     forAllNoShrink { (x: FiniteDuration) =>
-      shrink(x).forall(y => integralMayShrinkTo(x.toNanos, y.toNanos))
+      shrink(x).forall(y => twosComplementMayShrinkTo(x.toNanos, y.toNanos))
     }
 }
