@@ -216,25 +216,18 @@ object ShrinkSpecification extends Properties("Shrink") {
   // also a well-ordering on BigInt, and all other types we test are finite,
   // hence there can be no infinite regress.
 
-  def orderByMagnitudeAndSign[T](
-    abs: T => T,
-    equiv: (T, T) => Boolean,
-    lt: (T, T) => Boolean,
-    zero: T,
-    n: T,
-    m: T
-  ): Boolean = lt(abs(m), abs(n)) || (lt(n, zero) && equiv(m, abs(n)))
+  def orderByMagnitudeAndSign[T: Numeric](n: T, m: T): Boolean = {
+    val num = implicitly[Numeric[T]]
+    import num.{abs, equiv, lt, zero}
+    lt(abs(m), abs(n)) || (lt(n, zero) && equiv(m, abs(n)))
+  }
 
   def fractionalMayShrinkTo[T: Fractional](n: T, m: T): Boolean = {
-    val fractional = implicitly[Fractional[T]]
-    import fractional.{abs, equiv, lt, zero}
-    orderByMagnitudeAndSign(abs, equiv, lt, zero, n, m)
+    orderByMagnitudeAndSign(n, m)
   }
 
   def rawIntegralMayShrinkTo[T: Integral](n: T, m: T): Boolean = {
-    val integral = implicitly[Integral[T]]
-    import integral.{abs, equiv, lt, zero}
-    orderByMagnitudeAndSign(abs, equiv, lt, zero, n, m)
+    orderByMagnitudeAndSign(n, m)
   }
 
   def integralMayShrinkTo[T: Integral: TwosComplement](n: T, m: T): Boolean = {
