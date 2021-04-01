@@ -50,8 +50,15 @@ object GenSpecification extends Properties("java.time Gen") with OrphanInstances
 
   property("choose-zonedDateTime") = chooseProp[ZonedDateTime]
 
+  /** Generate a duration which is at least 1 second smaller than the max
+    * duration the type can support. We use this to avoid the incredibly
+    * unlikely event of overflowing in the handle-min-nanos-duration test.
+    */
+  private[this] lazy val genOneSecondLessThanMaxDuration: Gen[Duration] =
+    Gen.choose(Duration.ofSeconds(Long.MinValue), Duration.ofSeconds(Long.MaxValue - 1L, 999999999L))
+
   // https://github.com/typelevel/scalacheck/issues/762
-  property("handle-min-nanos-duration") = forAllNoShrink{(min: Duration) =>
+  property("handle-min-nanos-duration") = forAllNoShrink(genOneSecondLessThanMaxDuration){(min: Duration) =>
     // At most one second larger, with 0 in nanos.
     val max: Duration =
       min.plusSeconds(1L).withNanos(0)
@@ -62,8 +69,15 @@ object GenSpecification extends Properties("java.time Gen") with OrphanInstances
     checkChoose(min, max)
   }
 
+  /** Generate an Instant which is at least 1 second smaller than the max
+    * Instant the type can support. We use this to avoid the incredibly
+    * unlikely event of overflowing in the handle-min-nanos-instant test.
+    */
+  private[this] lazy val genOneSecondLessThanMaxInstant: Gen[Instant] =
+    Gen.choose(Instant.MIN, Instant.MAX.minusSeconds(1L))
+
   // https://github.com/typelevel/scalacheck/issues/762
-  property("handle-min-nanos-instant") = forAllNoShrink{(min: Instant) =>
+  property("handle-min-nanos-instant") = forAllNoShrink(genOneSecondLessThanMaxInstant){(min: Instant) =>
     // At most one second later, with 0 in nanos.
     val max: Instant =
       min.plusSeconds(1L).truncatedTo(ChronoUnit.NANOS)
