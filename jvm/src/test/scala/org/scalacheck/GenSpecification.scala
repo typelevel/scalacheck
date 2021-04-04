@@ -12,7 +12,7 @@ package org.scalacheck
 import rng.Seed
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
+import Prop.{forAll, forAllNoShrink, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
 import java.util.Date
@@ -119,7 +119,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   property("choose-infinite-double-fix-zero-defect-379") = {
-    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
+    forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
       xs.exists(_ != 0d)
     }
   }
@@ -148,7 +148,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
     val (l, h) = (BigInt(-2).pow(262143), BigInt(2).pow(262143))
-    Prop.forAllNoShrink(Gen.choose(l, h)) { x =>
+    forAllNoShrink(Gen.choose(l, h)) { x =>
       l <= x && x <= h
     }
   }
@@ -190,7 +190,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("resize(sz, posNum)") = forAll { (sz: Int) =>
     val g = Gen.resize(sz, Gen.posNum[Int])
-    Prop.forAllNoShrink(g) { n =>
+    forAllNoShrink(g) { n =>
       if (sz > 0) n <= sz && n >= 0
       else        n == 1
     }
@@ -198,7 +198,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("resize(sz, negNum)") = forAll { (sz: Int) =>
     val g = Gen.resize(sz, Gen.negNum[Int])
-    Prop.forAllNoShrink(g) { n =>
+    forAllNoShrink(g) { n =>
       if (sz > 0) n >= -sz && n <= 0
       else        n == -1
     }
@@ -208,7 +208,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
     val gs = Gen.buildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
     Prop.forAll(g) { (sz: Int) =>
-      Prop.forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+      forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
         if (sz > 0) l.size <= sz && l.size >= 0
         else        l.size == 0
       }
@@ -219,9 +219,19 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
     val gs = Gen.nonEmptyBuildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
     Prop.forAll(g) { (sz: Int) =>
-      Prop.forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+      forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
         if (sz > 0) l.size <= sz && l.size >= 1
         else        l.size == 1
+      }
+    }
+  }
+
+  property("stringOfN") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    Prop.forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+      forAllNoShrink(Gen.stringOfN(sz, c)) { (s) =>
+        if (sz > 0) s.size == sz
+        else        s.size == 0
       }
     }
   }
@@ -616,7 +626,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   //// See https://github.com/typelevel/scalacheck/issues/209
   property("uniform double #209") =
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)
@@ -632,7 +642,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("uniform long #209") = {
     val scale = 1d / Long.MaxValue
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)
