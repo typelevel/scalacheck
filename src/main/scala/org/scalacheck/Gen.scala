@@ -1029,14 +1029,16 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
-    gen { (p, seed) =>
-      mkString(n, new StringBuilder, gc, p, seed)
+    if (n <= 0) Gen.const("")
+    else gen { (p, seed) =>
+      mkString(n, new StringBuilder(n), gc, p, seed)
     }
 
   def stringOf(gc: Gen[Char]): Gen[String] =
     gen { (p, seed0) =>
       val (n, seed1) = Gen.mkSize(p, seed0)
-      mkString(n, new StringBuilder, gc, p, seed1)
+      if (n <= 0) r(Some(""), seed1)
+      else mkString(n, new StringBuilder(n), gc, p, seed1)
     }
 
   /** Generates a string that starts with a lower-case alpha character,
