@@ -27,7 +27,7 @@ private[scalacheck] trait JavaTimeChoose {
                 if(seconds == minSeconds) {
                   min.getNano
                 } else {
-                  1
+                  0
                 }
               val maxNanos: Int =
                 if (seconds == maxSeconds) {
@@ -57,7 +57,7 @@ private[scalacheck] trait JavaTimeChoose {
                 if (epochSecond == min.getEpochSecond) {
                   min.getNano
                 } else {
-                  1
+                  0
                 }
               val maxNano: Int =
                 if (epochSecond == max.getEpochSecond) {
