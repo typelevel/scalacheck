@@ -6,7 +6,7 @@ import java.time.chrono._
 /** On Scala <= 2.12 it is used to help the compiler figure out some `Ordering`
   * instances needed for testing.
   */
-private[time] trait OrphanInstances {
+trait OrderingVersionSpecific {
 
   implicit final lazy val localDateOrdering: Ordering[LocalDate] =
     Ordering.by((ld: LocalDate) => (ld: ChronoLocalDate))

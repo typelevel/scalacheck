@@ -14,7 +14,7 @@ import Arbitrary._
 import java.util.concurrent.TimeUnit
 
 object ArbitrarySpecification extends Properties("Arbitrary") {
-  private[this] val genOptionUnits =
+  val genOptionUnits =
     for {
       a <- arbitrary[Option[Unit]]
       b <- arbitrary[Option[Unit]]
