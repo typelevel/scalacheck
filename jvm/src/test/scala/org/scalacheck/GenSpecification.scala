@@ -15,7 +15,6 @@ import Gen._
 import Prop.{forAll, forAllNoShrink, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
-import java.util.Date
 import scala.util.{Try, Success, Failure}
 
 object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
@@ -83,105 +82,6 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("fail") = forAll { (prms: Parameters, seed: Seed) =>
     fail(prms, seed) == None
-  }
-
-  property("choose-int") = forAll { (l: Int, h: Int) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  property("choose-long") = forAll { (l: Long, h: Long) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  property("choose-double") = forAll { (l: Double, h: Double) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  import Double.{MinValue, MaxValue}
-  property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
-    MinValue <= x && x <= MaxValue && !x.isNaN
-  }
-
-  import Double.{NegativeInfinity, PositiveInfinity}
-  property("choose-infinite-double") = {
-    forAll(Gen.choose(NegativeInfinity, PositiveInfinity)) { x =>
-      NegativeInfinity <= x && x <= PositiveInfinity && !x.isNaN
-    }
-  }
-
-  property("choose-infinite-double-fix-zero-defect-379") = {
-    forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
-      xs.exists(_ != 0d)
-    }
-  }
-
-  val manualBigInt: Gen[BigInt] =
-    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_))
-
-  property("choose-big-int") =
-    forAll(manualBigInt, manualBigInt) { (l: BigInt, h: BigInt) =>
-      Try(choose(l, h)) match {
-        case Success(g) => forAll(g) { x => l <= x && x <= h }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-java-big-int") =
-    forAll(manualBigInt, manualBigInt) { (x0: BigInt, y0: BigInt) =>
-      val (x, y) = (x0.bigInteger, y0.bigInteger)
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
-    val (l, h) = (BigInt(-2).pow(262143), BigInt(2).pow(262143))
-    forAllNoShrink(Gen.choose(l, h)) { x =>
-      l <= x && x <= h
-    }
-  }
-
-  property("choose-big-decimal") =
-    forAll { (x0: Double, y0: Double) =>
-      val (x, y) = (BigDecimal(x0), BigDecimal(y0))
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x <= n && n <= y }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x > y)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-java-big-decimal") =
-    forAll { (x0: Double, y0: Double) =>
-      val (x, y) = (BigDecimal(x0).bigDecimal, BigDecimal(y0).bigDecimal)
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-xmap") = {
-    implicit val chooseDate: Choose[Date] =
-      Choose.xmap[Long, Date](new Date(_), _.getTime)
-    forAll { (l: Date, h: Date) =>
-      Try(choose(l, h)) match {
-        case Success(g) => forAll(g) { x => x.compareTo(l) >= 0 && x.compareTo(h) <= 0 }
-        case Failure(_) => Prop(l.after(h))
-      }
-    }
   }
 
   property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) == g)
