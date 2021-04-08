@@ -2,9 +2,10 @@ sourceDirectory := file("dummy source directory")
 
 val Scala212 = "2.12.13"
 val Scala213 = "2.13.5"
-val Scala30 = "3.0.0-RC2"
+val DottyOld = "3.0.0-RC1"
+val DottyNew = "3.0.0-RC2"
 
-ThisBuild / crossScalaVersions := Seq(Scala30, Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
