@@ -220,7 +220,7 @@ lazy val js = project.in(file("js"))
   .settings(
     Global / scalaJSStage := FastOptStage,
     libraryDependencies +=
-      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).withDottyCompat(scalaVersion.value)
+      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).cross(CrossVersion.for3Use2_13)
   )
   .enablePlugins(ScalaJSPlugin)
 
