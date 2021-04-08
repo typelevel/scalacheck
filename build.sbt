@@ -176,7 +176,11 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
     // TODO: re-enable MiMa for Scala 3 once there is a final version
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((3, _)) => Set()
-      case _            => Set("org.scalacheck" %%% "scalacheck" % "1.15.3")
+      case _            => Set("1.14.3",
+                               "1.15.1",
+                               "1.15.2",
+                               "1.15.3"
+                           ).map(v => "org.scalacheck" %%% "scalacheck" % v)
     }
   },
 
