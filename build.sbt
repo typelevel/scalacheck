@@ -1,15 +1,10 @@
 sourceDirectory := file("dummy source directory")
 
-val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
-
-scalaVersionSettings
-
 val Scala212 = "2.12.13"
 val Scala213 = "2.13.5"
-val DottyOld = "3.0.0-RC1"
-val DottyNew = "3.0.0-RC2"
+val Scala30 = "3.0.0-RC2"
 
-ThisBuild / crossScalaVersions := Seq(DottyOld, DottyNew, Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala30, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
@@ -18,8 +13,9 @@ val PrimaryOS = "ubuntu-latest"
 ThisBuild / githubWorkflowOSes := Seq(PrimaryOS)
 
 val Java8 = "adopt@1.8"
+val Java11 = "adopt@1.11"
 
-ThisBuild / githubWorkflowJavaVersions := Seq(Java8, "adopt@1.11")
+ThisBuild / githubWorkflowJavaVersions := Seq(Java8, Java11)
 
 // we don't need this since we aren't publishing
 ThisBuild / githubWorkflowArtifactUpload := false
@@ -89,16 +85,7 @@ def env(name: String): Option[String] =
 
 val isRelease = env("IS_RELEASE").exists(_ == "true")
 
-lazy val scalaVersionSettings = Seq(
-  scalaMajorVersion := {
-    val v = scalaVersion.value
-    CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
-      throw new RuntimeException(s"could not get Scala major version from $v")
-    }
-  }
-)
-
-lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
+lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   name := "scalacheck",
 
@@ -143,8 +130,12 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   },
 
   Compile / unmanagedSourceDirectories += {
-    val s = if (scalaMajorVersion.value >= 13 || isDotty.value) "+" else "-"
-    (LocalRootProject / baseDirectory).value / "src" / "main" / s"scala-2.13$s"
+    val s = CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3,  _)) => "scala-2.13+"
+      case Some((2, 13)) => "scala-2.13+"
+      case _             => "scala-2.13-"
+    }
+    (LocalRootProject / baseDirectory).value / "src" / "main" / s
   },
 
   Test / unmanagedSourceDirectories += (LocalRootProject / baseDirectory).value / "src" / "test" / "scala",
@@ -164,11 +155,10 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
         "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Xlint:-unused",
         "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
 
-    val n = scalaMajorVersion.value
-    if (isDotty.value)
-      Seq("-language:Scala2")
-    else
-      groups.flatMap(f => f(n))
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) => groups.flatMap(f => f(n.toInt))
+      case _            => Seq("-language:Scala2")
+    }
   },
 
   // HACK: without these lines, the console is basically unusable,
@@ -177,27 +167,16 @@ lazy val sharedSettings = MimaSettings.settings ++ scalaVersionSettings ++ Seq(
   Compile / console / scalacOptions ~= {_.filterNot("-Ywarn-unused-import" == _)},
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
 
-  Compile / doc / sources := {
-    val old = (Compile / doc / sources).value
-    if (isDotty.value)
-      Seq()
-    else
-      old
-  },
-
   // don't use fatal warnings in tests
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   mimaReportSignatureProblems := true,
   mimaPreviousArtifacts := {
-    // TODO: re-enable MiMa for Dotty once there is a final version
-    if (isDotty.value) Set()
-    else Set(
-      "1.14.3",
-      "1.15.1",
-      "1.15.2",
-      "1.15.3"
-    ).map(v => "org.scalacheck" %%% "scalacheck" % v)
+    // TODO: re-enable MiMa for Scala 3 once there is a final version
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, _)) => Set()
+      case _            => Set("org.scalacheck" %%% "scalacheck" % "1.15.3")
+    }
   },
 
   publishTo := {
@@ -243,18 +222,21 @@ lazy val js = project.in(file("js"))
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
   .settings(
-    Compile / doc / sources := {
-      if (isDotty.value) Seq()
-      else (Compile / doc/ sources).value
-    },
     Test / fork := {
       // Serialization issue in 2.13 and later
-      scalaMajorVersion.value == 13 || isDotty.value // ==> true
-      // else ==> false
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3,  _)) => true
+        case Some((2, 13)) => true
+        case _             => false
+      }
     },
   Test / unmanagedSourceDirectories += {
-    val s = if (scalaMajorVersion.value >= 13) "+" else "-"
-    baseDirectory.value / "src" / "test" / s"scala-2.13$s"
+    val s = CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3,  _)) => "scala-2.13+"
+      case Some((2, 13)) => "scala-2.13+"
+      case _             => "scala-2.13-"
+    }
+    baseDirectory.value / "src" / "test" / s
   },
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
@@ -275,7 +257,6 @@ lazy val native = project.in(file("native"))
 
 lazy val bench = project.in(file("bench"))
   .dependsOn(jvm)
-  .settings(scalaVersionSettings: _*)
   .settings(
     name := "scalacheck-bench",
     fork := true,
