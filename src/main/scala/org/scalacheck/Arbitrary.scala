@@ -148,6 +148,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbString: Arbitrary[String] =
     Arbitrary(Gen.stringOf(arbitrary[Char]))
 
+  /** Arbitrary instance of Symbol */
+  implicit lazy val arbSymbol: Arbitrary[Symbol] =
+    Arbitrary(arbitrary[String].map(Symbol(_)))
+
   /** Arbitrary instance of Date */
   implicit lazy val arbDate: Arbitrary[java.util.Date] =
     Arbitrary(Gen.calendar.map(_.getTime))

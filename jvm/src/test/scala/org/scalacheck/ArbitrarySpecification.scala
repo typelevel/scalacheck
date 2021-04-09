@@ -23,6 +23,16 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
 
+  property("arbString") =
+    Prop.forAll { (s: String) =>
+      s ne new String(s)
+    }
+
+  property("arbSymbol") =
+    Prop.forAll { (s: Symbol) =>
+      s eq Symbol(s.name)
+    }
+
   case class Recur(opt: Option[Recur])
 
   property("arbitrary[Recur].passes") = {
