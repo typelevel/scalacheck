@@ -19,6 +19,7 @@ object MimaSettings {
   )
 
   private def removedPrivateMethods = Seq(
+    "org.scalacheck.util.Buildable.buildableSeq"
   )
 
   private def removedPrivateClasses = Seq(
