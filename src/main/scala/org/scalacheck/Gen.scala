@@ -158,7 +158,7 @@ import java.math.{BigInteger, BigDecimal => JavaDecimal}
  *  - [[Gen$.containerOfN containerOfN]] - Generates a collection of at most ''n'' elements
  *  - [[Gen$.nonEmptyContainerOf nonEmptyContainerOf]] - Generates a non-empty collection
  *  - [[Gen$.either either]] - Generate a disjoint union of [[scala.util.Either]]
- *  - [[Gen$.infiniteLazyList infiniteLazyList]] - Generates an infinite lazy list
+ *  - infiniteLazyList - Generates an infinite lazy list
  *  - [[Gen$.infiniteStream infiniteStream]] - Generates an infinite stream
  *  - [[Gen$.listOf listOf]] - Generates a list of random length
  *  - [[Gen$.listOfN listOfN]] - Generates a list of at most ''n'' elements
