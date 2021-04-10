@@ -235,14 +235,14 @@ lazy val jvm = project.in(file("jvm"))
         case _             => false
       }
     },
-  Test / unmanagedSourceDirectories += {
-    val s = CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((3,  _)) => "scala-2.13+"
-      case Some((2, 13)) => "scala-2.13+"
-      case _             => "scala-2.13-"
-    }
-    baseDirectory.value / "src" / "test" / s
-  },
+    Test / unmanagedSourceDirectories += {
+      val s = CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3,  _)) => "scala-2.13+"
+        case Some((2, 13)) => "scala-2.13+"
+        case _             => "scala-2.13-"
+      }
+      baseDirectory.value / "src" / "test" / s
+    },
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 
