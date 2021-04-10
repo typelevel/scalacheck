@@ -9,7 +9,7 @@ else
   TESTS=1000
 fi
 
-for t in clean compile "testOnly * -- \"-s $TESTS -w $WORKERS\"" mimaReportBinaryIssues package; do
+for t in clean compile "testOnly * -- -s $TESTS -w $WORKERS" mimaReportBinaryIssues package doc; do
   sbt_cmd+=("$PLATFORM/$t")
 done
 
