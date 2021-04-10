@@ -5,9 +5,8 @@ object MimaSettings {
   import mima.core._
   import ProblemFilters.exclude
   import mima.plugin.MimaKeys.mimaBinaryIssueFilters
-  import mima.plugin.MimaPlugin.mimaDefaultSettings
 
-  lazy val settings = mimaDefaultSettings ++ Seq(
+  lazy val settings = Seq(
     mimaBinaryIssueFilters :=
       removedPrivateMethods.map(exclude[DirectMissingMethodProblem](_)) ++
       newMethods.map(exclude[ReversedMissingMethodProblem](_)) ++
