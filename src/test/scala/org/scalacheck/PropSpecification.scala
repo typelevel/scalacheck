@@ -137,10 +137,14 @@ object PropSpecification extends Properties("Prop") {
     exception(e)(prms).status == Exception(e)
   }
 
-  property("all") = forAll(Gen.nonEmptyListOf(const(proved)))(l => all(l:_*))
+  property("all") = {
+    val props: List[Prop] = List.fill(1000000)(proved)
+    all(props: _*)
+  }
 
-  property("atLeastOne") = forAll(Gen.nonEmptyListOf(const(proved))) { l =>
-    atLeastOne(l:_*)
+  property("atLeastOne") = {
+    val props: List[Prop] = List.fill(1000000)(proved)
+    atLeastOne(props: _*)
   }
 
   property("throws") = throws(classOf[java.lang.Exception]) {
