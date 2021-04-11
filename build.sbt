@@ -171,6 +171,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   // don't use fatal warnings in tests
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
+  autoAPIMappings := true,
   mimaReportSignatureProblems := true,
   mimaPreviousArtifacts := {
     // TODO: re-enable MiMa for Scala 3 once there is a final version
