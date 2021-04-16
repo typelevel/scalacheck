@@ -75,9 +75,9 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     githubWorkflowJobSetup.value.toList ::: List(
       WorkflowStep.Sbt(
         List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
-        name = Some("Run dubious benchmark suite"))),
+        name = Some("Build benchmark suite"))),
     javas = List(Java8),
-    scalas = crossScalaVersions.value.toList))
+    scalas = List(crossScalaVersions.value.last)))
 
 lazy val versionNumber = "1.15.4"
 
