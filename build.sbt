@@ -250,7 +250,6 @@ lazy val jvm = project.in(file("jvm"))
 lazy val native = project.in(file("native"))
   .settings(sharedSettings: _*)
   .settings(
-    Compile / doc := (jvm / Compile / doc).value,
     scalaVersion := Scala212,
     crossScalaVersions := Seq(Scala212, Scala213),
     // TODO: re-enable MiMa for native once published
