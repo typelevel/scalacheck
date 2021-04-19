@@ -126,11 +126,21 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("stringOf") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+      forAllNoShrink(Gen.resize(sz, Gen.stringOf(c))) { (s) =>
+        if (sz > 0) sz >= s.size && s.size >= 0 && s.forall(_ == c)
+        else        s.size == 0
+      }
+    }
+  }
+
   property("stringOfN") = {
     val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
-    Prop.forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+    forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
       forAllNoShrink(Gen.stringOfN(sz, c)) { (s) =>
-        if (sz > 0) s.size == sz
+        if (sz > 0) s.size == sz && s.forall(_ == c)
         else        s.size == 0
       }
     }
