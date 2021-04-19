@@ -244,6 +244,7 @@ lazy val jvm = project.in(file("jvm"))
       }
       baseDirectory.value / "src" / "test" / s
     },
+    libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.12.0" % "test",
     libraryDependencies += "org.scala-sbt" %  "test-interface" % "1.0"
   )
 

@@ -9,7 +9,8 @@
 
 package org.scalacheck
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
+import org.apache.commons.lang3.SerializationUtils
+import java.io.Serializable
 
 import Prop.proved
 
@@ -17,31 +18,17 @@ import util.SerializableCanBuildFroms._
 
 object SerializabilitySpecification extends Properties("Serializability") {
 
-  // adapted from https://github.com/milessabin/shapeless/blob/6b870335c219d59079b46eddff15028332c0c294/core/jvm/src/test/scala/shapeless/serialization.scala#L42-L62
-  private def serializable[M](m: M): Boolean = {
-    val baos = new ByteArrayOutputStream
-    val oos = new ObjectOutputStream(baos)
-    var ois: ObjectInputStream = null
-    try {
-      oos.writeObject(m)
-      oos.close()
-      val bais = new ByteArrayInputStream(baos.toByteArray)
-      ois = new ObjectInputStream(bais)
-      val m2 = ois.readObject() // just ensure we can read it back
-      ois.close()
-      true
-    } catch {
-      case thr: Throwable =>
-        thr.printStackTrace
-        false
-    } finally {
-      oos.close()
-      if (ois != null) ois.close()
-    }
+  def serializable[M <: Serializable](m: M): Boolean = {
+    val arr = serialize(m)
+    null != arr && arr.nonEmpty
+  }
+
+  def serialize[T <: Serializable](in: T): Array[Byte] = {
+    SerializationUtils.serialize(in)
   }
 
   def serializableArbitrary[T: Arbitrary](name: String) =
-    property(s"Arbitrary[$name] serializability") = {
+    property(s"Arbitrary[$name]") = {
       val arb = implicitly[Arbitrary[T]]
       assert(serializable(arb))
 
@@ -53,7 +40,7 @@ object SerializabilitySpecification extends Properties("Serializability") {
     }
 
   def serializableGen[T](name: String, gen: Gen[T]) =
-    property(s"Gen[$name] serializability") = {
+    property(name) = {
       assert(serializable(gen))
 
       // forcing the calculation of a value, to trigger the initialization of any lazily initialized field
@@ -64,7 +51,7 @@ object SerializabilitySpecification extends Properties("Serializability") {
     }
 
   def serializableCogen[T: Cogen](name: String) =
-    property(s"Cogen[$name] serializability") = {
+    property(s"Cogen[$name]") = {
       val gen = Cogen[T]
       assert(serializable(gen))
 
@@ -72,7 +59,7 @@ object SerializabilitySpecification extends Properties("Serializability") {
     }
 
   def serializableShrink[T: Shrink](name: String) =
-    property(s"Shrink[$name] serializability") = {
+    property(s"Shrink[$name]") = {
       val shrink = implicitly[Shrink[T]]
       assert(serializable(shrink))
 
@@ -89,11 +76,11 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableArbitrary[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int]")
   serializableArbitrary[List[(String,Int)]]("List[(String,Int)]")
 
-  serializableGen("identifier", Gen.identifier)
-  serializableGen("oneOf", Gen.oneOf(true, false))
-  serializableGen("choose", Gen.choose(1, 10))
-  serializableGen("function1", Gen.function1[Int, Int](Gen.choose(1, 10)))
-  serializableGen("zip(String,Int)", Gen.zip(Arbitrary.arbitrary[String], Arbitrary.arbitrary[Int]))
+  serializableGen("Gen.identifier", Gen.identifier)
+  serializableGen("Gen.oneOf", Gen.oneOf(true, false))
+  serializableGen("Gen.choose", Gen.choose(1, 10))
+  serializableGen("Gen.function1", Gen.function1[Int, Int](Gen.choose(1, 10)))
+  serializableGen("Gen.zip(String,Int)", Gen.zip(Arbitrary.arbitrary[String], Arbitrary.arbitrary[Int]))
 
   serializableCogen[String]("String")
   serializableCogen[Int]("Int")
@@ -115,9 +102,8 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableShrink[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int])")
   serializableShrink[List[(String,Int)]]("List[(String,Int)]")
 
-  property("Seed serializability") = {
-    assert(serializable(rng.Seed(1L)))
-    proved
+  property("Seed(1L)") = {
+    serializable(rng.Seed(1L))
   }
 
 }
