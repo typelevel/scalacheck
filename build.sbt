@@ -180,7 +180,8 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
       case _            => Set("1.14.3",
                                "1.15.1",
                                "1.15.2",
-                               "1.15.3"
+                               "1.15.3",
+                               "1.15.4"
                            ).map(v => "org.scalacheck" %%% "scalacheck" % v)
     }
   },
