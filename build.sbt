@@ -79,7 +79,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     javas = List(Java8),
     scalas = List(crossScalaVersions.value.last)))
 
-lazy val versionNumber = "1.15.4"
+lazy val versionNumber = "1.15.5"
 
 def env(name: String): Option[String] =
   Option(System.getenv(name))
