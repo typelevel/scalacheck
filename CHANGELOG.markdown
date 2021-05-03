@@ -1,5 +1,75 @@
 # ScalaCheck CHANGELOG
 
+## 1.15.4 (2021-05-03)
+
+* Binary compatible with 1.15.3 version of ScalaCheck.
+
+### Added
+
+* Docs for `Gen` by @ashawley 
+  [#783](https://github.com/typelevel/scalacheck/pull/783)
+
+* Add Arbitrary[Symbol] by @ashawley 
+  * [#243](https://github.com/typelevel/scalacheck/issues/243)
+  * [#785](https://github.com/typelevel/scalacheck/pull/785)
+
+* Add Cogen Instance For UUID by @isomarcte 
+  [#763](https://github.com/typelevel/scalacheck/pull/763)
+
+### Changed
+
+* Verbosity level for pretty-printing proofs by @ashawley 
+  [#789](https://github.com/typelevel/scalacheck/pull/789)
+
+* Hide ambiguous implicit buildableSeq by @ashawley 
+  [#788](https://github.com/typelevel/scalacheck/pull/788)
+
+* Cleanup of time by @ashawley 
+  [#781](https://github.com/typelevel/scalacheck/pull/781)
+
+* Initialize StringBuilder to suitable size by @martijnhoekstra 
+  [#778](https://github.com/typelevel/scalacheck/pull/778)
+
+* update ScalaCheck version in examples by @SethTisue 
+  [#766](https://github.com/typelevel/scalacheck/pull/766)
+
+### Fixed
+
+* Fix tuple serialization by @ashawley and @yhylord 
+  * [#672](https://github.com/typelevel/scalacheck/pull/672)
+  * [#795](https://github.com/typelevel/scalacheck/pull/795)
+
+* Fix overflow with Prop.all by @ashawley 
+  * [#787](https://github.com/typelevel/scalacheck/pull/787)
+  * [#748](https://github.com/typelevel/scalacheck/issues/748)
+
+* Fix Off By One Error In JavaTimeChoose by @isomarcte 
+  * [#762](https://github.com/typelevel/scalacheck/issues/762)
+  * [#769](https://github.com/typelevel/scalacheck/pull/769)
+
+* Fix typos by @bwignall 
+  [#767](https://github.com/typelevel/scalacheck/pull/767)
+
+## 1.15.3 (2021-02-16)
+
+* Binary compatible with 1.15.2 version of ScalaCheck.
+
+### Changed
+
+* Update Scala.js to 1.5.0
+  [#757](https://github.com/typelevel/scalacheck/pull/757)
+
+* Support for Scala Native 0.4.0 by @larsrh 
+  [#751](https://github.com/typelevel/scalacheck/pull/751)
+
+* Add Cogen.domainOf by @nigredo-tori 
+  [#756](https://github.com/typelevel/scalacheck/pull/756)
+
+### Fixed
+
+* Make printing of Commands failures more readable by @jonaskoelker 
+  [#634](https://github.com/typelevel/scalacheck/issues/634)
+
 ## 1.15.2 (2020-12-07)
 
 * Binary compatible with 1.15.1 version of ScalaCheck.
