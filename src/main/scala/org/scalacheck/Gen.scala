@@ -53,7 +53,7 @@ import java.math.{BigInteger, BigDecimal => JavaDecimal}
  * {{{
  * val genInt: Gen[Int] = Gen.choose(1,10)
  * Prop.forAll(genInt) { (n: Int) =>
- *   n == n
+ *   1 <= n && n <= 10
  * }
  * }}}
  *
@@ -64,9 +64,10 @@ import java.math.{BigInteger, BigDecimal => JavaDecimal}
  *
  * The above definition isn't necessary, though.  The same boolean
  * generator is defined in [[Arbitrary]] as an implicit declaration
- * for automatically parameterizing [[Prop]]s.  Instead, use use a
- * generator that is defined in [[Arbitrary]] with the polymorphic
- * method [[Arbitrary.arbitrary]] and an explicit type parameter:
+ * for automatically parameterizing [[Prop]]s.  Instead, use the
+ * generator that is defined in [[Arbitrary]] and available from the
+ * polymorphic method [[Arbitrary.arbitrary]] with an explicit type
+ * parameter:
  *
  * {{{
  * val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
