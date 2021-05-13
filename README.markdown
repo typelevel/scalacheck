@@ -1,5 +1,6 @@
 # ScalaCheck
 
+[![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/wQB9Xu422S)
 [![Join the chat at https://gitter.im/scalacheck/Lobby](https://badges.gitter.im/scalacheck/Lobby.svg)](https://gitter.im/scalacheck/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Continuous Integration](https://github.com/typelevel/scalacheck/actions/workflows/ci.yml/badge.svg)](https://github.com/typelevel/scalacheck/actions/workflows/ci.yml)
 
