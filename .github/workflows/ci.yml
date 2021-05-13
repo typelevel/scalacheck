@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.0-RC2, 3.0.0-RC3, 2.12.13, 2.13.5]
+        scala: [3.0.0, 2.12.13, 2.13.5]
         java: [adopt@1.8, adopt@1.11]
         platform: [jvm]
         workers: [1, 4]
@@ -30,12 +30,7 @@ jobs:
           - workers: 1
             os: ubuntu-latest
             java: adopt@1.8
-            scala: 3.0.0-RC2
-            platform: js
-          - workers: 1
-            os: ubuntu-latest
-            java: adopt@1.8
-            scala: 3.0.0-RC3
+            scala: 3.0.0
             platform: js
           - workers: 1
             os: ubuntu-latest
