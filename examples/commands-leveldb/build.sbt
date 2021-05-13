@@ -1,9 +1,9 @@
 name := "commands-leveldb"
 
-scalaVersion := "2.13.5"
+scalaVersion := "3.0.0"
 
 libraryDependencies ++= Seq(
-  "org.scalacheck" %% "scalacheck" % "1.15.3" % Test,
+  "org.scalacheck" %% "scalacheck" % "1.15.4" % Test,
   "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
 //  "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7"
 //  "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.6.1"

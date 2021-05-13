@@ -57,7 +57,7 @@ object LevelDBSpec extends Commands {
       genGetExisting(state)
     )
 
-  val genPut: Gen[Put] = Gen.resultOf(Put)
+  val genPut: Gen[Put] = Gen.resultOf(Put(_,_))
 
   def genPutExisting(state: State): Gen[Put] = for {
     key <- Gen.oneOf(state.contents.keys.toSeq)
@@ -65,7 +65,7 @@ object LevelDBSpec extends Commands {
                        Gen.const(state.contents(key)))
   } yield Put(key,value)
 
-  val genGet: Gen[Get] = Gen.resultOf(Get)
+  val genGet: Gen[Get] = Gen.resultOf(Get(_))
 
   def genGetExisting(state: State): Gen[Get] = for {
     key <- Gen.oneOf(state.contents.keys.toSeq)
