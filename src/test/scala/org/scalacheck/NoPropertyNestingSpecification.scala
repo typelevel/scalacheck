@@ -24,7 +24,7 @@ object NoPropertyNestingSpecification extends Properties("Properties.no nesting"
     results match {
       case collection.Seq(res) => res.status match {
         case Prop.Exception(e: IllegalStateException) =>
-          if (e.getMessage contains "nest") thrown = true
+          if (e.getMessage.contains("nest")) thrown = true
           else throw new Exception("exception message did not reference nesting")
         case _ => throw new Exception("did not get IllegalStateException")
       }

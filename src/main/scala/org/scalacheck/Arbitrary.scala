@@ -63,7 +63,7 @@ object Arbitrary extends ArbitraryLowPriority with ArbitraryArities with time.Ja
 
   /** Arbitrary instance of the Function0 type. */
   implicit def arbFunction0[T](implicit a: Arbitrary[T]): Arbitrary[() => T] =
-  Arbitrary(arbitrary[T] map (() => _))
+  Arbitrary(arbitrary[T].map(() => _))
 }
 
 /** separate trait to have same priority as ArbitraryArities */
@@ -259,7 +259,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
       arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long],
       arbitrary[Float], arbitrary[Double]
     )
-    Arbitrary(gen map (_.asInstanceOf[Number]))
+    Arbitrary(gen.map(_.asInstanceOf[Number]))
     // XXX TODO - restore BigInt and BigDecimal
     // Arbitrary(oneOf(arbBigInt.arbitrary :: (arbs map (_.arbitrary) map toNumber) : _*))
   }
@@ -313,7 +313,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Parameters] =
     Arbitrary(for {
-      sz <- arbitrary[Int] suchThat (_ >= 0)
+      sz <- arbitrary[Int].suchThat(_ >= 0)
     } yield Gen.Parameters.default.withSize(sz))
 
 
@@ -330,7 +330,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Arbitrary instance of [[org.scalacheck.Gen]] */
   implicit def arbGen[T](implicit a: Arbitrary[T]): Arbitrary[Gen[T]] =
     Arbitrary(frequency(
-      (5, arbitrary[T] map (const(_))),
+      (5, arbitrary[T].map(const(_))),
       (1, Gen.fail)
     ))
 

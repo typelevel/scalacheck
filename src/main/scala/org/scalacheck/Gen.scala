@@ -708,7 +708,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit object chooseBigInteger extends Choose[BigInteger] {
       def choose(low: BigInteger, high: BigInteger): Gen[BigInteger] =
-        (low compareTo high) match {
+        (low.compareTo(high)) match {
           case n if n > 0 => throw new IllegalBoundsError(low, high)
           case 0 => Gen.const(low)
           case _ => /* n < 0 */
@@ -767,7 +767,7 @@ object Gen extends GenArities with GenVersionSpecific {
     private[this] def chooseJavaBigDecimalScale(minScale: Int): Choose[JavaDecimal] =
       new Choose[JavaDecimal] {
         def choose(low: JavaDecimal, high: JavaDecimal): Gen[JavaDecimal] =
-        (low compareTo high) match {
+        (low.compareTo(high)) match {
           case n if n > 0 => throw new IllegalBoundsError(low, high)
           case 0 => Gen.const(low)
           case _ => /* n < 0 */
@@ -1146,7 +1146,7 @@ object Gen extends GenArities with GenVersionSpecific {
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
   def resultOf[T,R0](f: T => R0)(implicit a: Arbitrary[T]): Gen[R0] =
-    arbitrary[T] map f
+    arbitrary[T].map(f)
 
   /** Creates a Function0 generator. */
   def function0[A](g: Gen[A]): Gen[() => A] =
@@ -1445,7 +1445,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
-  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate _)
+  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate(_))
 
   /** Generates numbers within the given inclusive range, with
    *  extra weight on zero, +/- unity, both extremities, and any special
