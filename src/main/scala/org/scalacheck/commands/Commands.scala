@@ -373,7 +373,7 @@ trait Commands {
       l.foldLeft(const((s,Nil:Commands))) { case (g,()) =>
         for {
           (s0,cs) <- g
-          c <- genCommand(s0) suchThat (_.preCondition(s0))
+          c <- genCommand(s0) retryUntil (_.preCondition(s0), 100)
         } yield (c.nextState(s0), cs :+ c)
       }
     }
