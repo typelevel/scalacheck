@@ -63,7 +63,7 @@ class Properties(val name: String) {
   def check(prms: Test.Parameters = Test.Parameters.default): Unit = {
     val params = overrideParameters(prms)
     Test.checkProperties(
-      params.withTestCallback(ConsoleReporter(1) chain params.testCallback), this
+      params.withTestCallback(ConsoleReporter(1).chain(params.testCallback)), this
     )
   }
 
