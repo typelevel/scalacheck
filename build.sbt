@@ -174,18 +174,7 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   autoAPIMappings := true,
   mimaReportSignatureProblems := true,
-  mimaPreviousArtifacts := {
-    // TODO: re-enable MiMa for Scala 3 once there is a final version
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((3, _)) => Set()
-      case _            => Set("1.14.3",
-                               "1.15.1",
-                               "1.15.2",
-                               "1.15.3",
-                               "1.15.4"
-                           ).map(v => "org.scalacheck" %%% "scalacheck" % v)
-    }
-  },
+  mimaPreviousArtifacts := Set("org.scalacheck" %%% "scalacheck" % "1.15.4"),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
