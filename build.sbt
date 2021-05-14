@@ -85,6 +85,8 @@ def env(name: String): Option[String] =
 
 val isRelease = env("IS_RELEASE").exists(_ == "true")
 
+ThisBuild / versionScheme := Some("pvp")
+
 lazy val sharedSettings = MimaSettings.settings ++ Seq(
 
   name := "scalacheck",
