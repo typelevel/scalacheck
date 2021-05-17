@@ -83,7 +83,7 @@ object RedisSpec extends Commands {
 
   def genDelExisting(state: State): Gen[Del] =
     if(state.contents.isEmpty) genDel
-    else someOf(state.contents.keys.toSeq).map(Del)
+    else someOf(state.contents.keys.toSeq).map(Del.apply)
 
   def genSetExisting(state: State): Gen[Set] =
     if(state.contents.isEmpty) genSet else for {
@@ -91,9 +91,9 @@ object RedisSpec extends Commands {
       value <- oneOf(genVal, const(state.contents(key)))
     } yield Set(key,value)
 
-  val genGet: Gen[Get] = genKey.map(Get)
+  val genGet: Gen[Get] = genKey.map(Get.apply)
 
-  val genDel: Gen[Del] = nonEmptyListOf(genKey).map(Del)
+  val genDel: Gen[Del] = nonEmptyListOf(genKey).map(Del.apply)
 
   def genGetExisting(state: State): Gen[Get] =
     if(state.contents.isEmpty) genGet else for {
