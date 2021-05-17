@@ -1,6 +1,6 @@
 name := "scalacheck-demo"
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.6"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.3" % Test
 
