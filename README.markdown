@@ -3,6 +3,8 @@
 [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/wQB9Xu422S)
 [![Join the chat at https://gitter.im/scalacheck/Lobby](https://badges.gitter.im/scalacheck/Lobby.svg)](https://gitter.im/scalacheck/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Continuous Integration](https://github.com/typelevel/scalacheck/actions/workflows/ci.yml/badge.svg)](https://github.com/typelevel/scalacheck/actions/workflows/ci.yml)
+[![scalacheck Scala version support](https://index.scala-lang.org/typelevel/scalacheck/scalacheck/latest-by-scala-version.svg)](https://index.scala-lang.org/typelevel/scalacheck/scalacheck)
+
 
 ScalaCheck is a library written in [Scala](http://www.scala-lang.org/) and
 used for automated property-based testing of Scala or Java programs.
