@@ -16,4 +16,4 @@ addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.3")
 
-addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.11.0")
+addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.12.0")
