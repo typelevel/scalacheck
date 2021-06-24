@@ -42,7 +42,7 @@ private[scalacheck] trait JavaTimeArbitrary {
   // Year
 
   implicit final lazy val arbYear: Arbitrary[Year] =
-    Arbitrary(Gen.choose(Year.of(Year.MIN_VALUE), Year.of(Year.MIN_VALUE)))
+    Arbitrary(Gen.choose(Year.of(Year.MIN_VALUE), Year.of(Year.MAX_VALUE)))
 
   // LocalDate
 
