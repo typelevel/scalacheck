@@ -25,6 +25,14 @@ object MimaSettings {
   )
 
   private def otherProblems = Seq(
-  )
+    "org.scalacheck.Shrink.shrinkTuple2",
+    "org.scalacheck.Shrink.shrinkTuple3",
+    "org.scalacheck.Shrink.shrinkTuple4",
+    "org.scalacheck.Shrink.shrinkTuple5",
+    "org.scalacheck.Shrink.shrinkTuple6",
+    "org.scalacheck.Shrink.shrinkTuple7",
+    "org.scalacheck.Shrink.shrinkTuple8",
+    "org.scalacheck.Shrink.shrinkTuple9"
+  ).map(m => ProblemFilters.exclude[IncompatibleSignatureProblem](m))
 
 }
