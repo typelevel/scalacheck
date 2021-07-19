@@ -12,16 +12,15 @@ package org.scalacheck
 import rng.Seed
 
 import Gen._
-import Prop.{forAll, someFailing, noneFailing, sizedProp, secure, propBoolean}
+import Prop.{forAll, forAllNoShrink, someFailing, noneFailing, sizedProp, secure, propBoolean}
 import Arbitrary._
 import Shrink._
-import java.util.Date
 import scala.util.{Try, Success, Failure}
 
 object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
   implicit val arbSeed: Arbitrary[Seed] = Arbitrary(
-    arbitrary[Long] flatMap Seed.apply
+    arbitrary[Long].flatMap(Seed.apply)
   )
 
   property("pureApply #300") = {
@@ -85,108 +84,67 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     fail(prms, seed) == None
   }
 
-  property("choose-int") = forAll { (l: Int, h: Int) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  property("choose-long") = forAll { (l: Long, h: Long) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  property("choose-double") = forAll { (l: Double, h: Double) =>
-    Try(choose(l, h)) match {
-      case Success(g) => forAll(g) { x => l <= x && x <= h }
-      case Failure(_) => Prop(l > h)
-    }
-  }
-
-  import Double.{MinValue, MaxValue}
-  property("choose-large-double") = forAll(choose(MinValue, MaxValue)) { x =>
-    MinValue <= x && x <= MaxValue && !x.isNaN
-  }
-
-  import Double.{NegativeInfinity, PositiveInfinity}
-  property("choose-infinite-double") = {
-    forAll(Gen.choose(NegativeInfinity, PositiveInfinity)) { x =>
-      NegativeInfinity <= x && x <= PositiveInfinity && !x.isNaN
-    }
-  }
-
-  property("choose-infinite-double-fix-zero-defect-379") = {
-    Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
-      xs.exists(_ != 0d)
-    }
-  }
-
-  val manualBigInt: Gen[BigInt] =
-    nonEmptyContainerOf[Array, Byte](arbitrary[Byte]).map(BigInt(_))
-
-  property("choose-big-int") =
-    forAll(manualBigInt, manualBigInt) { (l: BigInt, h: BigInt) =>
-      Try(choose(l, h)) match {
-        case Success(g) => forAll(g) { x => l <= x && x <= h }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(l > h)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-java-big-int") =
-    forAll(manualBigInt, manualBigInt) { (x0: BigInt, y0: BigInt) =>
-      val (x, y) = (x0.bigInteger, y0.bigInteger)
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("Gen.choose(BigInt( 2^(2^18 - 1)), BigInt(-2^(2^18 - 1)))") = {
-    val (l, h) = (BigInt(-2).pow(262143), BigInt(2).pow(262143))
-    Prop.forAllNoShrink(Gen.choose(l, h)) { x =>
-      l <= x && x <= h
-    }
-  }
-
-  property("choose-big-decimal") =
-    forAll { (x0: Double, y0: Double) =>
-      val (x, y) = (BigDecimal(x0), BigDecimal(y0))
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x <= n && n <= y }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x > y)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-java-big-decimal") =
-    forAll { (x0: Double, y0: Double) =>
-      val (x, y) = (BigDecimal(x0).bigDecimal, BigDecimal(y0).bigDecimal)
-      Try(choose(x, y)) match {
-        case Success(g) => forAll(g) { n => x.compareTo(n) <= 0 && y.compareTo(n) >= 0 }
-        case Failure(e: Choose.IllegalBoundsError[_]) => Prop(x.compareTo(y) > 0)
-        case Failure(e) => throw e
-      }
-    }
-
-  property("choose-xmap") = {
-    implicit val chooseDate: Choose[Date] =
-      Choose.xmap[Long, Date](new Date(_), _.getTime)
-    forAll { (l: Date, h: Date) =>
-      Try(choose(l, h)) match {
-        case Success(g) => forAll(g) { x => x.compareTo(l) >= 0 && x.compareTo(h) <= 0 }
-        case Failure(_) => Prop(l.after(h))
-      }
-    }
-  }
-
   property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) == g)
 
   property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
+
+  property("resize(sz, posNum)") = forAll { (sz: Int) =>
+    val g = Gen.resize(sz, Gen.posNum[Int])
+    forAllNoShrink(g) { n =>
+      if (sz > 0) n <= sz && n >= 0
+      else        n == 1
+    }
+  }
+
+  property("resize(sz, negNum)") = forAll { (sz: Int) =>
+    val g = Gen.resize(sz, Gen.negNum[Int])
+    forAllNoShrink(g) { n =>
+      if (sz > 0) n >= -sz && n <= 0
+      else        n == -1
+    }
+  }
+
+  property("resize(sz, buildableOf)") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    val gs = Gen.buildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
+    Prop.forAll(g) { (sz: Int) =>
+      forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+        if (sz > 0) l.size <= sz && l.size >= 0
+        else        l.size == 0
+      }
+    }
+  }
+
+  property("resize(sz, nonEmptyBuilableOf)") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    val gs = Gen.nonEmptyBuildableOf[Seq[Int],Int](Arbitrary.arbitrary[Int])
+    Prop.forAll(g) { (sz: Int) =>
+      forAllNoShrink(Gen.resize(sz, gs)) { (l) =>
+        if (sz > 0) l.size <= sz && l.size >= 1
+        else        l.size == 1
+      }
+    }
+  }
+
+  property("stringOf") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+      forAllNoShrink(Gen.resize(sz, Gen.stringOf(c))) { (s) =>
+        if (sz > 0) sz >= s.size && s.size >= 0 && s.forall(_ == c)
+        else        s.size == 0
+      }
+    }
+  }
+
+  property("stringOfN") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+      forAllNoShrink(Gen.stringOfN(sz, c)) { (s) =>
+        if (sz > 0) s.size == sz && s.forall(_ == c)
+        else        s.size == 0
+      }
+    }
+  }
 
   property("oneOf n") = forAll { (l: List[Int]) =>
     Try(oneOf(l)) match {
@@ -578,7 +536,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   //// See https://github.com/typelevel/scalacheck/issues/209
   property("uniform double #209") =
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)
@@ -594,7 +552,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("uniform long #209") = {
     val scale = 1d / Long.MaxValue
-    Prop.forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
+    forAllNoShrink(Gen.choose(1000000, 2000000)) { n =>
       var i = 0
       var sum = 0d
       var seed = rng.Seed(n.toLong)

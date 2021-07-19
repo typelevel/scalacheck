@@ -154,11 +154,11 @@ object MachineSpec extends Commands {
   } yield Ping(from, to)
 
   def genBoot(state: State): Gen[Boot] = Gen.oneOf(
-    state.filterNot(_.running).map(Boot)
+    state.filterNot(_.running).map(Boot.apply)
   )
 
   def genShutdown(state: State): Gen[Shutdown] = Gen.oneOf(
-    state.filter(_.running).map(Shutdown)
+    state.filter(_.running).map(Shutdown.apply)
   )
 
   def genCommand(state: State): Gen[Command] =

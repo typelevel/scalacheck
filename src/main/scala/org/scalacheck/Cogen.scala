@@ -15,6 +15,7 @@ import scala.collection.immutable.BitSet
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
+import java.util.UUID
 import rng.Seed
 
 sealed trait Cogen[T] extends Serializable {
@@ -28,7 +29,7 @@ sealed trait Cogen[T] extends Serializable {
     Cogen((seed: Seed, s: S) => perturb(seed, f(s)))
 }
 
-object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific {
+object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecific with time.JavaTimeCogen {
 
   def apply[T](implicit ev: Cogen[T]): Cogen[T] = ev
 
@@ -158,6 +159,11 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
   implicit def cogenPartialFunction[A: Arbitrary, B: Cogen]: Cogen[PartialFunction[A, B]] =
     Cogen[A => Option[B]].contramap(_.lift)
 
+  implicit val cogenUUID: Cogen[UUID] =
+    Cogen[(Long, Long)].contramap(value =>
+      (value.getLeastSignificantBits, value.getMostSignificantBits)
+    )
+
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)
 
@@ -167,6 +173,8 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
     while (i < as.length) { s = A.perturb(s, as(i)); i += 1 }
     s.next
   }
+
+  def domainOf[A, B](f: A => B)(implicit B: Cogen[B]): Cogen[A] = B.contramap(f)
 }
 
 trait CogenLowPriority {

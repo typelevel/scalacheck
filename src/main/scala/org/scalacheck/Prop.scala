@@ -427,13 +427,15 @@ object Prop {
 
   /** Combines properties into one, which is true if and only if all the
    *  properties are true */
-  def all(ps: Prop*): Prop =
-    ps.foldLeft(proved)(_ && _)
+  def all(ps: Prop*) =
+    if (ps.isEmpty) proved
+    else Prop(prms => ps.map(p => p(prms)).reduceLeft(_ && _))
 
   /** Combines properties into one, which is true if at least one of the
    *  properties is true */
-  def atLeastOne(ps: Prop*): Prop =
-    ps.foldLeft(falsified)(_ || _)
+  def atLeastOne(ps: Prop*) =
+    if (ps.isEmpty) falsified
+    else Prop(prms => ps.map(p => p(prms)).reduceLeft(_ || _))
 
   /** A property that holds if at least one of the given generators
    *  fails generating a value */

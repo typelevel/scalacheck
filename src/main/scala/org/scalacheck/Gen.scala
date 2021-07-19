@@ -25,6 +25,199 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.util.{ Calendar, UUID }
 import java.math.{BigInteger, BigDecimal => JavaDecimal}
 
+/**
+ * A generator produces values for [[Prop]]s
+ *
+ * This module provides:
+ *  1. Definitions for non-arbitrary generators,
+ *  1. Factories to construct generators,
+ *  1. Methods to modify a generator, and
+ *  1. Various combinators for producing generators of values for more
+ *     complex data types.
+ *
+ * Explicit generators aren't required to write [[Prop]]s:
+ *
+ * {{{
+ * Prop.forAll { (n: Int) =>
+ *   n == n
+ * }
+ * }}}
+ *
+ * The [[Prop]] above is defined with parameters only and without an
+ * explicit generator, because generators are implicitly provided by
+ * [[Arbitrary]] for various data types.
+ *
+ * However, it's not uncommon to need to write explicit custom
+ * generators:
+ *
+ * {{{
+ * val genInt: Gen[Int] = Gen.choose(1,10)
+ * Prop.forAll(genInt) { (n: Int) =>
+ *   1 <= n && n <= 10
+ * }
+ * }}}
+ *
+ * This is a simple definition of a generator for booleans:
+ * {{{
+ * val genBool: Gen[Boolean] = Gen.oneOf(true,false)
+ * }}}
+ *
+ * The above definition isn't necessary, though.  The same boolean
+ * generator is defined in [[Arbitrary]] as an implicit declaration
+ * for automatically parameterizing [[Prop]]s.  Instead, use the
+ * generator that is defined in [[Arbitrary]] and available from the
+ * polymorphic method [[Arbitrary.arbitrary]] with an explicit type
+ * parameter:
+ *
+ * {{{
+ * val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
+ * }}}
+ *
+ * Alternatively, this is a boolean generator, but one that always
+ * produces true:
+ * {{{
+ * val genBool = Gen.const(true)
+ * }}}
+ *
+ * This is a generator of booleans that is true at a 2-to-1 ratio:
+ * {{{
+ * val genBool = Gen.frequency(2 -> true, 1 -> false)
+ * }}}
+ *
+ * This is a boolean generator that will produce true 75% of the time:
+ * {{{
+ * val genBool = Gen.prob(0.75)
+ * }}}
+ *
+ * For more information on designing custom generators and the
+ * motivations for doing so, see chapter 6, ''Generators in Detail'',
+ * of the book ''ScalaCheck: The Definitive Guide'' (2013) by Rickard
+ * Nilsson published by Artima Press.
+ *
+ * This is an example of a custom generator for integers:
+ * {{{
+ * val genSmallInt: Gen[Int] = Gen.choose(-100,100)
+ * }}}
+ *
+ * This can be used to generate different collections of zero or more small integers:
+ * {{{
+ * val genListOfInts: Gen[List[Int]] = Gen.listOf(genSmallInt)
+ *
+ * val genSeqOfInts: Gen[Seq[Int]] = Gen.someOf(-100 to 100)
+ *
+ * val genVectorOfInts: Gen[Vector[Int]] = Gen.containerOf[Vector,Int](genSmallInt)
+ *
+ * val genMap: Gen[Map[Int,Boolean]] = Gen.mapOf(Gen.zip(genSmallInt, genBool))
+ *
+ * val genOptionalInt: Gen[Option[Int]] = Gen.option(genSmallInt)
+ * }}}
+ *
+ * Or collections of one or more small integers:
+ * {{{
+ * val genListOfInts: Gen[List[Int]] = Gen.nonEmptyListOf(genSmallInt)
+ *
+ * val genSeqOfInts: Gen[Seq[Int]] = Gen.atLeastOne(-100 to 100)
+ *
+ * val genVectorOfInts: Gen[Vector[Int]] = Gen.nonEmptyContainerOf[Vector,Int](genSmallInt)
+ *
+ * val genMap: Gen[Map[Int,Boolean]] = Gen.nonEmptyMap(Gen.zip(genSmallInt, genBool))
+ *
+ * val genOptionalInt: Gen[Option[Int]] = Gen.some(genSmallInt)
+ * }}}
+ *
+ * The class methods for [[Gen]] should be familiar with those in the
+ * [[scala.collection Scala collections API]]:
+ *
+ *  - [[map]] - Apply a function to generated values
+ *  - [[flatMap]] - Apply a function that returns a generator
+ *  - [[filter]] - Use values that satisfy a predicate
+ *
+ * The [[Gen]] class also supports for-comprehensions to compose
+ * complex generators:
+ *
+ * {{{
+ * val genPerson = for {
+ *   firstName <- Gen.oneOf("Alan", "Ada", "Alonzo")
+ *   lastName <- Gen.oneOf("Lovelace", "Turing", "Church")
+ *   age <- Gen.choose(0,100) if (age >= 18)
+ * } yield Person(firstName, lastName, age)
+ * }}}
+ *
+ * Constructors and factories for generators:
+ *  - [[Gen$.const const]] - Always generates a single value
+ *  - [[Gen$.oneOf[T](t0* oneOf]] - Generate a value from a list of values
+ *  - [[Gen$.atLeastOne[T](g1* atLeastOne]] - Generate a collection with at least one value from a list
+ *  - [[Gen$.someOf[T](l* someOf]] - Generate a collection with zero or more values from a list
+ *  - [[Gen$.choose choose]] - Generate numeric values in an (inclusive) range
+ *  - [[Gen$.frequency frequency]] - Choose from multiple values with a weighted distribution
+ *
+ * Combinators of generators:
+ *  - [[Gen$.buildableOf buildableOf]] - Generates a collection with a generator
+ *  - [[Gen$.buildableOfN buildableOfN]] - Generates a collection of at most ''n'' elements
+ *  - [[Gen$.nonEmptyBuildableOf nonEmptyBuildableOf]] - Generates a non-empty collection
+ *  - [[Gen$.containerOf containerOf]] - Generates a collection with a generator
+ *  - [[Gen$.containerOfN containerOfN]] - Generates a collection of at most ''n'' elements
+ *  - [[Gen$.nonEmptyContainerOf nonEmptyContainerOf]] - Generates a non-empty collection
+ *  - [[Gen$.either either]] - Generate a disjoint union of [[scala.util.Either]]
+ *  - infiniteLazyList - Generates an infinite lazy list
+ *  - [[Gen$.infiniteStream infiniteStream]] - Generates an infinite stream
+ *  - [[Gen$.listOf listOf]] - Generates a list of random length
+ *  - [[Gen$.listOfN listOfN]] - Generates a list of at most ''n'' elements
+ *  - [[Gen$.nonEmptyListOf nonEmptyListOf]] - Generates a non-empty list of random length.
+ *  - [[Gen$.mapOf mapOf]] - Generates a [[scala.collection.Map]]
+ *  - [[Gen$.mapOfN mapOfN]] - Generates a [[scala.collection.Map]] with at most ''n'' elements
+ *  - [[Gen$.nonEmptyMap nonEmptyMap]] - Generates a non-empty map of random length
+ *  - [[Gen$.option option]] - Generate values of [[scala.Some]] and [[scala.None]]
+ *  - [[Gen$.pick[T](n:Int,g1* pick]] - A generator that randomly picks ''n'' elements from a list
+ *  - [[Gen$.sequence sequence]] - Sequences generators.
+ *  - [[Gen$.some some]] - A generator of [[scala.Some]]
+ *  - [[Gen.someOf[T](g1* someOf]] - A generator that picks a random number of elements from a list
+ *  - [[Gen$.stringOf stringOf]] - Generate string of characters
+ *  - [[Gen$.stringOfN stringOfN]] - Generate string of at most ''n'' characters
+ *
+ * Methods for working with [[Gen]] internals:
+ *  - [[Gen$.resize resize]] - Creates a resized version of a generator
+ *  - [[Gen$.parameterized parameterized]] - Generator with the parameters
+ *  - [[Gen$.size size]] - Generate with the value of the default size parameter
+ *  - [[Gen$.sized sized]] - Build a generator using the default size parameter
+
+ * Methods for probabilistic generators:
+ *  - [[Gen$.exponential exponential]] - Generate numbers according to an exponential distribution
+ *  - [[Gen$.gaussian gaussian]] - Generates numbers according to a Gaussian distribution
+ *  - [[Gen$.geometric geometric]] - Generates numbers according to a geometric distribution
+ *  - [[Gen$.poisson poisson]] - Generates numbers according to a Poisson distribution
+ *  - [[Gen$.prob prob]] - Generates a boolean for the probability of true
+ *
+ * Definitions for generating various, non-arbitrary, common values of
+ * strings and characters:
+ *  - [[Gen$.alphaChar alphaChar]] - Generates an alpha character
+ *  - [[Gen$.alphaStr alphaStr]] - Generates a string of alpha characters
+ *  - [[Gen$.numChar numChar]] - Generates a numerical character
+ *  - [[Gen$.numStr numStr]] - Generates a string of digits
+ *  - [[Gen$.alphaNumChar alphaNumChar]] - Generates an alphanumerical character
+ *  - [[Gen$.alphaNumStr alphaNumStr]] - Generates a string of alphanumerical characters
+ *  - [[Gen$.alphaLowerChar alphaLowerChar]] - Generates a lower-case alpha character
+ *  - [[Gen$.alphaLowerStr alphaLowerStr]] - Generates a string of lower-case alpha characters
+ *  - [[Gen$.alphaUpperChar alphaUpperChar]] - Generates an upper-case alpha character
+ *  - [[Gen$.alphaUpperStr alphaUpperStr]] - Generates a string of upper-case alpha characters
+ *  - [[Gen$.asciiChar asciiChar]] - Generates an ASCII character
+ *  - [[Gen$.asciiStr asciiStr]] - Generates a string of ASCII characters
+ *  - [[Gen$.identifier identifier]] - Generates an identifier
+ *  - [[Gen$.uuid uuid]] - Generates a UUID
+ *  - [[Gen$.hexChar hexChar]] - Generates a character of a hexadecimal digit
+ *  - [[Gen$.hexStr hexStr]] - Generates a string of hexadecimal digits
+ *
+ * Definitions for generating arbitrary values of commonly used types in
+ * Scala are defined elsewhere, see [[Arbitrary]].
+ *
+ * There are a couple of factory methods that are for advanced uses of generators:
+ *  - [[Gen$.delay delay]] - Generate a value of an expression by-name
+ *  - [[Gen$.lzy lzy]] - Lazily generate a value of an expression
+ *  - [[Gen$.fail fail]] - Fail to generate any values of a type
+ *  - [[Gen$.recursive recursive]] - A fixed point generator
+ *  - [[Gen$.resultOf[T,R0](f* resultOf]] - Generate values with a function or class
+ *  - [[Gen$.zip[T1](g1* zip]] - Generate tuples
+ */
 sealed abstract class Gen[+T] extends Serializable { self =>
 
   //// Private interface ////
@@ -347,7 +540,7 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   /** Provides implicit [[org.scalacheck.Gen.Choose]] instances */
-  object Choose {
+  object Choose extends time.JavaTimeChoose {
 
     class IllegalBoundsError[A](low: A, high: A)
         extends IllegalArgumentException(s"invalid bounds: low=$low, high=$high")
@@ -515,7 +708,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     implicit object chooseBigInteger extends Choose[BigInteger] {
       def choose(low: BigInteger, high: BigInteger): Gen[BigInteger] =
-        (low compareTo high) match {
+        (low.compareTo(high)) match {
           case n if n > 0 => throw new IllegalBoundsError(low, high)
           case 0 => Gen.const(low)
           case _ => /* n < 0 */
@@ -574,7 +767,7 @@ object Gen extends GenArities with GenVersionSpecific {
     private[this] def chooseJavaBigDecimalScale(minScale: Int): Choose[JavaDecimal] =
       new Choose[JavaDecimal] {
         def choose(low: JavaDecimal, high: JavaDecimal): Gen[JavaDecimal] =
-        (low compareTo high) match {
+        (low.compareTo(high)) match {
           case n if n > 0 => throw new IllegalBoundsError(low, high)
           case 0 => Gen.const(low)
           case _ => /* n < 0 */
@@ -608,7 +801,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
 
   /**
-   * A fixed point generator. This is useful for making recusive structures
+   * A fixed point generator. This is useful for making recursive structures
    * e.g.
    *
    * Gen.recursive[List[Int]] { recurse =>
@@ -953,7 +1146,7 @@ object Gen extends GenArities with GenVersionSpecific {
    *  results of that function by feeding it with arbitrarily generated input
    *  parameters. */
   def resultOf[T,R0](f: T => R0)(implicit a: Arbitrary[T]): Gen[R0] =
-    arbitrary[T] map f
+    arbitrary[T].map(f)
 
   /** Creates a Function0 generator. */
   def function0[A](g: Gen[A]): Gen[() => A] =
@@ -1029,14 +1222,16 @@ object Gen extends GenArities with GenVersionSpecific {
   }
 
   def stringOfN(n: Int, gc: Gen[Char]): Gen[String] =
-    gen { (p, seed) =>
-      mkString(n, new StringBuilder, gc, p, seed)
+    if (n <= 0) Gen.const("")
+    else gen { (p, seed) =>
+      mkString(n, new StringBuilder(n), gc, p, seed)
     }
 
   def stringOf(gc: Gen[Char]): Gen[String] =
     gen { (p, seed0) =>
       val (n, seed1) = Gen.mkSize(p, seed0)
-      mkString(n, new StringBuilder, gc, p, seed1)
+      if (n <= 0) r(Some(""), seed1)
+      else mkString(n, new StringBuilder(n), gc, p, seed1)
     }
 
   /** Generates a string that starts with a lower-case alpha character,
@@ -1250,7 +1445,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** Generates negative numbers of uniform distribution, with an
    *  lower bound of the negated generation size parameter. */
-  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate _)
+  def negNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = posNum.map(num.negate(_))
 
   /** Generates numbers within the given inclusive range, with
    *  extra weight on zero, +/- unity, both extremities, and any special
@@ -1288,7 +1483,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     // We want to be sure we always initialize the calendar's time. By
     // default, Calendar.getInstance uses the system time. We always
-    // overwrite it with a determinisitcally-generated time to be sure
+    // overwrite it with a deterministically-generated time to be sure
     // that calendar generation is also deterministic.
     //
     // We limit the time (in milliseconds) because extreme values will

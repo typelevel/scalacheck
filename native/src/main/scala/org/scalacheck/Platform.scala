@@ -11,7 +11,7 @@ package org.scalacheck
 
 import Test._
 
-import scala.scalanative.testinterface.PreloadedClassLoader
+import scala.scalanative.reflect.Reflect
 
 private[scalacheck] object Platform {
 
@@ -23,14 +23,23 @@ private[scalacheck] object Platform {
     workerFun(0)
   }
 
-  def loadModule(name: String, loader: ClassLoader): AnyRef =
-    loader.asInstanceOf[PreloadedClassLoader].loadPreloaded(name)
+  def loadModule(name: String, loader: ClassLoader): AnyRef = {
+    Reflect
+      .lookupLoadableModuleClass(name + "$")
+      .getOrElse(throw new ClassNotFoundException(name + "$"))
+      .loadModule()
+      .asInstanceOf[AnyRef]
+  }
 
-  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
-    org.scalajs.testinterface.TestUtils.newInstance(name, loader, paramTypes)(args)
+  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef = {
+    Reflect
+      .lookupInstantiatableClass(name)
+      .getOrElse(throw new ClassNotFoundException(name))
+      .getConstructor(paramTypes: _*)
+      .getOrElse(throw new NoSuchMethodError(paramTypes.mkString("<init>(", ",", ")")))
+      .newInstance(args: _*)
+      .asInstanceOf[AnyRef]
+  }
 
-  // We don't need those annotation in Native, and they have been deprecated.
-  // We use `String` instead of the definition in Native because `-Xfatal-warnings`
-  // is set.
-  type EnableReflectiveInstantiation = String
+  type EnableReflectiveInstantiation = scala.scalanative.reflect.annotation.EnableReflectiveInstantiation
 }

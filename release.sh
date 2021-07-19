@@ -55,7 +55,5 @@ runsbt "+ jvm/$CMD"
 # step 4b: js releases
 runsbt "+ js/$CMD"
 
-# step 4c: native releases (clean versions)
-SCALANATIVE_VERSION="0.3.9" runsbt "+ native/$CMD"
-runsbt "+ native/clean"
-SCALANATIVE_VERSION="0.4.0-M2" runsbt "+ native/$CMD"
+# step 4c: native releases
+runsbt "+ native/$CMD"

@@ -160,6 +160,7 @@ object Pretty {
       if(ls.isEmpty) ""
       else "> Labels of failing property: " / ls.mkString("\n")
     val s = res.status match {
+      case Test.Proved(args) if(prms.verbosity <= 1) => "OK, proved property."
       case Test.Proved(args) => "OK, proved property."/prettyArgs(args)(prms)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
