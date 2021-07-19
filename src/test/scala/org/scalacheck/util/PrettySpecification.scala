@@ -42,7 +42,7 @@ object PrettySpecification extends Properties("Pretty") {
       lines.forall(s => s.length <= length)
     }
 
-  property("break is reversable") =
+  property("break is reversible") =
     Prop.forAll { (input: String, lead: String, x: Int) =>
       val length = lead.length + (x & 0xff) + 1
       val res = Pretty.break(input, lead, length)

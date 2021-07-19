@@ -329,26 +329,34 @@ trait Commands {
   }
 
   /** Formats a list of commands with corresponding results */
-  private def prettyCmdsRes(rs: List[(Command,Try[String])]) = {
-    val cs = rs.map {
-      case (c, Success("()")) => c.toString
-      case (c, Success(r)) => s"$c => $r"
-      case (c,r) => s"$c => $r"
+  private def prettyCmdsRes(rs: List[(Command,Try[String])], maxLength: Int) = {
+    val maxNumberWidth = "%d".format(maxLength).length
+    val lineLayout = "  %%%dd. %%s".format(maxNumberWidth)
+    val cs = rs.zipWithIndex.map {
+      case (r, i) => lineLayout.format(i + 1, r match {
+        case (c, Success("()")) => c.toString
+        case (c, Success(r)) => s"$c => $r"
+        case (c, r) => s"$c => $r"
+      })
     }
-    cs.mkString("(","; ",")")
+    if (cs.isEmpty)
+      "  <no commands>"
+    else
+      cs.mkString("\n")
   }
 
   /** A property that runs the given actions in the given SUT */
   private def runActions(sut: Sut, as: Actions, finalize : =>Unit): Prop = {
+    val maxLength = as.parCmds.map(_.length).foldLeft(as.seqCmds.length)(_.max(_))
     try{
     val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
-    val l1 = s"initialstate = ${as.s}\nseqcmds = ${prettyCmdsRes(as.seqCmds zip rs1)}"
+    val l1 = s"Initial State:\n  ${as.s}\nSequential Commands:\n${prettyCmdsRes(as.seqCmds zip rs1, maxLength)}"
     if(as.parCmds.isEmpty) p1 :| l1
     else propAnd(p1.flatMap{r => if(!r.success) finalize; Prop(prms => r)} :| l1, {
       try{
       val (p2, rs2) = runParCmds(sut, s, as.parCmds)
-      val l2 = rs2.map(prettyCmdsRes).mkString("(",",\n",")")
-      p2 :| l1 :| s"parcmds = (state = ${s}) $l2"
+      val l2 = rs2.map(prettyCmdsRes(_, maxLength)).mkString("\n\n")
+      p2 :| l1 :| s"Parallel Commands (starting in state = ${s})\n$l2"
       }
       finally finalize
     })
@@ -365,7 +373,7 @@ trait Commands {
       l.foldLeft(const((s,Nil:Commands))) { case (g,()) =>
         for {
           (s0,cs) <- g
-          c <- genCommand(s0) suchThat (_.preCondition(s0))
+          c <- genCommand(s0).suchThat(_.preCondition(s0))
         } yield (c.nextState(s0), cs :+ c)
       }
     }
