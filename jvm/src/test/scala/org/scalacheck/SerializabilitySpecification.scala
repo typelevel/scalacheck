@@ -19,51 +19,39 @@ import util.SerializableCanBuildFroms._
 object SerializabilitySpecification extends Properties("Serializability") {
 
   def serializable[M <: Serializable](m: M): Boolean = {
-    val arr = serialize(m)
-    null != arr && arr.nonEmpty
-  }
-
-  def serialize[T <: Serializable](in: T): Array[Byte] = {
-    SerializationUtils.serialize(in)
+    SerializationUtils.roundtrip(m)
+    true
   }
 
   def serializableArbitrary[T: Arbitrary](name: String) =
     property(s"Arbitrary[$name]") = {
       val arb = implicitly[Arbitrary[T]]
-      assert(serializable(arb))
+      serializable(arb)
 
       // forcing the calculation of a value, to trigger the initialization of any lazily initialized field
       arb.arbitrary.sample
-      assert(serializable(arb))
-
-      proved
+      serializable(arb)
     }
 
   def serializableGen[T](name: String, gen: Gen[T]) =
     property(name) = {
-      assert(serializable(gen))
+      serializable(gen)
 
       // forcing the calculation of a value, to trigger the initialization of any lazily initialized field
       gen.sample
-      assert(serializable(gen))
-
-      proved
+      serializable(gen)
     }
 
   def serializableCogen[T: Cogen](name: String) =
     property(s"Cogen[$name]") = {
       val gen = Cogen[T]
-      assert(serializable(gen))
-
-      proved
+      serializable(gen)
     }
 
   def serializableShrink[T: Shrink](name: String) =
     property(s"Shrink[$name]") = {
       val shrink = implicitly[Shrink[T]]
-      assert(serializable(shrink))
-
-      proved
+      serializable(shrink)
     }
 
   serializableArbitrary[String]("String")
