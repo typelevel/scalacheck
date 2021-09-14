@@ -9,9 +9,10 @@
 
 package org.scalacheck
 
+import java.util.concurrent.TimeUnit
+
 import Prop._
 import Arbitrary._
-import java.util.concurrent.TimeUnit
 
 object ArbitrarySpecification extends Properties("Arbitrary") {
   val genOptionUnits =
