@@ -173,7 +173,11 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   autoAPIMappings := true,
-  mimaReportSignatureProblems := true,
+  // Mima signature checking stopped working after 3.0.2 upgrade, see #834
+  mimaReportSignatureProblems := (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _)) => false
+    case _ => true
+  }),
   mimaPreviousArtifacts := Set("org.scalacheck" %%% "scalacheck" % "1.15.4"),
 
   publishTo := {
