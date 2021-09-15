@@ -2,7 +2,7 @@ sourceDirectory := file("dummy source directory")
 
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.6"
-val Scala3 = "3.0.1"
+val Scala3 = "3.0.2"
 
 ThisBuild / crossScalaVersions := Seq(Scala3, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
@@ -173,7 +173,11 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
 
   autoAPIMappings := true,
-  mimaReportSignatureProblems := true,
+  // Mima signature checking stopped working after 3.0.2 upgrade, see #834
+  mimaReportSignatureProblems := (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _)) => false
+    case _ => true
+  }),
   mimaPreviousArtifacts := Set("org.scalacheck" %%% "scalacheck" % "1.15.4"),
 
   publishTo := {
