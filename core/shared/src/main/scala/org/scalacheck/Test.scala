@@ -125,6 +125,17 @@ object Test {
     def withLegacyShrinking(b: Boolean): Parameters =
       cpy(useLegacyShrinking0 = b)
 
+    /** Maximum number of spins of the RNG to perform between checks.
+     *  Greater values will reduce reuse of values (with dimimishing returns)
+     *  for a given number of arguments to Prop.forAll tests.  Greater values
+     *  will also generally lead to slower tests, so be careful.
+     */
+    val maxRNGSpins: Int = 1
+
+    /** Set maximum RNG spins between checks */
+    def withMaxRNGSpins(n: Int): Parameters =
+      cpy(maxRNGSpins0 = n)
+
     override def toString: String = {
       val sb = new StringBuilder
       sb.append("Parameters(")
@@ -137,7 +148,8 @@ object Test {
       sb.append(s"customClassLoader=$customClassLoader, ")
       sb.append(s"propFilter=$propFilter, ")
       sb.append(s"initialSeed=$initialSeed, ")
-      sb.append(s"useLegacyShrinking=$useLegacyShrinking)")
+      sb.append(s"useLegacyShrinking=$useLegacyShrinking, ")
+      sb.append(s"maxRNGSpins=$maxRNGSpins)")
       sb.toString
     }
 
@@ -152,7 +164,8 @@ object Test {
       customClassLoader0: Option[ClassLoader] = outer.customClassLoader,
       propFilter0: Option[String] = outer.propFilter,
       initialSeed0: Option[rng.Seed] = outer.initialSeed,
-      useLegacyShrinking0: Boolean = outer.useLegacyShrinking
+      useLegacyShrinking0: Boolean = outer.useLegacyShrinking,
+      maxRNGSpins0: Int = outer.maxRNGSpins
     ): Parameters =
       new Parameters {
         val minSuccessfulTests: Int = minSuccessfulTests0
@@ -165,6 +178,7 @@ object Test {
         val propFilter: Option[String] = propFilter0
         val initialSeed: Option[rng.Seed] = initialSeed0
         override val useLegacyShrinking: Boolean = useLegacyShrinking0
+        override val maxRNGSpins: Int = maxRNGSpins0
       }
 
     // no longer used, but preserved for binary compatibility
@@ -342,10 +356,17 @@ object Test {
       val help = "Disable legacy shrinking using Shrink instances"
     }
 
+    object OptMaxRNGSpins extends IntOpt {
+      val default = 1
+      val names = Set("maxRNGSpins")
+      val help = "Maximum number of RNG spins to perform between checks"
+    }
+
     val opts = Set[Opt[_]](
       OptMinSuccess, OptMaxDiscardRatio, OptMinSize,
       OptMaxSize, OptWorkers, OptVerbosity,
-      OptPropFilter, OptInitialSeed, OptDisableLegacyShrinking
+      OptPropFilter, OptInitialSeed, OptDisableLegacyShrinking,
+      OptMaxRNGSpins
     )
 
     def parseParams(args: Array[String]): (Parameters => Parameters, List[String]) = {
@@ -369,6 +390,7 @@ object Test {
         }
 
       val useLegacyShrinking0: Boolean = !optMap(OptDisableLegacyShrinking)
+      val maxRNGSpins: Int = optMap(OptMaxRNGSpins)
       val params = { (p: Parameters) =>
         p.withMinSuccessfulTests(minSuccess0)
           .withMinSize(minSize0)
@@ -379,6 +401,7 @@ object Test {
           .withPropFilter(propFilter0)
           .withInitialSeed(initialSeed0)
           .withLegacyShrinking(useLegacyShrinking0)
+          .withMaxRNGSpins(maxRNGSpins)
       }
       (params, us)
     }
@@ -405,6 +428,7 @@ object Test {
 
     val iterations = Math.ceil(params.minSuccessfulTests / params.workers.toDouble)
     val sizeStep = (params.maxSize - params.minSize) / (iterations * params.workers)
+    val maxSpinsBetween = params.maxRNGSpins.max(1)
     var stop = false
 
     def workerFun(workerIdx: Int): Result = {
@@ -420,6 +444,22 @@ object Test {
         if (workerIdx == 0) seed0 else seed0.reseed(workerIdx.toLong)
       }
 
+      val spinner: () => Unit =
+        if (maxSpinsBetween > 1) {
+          () => {
+            var slides = 1 + ((n + d) % maxSpinsBetween)
+
+            while (slides > 0) {
+              seed = seed.slide
+              slides -= 1
+            }
+          }
+        } else {
+          () => {
+            seed = seed.slide
+          }
+        }
+
       while(!stop && res == null && n < iterations) {
 
         val count = workerIdx + (params.workers * (n + d))
@@ -429,7 +469,7 @@ object Test {
           .withInitialSeed(Some(seed))
           .withSize(size.round.toInt)
 
-        seed = seed.slide
+        spinner()
 
         val propRes = p(genPrms)
         if (propRes.collected.nonEmpty) {

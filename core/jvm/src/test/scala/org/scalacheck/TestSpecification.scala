@@ -190,4 +190,28 @@ object TestSpecification extends Properties("Test") {
     val p1 = Prop(unique.size > 1) :| s"saw $n duplicate values: $unique"
     p0 && p1
   }
+
+  property("initialSeed is used and then updated when varying RNG spins") = {
+    val seed = rng.Seed.fromBase64("aaaaa_mr05Z_DCbd2PyUolC0h93iH1MQwIdnH2UuI4L=").get
+    val gen = Gen.choose(Int.MinValue, Int.MaxValue)
+    val expected = gen(Gen.Parameters.default, seed).get
+    
+    val prms = Test.Parameters.default
+      .withInitialSeed(Some(seed))
+      .withMinSuccessfulTests(10)
+      .withMaxRNGSpins(5)
+
+    var xs: List[Int] = Nil
+    val prop = Prop.forAll(gen) { x =>
+      xs = x :: xs
+      true
+    }
+
+    val res = Test.check(prms, prop)
+    val n = xs.size
+    val unique = xs.toSet
+    val p0 = Prop(unique(expected)) :| s"did not see $expected in $unique"
+    val p1 = Prop(unique.size > 1) :| s"saw $n duplicate values: $unique"
+    p0 && p1
+  }
 }
