@@ -152,8 +152,8 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbChar: Arbitrary[Char] = Arbitrary {
     // valid ranges are [0x0000, 0xD7FF] and [0xE000, 0xFFFD].
     //
-    // ((0xFFFD + 1) - 0xE000) + ((0xD7FF + 1) - 0x0000)
-    choose(0, 63486).map { i =>
+    // ((0xFFFD + 1) - 0xE000) + ((0xD7FF + 1) - 0x0000) - 1
+    choose(0, 63485).map { i =>
       if (i <= 0xD7FF) i.toChar
       else (i + 2048).toChar
     }

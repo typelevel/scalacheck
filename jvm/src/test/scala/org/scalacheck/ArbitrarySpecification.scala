@@ -9,9 +9,10 @@
 
 package org.scalacheck
 
+import java.util.concurrent.TimeUnit
+
 import Prop._
 import Arbitrary._
-import java.util.concurrent.TimeUnit
 
 object ArbitrarySpecification extends Properties("Arbitrary") {
   val genOptionUnits =
@@ -22,6 +23,11 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
 
   property("arbOption coverage") =
     exists(genOptionUnits) { case (a, b) => a.isDefined != b.isDefined }
+
+  property("arbChar") =
+    Prop.forAll { (c: Char) =>
+      0x0000 <= c && c <= 0xD7FF || 0xE000 <= c && c <= 0xFFFD
+    }
 
   property("arbString") =
     Prop.forAll { (s: String) =>
