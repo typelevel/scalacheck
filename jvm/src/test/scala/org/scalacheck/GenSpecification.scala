@@ -183,7 +183,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   property("listOfN") = forAll(choose(0,100)) { n =>
-    forAll(listOfN(n, arbitrary[Int])) { _.length == n }
+    forAll(listOfN(n, arbitrary[Int])) { _.length <= n }
   }
 
   property("setOfN") = forAll(choose(0,100)) { n =>
@@ -192,10 +192,6 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("mapOfN") = forAll(choose(0,100)) { n =>
     forAll(mapOfN(n, arbitrary[(Int,Int)])) { _.size <= n }
-  }
-
-  property("empty listOfN") = forAll(listOfN(0, arbitrary[Int])) { l =>
-    l.length == 0
   }
 
   property("listOf(posNum)") = {
@@ -219,7 +215,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   property("listOfN(listOfN(posNum))") = sizedProp { sz => // #568
     forAll(choose(0, sz), choose(0, sz)) { (m: Int, n: Int) =>
       forAll(listOfN(m, listOfN(n, posNum[Int]))) { ll =>
-        ll.length == m && ll.forall(_.length == n)
+        ll.length <= m && ll.forall(_.length <= n)
       }
     }
   }
@@ -515,11 +511,13 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   val tf: List[Boolean] = List(true, false)
   val utf: List[Trilean] = List(Left(()), Right(true), Right(false))
 
-  def exhaust[A: Cogen, B: Arbitrary](n: Int, as: List[A], bs: List[B]): Boolean = {
-    val fs = listOfN(n, arbitrary[A => B]).sample.get
-    val outcomes = for { f <- fs; a <- as } yield (a, f(a))
-    val expected = for { a <- as; b <- bs } yield (a, b)
-    outcomes.toSet == expected.toSet
+  def exhaust[A: Cogen, B: Arbitrary](n: Int, as: List[A], bs: List[B]) = {
+    val g = containerOfN[List,A => B](n, arbitrary[A => B])
+    Prop.forAllNoShrink(g) { (fs) =>
+      val outcomes = for { f <- fs; a <- as } yield (a, f(a))
+      val expected = for { a <- as; b <- bs } yield (a, b)
+      outcomes.toSet == expected.toSet
+    }
   }
 
   // none of these should fail more than 1 in 100000000 runs.

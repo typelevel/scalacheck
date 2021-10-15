@@ -366,7 +366,7 @@ trait Commands {
 
   /** [[Actions]] generator */
   private def actions(threadCount: Int, maxParComb: Int): Gen[Actions] = {
-    import Gen.{const, listOfN, sized}
+    import Gen.{const, containerOfN, sized}
 
     def sizedCmds(s: State)(sz: Int): Gen[(State,Commands)] = {
       val l: List[Unit] = List.fill(sz)(())
@@ -421,7 +421,7 @@ trait Commands {
       s0 <- genInitialState
       (s1,seqCmds) <- sized(sizedCmds(s0))
       parCmds <- if(parSz <= 0) const(Nil) else
-                 listOfN(threadCount, sizedCmds(s1)(parSz).map(_._2))
+                 containerOfN[List,Commands](threadCount, sizedCmds(s1)(parSz).map(_._2))
     } yield Actions(s0, seqCmds, parCmds)
 
     g.suchThat(actionsPrecond)

@@ -64,6 +64,9 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
   }
 
   property("arbEnum") = {
-    Gen.listOfN(100, arbitrary[TimeUnit]).sample.get.toSet == TimeUnit.values.toSet
+    val g = Gen.containerOfN[List,TimeUnit](100, arbitrary[TimeUnit])
+    Prop.forAllNoShrink(g) { (l: List[TimeUnit]) =>
+      l.toSet == TimeUnit.values.toSet
+    }
   }
 }

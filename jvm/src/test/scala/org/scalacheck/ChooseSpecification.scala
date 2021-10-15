@@ -128,7 +128,7 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
 
   property("choose(NegativeInfinity, PositiveInfinity)") =
     Prop.forAllNoShrink(listOfN(3, choose(NegativeInfinity, PositiveInfinity))) { xs =>
-      xs.exists(_ != 0d)
+      xs.isEmpty || xs.exists(_ != 0d)
     }
 
   val manualBigInt: Gen[BigInt] =
