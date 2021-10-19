@@ -2,9 +2,10 @@ sourceDirectory := file("dummy source directory")
 
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.6"
-val Scala3 = "3.0.2"
+val Scala30 = "3.0.2"
+val Scala31 = "3.1.0"
 
-ThisBuild / crossScalaVersions := Seq(Scala3, Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala31, Scala30, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
@@ -179,6 +180,12 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
     case _ => true
   }),
   mimaPreviousArtifacts := Set("org.scalacheck" %%% "scalacheck" % "1.15.4"),
+
+  // Don't publish for Scala 3.1 or later, only from 3.0
+  publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, x)) if x > 0 => true
+    case _                     => false
+  }),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
