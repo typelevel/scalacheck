@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<!-- Mirrored from scalacheck.org/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 01 Nov 2021 16:09:35 GMT -->
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link href="css/syntax.css" rel="stylesheet" type="text/css">
+<title>ScalaCheck</title>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div class="logo">
+<a href="index-2.html"><img src="img/logo_forall_h61.png" alt="ScalaCheck" /></a><a href="index-2.html"><img src="img/logo_scalacheck_h61.png" alt="ScalaCheck" /></a>
+</div>
+<div class="nav">
+<ul>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="https://github.com/rickynils/scalacheck" target="_blank">Source</a></li>
+</ul>
+</div>
+</div>
+<div class="main">
+<h1 id="scalacheck-property-based-testing-for-scala">ScalaCheck: Property-based testing for Scala</h1>
+<p>ScalaCheck is a library written in <a href="https://www.scala-lang.org/">Scala</a> and used for automated property-based testing of Scala or Java programs. ScalaCheck was originally inspired by the Haskell library <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a>, but has also ventured into its own.</p>
+<p>ScalaCheck has no external dependencies other than the Scala runtime, and <a href="download.html#sbt">works</a> great with <a href="http://www.scala-sbt.org/">sbt</a>, the Scala build tool. It is also fully integrated in the test frameworks <a href="http://www.scalatest.org/">ScalaTest</a>, <a href="https://etorreborre.github.io/specs2/">specs2</a> and <a href="https://github.com/47deg/LambdaTest">LambdaTest</a>. You can also use ScalaCheck completely standalone, with its built-in test runner.</p>
+<p>ScalaCheck is used by several prominent Scala projects, for example the <a href="https://www.scala-lang.org/">Scala compiler</a> and the <a href="http://akka.io/">Akka</a> concurrency framework.</p>
+<h2 id="news">News</h2>
+<ul>
+<li><p>2019-09-18: ScalaCheck 1.14.1 released! This is the first release since the ScalaCheck repository was moved to the <a href="https://typelevel.org/">Typelevel</a> organisation. See the <a href="https://github.com/rickynils/scalacheck/releases/tag/1.14.1">release notes</a>.</p></li>
+<li><p>2018-04-22: <a href="download/1.14.0.html">ScalaCheck 1.14.0</a>! This release introduces support for deterministic testing. See <a href="https://github.com/rickynils/scalacheck/tree/1.14.0/RELEASE.markdown">release notes</a> and <a href="https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown">change log</a>.</p></li>
+<li><p>2016-11-01: <a href="download/1.13.4.html">ScalaCheck 1.13.4</a> and <a href="download/1.12.6.html">ScalaCheck 1.12.6</a> released! These releases fix a <a href="https://github.com/rickynils/scalacheck/issues/290">deadlock problem</a> with Scala 2.12.0. Also, as a problem was discovered with the previously released ScalaCheck 1.12.5 build, it is recommended that you upgrade to 1.12.6 or 1.13.4 even if you’re not using Scala 2.12.</p></li>
+<li><p>2016-10-19: <a href="download/1.13.3.html">ScalaCheck 1.13.3</a> released! See <a href="https://github.com/rickynils/scalacheck/tree/1.13.3/RELEASE">release notes</a>.</p></li>
+<li><p>2016-07-11: <a href="download/1.13.2.html">ScalaCheck 1.13.2</a> released! See <a href="https://github.com/rickynils/scalacheck/tree/1.13.2/RELEASE">release notes</a>.</p></li>
+<li><p>2016-04-14: <a href="download/1.13.1.html">ScalaCheck 1.13.1</a> released! See <a href="https://github.com/rickynils/scalacheck/tree/1.13.1/RELEASE">release notes</a>.</p></li>
+<li><p>2016-02-03: <a href="download/1.13.0.html">ScalaCheck 1.13.0</a> released! See <a href="https://github.com/rickynils/scalacheck/tree/1.13.0/RELEASE">release notes</a>.</p></li>
+<li><p>2015-09-10: Snapshot builds are no longer published on this site. Instead <a href="https://travis-ci.org/rickynils/scalacheck">Travis</a> automatically publishes all successful builds of the master branch. See <a href="download.html#snapshot">documentation</a> for more information.</p></li>
+</ul>
+<h2 id="quickstart">Quick start</h2>
+<p>Specify some of the methods of <code>java.lang.String</code> like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode scala"><code class="sourceCode scala"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">import</span> org.<span class="fu">scalacheck</span>.<span class="fu">Properties</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">import</span> org.<span class="fu">scalacheck</span>.<span class="fu">Prop</span>.<span class="fu">forAll</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">object</span> StringSpecification <span class="kw">extends</span> Properties(<span class="st">&quot;String&quot;</span>) {</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">  <span class="fu">property</span>(<span class="st">&quot;startsWith&quot;</span>) = forAll { (a: String, b: String) =&gt;</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">    (a+b).<span class="fu">startsWith</span>(a)</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">  }</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">  <span class="fu">property</span>(<span class="st">&quot;concatenate&quot;</span>) = forAll { (a: String, b: String) =&gt;</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">    (a+b).<span class="fu">length</span> &gt; a.<span class="fu">length</span> &amp;&amp; (a+b).<span class="fu">length</span> &gt; b.<span class="fu">length</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">  }</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">  <span class="fu">property</span>(<span class="st">&quot;substring&quot;</span>) = forAll { (a: String, b: String, c: String) =&gt;</a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">    (a+b+c).<span class="fu">substring</span>(a.<span class="fu">length</span>, a.<span class="fu">length</span>+b.<span class="fu">length</span>) == b</a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">  }</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">}</a></code></pre></div>
+<p>If you use <a href="http://www.scala-sbt.org/">sbt</a> add the following dependency to your build file:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><a class="sourceLine" id="cb2-1" data-line-number="1">libraryDependencies += <span class="st">&quot;org.scalacheck&quot;</span> %% <span class="st">&quot;scalacheck&quot;</span> % <span class="st">&quot;1.14.1&quot;</span> % <span class="st">&quot;test&quot;</span></a></code></pre></div>
+<p>Put your ScalaCheck properties in <code>src/test/scala</code>, then use the <code>test</code> task to check them:</p>
+<pre><code>$ sbt test
++ String.startsWith: OK, passed 100 tests.
+! String.concat: Falsified after 0 passed tests.
+&gt; ARG_0: &quot;&quot;
+&gt; ARG_1: &quot;&quot;
++ String.substring: OK, passed 100 tests.</code></pre>
+<p>As you can see, the second property was not quite right. ScalaCheck discovers this and presents the arguments that make the property fail, two empty strings. The other two properties both pass 100 test rounds, each with a randomized set of input parameters.</p>
+<p>You can also use ScalaCheck standalone, since it has a built-in command line test runner. Compile and run like this:</p>
+<pre><code>$ scalac -cp scalacheck_2.11-1.14.1.jar StringSpecification.scala
+
+$ scala -cp .:scalacheck_2.11-1.14.1.jar StringSpecification</code></pre>
+</div>
+<div class="footer">
+<div class="left"><p>&copy; 2019 <a href="mailto:rickynils@gmail.com">Rickard Nilsson</a></p></div>
+<div class="logo"><a href="index-2.html"><img src="img/logo_forall_h30.png" alt="ScalaCheck" /></a></div>
+<div class="right"><p></p></div>
+</div>
+</div>
+</body>
+
+<!-- Mirrored from scalacheck.org/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 01 Nov 2021 16:09:35 GMT -->
+</html>
