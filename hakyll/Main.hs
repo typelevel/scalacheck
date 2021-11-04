@@ -110,6 +110,10 @@ main = do
       route idRoute
       compile $ copyFileCompiler
 
+    match "CNAME" $ do
+      route idRoute
+      compile $ copyFileCompiler
+
     sequence_ $ map (mkRelease env) $ versions env
 
 --    match "articles/*" $ do
