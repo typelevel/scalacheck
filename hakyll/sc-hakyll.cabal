@@ -1,0 +1,16 @@
+name:                sc-hakyll
+version:             0.0.0.0
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable hakyll
+  main-is:       Main.hs
+  build-depends: base >=4.5,
+                 hakyll,
+                 bytestring,
+                 containers,
+                 filepath,
+                 process,
+                 pandoc,
+                 split,
+                 yaml

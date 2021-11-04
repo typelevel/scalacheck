@@ -1,0 +1,101 @@
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Lato'), url(../../fonts/lato-v6-v0SdcGFAl2aezM9Vq_aFTQ.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Inconsolata';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Inconsolata'), url(../../fonts/inconsolata-v6-BjAYBlHtW3CJxDcjzrnZCJ0EAVxt0G0biEntp43Qt6E.ttf) format('truetype');
+}
+
+.remark-container {
+  background-color: #000;
+}
+
+.remark-slide-content {
+  font-family: 'LatoLatin', sans-serif;
+}
+
+.big-image img {
+  display: block;
+  width: 90%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.big-image2 img {
+  display: block;
+  width: 40%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.left-column {
+  float: left;
+  width: 15%;
+  height: 80%;
+  margin-right: 5%;
+}
+
+.right-column {
+  float: right;
+  width: 80%;
+  height: 80%;
+}
+
+.remark-slide-content .right-column h1 {
+  margin: 0;
+  text-align: left;
+  font-size: 2.5em;
+}
+
+.remark-slide-content .right-column h2 {
+  font-size: 1.5em;
+}
+
+.left-column img {
+  width: 100%;
+}
+
+code {
+  font-size: 1.5em;
+  font-weight: normal;
+  font-family: 'Inconsolata', monospace;
+}
+
+p > code {
+  font-size: 0.90em;
+  font-weight: normal;
+  font-family: 'Inconsolata', monospace;
+  background-color: #F0F0F0;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+
+.remark-slide-content h1 {
+  margin-bottom: 1.0em;
+  text-align: center;
+  font-size: 2.0em;
+  font-weight: bold;
+}
+
+.remark-slide-content h2 {
+  margin-top: 1.0em;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.remark-slide-content p {
+  font-size: 1.5em;
+  font-weight: normal;
+  margin-left: 0.5em;
+}
+
+.remark-slide-content li p {
+  font-size: 1.5em;
+  font-weight: normal;
+}
