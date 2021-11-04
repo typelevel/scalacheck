@@ -1,17 +1,3 @@
-@font-face {
-  font-family: 'Lato';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Lato'), url(../fonts/lato-v6-v0SdcGFAl2aezM9Vq_aFTQ.ttf) format('truetype');
-}
-
-@font-face {
-  font-family: 'Inconsolata';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Inconsolata'), url(../fonts/inconsolata-v6-BjAYBlHtW3CJxDcjzrnZCJ0EAVxt0G0biEntp43Qt6E.ttf) format('truetype');
-}
-
 body {
   padding-top: 0px;
   padding-bottom: 40px;

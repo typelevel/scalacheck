@@ -15,7 +15,7 @@ request](\$repoUrl\$/pulls)!).
 ## API Documentation
 
 The API documentation for the latest ScalaCheck release is available both
-[online](/files/scalacheck_\$scalaVer\$-\$currentVer\$-api/index.html) and packaged for [download](/download.html#api).
+[online](https://javadoc.io/doc/org.scalacheck/scalacheck_\$scalaVer\$/\$currentVer$/org/scalacheck/index.html) and packaged for [download](/download.html#api).
 You can find documentation for other ScalaCheck releases
 [here](/releases.html).
 

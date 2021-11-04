@@ -26,7 +26,7 @@ by ScalaCheck \$currentVer\$.
 |                                            |       |       |       |   |
 |:-------------------------------------------|:------|:------|:------|:--|
 | ScalaCheck \$currentVer\$ sources |[.jar](/files/scalacheck_\$scalaVer\$-\$currentVer\$-sources.jar)|[.zip](/files/scalacheck_\$scalaVer\$-\$currentVer\$-sources.zip)|[.tar.gz](/files/scalacheck_\$scalaVer\$-\$currentVer\$-sources.tar.gz)|[browse](\$repoUrl\$/tree/\$currentVer\$)|
-| ScalaCheck \$currentVer\$ API docs|[.jar](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.jar)|[.zip](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.zip)|[.tar.gz](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.tar.gz)|[browse](/files/scalacheck_\$scalaVer\$-\$currentVer\$-api/index.html)|
+| ScalaCheck \$currentVer\$ API docs|[.jar](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.jar)|[.zip](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.zip)|[.tar.gz](/files/scalacheck_\$scalaVer\$-\$currentVer\$-javadoc.tar.gz)|[browse](https://javadoc.io/doc/org.scalacheck/scalacheck_\$scalaVer\$/\$currentVer$/org/scalacheck/index.html)|
 
 ## sbt
 
