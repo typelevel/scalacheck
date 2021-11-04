@@ -15,3 +15,11 @@ nix --extra-experimental-features "nix-command flakes" build .#scalacheck-web
 ```
 
 You can then browse the site locally from `./result/index.html`
+
+## Publish instructions
+
+The following script builds the site and pushes the contents of `result` to the `gh-pages` branch:
+
+```sh
+./push-site.sh
+```
