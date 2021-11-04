@@ -6,6 +6,7 @@ nix --extra-experimental-features "nix-command flakes" build .#scalacheck-web
 REV=$(git rev-parse --short HEAD)
 if [ -d target ]; then rm -rf target; fi
 git worktree add -f target gh-pages
+rm -r target/*
 cp -r result/* target
 cd target
 git add -A .
