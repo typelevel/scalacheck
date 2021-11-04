@@ -55,6 +55,9 @@ let
     ln -s $wrapper $out/bin/hakyll
   '';
 
+  LOCALE_ARCHIVE =
+    if stdenv.isLinux then "${glibcLocales}/lib/locale/locale-archive" else "";
+
 in stdenv.mkDerivation {
   name = "scalacheck-web";
   src = ./src;
@@ -62,7 +65,7 @@ in stdenv.mkDerivation {
   phases = [ "buildPhase" "installPhase" ];
   buildPhase = ''
     export LANG="en_US.UTF-8"
-    export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+    export LOCALE_ARCHIVE="${LOCALE_ARCHIVE}"
     cp -r --no-preserve=mode $src src
     hakyll build
   '';

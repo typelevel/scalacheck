@@ -53,6 +53,9 @@ let
     };
   };
 
+  LOCALE_ARCHIVE =
+    if stdenv.isLinux then "${glibcLocales}/lib/locale/locale-archive" else "";
+
 in rec {
 
   # Fetches the given ScalaCheck with the given Scala version from Maven
@@ -95,7 +98,7 @@ in rec {
     buildPhase = ''
       type -P scaladoc
       export LANG="en_US.UTF-8"
-      export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+      export LOCALE_ARCHIVE="${LOCALE_ARCHIVE}"
       testinterface="${test-interface."1.0"}/lib/test-interface.jar"
       find src/main/scala \
         ${optionalString (versionAtLeast scVer "1.12.1") "jvm/src/main/scala"} -name '*.scala' | grep -v ScalaCheckFramework.scala > sources
