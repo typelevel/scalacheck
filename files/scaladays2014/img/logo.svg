@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="269.9935"
+   height="270.0228"
+   id="svg4110"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   inkscape:export-filename="/home/rickard/wrk/personal/scalacheck-web/src/img/logo_full_w200.png"
+   inkscape:export-xdpi="20.448057"
+   inkscape:export-ydpi="20.448057"
+   sodipodi:docname="logo_full.svg">
+  <defs
+     id="defs4112" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.4320688"
+     inkscape:cx="-339.93409"
+     inkscape:cy="133.83706"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1440"
+     inkscape:window-height="861"
+     inkscape:window-x="0"
+     inkscape:window-y="20"
+     inkscape:window-maximized="0"
+     showguides="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata4115">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-258.75342,-66.007292)">
+    <path
+       style="fill:#000000;fill-opacity:0.94117647;stroke:none"
+       d="m 224.78125,248.25 c -66.96267,0.83872 -124.43797,51.37445 -132.25,119.65625 C 84.057182,441.97464 137.24411,508.90093 211.3125,517.375 285.38089,525.84907 352.27593,472.66214 360.75,398.59375 369.22407,324.52536 316.06839,257.59907 242,249.125 c -5.78659,-0.66204 -11.54395,-0.94608 -17.21875,-0.875 z m 62.09375,78.28125 a 2.2267227,2.2267227 0 0 1 2.09375,3 l -49.625,131.6875 a 2.2267227,2.2267227 0 0 1 -2.09375,1.4375 2.2267227,2.2267227 0 0 1 -0.15625,0 c -6.66996,0.0278 -13.33,0.0659 -20,0.0937 A 2.2267227,2.2267227 0 0 1 215,461.3125 l -50.65625,-131.25 a 2.2267227,2.2267227 0 0 1 2.0625,-3.03125 l 18.5,-0.0937 A 2.2267227,2.2267227 0 0 1 187,328.40625 l 11.59375,32.21875 56.125,-0.25 11.3125,-32.28125 a 2.2267227,2.2267227 0 0 1 2.09375,-1.5 c 6.25245,-0.0262 12.4976,-0.0363 18.75,-0.0625 z m -39.0625,53.125 c -13.99033,0.0586 -27.97843,0.1289 -41.96875,0.1875 l 21.25,56.65625 20.71875,-56.84375 z"
+       transform="translate(167.10932,-182.23206)"
+       id="path3882"
+       inkscape:export-filename="/home/rickard/wrk/personal/scalacheck-web/src/img/favicon.ico.png"
+       inkscape:export-xdpi="5.3299999"
+       inkscape:export-ydpi="5.3299999"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>
