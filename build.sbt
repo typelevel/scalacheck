@@ -219,7 +219,6 @@ lazy val js = project.in(file("js"))
     Global / scalaJSStage := FastOptStage,
     libraryDependencies ++= Seq(
       ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).cross(CrossVersion.for3Use2_13),
-      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
     )
   )
   .enablePlugins(ScalaJSPlugin)
