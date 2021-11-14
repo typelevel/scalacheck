@@ -19,11 +19,11 @@ import java.time._
   */
 private[scalacheck] trait JavaTimeArbitrary {
 
-  // // Duration
+  // Duration
 
-  // // Java duration values are conceptually infinite, thus they do not expose
-  // // Duration.MAX/Duration.MIN values, but in practice they are finite,
-  // // restricted by their underlying representation a long and an int.
+  // Java duration values are conceptually infinite, thus they do not expose
+  // Duration.MAX/Duration.MIN values, but in practice they are finite,
+  // restricted by their underlying representation a long and an int.
 
   implicit final lazy val arbJavaDuration: Arbitrary[Duration] = {
     val minJavaDuration = Duration.ofSeconds(Long.MinValue)
