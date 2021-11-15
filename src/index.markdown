@@ -25,6 +25,31 @@ concurrency framework.
 
 ## News
 
+ * 2021-05-14: Scala 3.0 artifacts were published for ScalaCheck 1.15.4
+   and 1.15.3
+ 
+ * 2021-05-03: ScalaCheck 1.15.4 is released with a few small bug fixes
+ 
+ * 2021-02-16: ScalaCheck 1.15.3 adds support for Scala Native 0.4.0
+ 
+ * 2020-12-17: ScalaCheck 1.15.2 fixes some uninentional API breakage of
+   methods `someOf`, `atLeastOne` and `pick` in `Gen`.
+ 
+ * 2020-11-03: [ScalaCheck 1.15.1](\$repoUrl\$/tree/1.15.1/CHANGELOG.markdown)
+   is released. Fixes some uninentional API breakage of methods `someOf`,
+   `atLeastOne` and `pick` in `Gen`.
+ 
+ * 2020-10-30: [ScalaCheck 1.15.0](\$repoUrl\$/tree/1.15.0/CHANGELOG.markdown)
+   introduces a few enhancements and some performance improvements to string
+   and character generation.
+ 
+ * 2019-12-13: ScalaCheck 1.14.3 fixed a defect with number generators. This
+   also produces artifacts for Scala.js 1.0.0-RC2 and 0.6.31. See the
+   [change log](\$repoUrl\$/tree/1.14.3/CHANGELOG.markdown).
+ 
+ * 2019-09-25: ScalaCheck 1.14.2 fixed a major defect with Scala.js but no
+   other changes from 1.14.1.
+
  * 2019-09-18: ScalaCheck 1.14.1 released! This is the first release since the
    ScalaCheck repository was moved to the [Typelevel](https://typelevel.org/)
    organisation. See the [release notes](\$repoUrl\$/releases/tag/1.14.1).
