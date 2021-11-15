@@ -5,22 +5,22 @@ author: Rickard Nilsson
 
 # ScalaCheck: Property-based testing for Scala
 
-ScalaCheck is a library written in [Scala](http://www.scala-lang.org/) and
+ScalaCheck is a library written in [Scala](https://www.scala-lang.org/) and
 used for automated property-based testing of Scala or Java programs.
 ScalaCheck was originally inspired by the Haskell library
-[QuickCheck](http://hackage.haskell.org/package/QuickCheck), but has also
+[QuickCheck](https://hackage.haskell.org/package/QuickCheck), but has also
 ventured into its own.
 
 ScalaCheck has no external dependencies other than the Scala runtime, and
-[works](/download.html#sbt) great with [sbt](http://www.scala-sbt.org/), the
+[works](/download.html#sbt) great with [sbt](https://www.scala-sbt.org/), the
 Scala build tool. It is also fully integrated in the test frameworks
-[ScalaTest](http://www.scalatest.org/),
-[specs2](http://etorreborre.github.io/specs2/) and
+[ScalaTest](https://www.scalatest.org/),
+[specs2](https://etorreborre.github.io/specs2/) and
 [LambdaTest](https://github.com/47deg/LambdaTest). You can also use ScalaCheck
 completely standalone, with its built-in test runner.
 
 ScalaCheck is used by several prominent Scala projects, for example the [Scala
-compiler](http://www.scala-lang.org/) and the [Akka](http://akka.io/)
+compiler](https://www.scala-lang.org/) and the [Akka](https://akka.io/)
 concurrency framework.
 
 ## News
@@ -108,7 +108,7 @@ object StringSpecification extends Properties("String") {
 }
 ```
 
-If you use [sbt](http://www.scala-sbt.org/) add the following dependency to
+If you use [sbt](https://www.scala-sbt.org/) add the following dependency to
 your build file:
 
 ```scala
