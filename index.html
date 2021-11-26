@@ -28,11 +28,19 @@
 
       <div class="main">
         <h1 id="scalacheck-property-based-testing-for-scala">ScalaCheck: Property-based testing for Scala</h1>
-<p>ScalaCheck is a library written in <a href="http://www.scala-lang.org/">Scala</a> and used for automated property-based testing of Scala or Java programs. ScalaCheck was originally inspired by the Haskell library <a href="http://hackage.haskell.org/package/QuickCheck">QuickCheck</a>, but has also ventured into its own.</p>
-<p>ScalaCheck has no external dependencies other than the Scala runtime, and <a href="./download.html#sbt">works</a> great with <a href="http://www.scala-sbt.org/">sbt</a>, the Scala build tool. It is also fully integrated in the test frameworks <a href="http://www.scalatest.org/">ScalaTest</a>, <a href="http://etorreborre.github.io/specs2/">specs2</a> and <a href="https://github.com/47deg/LambdaTest">LambdaTest</a>. You can also use ScalaCheck completely standalone, with its built-in test runner.</p>
-<p>ScalaCheck is used by several prominent Scala projects, for example the <a href="http://www.scala-lang.org/">Scala compiler</a> and the <a href="http://akka.io/">Akka</a> concurrency framework.</p>
+<p>ScalaCheck is a library written in <a href="https://www.scala-lang.org/">Scala</a> and used for automated property-based testing of Scala or Java programs. ScalaCheck was originally inspired by the Haskell library <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a>, but has also ventured into its own.</p>
+<p>ScalaCheck has no external dependencies other than the Scala runtime, and <a href="./download.html#sbt">works</a> great with <a href="https://www.scala-sbt.org/">sbt</a>, the Scala build tool. It is also fully integrated in the test frameworks <a href="https://www.scalatest.org/">ScalaTest</a>, <a href="https://etorreborre.github.io/specs2/">specs2</a> and <a href="https://github.com/47deg/LambdaTest">LambdaTest</a>. You can also use ScalaCheck completely standalone, with its built-in test runner.</p>
+<p>ScalaCheck is used by several prominent Scala projects, for example the <a href="https://www.scala-lang.org/">Scala compiler</a> and the <a href="https://akka.io/">Akka</a> concurrency framework.</p>
 <h2 id="news">News</h2>
 <ul>
+<li><p>2021-05-14: Scala 3.0 artifacts were published for ScalaCheck 1.15.4 and 1.15.3</p></li>
+<li><p>2021-05-03: ScalaCheck 1.15.4 is released with a few small bug fixes</p></li>
+<li><p>2021-02-16: ScalaCheck 1.15.3 adds support for Scala Native 0.4.0</p></li>
+<li><p>2020-12-17: ScalaCheck 1.15.2 fixes some uninentional API breakage of methods <code>someOf</code>, <code>atLeastOne</code> and <code>pick</code> in <code>Gen</code>.</p></li>
+<li><p>2020-11-03: <a href="https://github.com/rickynils/scalacheck/tree/1.15.1/CHANGELOG.markdown">ScalaCheck 1.15.1</a> is released. Fixes some uninentional API breakage of methods <code>someOf</code>, <code>atLeastOne</code> and <code>pick</code> in <code>Gen</code>.</p></li>
+<li><p>2020-10-30: <a href="https://github.com/rickynils/scalacheck/tree/1.15.0/CHANGELOG.markdown">ScalaCheck 1.15.0</a> introduces a few enhancements and some performance improvements to string and character generation.</p></li>
+<li><p>2019-12-13: ScalaCheck 1.14.3 fixed a defect with number generators. This also produces artifacts for Scala.js 1.0.0-RC2 and 0.6.31. See the <a href="https://github.com/rickynils/scalacheck/tree/1.14.3/CHANGELOG.markdown">change log</a>.</p></li>
+<li><p>2019-09-25: ScalaCheck 1.14.2 fixed a major defect with Scala.js but no other changes from 1.14.1.</p></li>
 <li><p>2019-09-18: ScalaCheck 1.14.1 released! This is the first release since the ScalaCheck repository was moved to the <a href="https://typelevel.org/">Typelevel</a> organisation. See the <a href="https://github.com/rickynils/scalacheck/releases/tag/1.14.1">release notes</a>.</p></li>
 <li><p>2018-04-22: <a href="./download/1.14.0.html">ScalaCheck 1.14.0</a>! This release introduces support for deterministic testing. See <a href="https://github.com/rickynils/scalacheck/tree/1.14.0/RELEASE.markdown">release notes</a> and <a href="https://github.com/rickynils/scalacheck/tree/1.14.0/CHANGELOG.markdown">change log</a>.</p></li>
 <li><p>2016-11-01: <a href="./download/1.13.4.html">ScalaCheck 1.13.4</a> and <a href="./download/1.12.6.html">ScalaCheck 1.12.6</a> released! These releases fix a <a href="https://github.com/rickynils/scalacheck/issues/290">deadlock problem</a> with Scala 2.12.0. Also, as a problem was discovered with the previously released ScalaCheck 1.12.5 build, it is recommended that you upgrade to 1.12.6 or 1.13.4 even if you’re not using Scala 2.12.</p></li>
@@ -62,7 +70,7 @@
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>If you use <a href="http://www.scala-sbt.org/">sbt</a> add the following dependency to your build file:</p>
+<p>If you use <a href="https://www.scala-sbt.org/">sbt</a> add the following dependency to your build file:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>libraryDependencies <span class="op">+=</span> <span class="st">&quot;org.scalacheck&quot;</span> <span class="op">%%</span> <span class="st">&quot;scalacheck&quot;</span> <span class="op">%</span> <span class="st">&quot;1.14.1&quot;</span> <span class="op">%</span> <span class="st">&quot;test&quot;</span></span></code></pre></div>
 <p>Put your ScalaCheck properties in <code>src/test/scala</code>, then use the <code>test</code> task to check them:</p>
 <pre><code>$ sbt test
@@ -79,7 +87,7 @@ $ scala -cp .:scalacheck_2.11-1.14.1.jar StringSpecification</code></pre>
       </div>
 
       <div class="footer">
-        <div class="left"><p>&copy; 2019 <a href="mailto:rickynils@gmail.com">Rickard Nilsson</a></p></div>
+        <div class="left"><p>&copy; 2021 <a href="mailto:rickynils@gmail.com">Rickard Nilsson</a></p></div>
         <div class="logo"><a href="./index.html"><img src="./img/logo_forall_h30.png" alt="ScalaCheck" /></a></div>
       </div>
 
