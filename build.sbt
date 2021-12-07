@@ -2,9 +2,10 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 ThisBuild / baseVersion := "1.15"
 
-ThisBuild / organization := "org.scalacheck"
+ThisBuild / organization := "io.vasilev"
 ThisBuild / organizationName := "ScalaCheck"
 ThisBuild / organizationHomepage := Some(url("https://scalacheck.org"))
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 ThisBuild / developers := List(
   Developer(
@@ -15,6 +16,7 @@ ThisBuild / developers := List(
   )
 )
 
+ThisBuild / homepage := Some(url("https://scalacheck.org"))
 ThisBuild / scmInfo := Some(
   ScmInfo(
     url("https://github.com/typelevel/scalacheck"),
@@ -41,6 +43,8 @@ lazy val scalacheck = project
 lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("core"))
   .settings(
+    moduleName := "scalacheck",
+
     Compile / sourceGenerators += task {
       val dir = (Compile / sourceManaged).value / "org" / "scalacheck"
       codegen.genAll.map { s =>
@@ -59,7 +63,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
       val groups: Seq[Int => Seq[String]] = Seq(
         mk(12 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
-          "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation",
+          "-Ywarn-nullary-unit", "-Xfuture", "-deprecation",
           "-Ywarn-infer-any", "-Ywarn-unused-import"),
         mk(12 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
           "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Xlint:-unused",
@@ -93,13 +97,6 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       case Some((3, x)) if x > 0 => true
       case _                     => false
     }),
-
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
-                        else ("releases", "service/local/staging/deploy/maven2")
-      Some(name at nexus + path)
-    },
 
     publishMavenStyle := true,
 
