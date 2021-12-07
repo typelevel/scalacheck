@@ -92,3 +92,12 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies += "org.scala-native" %%% "test-interface" % nativeVersion,
     crossScalaVersions := (ThisBuild / crossScalaVersions).value.filter(_.startsWith("2."))
   )
+
+lazy val bench = project
+  .in(file("bench"))
+  .dependsOn(core.jvm)
+  .enablePlugins(JmhPlugin, NoPublishPlugin)
+  .settings(
+    name := "scalacheck-bench",
+    fork := true
+  )
