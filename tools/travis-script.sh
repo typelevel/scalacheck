@@ -3,7 +3,7 @@ set -evu
 
 sbt_cmd=(sbt ++$TRAVIS_SCALA_VERSION)
 
-if [[ "$PLATFORM" == "js" ]]; then
+if [[ "$PLATFORM" == "coreJS" ]]; then
   TESTS=100
 else
   TESTS=1000

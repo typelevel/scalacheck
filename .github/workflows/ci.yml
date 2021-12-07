@@ -24,39 +24,39 @@ jobs:
         os: [ubuntu-latest]
         scala: [3.1.0, 3.0.2, 2.12.15, 2.13.7]
         java: [temurin@8, temurin@11]
-        platform: [jvm]
+        platform: [coreJVM]
         workers: [1, 4]
         include:
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 3.1.0
-            platform: js
+            platform: coreJS
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 3.0.2
-            platform: js
+            platform: coreJS
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 2.12.15
-            platform: js
+            platform: coreJS
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 2.13.7
-            platform: js
+            platform: coreJS
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 2.12.15
-            platform: native
+            platform: coreNative
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
             scala: 2.13.7
-            platform: native
+            platform: coreNative
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)

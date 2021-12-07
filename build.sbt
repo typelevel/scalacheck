@@ -43,7 +43,7 @@ val Java11 = JavaSpec.temurin("11")
 ThisBuild / githubWorkflowJavaVersions := Seq(Java8, Java11)
 
 ThisBuild / githubWorkflowBuildMatrixAdditions ++= Map(
-  "platform" -> List("jvm"),
+  "platform" -> List("coreJVM"),
   "workers" -> List("1", "4")
 )
 
@@ -51,7 +51,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   crossScalaVersions.value map { scala =>
     MatrixInclude(
       Map("os" -> PrimaryOS, "java" -> Java8.render, "scala" -> scala),
-      Map("platform" -> "js", "workers" -> "1"))
+      Map("platform" -> "coreJS", "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
@@ -61,7 +61,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
         "os" -> PrimaryOS,
         "scala" -> scala,
         "java" -> Java8.render),
-      Map("platform" -> "native", "workers" -> "1"))
+      Map("platform" -> "coreNative", "workers" -> "1"))
   }
 
 ThisBuild / githubWorkflowBuildPreamble +=
