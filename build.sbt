@@ -15,6 +15,13 @@ ThisBuild / developers := List(
   )
 )
 
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/typelevel/scalacheck"),
+    "scm:git:git@github.com:typelevel/scalacheck.git"
+  )
+)
+
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.7"
 val Scala30 = "3.0.2"
@@ -42,20 +49,9 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
         f
       }
     },
-    headerSources / excludeFilter := HiddenFileFilter || "*.scala"
-  )
-  .jvmSettings(
-    libraryDependencies ++= Seq(
-      "org.scala-sbt" % "test-interface" % "1.0",
-      "org.apache.commons" % "commons-lang3" % "3.12.0" % Test
-    ),
-    Test / fork := {
-      // Serialization issue in 2.13 and later
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 12)) => false
-        case _             => true
-      }
-    },
+
+    headerSources / excludeFilter := HiddenFileFilter || "*.scala",
+
     // 2.12 - 2.13
     scalacOptions := {
       def mk(r: Range)(strs: String*): Int => Seq[String] =
@@ -63,7 +59,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
       val groups: Seq[Int => Seq[String]] = Seq(
         mk(12 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
-          "-Ywarn-nullary-unit", "-Xfuture", "-deprecation",
+          "-Ywarn-nullary-unit", "-Xfuture", "-Xfatal-warnings", "-deprecation",
           "-Ywarn-infer-any", "-Ywarn-unused-import"),
         mk(12 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
           "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Xlint:-unused",
@@ -82,7 +78,49 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     Test / console / scalacOptions := (Compile / console / scalacOptions).value,
 
     // don't use fatal warnings in tests
-    Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings"))
+    Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
+
+    autoAPIMappings := true,
+    // Mima signature checking stopped working after 3.0.2 upgrade, see #834
+    mimaReportSignatureProblems := (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, _)) => false
+      case _ => true
+    }),
+    mimaPreviousArtifacts := Set("org.scalacheck" %%% "scalacheck" % "1.15.4"),
+
+    // Don't publish for Scala 3.1 or later, only from 3.0
+    publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, x)) if x > 0 => true
+      case _                     => false
+    }),
+
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      val (name, path) = if (isSnapshot.value) ("snapshots", "content/repositories/snapshots")
+                        else ("releases", "service/local/staging/deploy/maven2")
+      Some(name at nexus + path)
+    },
+
+    publishMavenStyle := true,
+
+    publishArtifact := true,
+
+    Test / publishArtifact := false,
+
+    pomIncludeRepository := { _ => false },
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-sbt" % "test-interface" % "1.0",
+      "org.apache.commons" % "commons-lang3" % "3.12.0" % Test
+    ),
+    Test / fork := {
+      // Serialization issue in 2.13 and later
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 12)) => false
+        case _             => true
+      }
+    },
   )
   .jsSettings(
     libraryDependencies +=
@@ -90,7 +128,8 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .nativeSettings(
     libraryDependencies += "org.scala-native" %%% "test-interface" % nativeVersion,
-    crossScalaVersions := (ThisBuild / crossScalaVersions).value.filter(_.startsWith("2."))
+    crossScalaVersions := (ThisBuild / crossScalaVersions).value.filter(_.startsWith("2.")),
+    mimaPreviousArtifacts := Set()
   )
 
 lazy val bench = project
