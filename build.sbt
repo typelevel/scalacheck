@@ -20,7 +20,7 @@ val Scala213 = "2.13.7"
 val Scala30 = "3.0.2"
 val Scala31 = "3.1.0"
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala31, Scala30, Scala212, Scala213)
 
 lazy val scalacheck = project
   .in(file("."))
@@ -73,12 +73,22 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
         case Some((2, n)) => groups.flatMap(f => f(n.toInt))
         case _            => Seq("-language:Scala2")
       }
-    }
+    },
+
+    // HACK: without these lines, the console is basically unusable,
+    // since all imports are reported as being unused (and then become
+    // fatal errors).
+    Compile / console / scalacOptions ~= {_.filterNot("-Ywarn-unused-import" == _)},
+    Test / console / scalacOptions := (Compile / console / scalacOptions).value,
+
+    // don't use fatal warnings in tests
+    Test / scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings"))
   )
   .jsSettings(
     libraryDependencies +=
       ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).cross(CrossVersion.for3Use2_13)
   )
   .nativeSettings(
-    libraryDependencies += "org.scala-native" %%% "test-interface" % nativeVersion
+    libraryDependencies += "org.scala-native" %%% "test-interface" % nativeVersion,
+    crossScalaVersions := (ThisBuild / crossScalaVersions).value.filter(_.startsWith("2."))
   )
