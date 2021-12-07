@@ -1,6 +1,7 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 ThisBuild / baseVersion := "1.15"
+ThisBuild / versionScheme := Some("pvp")
 
 ThisBuild / organization := "io.vasilev"
 ThisBuild / organizationName := "ScalaCheck"
@@ -30,6 +31,76 @@ val Scala30 = "3.0.2"
 val Scala31 = "3.1.0"
 
 ThisBuild / crossScalaVersions := Seq(Scala31, Scala30, Scala212, Scala213)
+
+ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+
+val PrimaryOS = "ubuntu-latest"
+ThisBuild / githubWorkflowOSes := Seq(PrimaryOS)
+
+val Java8 = JavaSpec.temurin("8")
+val Java11 = JavaSpec.temurin("11")
+
+ThisBuild / githubWorkflowJavaVersions := Seq(Java8, Java11)
+
+ThisBuild / githubWorkflowBuildMatrixAdditions ++= Map(
+  "platform" -> List("jvm"),
+  "workers" -> List("1", "4")
+)
+
+ThisBuild / githubWorkflowBuildMatrixInclusions ++=
+  crossScalaVersions.value map { scala =>
+    MatrixInclude(
+      Map("os" -> PrimaryOS, "java" -> Java8.render, "scala" -> scala),
+      Map("platform" -> "js", "workers" -> "1"))
+  }
+
+ThisBuild / githubWorkflowBuildMatrixInclusions ++=
+  crossScalaVersions.value.filter(_.startsWith("2.")) map { scala =>
+    MatrixInclude(
+      Map(
+        "os" -> PrimaryOS,
+        "scala" -> scala,
+        "java" -> Java8.render),
+      Map("platform" -> "native", "workers" -> "1"))
+  }
+
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Run(
+    List("sudo apt install clang libunwind-dev libgc-dev libre2-dev"),
+    name = Some("Setup scala native dependencies"),
+    cond = Some("matrix.platform == 'native'"))
+
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Run(
+    List("./tools/travis-script.sh"),
+    name = Some("Run the build script"),
+    env = Map(
+      "PLATFORM" -> "${{ matrix.platform }}",
+      "TRAVIS_SCALA_VERSION" -> "${{ matrix.scala }}",
+      "WORKERS" -> "${{ matrix.workers }}")))
+
+ThisBuild / githubWorkflowAddedJobs ++= Seq(
+  WorkflowJob(
+    "examples",
+    "Examples",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Run(
+        List(
+          "cd examples",
+          "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
+        name = Some("Build examples"))),
+    javas = List(Java8),
+    scalas = List(crossScalaVersions.value.last)),
+
+  WorkflowJob(
+    "bench",
+    "Bench",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Sbt(
+        List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
+        name = Some("Build benchmark suite"))),
+    javas = List(Java8),
+    scalas = List(crossScalaVersions.value.last)))
 
 lazy val scalacheck = project
   .in(file("."))

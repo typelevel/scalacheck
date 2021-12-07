@@ -104,6 +104,15 @@ jobs:
           WORKERS: ${{ matrix.workers }}
         run: ./tools/travis-script.sh
 
+      - name: Compress target directories
+        run: tar cf targets.tar core/native/target core/js/target core/jvm/target target bench/target project/target
+
+      - name: Upload target directories
+        uses: actions/upload-artifact@v2
+        with:
+          name: target-${{ matrix.os }}-${{ matrix.scala }}-${{ matrix.java }}
+          path: targets.tar
+
   examples:
     name: Examples
     strategy:
