@@ -207,14 +207,8 @@ lazy val sharedSettings = MimaSettings.settings ++ Seq(
   )
 )
 
-lazy val sharedJVMJSSettings = Seq(
-  Compile / unmanagedSourceDirectories += (LocalRootProject / baseDirectory).value / "jvm-js" / "main" / "scala",
-  Test / unmanagedSourceDirectories += (LocalRootProject / baseDirectory).value / "jvm-js" / "test" / "scala"
-)
-
 lazy val js = project.in(file("js"))
   .settings(sharedSettings: _*)
-  .settings(sharedJVMJSSettings: _*)
   .settings(
     Global / scalaJSStage := FastOptStage,
     libraryDependencies +=
@@ -224,7 +218,6 @@ lazy val js = project.in(file("js"))
 
 lazy val jvm = project.in(file("jvm"))
   .settings(sharedSettings: _*)
-  .settings(sharedJVMJSSettings: _*)
   .settings(
     Test / fork := {
       // Serialization issue in 2.13 and later
