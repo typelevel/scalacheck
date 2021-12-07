@@ -25,6 +25,8 @@ ThisBuild / scmInfo := Some(
   )
 )
 
+ThisBuild / licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
+
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.7"
 val Scala30 = "3.0.2"
