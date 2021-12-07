@@ -206,5 +206,6 @@ lazy val bench = project
   .enablePlugins(JmhPlugin, NoPublishPlugin)
   .settings(
     name := "scalacheck-bench",
-    fork := true
+    fork := true,
+    headerSources / excludeFilter := HiddenFileFilter || "*.scala"
   )
