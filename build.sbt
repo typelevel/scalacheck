@@ -13,8 +13,8 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 val PrimaryOS = "ubuntu-latest"
 ThisBuild / githubWorkflowOSes := Seq(PrimaryOS)
 
-val Java8 = "adopt@1.8"
-val Java11 = "adopt@1.11"
+val Java8 = JavaSpec.temurin("8")
+val Java11 = JavaSpec.temurin("11")
 
 ThisBuild / githubWorkflowJavaVersions := Seq(Java8, Java11)
 
@@ -27,7 +27,7 @@ ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   crossScalaVersions.value map { scala =>
     MatrixInclude(
-      Map("os" -> PrimaryOS, "java" -> Java8, "scala" -> scala),
+      Map("os" -> PrimaryOS, "java" -> Java8.render, "scala" -> scala),
       Map("platform" -> "js", "workers" -> "1"))
   }
 
@@ -37,7 +37,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
       Map(
         "os" -> PrimaryOS,
         "scala" -> scala,
-        "java" -> Java8),
+        "java" -> Java8.render),
       Map("platform" -> "native", "workers" -> "1"))
   }
 
