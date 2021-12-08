@@ -34,6 +34,7 @@ val Scala31 = "3.1.0"
 
 ThisBuild / crossScalaVersions := Seq(Scala31, Scala30, Scala212, Scala213)
 
+ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 
 val PrimaryOS = "ubuntu-latest"
