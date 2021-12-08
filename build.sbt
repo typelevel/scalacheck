@@ -134,25 +134,6 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
     headerSources / excludeFilter := HiddenFileFilter || "*.scala",
 
-    // 2.12 - 2.13
-    scalacOptions := {
-      def mk(r: Range)(strs: String*): Int => Seq[String] =
-        (n: Int) => if (r.contains(n)) strs else Seq.empty
-
-      val groups: Seq[Int => Seq[String]] = Seq(
-        mk(12 to 12)("-Ywarn-inaccessible", "-Ywarn-nullary-override",
-          "-Ywarn-nullary-unit", "-Xfuture", "-deprecation",
-          "-Ywarn-infer-any", "-Ywarn-unused-import"),
-        mk(12 to 13)("-encoding", "UTF-8", "-feature", "-unchecked",
-          "-Ywarn-dead-code", "-Ywarn-numeric-widen", "-Xlint:-unused",
-          "-Ywarn-unused:-patvars,-implicits,-locals,-privates,-explicits"))
-
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) => groups.flatMap(f => f(n.toInt))
-        case _            => Seq("-language:Scala2")
-      }
-    },
-
     // HACK: without these lines, the console is basically unusable,
     // since all imports are reported as being unused (and then become
     // fatal errors).
