@@ -134,6 +134,8 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
     headerSources / excludeFilter := HiddenFileFilter || "*.scala",
 
+    scalacOptions ~= (_ filterNot (_ == "-Xfatal-warnings")),
+
     // HACK: without these lines, the console is basically unusable,
     // since all imports are reported as being unused (and then become
     // fatal errors).
