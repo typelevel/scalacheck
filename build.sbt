@@ -3,10 +3,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 ThisBuild / baseVersion := "1.15"
 ThisBuild / versionScheme := Some("pvp")
 
-ThisBuild / organization := "io.vasilev"
+ThisBuild / organization := "org.scalacheck"
 ThisBuild / organizationName := "ScalaCheck"
 ThisBuild / organizationHomepage := Some(url("https://scalacheck.org"))
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 ThisBuild / developers := List(
   Developer(
