@@ -127,6 +127,11 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       }
     },
 
+    Compile / packageSrc / mappings ++= (Compile / managedSources).value.map{ f =>
+      // to merge generated sources into sources.jar as well
+      (f, f.relativeTo((Compile / sourceManaged).value).get.getPath)
+    },
+
     headerSources / excludeFilter := HiddenFileFilter || "*.scala",
 
     // 2.12 - 2.13
