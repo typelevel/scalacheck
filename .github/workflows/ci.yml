@@ -50,6 +50,11 @@ jobs:
           - workers: 1
             os: ubuntu-latest
             java: temurin@8
+            scala: 3.1.0
+            platform: native
+          - workers: 1
+            os: ubuntu-latest
+            java: temurin@8
             scala: 2.12.15
             platform: native
           - workers: 1

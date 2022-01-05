@@ -32,7 +32,7 @@ ThisBuild / githubWorkflowBuildMatrixInclusions ++=
   }
 
 ThisBuild / githubWorkflowBuildMatrixInclusions ++=
-  crossScalaVersions.value.filter(_.startsWith("2.")) map { scala =>
+  crossScalaVersions.value.filterNot(_ == Scala30) map { scala =>
     MatrixInclude(
       Map(
         "os" -> PrimaryOS,
@@ -253,10 +253,18 @@ lazy val jvm = project.in(file("jvm"))
 lazy val native = project.in(file("native"))
   .settings(sharedSettings: _*)
   .settings(
-    scalaVersion := Scala212,
-    crossScalaVersions := Seq(Scala212, Scala213),
     // TODO: re-enable MiMa for native once published
     mimaPreviousArtifacts := Set(),
+    publish / skip := CrossVersion.partialVersion(scalaVersion.value) == Some((3, 0)),
+    Compile / doc / scalacOptions --= {
+      // TODO remove this workaround
+      // https://github.com/scala-native/scala-native/issues/2503
+      if (scalaBinaryVersion.value == "3") {
+        (Compile / doc / scalacOptions).value.filter(_.contains("-Xplugin"))
+      } else {
+        Nil
+      }
+    },
     libraryDependencies ++= Seq(
       "org.scala-native" %%% "test-interface" % nativeVersion
     )

@@ -12,7 +12,7 @@ def printAndDie(msg: String): Nothing = {
   sys.error(msg)
 }
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.2")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.3")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.3")
 
