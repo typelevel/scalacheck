@@ -130,7 +130,7 @@ class GenBench {
   def sequence(): List[Seq[Int]] =
     seeds.map(s => Gen.sequence[Vector[Int], Int](gens).pureApply(params, s))
 
-  private val items = (1 to 100).toVector
+  private val items = (1 to genSize).toVector
 
   @Benchmark
   def oneOf(): List[Int] =
@@ -161,11 +161,11 @@ class GenBench {
       gf.pureApply(params, s)
     }
 
-  private def fg = Gen.choose(1, 100).filter(_ >= 3)
+  private def fg = Gen.choose(1, genSize).filter(_ >= 3)
 
   @Benchmark
   def testFilter(): List[List[Int]] =
     seeds.map { s =>
-      Gen.listOfN(100, fg).pureApply(params, s)
+      Gen.containerOfN[List,Int](genSize, fg).pureApply(params, s)
     }
 }
