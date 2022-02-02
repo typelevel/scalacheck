@@ -3,7 +3,7 @@ sourceDirectory := file("dummy source directory")
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.8"
 val Scala30 = "3.0.2"
-val Scala31 = "3.1.0"
+val Scala31 = "3.1.1"
 
 ThisBuild / crossScalaVersions := Seq(Scala31, Scala30, Scala212, Scala213)
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
