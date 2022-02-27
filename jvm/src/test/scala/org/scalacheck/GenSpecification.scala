@@ -260,6 +260,30 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("indexedPick") = forAll { (vec: Vector[Int]) =>
+    forAll(choose(-1, 2 * vec.length)) { n =>
+      Try(indexedPick(n, vec)) match {
+        case Success(g) =>
+          forAll(g) { m => m.length == n && m.forall(vec.contains) }
+        case Failure(_) =>
+          Prop(n < 0 || n > vec.length)
+      }
+    }
+  }
+
+  property("indexedPick does not repeat picks") = forAll { (set: Set[Int]) =>
+    forAll(choose(-1, 2 * set.size)) { n =>
+      Try(indexedPick(n, set.toVector)) match {
+        case Success(g) =>
+          forAll(g) { m =>
+            m.toSet.size == n
+          }
+        case Failure(_) =>
+          Prop(n < 0 || n > set.size)
+      }
+    }
+  }
+
   /**
    * Expect:
    * 25% 1, 2, 3

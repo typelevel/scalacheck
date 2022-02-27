@@ -14,6 +14,7 @@ import language.implicitConversions
 
 import rng.Seed
 import util.Buildable
+import util.MissingSelector
 import util.SerializableCanBuildFroms._
 import ScalaVersionSpecific._
 
@@ -1141,6 +1142,31 @@ object Gen extends GenArities with GenVersionSpecific {
    */
   def pick[T](n: Int, g1: Gen[T], g2: Gen[T], gn: Gen[T]*): Gen[Seq[T]] =
     pick(n, g1 +: g2 +: gn).flatMap(sequence[Seq[T], T](_))
+
+  /** A generator that randomly picks a given number of elements from an IndexedSeq
+   *
+   * The elements are guaranteed to be permuted in random order.
+   */
+  def indexedPick[T](n: Int, l: IndexedSeq[T]): Gen[collection.Seq[T]] = {
+    if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
+    else if (n == 0) Gen.const(Nil)
+    else gen { (p, seed0) =>
+      val buf = ArrayBuffer.empty[T]
+      var seed = seed0
+      var selector: MissingSelector = MissingSelector.empty
+      while (buf.size < n) {
+        val (x, s) = seed.long
+        // After having chosen k indices, we can choose between (l.size - k) available indices
+        val idxInAvailable = (x & Long.MaxValue % (l.size - buf.size)).toInt
+        // Translate from index in available to real index
+        val (idx, newSelector) = selector.selectAndAdd(idxInAvailable)
+        selector = newSelector
+        buf += l(idx)
+        seed = s
+      }
+      r(Some(buf), seed)
+    }
+  }
 
   /** Takes a function and returns a generator that generates arbitrary
    *  results of that function by feeding it with arbitrarily generated input
