@@ -51,13 +51,26 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     scalas = List(scalaVersion.value)))
 
 ThisBuild / tlBaseVersion := "1.15"
-ThisBuild / tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "1.15").toMap
+ThisBuild / tlMimaPreviousVersions ++= Set(
+  // manually added because tags are not v-prefixed
+  "1.14.0",
+  "1.14.1",
+  "1.14.2",
+  "1.14.3",
+  "1.15.0",
+  "1.15.1",
+  "1.15.2",
+  "1.15.3",
+  "1.15.4",
+)
+ThisBuild / tlVersionIntroduced := Map("3" -> "1.15.3")
 
 lazy val root = tlCrossRootProject.aggregate(core, bench)
 
 lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("core"))
   .settings(
+    name := "scalacheck",
     Compile / unmanagedSourceDirectories += {
       val s = CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3,  _)) => "scala-2.13+"
@@ -93,12 +106,14 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .jsSettings(
     libraryDependencies +=
-      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).cross(CrossVersion.for3Use2_13)
+      ("org.scala-js" %% "scalajs-test-interface" % scalaJSVersion).cross(CrossVersion.for3Use2_13),
+    tlVersionIntroduced ++= List("2.12", "2.13").map(_ -> "1.14.3").toMap
   )
   .nativeSettings(
     libraryDependencies ++= Seq(
       "org.scala-native" %%% "test-interface" % nativeVersion
-    )
+    ),
+    tlVersionIntroduced ++= List("2.12", "2.13").map(_ -> "1.15.2").toMap
   )
 
 lazy val bench = project.in(file("bench"))
