@@ -32,4 +32,6 @@ object Buildable extends BuildableVersionSpecific {
       def builder: mutable.Builder[T, Seq[T]] =
         Seq.newBuilder[T]
     }
+
+  private[scalacheck] implicit def implicitBuildableSeq[T]: Buildable[T, Seq[T]] = buildableSeq
 }
