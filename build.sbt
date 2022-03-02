@@ -38,7 +38,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
           "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
         name = Some("Build examples"))),
     javas = List(Java8),
-    scalas = List(scalaVersion.value)),
+    scalas = List((ThisBuild / scalaVersion).value)),
 
   WorkflowJob(
     "bench",
@@ -48,7 +48,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
         List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
         name = Some("Build benchmark suite"))),
     javas = List(Java8),
-    scalas = List(scalaVersion.value)))
+    scalas = List((ThisBuild / scalaVersion).value)))
 
 ThisBuild / tlBaseVersion := "1.15"
 ThisBuild / tlMimaPreviousVersions ++= Set(
