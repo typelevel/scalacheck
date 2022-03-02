@@ -124,12 +124,3 @@ lazy val bench = project.in(file("bench"))
     fork := true,
   )
   .enablePlugins(NoPublishPlugin, JmhPlugin)
-
-    // Test / fork := {
-    //   // Serialization issue in 2.13 and later
-    //   CrossVersion.partialVersion(scalaVersion.value) match {
-    //     case Some((3,  _)) => true
-    //     case Some((2, 13)) => true
-    //     case _             => false
-    //   }
-    // }
