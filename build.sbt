@@ -1,6 +1,6 @@
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.8"
-val Scala3 = "3.1.1"
+val Scala3 = "3.0.2"
 
 name := "scalacheck"
 ThisBuild / organization := "org.scalacheck"
@@ -23,6 +23,7 @@ ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List(
+    MatrixExclude(Map("project" -> "rootNative", "scala" -> Scala3)),
     MatrixExclude(Map("project" -> "rootJS", "workers" -> "4")),
     MatrixExclude(Map("project" -> "rootNative", "workers" -> "4"))
   )
@@ -113,7 +114,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.scala-native" %%% "test-interface" % nativeVersion
     ),
-    tlVersionIntroduced ++= 
+    tlVersionIntroduced ++=
       List("2.12", "2.13").map(_ -> "1.15.2").toMap ++ Map("3" -> "1.15.5")
   )
 
