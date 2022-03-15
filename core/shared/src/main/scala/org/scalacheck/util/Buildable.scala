@@ -27,9 +27,11 @@ object Buildable extends BuildableVersionSpecific {
       def builder = new ArrayListBuilder[T]
     }
 
-  private[scalacheck] implicit def buildableSeq[T]: Buildable[T, Seq[T]] =
+  def buildableSeq[T]: Buildable[T, Seq[T]] =
     new Buildable[T, Seq[T]] {
       def builder: mutable.Builder[T, Seq[T]] =
         Seq.newBuilder[T]
     }
+
+  private[scalacheck] implicit def implicitBuildableSeq[T]: Buildable[T, Seq[T]] = buildableSeq
 }
