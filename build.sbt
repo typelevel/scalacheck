@@ -1,6 +1,6 @@
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.8"
-val Scala3 = "3.0.2"
+val Scala3 = "3.1.1"
 
 name := "scalacheck"
 ThisBuild / organization := "org.scalacheck"
@@ -23,7 +23,6 @@ ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List(
-    MatrixExclude(Map("project" -> "rootNative", "scala" -> Scala3)),
     MatrixExclude(Map("project" -> "rootJS", "workers" -> "4")),
     MatrixExclude(Map("project" -> "rootNative", "workers" -> "4"))
   )
@@ -51,7 +50,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     javas = List(Java8),
     scalas = List((ThisBuild / scalaVersion).value)))
 
-ThisBuild / tlBaseVersion := "1.15"
+ThisBuild / tlBaseVersion := "1.16"
 ThisBuild / tlMimaPreviousVersions ++= Set(
   // manually added because tags are not v-prefixed
   "1.14.0",
@@ -115,7 +114,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.scala-native" %%% "test-interface" % nativeVersion
     ),
     tlVersionIntroduced ++=
-      List("2.12", "2.13").map(_ -> "1.15.2").toMap ++ Map("3" -> "1.15.5")
+      List("2.12", "2.13").map(_ -> "1.15.2").toMap ++ Map("3" -> "1.16.0")
   )
 
 lazy val bench = project.in(file("bench"))

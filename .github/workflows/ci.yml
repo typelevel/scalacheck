@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.2, 2.12.15, 2.13.8]
+        scala: [3.1.1, 2.12.15, 2.13.8]
         java: [temurin@8, temurin@11]
         project: [rootJS, rootJVM, rootNative]
         workers: [1, 4]
@@ -37,8 +37,6 @@ jobs:
             java: temurin@11
           - project: rootNative
             java: temurin@11
-          - project: rootNative
-            scala: 3.0.2
           - project: rootJS
             workers: 4
           - project: rootNative
@@ -191,32 +189,42 @@ jobs:
             ~/Library/Caches/Coursier/v1
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
-      - name: Download target directories (3.0.2, rootJS, 1)
+      - name: Download target directories (3.1.1, rootJS, 1)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3.0.2-rootJS-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.1.1-rootJS-1
 
-      - name: Inflate target directories (3.0.2, rootJS, 1)
+      - name: Inflate target directories (3.1.1, rootJS, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.0.2, rootJVM, 1)
+      - name: Download target directories (3.1.1, rootJVM, 1)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3.0.2-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.1.1-rootJVM-1
 
-      - name: Inflate target directories (3.0.2, rootJVM, 1)
+      - name: Inflate target directories (3.1.1, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.0.2, rootJVM, 1)
+      - name: Download target directories (3.1.1, rootNative, 1)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3.0.2-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.1.1-rootNative-1
 
-      - name: Inflate target directories (3.0.2, rootJVM, 1)
+      - name: Inflate target directories (3.1.1, rootNative, 1)
+        run: |
+          tar xf targets.tar
+          rm targets.tar
+
+      - name: Download target directories (3.1.1, rootJVM, 1)
+        uses: actions/download-artifact@v2
+        with:
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.1.1-rootJVM-1
+
+      - name: Inflate target directories (3.1.1, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
