@@ -16,6 +16,8 @@ ThisBuild / developers := List(
   )
 )
 
+ThisBuild / tlCiReleaseBranches := Seq("main")
+
 ThisBuild / crossScalaVersions := Seq(Scala3, Scala212, Scala213)
 val Java8 = JavaSpec.temurin("8")
 ThisBuild / githubWorkflowJavaVersions := Seq(Java8, JavaSpec.temurin("11"))

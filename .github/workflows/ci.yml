@@ -117,15 +117,15 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' doc
 
       - name: Make target directories
-        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
+        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
         run: mkdir -p target .js/target core/native/target core/js/target core/jvm/target .jvm/target .native/target bench/target project/target
 
       - name: Compress target directories
-        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
+        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
         run: tar cf targets.tar target .js/target core/native/target core/js/target core/jvm/target .jvm/target .native/target bench/target project/target
 
       - name: Upload target directories
-        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
+        if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
         uses: actions/upload-artifact@v2
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-${{ matrix.scala }}-${{ matrix.project }}-${{ matrix.workers }}
@@ -134,7 +134,7 @@ jobs:
   publish:
     name: Publish Artifacts
     needs: [build]
-    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     strategy:
       matrix:
         os: [ubuntu-latest]
