@@ -8,6 +8,7 @@ private[scalacheck] sealed trait MissingSelector {
    *         and a new MissingSelector containing this integer.
    */
   def selectAndAdd(i: Int): (Int, MissingSelector)
+  protected def selAndAdd(i: Int): (Int, MissingSelector.Inner)
   def size: Int
   def toList(others: List[Int] = List.empty[Int]): List[Int]
 }
@@ -15,11 +16,11 @@ private[scalacheck] sealed trait MissingSelector {
 private[scalacheck] object MissingSelector {
   val empty: MissingSelector = Empty
 
-  sealed private trait Color
-  private object B extends Color
-  private object R extends Color
+  sealed trait Color
+  object B extends Color
+  object R extends Color
 
-  final private class Inner private(
+  final class Inner private(
     private val color: Color,
     private val root: Int,
     private val left: MissingSelector,
@@ -27,15 +28,19 @@ private[scalacheck] object MissingSelector {
     val size: Int
   ) extends MissingSelector {
     override def selectAndAdd(i: Int): (Int, MissingSelector) = {
+      val (newI, newTree) = selAndAdd(i)
+      (newI, newTree.asBlack)
+    }
+
+    override protected def selAndAdd(i: Int): (Int, Inner) = {
       val (newI, newTree) = if (i + left.size < root) {
-        val (newI, newLeft) = left.selectAndAdd(i)
+        val (newI, newLeft) = left.selAndAdd(i)
         (newI, Inner(color, root, newLeft, right))
-      }
-      else {
-        val (newI, newRight) = right.selectAndAdd(i + left.size + 1)
+      } else {
+        val (newI, newRight) = right.selAndAdd(i + left.size + 1)
         (newI, Inner(color, root, left, newRight))
       }
-      (newI, newTree.balance.asBlack)
+      (newI, newTree.balance)
     }
 
     override def toList(others: List[Int]): List[Int] = left.toList(root :: right.toList(others))
@@ -55,15 +60,16 @@ private[scalacheck] object MissingSelector {
     private def asBlack: Inner = if (color == B) this else Inner(B, root, left, right)
   }
 
-  private object Inner {
+  object Inner {
     private[MissingSelector] def apply(color: Color, root: Int, left: MissingSelector, right: MissingSelector): Inner =
       new Inner(color, root, left, right, left.size + right.size + 1)
-    private def unapply(inner: Inner): Option[(Color, Int, MissingSelector, MissingSelector)] =
+    def unapply(inner: Inner): Option[(Color, Int, MissingSelector, MissingSelector)] =
       Some((inner.color, inner.root, inner.left, inner.right))
   }
 
   private object Empty extends MissingSelector {
-    override def selectAndAdd(i: Int): (Int, MissingSelector) = (i, Inner(B, i, Empty, Empty))
+    override def selectAndAdd(i: Int): (Int, MissingSelector) = (i, Inner(R, i, Empty, Empty))
+    override protected def selAndAdd(i: Int): (Int, Inner) = (i, Inner(R, i, Empty, Empty))
     override def size: Int = 0
     override def toList(others: List[Int]): List[Int] = others
   }
