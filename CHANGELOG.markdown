@@ -1,5 +1,23 @@
 # ScalaCheck CHANGELOG
 
+## 1.16.0 (2022-04-07)
+
+Scalacheck 1.16.0 is binary compatible with the 1.15.x and 1.14.x series. It is published for Scala 2.12, 2.13, and 3.1+ with Scala.js 1.8+ and Scala Native 0.4. This release is the first to support Scala 3 on the Native platform.
+
+## User-facing PRs
+- Adds Discord badge by @paualarco in https://github.com/typelevel/scalacheck/pull/814
+- ScalaCheck follows semver since 1.14.x by @larsrh in https://github.com/typelevel/scalacheck/pull/793
+- Improve docs for Arbitrary by @ashawley in https://github.com/typelevel/scalacheck/pull/806
+- Update examples to 3.0 by @ashawley in https://github.com/typelevel/scalacheck/pull/813
+- Add badge to README showing supported versions of Scala by @rtyley in https://github.com/typelevel/scalacheck/pull/819
+- Fix `Arbitrary[Year]` instance max value by @dantb in https://github.com/typelevel/scalacheck/pull/825
+- Check roundtrip in serialize tests by @ashawley in https://github.com/typelevel/scalacheck/pull/829
+- Fix `Arbitrary[Char]` generates 0xFFFE (not a character in Unicode) by @kadzuya in https://github.com/typelevel/scalacheck/pull/835
+- Ensure preconditions are satisified when shrinking Commands actions by @jonaskoelker in https://github.com/typelevel/scalacheck/pull/739
+- Support `java.time` arbitraries on Scala.js & Native by @armanbilge in https://github.com/typelevel/scalacheck/pull/830
+- Enable published snapshots by @armanbilge in https://github.com/typelevel/scalacheck/pull/877
+- Onwards and upwards by @armanbilge in https://github.com/typelevel/scalacheck/pull/879
+
 ## 1.15.4 (2021-05-03)
 
 * Binary compatible with 1.15.3 version of ScalaCheck.
