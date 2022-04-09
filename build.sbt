@@ -52,7 +52,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     javas = List(Java8),
     scalas = List((ThisBuild / scalaVersion).value)))
 
-ThisBuild / tlBaseVersion := "1.16"
+ThisBuild / tlBaseVersion := "1.17"
 ThisBuild / tlMimaPreviousVersions ++= Set(
   // manually added because tags are not v-prefixed
   "1.14.0",
