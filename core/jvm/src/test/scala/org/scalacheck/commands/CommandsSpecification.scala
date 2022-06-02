@@ -13,7 +13,15 @@ import org.scalacheck._
 
 object CommandsSpecification extends Properties("Commands") {
 
-  property("commands") = TestCommands.property(threadCount = 4)
+  def prop = TestCommands.property(threadCount = 4)
+  property("commands") = prop
+
+  // `property(...) = prop` evaluates `prop` for each generation, while this will reuse the same value
+  val reusedProp = prop
+  property("commands with prop evaluated just once") = reusedProp
+
+  override def overrideParameters(p: Test.Parameters): Test.Parameters =
+    super.overrideParameters(p).withWorkers(2)
 
   object TestCommands extends Commands {
     case class Counter(var n: Int) {
