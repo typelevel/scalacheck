@@ -73,22 +73,6 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("core"))
   .settings(
     name := "scalacheck",
-    Compile / unmanagedSourceDirectories += {
-      val s = CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((3,  _)) => "scala-2.13+"
-        case Some((2, 13)) => "scala-2.13+"
-        case _             => "scala-2.13-"
-      }
-      baseDirectory.value / ".." / "shared" / "src" / "main" / s
-    },
-    Test / unmanagedSourceDirectories += {
-      val s = CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((3,  _)) => "scala-2.13+"
-        case Some((2, 13)) => "scala-2.13+"
-        case _             => "scala-2.13-"
-      }
-      baseDirectory.value / ".." / "shared" / "src" / "test" / s
-    },
     Compile / sourceGenerators += task {
       val dir = (Compile / sourceManaged).value / "org" / "scalacheck"
       codegen.genAll.map { s =>
