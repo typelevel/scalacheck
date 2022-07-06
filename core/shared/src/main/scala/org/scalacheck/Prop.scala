@@ -14,6 +14,7 @@ import language.implicitConversions
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
 import scala.annotation.tailrec
+import scala.util.control.NonFatal
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
  *  use `Prop.apply` instead. */
@@ -772,10 +773,13 @@ object Prop {
     /*
      * Returns the first failed result in Left or success in Right.
      */
-    def getFirstFailure(xs: Stream[T]): Either[(T,Result),(T,Result)] = {
+    def getFirstFailure(xs: Stream[T], exceptionFilter: Option[Class[_]]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
       val results = xs.map(x => (x, result(x)))
-      results.dropWhile(!_._2.failure).headOption match {
+      results.dropWhile {
+        case (_, Result(Exception(e), _, _, _)) => !exceptionFilter.contains(e.getClass)
+        case (_, r) => !r.failure
+      }.headOption match {
         case None => Right(results.head)
         case Some(xr) => Left(xr)
       }
@@ -784,7 +788,8 @@ object Prop {
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
       val xs = shrink(x)
       val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
-      if(xs.isEmpty) res else getFirstFailure(xs) match {
+      val originalException = Some(r.status).collect { case NonFatal(e) => e.getClass() }
+      if(xs.isEmpty) res else getFirstFailure(xs, originalException) match {
         case Right((x2,r2)) => res
         case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
       }

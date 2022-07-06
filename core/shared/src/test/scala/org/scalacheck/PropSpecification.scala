@@ -241,6 +241,34 @@ object PropSpecification extends Properties("Prop") {
     Prop(prop(params).failure && !Bogus.shrunk)
   }
 
+  property("shrinking does not change the original error to an exception") = {
+    val prop = forAll(Gen.const(1)) { (n: Int) => (10 / n) < 10 }
+    val result = prop(Gen.Parameters.default)
+
+    // shrinking should maintain the False result and not transform it to an ArithmeticException
+    Prop(result.status == False)
+  }
+
+  property("shrinking does not change the original exception type") = {
+    class ExpectedException extends RuntimeException("expected exception")
+    class UnexpectedException extends RuntimeException("unexpected exception")
+    def throwOn42(n: Int): Int = {
+      if(n == 42)
+        throw new ExpectedException
+      else
+        throw new UnexpectedException
+    }
+
+    val prop = forAll(Gen.const(42)) { (n: Int) => throwOn42(n) == 1 }
+    val result = prop(Gen.Parameters.default)
+
+    // shrinking should maintain the original ExpectedException and not transform it to an UnexpectedException
+    Prop(result.status match {
+      case Exception(e) => e.getClass == classOf[ExpectedException]
+      case _ => false
+    })
+  }
+
   // make sure the two forAlls are seeing independent values
   property("regression #530: failure to slide seed") =
     forAll((x: Int) => (x >= 0) ==> true) &&
