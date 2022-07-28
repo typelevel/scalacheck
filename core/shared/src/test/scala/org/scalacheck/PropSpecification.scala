@@ -269,6 +269,30 @@ object PropSpecification extends Properties("Prop") {
     })
   }
 
+  property("shrinking process always take the first value returned by the Shrink[T]") = {
+    // this shrinker split a string in 2
+    implicit val stringShrink: Shrink[String] = Shrink[String] {
+      def split(s: String): Stream[String] = {
+        if (s.length == 1) Stream.empty
+        else {
+          s.take(s.length / 2) #:: s.drop(s.length / 2)  #:: Stream.empty
+        }
+      }
+      split
+    }
+
+    // shrinked value will be "1234", then shrinked to "12" because it also fails, and finally "1"
+    val prop = forAll(Gen.const("12345678")) { (a: String) =>
+      throw new RuntimeException("expected exception")
+    }
+
+    val result = prop(Gen.Parameters.default)
+    Prop(result.status match {
+      case Exception(_) => result.args.head.arg == "1"
+      case _ => false
+    })
+  }
+
   // make sure the two forAlls are seeing independent values
   property("regression #530: failure to slide seed") =
     forAll((x: Int) => (x >= 0) ==> true) &&
