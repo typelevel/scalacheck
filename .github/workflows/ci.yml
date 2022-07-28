@@ -9,9 +9,9 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches: ['**', '!update/**']
+    branches: ['**', '!update/**', '!pr/**']
   push:
-    branches: ['**', '!update/**']
+    branches: ['**', '!update/**', '!pr/**']
     tags: [v*]
 
 env:
@@ -219,16 +219,6 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.1.2, rootJVM, 1)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3.1.2-rootJVM-1
-
-      - name: Inflate target directories (3.1.2, rootJVM, 1)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
       - name: Download target directories (2.12.16, rootJS, 1)
         uses: actions/download-artifact@v2
         with:
@@ -259,16 +249,6 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.16, rootJVM, 1)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.16-rootJVM-1
-
-      - name: Inflate target directories (2.12.16, rootJVM, 1)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
       - name: Download target directories (2.13.8, rootJS, 1)
         uses: actions/download-artifact@v2
         with:
@@ -295,16 +275,6 @@ jobs:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.8-rootNative-1
 
       - name: Inflate target directories (2.13.8, rootNative, 1)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.13.8, rootJVM, 1)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.8-rootJVM-1
-
-      - name: Inflate target directories (2.13.8, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
