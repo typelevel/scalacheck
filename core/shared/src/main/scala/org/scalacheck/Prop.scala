@@ -773,7 +773,7 @@ object Prop {
     /*
      * Returns the first failed result in Left or success in Right.
      */
-    def getFirstFailure(xs: Stream[T], exceptionFilter: Option[Class[_]]): Either[(T,Result),(T,Result)] = {
+    def getFirstFailure(xs: Stream[T], exceptionFilter: Option[Class[_ <: Throwable]]): Either[(T,Result),(T,Result)] = {
       assert(!xs.isEmpty, "Stream cannot be empty")
       val results = xs.map(x => (x, result(x)))
       results.dropWhile {
@@ -788,7 +788,7 @@ object Prop {
     def shrinker(x: T, r: Result, shrinks: Int, orig: T): Result = {
       val xs = shrink(x)
       val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
-      val originalException = Some(r.status).collect { case NonFatal(e) => e.getClass() }
+      val originalException = Some(r.status).collect { case Prop.Exception(e) => e.getClass }
       if(xs.isEmpty) res else getFirstFailure(xs, originalException) match {
         case Right((x2,r2)) => res
         case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
