@@ -1521,7 +1521,7 @@ object Gen extends GenArities with GenVersionSpecific {
         c.set(HOUR_OF_DAY, 23)
         c.set(MINUTE, 59)
         c.set(SECOND, 59)
-        c.set(MILLISECOND, 59)
+        c.set(MILLISECOND, 999)
       })
 
     val firstDayOfYearGen: Gen[Calendar] =
