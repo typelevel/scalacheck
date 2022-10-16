@@ -86,7 +86,7 @@ Here are some examples of properties defined with help of the
 ```scala
 import org.scalacheck.Prop.forAll
 
-val propReverseList = forAll { l: List[String] => l.reverse.reverse == l }
+val propReverseList = forAll { (l: List[String]) => l.reverse.reverse == l }
 
 val propConcatString = forAll { (s1: String, s2: String) =>
   (s1 + s2).endsWith(s2)
@@ -124,7 +124,7 @@ you can use the implication operator `==>`:
 ```scala
 import org.scalacheck.Prop.{forAll, propBoolean}
 
-val propMakeList = forAll { n: Int =>
+val propMakeList = forAll { (n: Int) =>
   (n >= 0 && n < 10000) ==> (List.fill(n)("").length == n)
 }
 ```
@@ -140,7 +140,7 @@ non-zero will be thrown away:
 ```
 scala> import org.scalacheck.Prop.{forAll, propBoolean}
 
-scala> val propTrivial = forAll { n: Int =>
+scala> val propTrivial = forAll { (n: Int) =>
      |  (n == 0) ==> (n == 0)
      | }
 
@@ -628,7 +628,7 @@ list.
 ```scala
 import org.scalacheck.Prop._
 
-val myProp = forAll { l: List[Int] =>
+val myProp = forAll { (l: List[Int]) =>
   classify(ordered(l), "ordered") {
     classify(l.length > 5, "large", "small") {
       l.reverse.reverse == l
