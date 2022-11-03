@@ -17,6 +17,8 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
 import java.util.UUID
 import rng.Seed
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 sealed trait Cogen[T] extends Serializable {
 
@@ -124,10 +126,20 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
     Cogen.it(_.iterator)
 
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =
-    Cogen.it(_.toVector.sorted.iterator)
+    Cogen[SortedSet[A]].contramap(value =>
+      value.foldLeft(SortedSet.empty[A])(_ + _)
+    )
+
+  implicit def cogenSortedSet[A: Cogen]: Cogen[SortedSet[A]] =
+    Cogen.it(_.iterator)
 
   implicit def cogenMap[K: Cogen: Ordering, V: Cogen]: Cogen[Map[K, V]] =
-    Cogen.it(_.toVector.sortBy(_._1).iterator)
+    Cogen[SortedMap[K, V]].contramap(value =>
+      value.foldLeft(SortedMap.empty[K, V])(_ + _)
+    )
+
+  implicit def cogenSortedMap[K: Cogen, V: Cogen]: Cogen[SortedMap[K, V]] =
+    Cogen.it(_.iterator)
 
   implicit def cogenFunction0[Z: Cogen]: Cogen[() => Z] =
     Cogen[Z].contramap(f => f())

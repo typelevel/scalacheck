@@ -16,9 +16,10 @@ import org.scalacheck.Prop.forAll
 import org.scalacheck.rng.Seed
 import ScalaVersionSpecific._
 
-
-import scala.util.Try
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Try
 
 import java.time._
 import java.util.UUID
@@ -181,4 +182,6 @@ object CogenSpecification extends Properties("Cogen") {
   include(cogenLaws[ZonedDateTime], "cogenZonedDateTime.")
   include(cogenLaws[ZoneId], "cogenZoneId.")
   include(cogenLaws[Period], "cogenPeriod.")
+  include(cogenLaws[SortedSet[Int]], "cogenSortedSet.")
+  include(cogenLaws[SortedMap[Int, Int]], "cogenSortedSet.")
 }
