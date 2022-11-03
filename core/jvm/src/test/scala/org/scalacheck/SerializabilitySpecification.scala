@@ -12,8 +12,6 @@ package org.scalacheck
 import org.apache.commons.lang3.SerializationUtils
 import java.io.Serializable
 
-import Prop.proved
-
 import util.SerializableCanBuildFroms._
 
 object SerializabilitySpecification extends Properties("Serializability") {

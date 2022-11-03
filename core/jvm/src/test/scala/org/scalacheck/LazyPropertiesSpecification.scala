@@ -13,7 +13,7 @@ object LazyPropertiesSpecification extends Properties("Properties.lazy registrat
 
   property("properties registered lazily") = {
     var evaluated = false
-    val p = new Properties("P") {
+    val _ = new Properties("P") {
       property("p") = {
         evaluated = true
         Prop.proved
@@ -23,4 +23,3 @@ object LazyPropertiesSpecification extends Properties("Properties.lazy registrat
   }
 
 }
-

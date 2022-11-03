@@ -9,12 +9,9 @@
 
 package org.scalacheck
 
-import language.implicitConversions
-
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
 import scala.annotation.tailrec
-import scala.util.control.NonFatal
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly,
  *  use `Prop.apply` instead. */
@@ -43,7 +40,11 @@ sealed abstract class Prop extends Serializable { self =>
       res
     }
 
+  @deprecated(message="Please use useSeed which only takes a seed. name is, and has been, unused.", since="1.17.1")
   def useSeed(name: String, seed: Seed): Prop =
+    useSeed(seed)
+
+  def useSeed(seed: Seed): Prop =
     Prop(prms0 => self(prms0.withInitialSeed(seed)))
 
   def contramap(f: Gen.Parameters => Gen.Parameters): Prop =
@@ -64,7 +65,7 @@ sealed abstract class Prop extends Serializable { self =>
   /** Convenience method that checks this property with the given parameters
    *  and reports the result on the console. Should only be used when running
    *  tests interactively within the Scala REPL.*/
-  def check(prms: Test.Parameters): Unit = Test.check(
+  def check(prms: Test.Parameters): Unit = Test.check_(
     if(prms.testCallback.isInstanceOf[ConsoleReporter]) prms
     else prms.withTestCallback(prms.testCallback.chain(ConsoleReporter(1))),
     this
@@ -312,7 +313,7 @@ object Prop {
   )
 
   /** Create a property that returns the given result */
-  def apply(r: Result): Prop = Prop.apply(prms => r)
+  def apply(r: Result): Prop = Prop.apply(_ => r)
 
   /** Create a property from a boolean value */
   def apply(b: Boolean): Prop = if(b) proved else falsified
@@ -790,7 +791,7 @@ object Prop {
       val res = r.addArg(Arg(labels,x,shrinks,orig,pp(x),pp(orig)))
       val originalException = Some(r.status).collect { case Prop.Exception(e) => e.getClass }
       if(xs.isEmpty) res else getFirstFailure(xs, originalException) match {
-        case Right((x2,r2)) => res
+        case Right(_) => res
         case Left((x2,r2)) => shrinker(x2, replOrig(r,r2), shrinks+1, orig)
       }
     }

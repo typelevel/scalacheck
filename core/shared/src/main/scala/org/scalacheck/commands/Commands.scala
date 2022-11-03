@@ -380,7 +380,7 @@ trait Commands {
     val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
     val l1 = s"Initial State:\n  ${as.s}\nSequential Commands:\n${prettyCmdsRes(as.seqCmds zip rs1, maxLength)}"
     if(as.parCmds.isEmpty) p1 :| l1
-    else propAnd(p1.flatMap{r => if(!r.success) finalize; Prop(prms => r)} :| l1, {
+    else propAnd(p1.flatMap{r => if(!r.success) finalize; Prop(_ => r)} :| l1, {
       try{
       val (p2, rs2) = runParCmds(sut, s, as.parCmds)
       val l2 = rs2.map(prettyCmdsRes(_, maxLength)).mkString("\n\n")
@@ -463,7 +463,7 @@ trait Commands {
 
   /** Short-circuit property AND operator. (Should maybe be in Prop module) */
   private def propAnd(p1: => Prop, p2: => Prop) = p1.flatMap { r =>
-    if(r.success) Prop.secure(p2) else Prop(prms => r)
+    if(r.success) Prop.secure(p2) else Prop(_ => r)
   }
 
 }

@@ -20,7 +20,7 @@ object CommandsShrinkSpecification extends Properties("Commands Shrinking") {
         // command sequence contains the Dequeue command, we will invoke
         // Nil.tail which will raise UnsupportedOperationException.
         result.status match {
-          case Prop.Exception(e: UnsupportedOperationException) => false
+          case Prop.Exception(_: UnsupportedOperationException) => false
           case _ => true
         }
     }

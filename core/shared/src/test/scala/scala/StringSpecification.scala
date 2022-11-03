@@ -20,7 +20,7 @@ object StringSpecification extends Properties("scala.String") {
     val listOfGens: List[Gen[Char]] = "".toList.map(Gen.const(_))
     val g1: Gen[String] = Gen.sequence(listOfGens).map(_.asScala.mkString)
     val g2: Gen[String] = Gen.sequence(List(Gen.listOf(' ').map(_.mkString))).map(_.asScala.mkString)
-    Prop.forAll(g1, g2) { (s1, s2) =>
+    Prop.forAll(g1, g2) { (_, _) =>
       true
     }
   }

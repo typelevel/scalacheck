@@ -9,7 +9,6 @@
 
 package org.scalacheck
 
-import language.higherKinds
 import concurrent.Future
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -22,7 +21,7 @@ import util.SerializableCanBuildFroms._
  *
  * The [[Arbitrary]] module defines implicit generator instances for
  * common types.
- * 
+ *
  * The implicit definitions of [[Arbitrary]] provide type-directed
  * [[Gen]]s so they are available for properties, generators, or other
  * definitions of [[Arbitrary]].
@@ -261,7 +260,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
       } yield {
         try {
           BigDecimal(n, scale, mc)
-        } catch { case ae: ArithmeticException =>
+        } catch { case _: ArithmeticException =>
           // Handle the case where scale/precision conflict
           BigDecimal(n, scale, UNLIMITED)
         }

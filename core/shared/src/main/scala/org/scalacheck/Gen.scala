@@ -9,9 +9,6 @@
 
 package org.scalacheck
 
-import language.higherKinds
-import language.implicitConversions
-
 import rng.Seed
 import util.Buildable
 import util.SerializableCanBuildFroms._
@@ -300,7 +297,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
       def doApply(p: Gen.Parameters, seed: Seed): Gen.R[T] =
         p.useInitialSeed(seed) { (p0, s0) =>
           val r = self.doApply(p0, s0)
-          r.copy(r = r.retrieve.filter(f))
+          r.withResult(r.retrieve.filter(f))
         }
     }
 
@@ -369,7 +366,7 @@ sealed abstract class Gen[+T] extends Serializable { self =>
     def doApply(p: Gen.Parameters, seed: Seed) =
       p.useInitialSeed(seed) { (p0, s0) =>
         val r = self.doApply(p0, s0)
-        r.copy(l = r.labels + l)
+        r.withLabels(r.labels + l)
       }
   }
 
@@ -401,7 +398,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   class RetrievalError extends RuntimeException("couldn't generate value")
 
-  private[scalacheck] trait R[+T] {
+  private[scalacheck] trait R[+T] { self =>
     def labels: Set[String] = Set()
     // sieve is no longer used but preserved for binary compatibility
     final def sieve[U >: T]: U => Boolean = (_: U) => true
@@ -410,28 +407,43 @@ object Gen extends GenArities with GenVersionSpecific {
 
     def retrieve: Option[T] = result
 
+    @deprecated(message="Please use withLabels, withResult, or withSeed instead.", since="1.17.1")
     def copy[U >: T](
       l: Set[String] = this.labels,
       // s is no longer used but preserved for binary compatibility
       s: U => Boolean = this.sieve,
       r: Option[U] = this.result,
       sd: Seed = this.seed
-    ): R[U] = new R[U] {
+    ): R[U] = withLabels(l).withSeed(sd).withResult(r)
+
+    final def withLabels(l: Set[String]): R[T] = new R[T] {
       override val labels = l
-      val seed = sd
-      val result = r
+      override val seed = self.seed
+      override protected val result = self.result
+    }
+
+    final def withResult[U >: T](r: Option[U]): R[U] = new R[U] {
+      override val labels = self.labels
+      override val seed = self.seed
+      override protected val result = r
+    }
+
+    final def withSeed(sd: Seed): R[T] = new R[T] {
+      override val labels = self.labels
+      override val seed = sd
+      override protected val result = self.result
     }
 
     def map[U](f: T => U): R[U] =
-      r(retrieve.map(f), seed).copy(l = labels)
+      r(retrieve.map(f), seed).withLabels(labels)
 
     def flatMap[U](f: T => R[U]): R[U] =
       retrieve match {
         case None =>
-          r(None, seed).copy(l = labels)
+          r(None, seed).withLabels(labels)
         case Some(t) =>
           val r = f(t)
-          r.copy(l = labels | r.labels)
+          r.withLabels(labels | r.labels)
       }
   }
 
@@ -794,10 +806,10 @@ object Gen extends GenArities with GenVersionSpecific {
   //// Various Generator Combinators ////
 
   /** A generator that always generates the given value */
-  implicit def const[T](x: T): Gen[T] = gen((p, seed) => r(Some(x), seed))
+  implicit def const[T](x: T): Gen[T] = gen((_, seed) => r(Some(x), seed))
 
   /** A generator that never generates a value */
-  def fail[T]: Gen[T] = gen((p, seed) => failed[T](seed))
+  def fail[T]: Gen[T] = gen((_, seed) => failed[T](seed))
 
 
   /**
@@ -836,7 +848,7 @@ object Gen extends GenArities with GenVersionSpecific {
       gs.foldLeft(r(Some(Vector.empty[T]), seed)) {
         case (rs,g) =>
           val rt = g.doApply(p, rs.seed)
-          rt.flatMap(t => rs.map(_ :+ t)).copy(sd = rt.seed)
+          rt.flatMap(t => rs.map(_ :+ t)).withSeed(rt.seed)
       }
     }
     g.map(b.fromIterable)
@@ -863,8 +875,8 @@ object Gen extends GenArities with GenVersionSpecific {
       val re = fn(a, seed)
       val nextLabs = labs | re.labels
       re.retrieve match {
-        case None => r(None, re.seed).copy(l = nextLabs)
-        case Some(Right(b)) => r(Some(b), re.seed).copy(l = nextLabs)
+        case None => r(None, re.seed).withLabels(nextLabs)
+        case Some(Right(b)) => r(Some(b), re.seed).withLabels(nextLabs)
         case Some(Left(a)) => tailRecMR(a, re.seed, nextLabs)(fn)
       }
     }
@@ -950,7 +962,7 @@ object Gen extends GenArities with GenVersionSpecific {
         total += weight
         builder += ((total, value))
       }
-      val tree = builder.result
+      val tree = builder.result()
       choose(1L, total).flatMap(r => tree.rangeFrom(r).head._2)
     }
   }
@@ -996,7 +1008,7 @@ object Gen extends GenArities with GenVersionSpecific {
           }
           seed = res.seed
         }
-        r(Some(bldr.result), seed)
+        r(Some(bldr.result()), seed)
       }
     }
   }
@@ -1114,13 +1126,13 @@ object Gen extends GenArities with GenVersionSpecific {
   def pick[T](n: Int, l: Iterable[T]): Gen[collection.Seq[T]] = {
     if (n > l.size || n < 0) throw new IllegalArgumentException(s"invalid choice: $n")
     else if (n == 0) Gen.const(Nil)
-    else gen { (p, seed0) =>
+    else gen { (_, seed0) =>
       val buf = ArrayBuffer.empty[T]
       val it = l.iterator
       var seed = seed0
       var count = 0
       while (it.hasNext) {
-        val t = it.next
+        val t = it.next()
         count += 1
         if (count <= n) {
           buf += t

@@ -510,6 +510,18 @@ object Test {
     timedRes
   }
 
+  /** As `check`, but discards the result. Useful for when you just want to
+    * read the console output.
+    */
+  def check_(params: Parameters, p: Prop): Unit =
+    {check(params, p); ()}
+
+  /** As `check`, but discards the result. Useful for when you just want to
+    * read the console output.
+    */
+  def check_(p: Prop)(f: Parameters => Parameters): Unit =
+    check_(f(Parameters.default), p)
+
   /** Returns the result of filtering a property name by a supplied regular expression.
     *
     *  @param propertyName The name of the property to be filtered.
@@ -526,7 +538,7 @@ object Test {
         val regex = expr.r
         (s: String) => matchPropFilter(s, regex)
       case None =>
-        (s: String) => true
+        (_: String) => true
     }
 
   /** Check a set of properties. */
@@ -548,4 +560,9 @@ object Test {
       (name, res)
     }
   }
+
+  /** As `checkProperties`, but discards the result. Useful for when you just
+    * want to observe the results on the console.
+    */
+  def checkProperties_(prms: Parameters, ps: Properties): Unit = {checkProperties(prms, ps); ()}
 }

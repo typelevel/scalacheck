@@ -76,7 +76,7 @@ object PropSpecification extends Properties("Prop") {
     val g = oneOf(proved,passed,undecided)
     forAll(g)(p => (p && undecided) == undecided)
   }
-  property("Prop.&& Right prio") = forAll { (sz: Int, prms: Parameters) =>
+  property("Prop.&& Right prio") = forAll { (_: Int, prms: Parameters) =>
     val p = proved.map(_.label("RHS")) && proved.map(_.label("LHS"))
     p(prms).labels.contains("RHS")
   }
@@ -205,7 +205,7 @@ object PropSpecification extends Properties("Prop") {
   property("prop.useSeed is deterministic") =
     forAll { (p0: Prop, n: Long) =>
       val params = Gen.Parameters.default
-      val p = p0.useSeed("some name", rng.Seed(n))
+      val p = p0.useSeed(rng.Seed(n))
       val x = p(params).success
       val set = (1 to 10).map(_ => p(params).success).toSet
       Prop(set == Set(x)).label(s"$set == Set($x)")
@@ -215,7 +215,7 @@ object PropSpecification extends Properties("Prop") {
     forAll { (g1: Gen[Int], g2: Gen[Int], g3: Gen[Int], n: Long) =>
       val params = Gen.Parameters.default
       val p0 = Prop.forAll(g1, g2, g3) { (x, y, z) => x == y && y == z }
-      val p = p0.useSeed("some name", rng.Seed(n))
+      val p = p0.useSeed(rng.Seed(n))
       val r1 = p(params).success
       val r2 = p(params).success
       Prop(r1 == r2).label(s"$r1 == $r2")
@@ -230,14 +230,14 @@ object PropSpecification extends Properties("Prop") {
       var shrunk: Boolean = false
 
       implicit def shrinkBogus: Shrink[Bogus] = {
-        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+        Shrink { (_: Bogus) => shrunk = true; Stream.empty }
       }
     }
 
     case class Bogus(x: Int)
 
     val params = Gen.Parameters.default.disableLegacyShrinking
-    val prop = Prop.forAll(Bogus.gen) { b => Prop(false) }
+    val prop = Prop.forAll(Bogus.gen) { _ => Prop(false) }
     Prop(prop(params).failure && !Bogus.shrunk)
   }
 
@@ -282,7 +282,7 @@ object PropSpecification extends Properties("Prop") {
     }
 
     // shrinked value will be "1234", then shrinked to "12" because it also fails, and finally "1"
-    val prop = forAll(Gen.const("12345678")) { (a: String) =>
+    val prop = forAll(Gen.const("12345678")) { (_: String) =>
       throw new RuntimeException("expected exception")
     }
 

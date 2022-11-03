@@ -193,6 +193,6 @@ object Seed {
   }
 
   /** Generate a random seed. */
-  def random(): Seed = apply(scala.util.Random.nextLong)
+  def random(): Seed = apply(scala.util.Random.nextLong())
 
 }

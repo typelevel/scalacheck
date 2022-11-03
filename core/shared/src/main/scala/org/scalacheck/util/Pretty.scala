@@ -9,8 +9,6 @@
 
 package org.scalacheck.util
 
-import language.implicitConversions
-
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
 import scala.annotation.tailrec
@@ -79,7 +77,7 @@ object Pretty {
       }
 
     loop(0, length)
-    sb.result
+    sb.result()
   }
 
   def format(s: String, lead: String, trail: String, width: Int) =
@@ -106,11 +104,11 @@ object Pretty {
     builder.result()
   }
 
-  implicit def prettyAny(t: Any): Pretty = Pretty { p => toStrOrNull(t) }
+  implicit def prettyAny(t: Any): Pretty = Pretty { _ => toStrOrNull(t) }
 
-  implicit def prettyString(t: String): Pretty = Pretty { p => "\""++escapeControlChars(t)++"\"" }
+  implicit def prettyString(t: String): Pretty = Pretty { _ => "\""++escapeControlChars(t)++"\"" }
 
-  implicit def prettyList(l: List[Any]): Pretty = Pretty { p =>
+  implicit def prettyList(l: List[Any]): Pretty = Pretty { _ =>
     l.map("\""+_+"\"").mkString("List(", ", ", ")")
   }
 
@@ -142,7 +140,7 @@ object Pretty {
     }.mkString("\n")
   }
 
-  implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { prms =>
+  implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { _ =>
     if(fm.total == 0) ""
     else {
       "> Collected test data: " / {
@@ -160,7 +158,7 @@ object Pretty {
       if(ls.isEmpty) ""
       else "> Labels of failing property: " / ls.mkString("\n")
     val s = res.status match {
-      case Test.Proved(args) if(prms.verbosity <= 1) => "OK, proved property."
+      case Test.Proved(_) if(prms.verbosity <= 1) => "OK, proved property."
       case Test.Proved(args) => "OK, proved property."/prettyArgs(args)(prms)
       case Test.Passed => "OK, passed "+res.succeeded+" tests."
       case Test.Failed(args, l) =>
@@ -183,7 +181,7 @@ object Pretty {
     else "%d min %.3f sec ".format(min, sec)
   }
 
-  implicit def prettyTestParams(prms: Test.Parameters): Pretty = Pretty { p =>
+  implicit def prettyTestParams(prms: Test.Parameters): Pretty = Pretty { _ =>
     prms.toString
   }
 }

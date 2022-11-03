@@ -33,7 +33,7 @@ class Properties(val name: String) {
 
   /**
    * Customize the parameters specific to this class.
-   * 
+   *
    * After the command-line (either [[main]] above or sbt) modifies
    * the default parameters, this method is called with the current
    * state of the parameters.  This method must then return
@@ -62,7 +62,7 @@ class Properties(val name: String) {
    *  instead. */
   def check(prms: Test.Parameters = Test.Parameters.default): Unit = {
     val params = overrideParameters(prms)
-    Test.checkProperties(
+    Test.checkProperties_(
       params.withTestCallback(ConsoleReporter(1).chain(params.testCallback)), this
     )
   }
@@ -118,7 +118,7 @@ class Properties(val name: String) {
       optSeed match {
         case Some(encodedSeed) =>
           val seed = Seed.fromBase64(encodedSeed).get
-          props += ((fullName, Prop.delay(p).useSeed(fullName, seed)))
+          props += ((fullName, Prop.delay(p).useSeed(seed)))
         case None =>
           props += ((fullName, Prop.delay(p).viewSeed(fullName)))
       }
