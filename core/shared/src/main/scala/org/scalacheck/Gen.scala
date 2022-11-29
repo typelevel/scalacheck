@@ -407,7 +407,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
     def retrieve: Option[T] = result
 
-    @deprecated(message="Please use withLabels, withResult, or withSeed instead.", since="1.17.1")
+    @deprecated(message="Please use withLabels, withResult, or withSeed instead.", since="1.18.0")
     def copy[U >: T](
       l: Set[String] = this.labels,
       // s is no longer used but preserved for binary compatibility
