@@ -40,7 +40,7 @@ sealed abstract class Prop extends Serializable { self =>
       res
     }
 
-  @deprecated(message="Please use useSeed which only takes a seed. name is, and has been, unused.", since="1.17.1")
+  @deprecated(message="Please use useSeed which only takes a seed. name is, and has been, unused.", since="1.18.0")
   def useSeed(name: String, seed: Seed): Prop =
     useSeed(seed)
 
