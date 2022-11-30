@@ -77,7 +77,7 @@ class GenBench {
     // this guarantees a deterministic set of seeds for any given
     // seedCount, which helps ensure we're making fair comparisons
     // when we benchmark several different branches.
-    val start = 993423
+    val start: Long = 993423L
     val preseeds = start until (start + seedCount)
     seeds = preseeds.map(n => Seed(n)).toList
 

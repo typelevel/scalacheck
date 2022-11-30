@@ -11,7 +11,6 @@ package org.scalacheck
 package util
 
 import scala.collection._
-import scala.language.higherKinds
 import ScalaVersionSpecific._
 
 object BuildableSpecification {
@@ -31,7 +30,7 @@ object BuildableSpecification {
   implicit val mutableSetGen: Gen[mutable.Set[String]] = container[mutable.Set]
 
   implicit val setGen: Gen[Set[String]] = container[Set]
-    
+
   implicit val immutableSortedSetGen: Gen[immutable.SortedSet[String]] = container[immutable.SortedSet]
 
   implicit val vectorGen: Gen[Vector[String]] = container[Vector]

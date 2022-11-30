@@ -9,12 +9,14 @@
 
 package org.scalacheck
 
-import scala.scalajs.reflect.Reflect
-
 import Test._
+
+import scala.annotation.nowarn
+import scala.scalajs.reflect.Reflect
 
 private[scalacheck] object Platform {
 
+  @nowarn("msg=is never used")
   def runWorkers(
     params: Parameters,
     workerFun: Int => Result,
@@ -23,6 +25,7 @@ private[scalacheck] object Platform {
     workerFun(0)
   }
 
+  @nowarn("msg=is never used")
   def loadModule(name: String, loader: ClassLoader): AnyRef = {
     Reflect
       .lookupLoadableModuleClass(name + "$")
@@ -31,6 +34,7 @@ private[scalacheck] object Platform {
       .asInstanceOf[AnyRef]
   }
 
+  @nowarn("msg=is never used")
   def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef = {
     Reflect
       .lookupInstantiatableClass(name)

@@ -20,21 +20,21 @@ object TestSpecification extends Properties("Test") {
 
   val passing = forAll( (n: Int) => n == n )
 
-  val failing = forAll( (n: Int) => false )
+  val failing = forAll( (_: Int) => false )
 
   val exhausted = forAll( (n: Int) =>
     (n > 0 && n < 0) ==> (n == n)
   )
 
-  val shrunk = forAll( (t: (Int,Int,Int)) => false )
+  val shrunk = forAll( (_: (Int,Int,Int)) => false )
 
-  val propException = forAll { (n:Int) => throw new java.lang.Exception }
+  val propException = forAll { (_:Int) => throw new java.lang.Exception }
 
   val undefinedInt = for{
     n <- arbitrary[Int]
   } yield n/0
 
-  val genException = forAll(undefinedInt)((n: Int) => true)
+  val genException = forAll(undefinedInt)((_: Int) => true)
 
   property("workers") = forAll { (prms: Test.Parameters) =>
     var res = true
@@ -120,7 +120,7 @@ object TestSpecification extends Properties("Test") {
     Test.check(prms, shrunk).status match {
       case Failed(Arg(_,(x:Int,y:Int,z:Int),_,_,_,_)::Nil,_) =>
         x == 0 && y == 0 && z == 0
-      case x => false
+      case _ => false
     }
   }
 
@@ -133,13 +133,13 @@ object TestSpecification extends Properties("Test") {
       var shrunk: Boolean = false
 
       implicit def shrinkBogus: Shrink[Bogus] = {
-        Shrink { (b: Bogus) => shrunk = true; Stream.empty }
+        Shrink { (_: Bogus) => shrunk = true; Stream.empty }
       }
     }
 
     case class Bogus(x: Int)
 
-    val prop = Prop.forAll[Bogus, Prop](Bogus.gen) { b => Prop(false) }
+    val prop = Prop.forAll[Bogus, Prop](Bogus.gen) { _ => Prop(false) }
     val prms = Test.Parameters.default.disableLegacyShrinking
     val res = Test.check(prms, prop)
     Prop(!res.passed && !Bogus.shrunk)
@@ -195,7 +195,7 @@ object TestSpecification extends Properties("Test") {
     val seed = rng.Seed.fromBase64("aaaaa_mr05Z_DCbd2PyUolC0h93iH1MQwIdnH2UuI4L=").get
     val gen = Gen.choose(Int.MinValue, Int.MaxValue)
     val expected = gen(Gen.Parameters.default, seed).get
-    
+
     val prms = Test.Parameters.default
       .withInitialSeed(Some(seed))
       .withMinSuccessfulTests(10)
@@ -207,7 +207,7 @@ object TestSpecification extends Properties("Test") {
       true
     }
 
-    val res = Test.check(prms, prop)
+    Test.check_(prms, prop)
     val n = xs.size
     val unique = xs.toSet
     val p0 = Prop(unique(expected)) :| s"did not see $expected in $unique"

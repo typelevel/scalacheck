@@ -9,7 +9,6 @@
 
 package org.scalacheck
 
-import language.higherKinds
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.util.{Failure, Success, Try}

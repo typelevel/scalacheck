@@ -9,6 +9,8 @@
 
 package org.scalacheck
 
+import scala.annotation.nowarn
+
 import Test._
 
 private[scalacheck] object Platform {
@@ -61,6 +63,7 @@ private[scalacheck] object Platform {
     }
   }
 
+  @nowarn("msg=is never used")
   def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
     if(!args.isEmpty) ???
     else Class.forName(name, true, loader).getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]

@@ -11,6 +11,7 @@ package org.scalacheck
 package util
 
 import org.scalacheck.{Gen, Prop, Properties}
+import org.scalacheck.Prop._
 
 object PrettySpecification extends Properties("Pretty") {
 
@@ -29,9 +30,10 @@ object PrettySpecification extends Properties("Pretty") {
   }
 
   property("break is stacksafe") = {
-    val big = "x" * 10000
+    val size: Int = 10000
+    val big = "x" * size
     val res = Pretty.break(big, "", 1)
-    Prop.passed
+    res.linesIterator.size ?= size
   }
 
   property("break ensures line length") =

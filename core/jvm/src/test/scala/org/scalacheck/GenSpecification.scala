@@ -45,12 +45,12 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("frequency 1") = {
     val g = frequency((10, const(0)), (5, const(1)))
-    forAll(g) { n => true }
+    forAll(g) { _ => true }
   }
 
   property("frequency 2") = {
     val g = frequency((10, 0), (5, 1))
-    forAll(g) { n => true }
+    forAll(g) { _ => true }
   }
 
   property("frequency 3") = forAll(choose(1,100000)) { n =>
@@ -84,9 +84,9 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     fail(prms, seed) == None
   }
 
-  property("parameterized") = forAll((g: Gen[Int]) => parameterized(p=>g) == g)
+  property("parameterized") = forAll((g: Gen[Int]) => parameterized(_=>g) == g)
 
-  property("sized") = forAll((g: Gen[Int]) => sized(i => g) == g)
+  property("sized") = forAll((g: Gen[Int]) => sized(_ => g) == g)
 
   property("resize(sz, posNum)") = forAll { (sz: Int) =>
     val g = Gen.resize(sz, Gen.posNum[Int])
@@ -386,17 +386,17 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   // its constructor valid values.
   property("BigDecimal") = forAll { (_: BigDecimal) => true }
 
-  property("resultOf1") = forAll(resultOf((m: Int) => 0))(_ == 0)
+  property("resultOf1") = forAll(resultOf((_: Int) => 0))(_ == 0)
 
   property("resultOf2") = {
     case class A(m: Int, s: String)
-    forAll(resultOf(A.apply _)) { (a:A) => true }
+    forAll(resultOf(A.apply _)) { _ => true }
   }
 
   property("resultOf3") = {
     case class B(n: Int, s: String, b: Boolean)
     implicit val arbB: Arbitrary[B] = Arbitrary(resultOf(B.apply _))
-    forAll { (b:B) => true }
+    forAll { (_: B) => true }
   }
 
   property("option") = forAll { (n: Int) =>

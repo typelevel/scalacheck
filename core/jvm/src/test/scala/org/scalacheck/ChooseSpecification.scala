@@ -13,7 +13,6 @@ import Gen._
 
 import java.time._
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 import java.util.Date
 import scala.util.{Try, Success, Failure}
 
@@ -28,7 +27,7 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
     import O.mkOrderingOps
     Try(choose(l, h)) match {
       case Success(g) => Prop.forAll(g) { x => l <= x && x <= h }
-      case Failure(e: Choose.IllegalBoundsError[_]) => l > h
+      case Failure(_: Choose.IllegalBoundsError[_]) => l > h
       case Failure(e) => throw e
     }
   }

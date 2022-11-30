@@ -9,8 +9,6 @@
 
 package org.scalacheck
 
-import language.higherKinds
-
 import util.Buildable
 import util.SerializableCanBuildFroms._
 import scala.concurrent.duration.{Duration, FiniteDuration}
