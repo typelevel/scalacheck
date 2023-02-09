@@ -28,14 +28,14 @@ private[scalacheck] object Platform {
       val Result(st1, s1, d1, fm1, _) = r1
       val Result(st2, s2, d2, fm2, _) = r2
       if (st1 != Passed && st1 != Exhausted)
-        Result(st1, s1+s2, d1+d2, fm1++fm2, 0)
+        Result(st1, s1+s2, d1+d2, fm1++fm2)
       else if (st2 != Passed && st2 != Exhausted)
-        Result(st2, s1+s2, d1+d2, fm1++fm2, 0)
+        Result(st2, s1+s2, d1+d2, fm1++fm2)
       else {
         if (s1+s2 >= minSuccessfulTests && maxDiscardRatio*(s1+s2) >= (d1+d2))
-          Result(Passed, s1+s2, d1+d2, fm1++fm2, 0)
+          Result(Passed, s1+s2, d1+d2, fm1++fm2)
         else
-          Result(Exhausted, s1+s2, d1+d2, fm1++fm2, 0)
+          Result(Exhausted, s1+s2, d1+d2, fm1++fm2)
       }
     }
 
@@ -46,12 +46,12 @@ private[scalacheck] object Platform {
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
       try {
         val fs = List.range(0,workers) map (idx => Future {
-          params.customClassLoader.map(
+          params.customClassLoader.foreach(
             Thread.currentThread.setContextClassLoader(_)
           )
           blocking { workerFun(idx) }
         })
-        val zeroRes = Result(Passed,0,0,FreqMap.empty[Set[Any]],0)
+        val zeroRes = Result(Passed,0,0,FreqMap.empty[Set[Any]])
         val res =
           if (fs.isEmpty) Future.successful(zeroRes)
           else Future.sequence(fs).map(_.foldLeft(zeroRes)(mergeResults))
@@ -65,7 +65,7 @@ private[scalacheck] object Platform {
 
   @nowarn("msg=is never used")
   def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
-    if(!args.isEmpty) ???
+    if(args.nonEmpty) ???
     else Class.forName(name, true, loader).getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]
 
   def loadModule(name: String, loader: ClassLoader): AnyRef =
