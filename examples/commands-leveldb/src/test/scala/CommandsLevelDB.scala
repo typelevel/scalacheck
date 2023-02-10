@@ -31,12 +31,6 @@ object LevelDBSpec extends Commands {
   }
 
   def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]
-  ) = {
-    !initSuts.exists(_.name == newState.name) &&
-    !runningSuts.exists(_.name == newState.name)
-  }
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
                       runningSuts: Traversable[Sut]
                      ) = {
     for {
