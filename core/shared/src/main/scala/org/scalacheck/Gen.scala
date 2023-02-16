@@ -1246,6 +1246,10 @@ object Gen extends GenArities with GenVersionSpecific {
       else mkString(n, new StringBuilder(n), gc, p, seed1)
     }
 
+  def nonEmptyStringOf(gc: Gen[Char]): Gen[String] =
+    sized(s => choose(1, Integer.max(s, 1)))
+      .flatMap(n => stringOfN(n, gc))
+
   /** Generates a string that starts with a lower-case alpha character,
    *  and only contains alphanumerical characters */
   val identifier: Gen[String] =

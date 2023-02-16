@@ -146,6 +146,16 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("nonEmptyStringOf") = {
+    val g = Gen.size.flatMap(sz => Gen.oneOf(-sz, sz))
+    forAll(g, Gen.alphaChar) { (sz: Int, c: Char) =>
+      forAllNoShrink(Gen.resize(sz, Gen.nonEmptyStringOf(c))) { (s) =>
+        if (sz > 0) sz >= s.size && s.size >= 1 && s.forall(_ == c)
+        else        s.size == 1
+      }
+    }
+  }
+
   property("oneOf n") = forAll { (l: List[Int]) =>
     Try(oneOf(l)) match {
       case Success(g) => forAll(g)(l.contains)
