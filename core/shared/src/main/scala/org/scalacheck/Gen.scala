@@ -1101,6 +1101,11 @@ object Gen extends GenArities with GenVersionSpecific {
     }
   }
 
+  /**
+   * Generates a non-empty seq of values from a given iterable.
+   *
+   * Complements someOf which may return empty seq
+   */
   def nonEmptySomeOf[T](l: Iterable[T]): Gen[collection.Seq[T]] =
     choose(1, l.size).flatMap(pick(_, l))
 
@@ -1108,6 +1113,11 @@ object Gen extends GenArities with GenVersionSpecific {
   def someOf[T](l: Iterable[T]) =
     choose(0, l.size).flatMap(pick(_,l))
 
+  /**
+   * Generates a non-empty seq of values from given generators.
+   * 
+   * Complements [[someOf(Gen[T], Gen[T], Gen[T]*)]] which may return empty seq
+   */
   def nonEmptySomeOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[Seq[T]] =
     choose(1, gs.length + 2).flatMap(pick(_, g1, g2, gs: _*))
 
