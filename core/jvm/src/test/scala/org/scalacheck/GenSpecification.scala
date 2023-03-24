@@ -242,6 +242,31 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     s.drop(n & 0xffff).nonEmpty
   }
 
+  property("nonEmptySomeOf") =  {
+    val g =
+      for {
+        input  <- nonEmptyListOf(choose(1, Int.MaxValue))
+        result <- nonEmptySomeOf(input)
+      } yield (result, input)
+
+    forAllNoShrink(g) { case (result, input) =>
+      result.nonEmpty && result.forall(input.contains)
+
+    }
+  }
+
+  property("nonEmptySomeOf(gens)") = {
+    val g2: Gen[Seq[Any]] =
+      nonEmptySomeOf(
+        alphaNumChar,
+        alphaStr,
+        posNum[Int],
+        uuid
+      )
+
+    forAll(g2)(_.nonEmpty)
+  }
+
   property("someOf") = forAll { (l: List[Int]) =>
     forAll(someOf(l))(_.toList.forall(l.contains))
   }

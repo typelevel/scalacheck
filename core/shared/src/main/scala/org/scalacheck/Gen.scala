@@ -1101,9 +1101,15 @@ object Gen extends GenArities with GenVersionSpecific {
     }
   }
 
+  def nonEmptySomeOf[T](l: Iterable[T]): Gen[collection.Seq[T]] =
+    choose(1, l.size).flatMap(pick(_, l))
+
   /** A generator that picks a random number of elements from a list */
   def someOf[T](l: Iterable[T]) =
     choose(0, l.size).flatMap(pick(_,l))
+
+  def nonEmptySomeOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*): Gen[Seq[T]] =
+    choose(1, gs.length + 2).flatMap(pick(_, g1, g2, gs: _*))
 
   /** A generator that picks a random number of elements from a list */
   def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
