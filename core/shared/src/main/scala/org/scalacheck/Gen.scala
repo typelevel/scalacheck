@@ -171,6 +171,7 @@ import java.math.{BigInteger, BigDecimal => JavaDecimal}
  *  - [[Gen.someOf[T](g1* someOf]] - A generator that picks a random number of elements from a list
  *  - [[Gen$.stringOf stringOf]] - Generate string of characters
  *  - [[Gen$.stringOfN stringOfN]] - Generate string of at most ''n'' characters
+ *  - [[Gen$.nonEmptyStringOf nonEmptyStringOf]] - Generate a non-empty string of characters
  *
  * Methods for working with [[Gen]] internals:
  *  - [[Gen$.resize resize]] - Creates a resized version of a generator
