@@ -6,7 +6,7 @@ name := "scalacheck"
 ThisBuild / organization := "org.scalacheck"
 ThisBuild / organizationName := "Typelevel"
 ThisBuild / homepage := Some(url("http://www.scalacheck.org"))
-ThisBuild / licenses := Seq("BSD 3-clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
+ThisBuild / licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
 ThisBuild / developers := List(
   Developer(
     id    = "rickynils",
