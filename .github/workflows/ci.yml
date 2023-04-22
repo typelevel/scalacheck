@@ -33,6 +33,10 @@ jobs:
         project: [rootJS, rootJVM, rootNative]
         workers: [1, 4]
         exclude:
+          - scala: 3.2.2
+            java: temurin@11
+          - scala: 2.12.17
+            java: temurin@11
           - project: rootJS
             java: temurin@11
           - project: rootNative
@@ -94,6 +98,10 @@ jobs:
 
       - name: Check that workflows are up to date
         run: sbt githubWorkflowCheck
+
+      - name: Check headers and formatting
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-latest'
+        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck
 
       - name: scalaJSLink
         if: matrix.project == 'rootJS'
