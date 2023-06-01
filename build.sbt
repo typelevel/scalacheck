@@ -6,7 +6,7 @@ name := "scalacheck"
 ThisBuild / organization := "org.scalacheck"
 ThisBuild / organizationName := "Typelevel"
 ThisBuild / homepage := Some(url("http://www.scalacheck.org"))
-ThisBuild / licenses := Seq("BSD 3-clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
+ThisBuild / licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
 ThisBuild / developers := List(
   Developer(
     id    = "rickynils",
@@ -68,6 +68,14 @@ ThisBuild / tlMimaPreviousVersions ++= Set(
 ThisBuild / tlVersionIntroduced := Map("3" -> "1.15.3")
 
 lazy val root = tlCrossRootProject.aggregate(core, bench)
+  .settings(
+    Compile / headerSources ++= Seq(
+      "codegen.scala",
+      "CustomHeaderPlugin.scala"
+    ).map {
+      BuildPaths.projectStandard((ThisBuild / baseDirectory).value) / _
+    }
+  )
 
 lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("core"))
