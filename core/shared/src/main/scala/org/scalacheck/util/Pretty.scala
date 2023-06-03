@@ -12,7 +12,6 @@ package org.scalacheck.util
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
 import scala.annotation.tailrec
-import scala.math.round
 
 sealed trait Pretty extends Serializable {
   def apply(prms: Pretty.Params): String
@@ -143,12 +142,13 @@ object Pretty {
   implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { _ =>
     if(fm.total == 0) ""
     else {
+      val precision = if (fm.total <= 100) 0 else if (fm.total <= 1000) 1 else 2
       "> Collected test data: " / {
         for {
           (xs,r) <- fm.getRatios
           ys = xs - (())
           if !ys.isEmpty
-        } yield round(r*100).toString + "% " + ys.mkString(", ")
+        } yield s"%.${precision}f".format(r * 100) + "% " + ys.mkString(", ")
       }.mkString("\n")
     }
   }
