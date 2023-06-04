@@ -9,14 +9,16 @@
 
 package org.scalacheck.time
 
-import org.scalacheck._
-import java.time._
 import org.scalacheck.Gen.Choose
+import org.scalacheck._
+
+import java.time._
 
 /** [[Gen#Choose]] instances for `java.time` types.
   *
-  * @note [[Gen#Choose]] instances for `java.time` types which are Java enum
-  *       types are provided by ScalaCheck's general Java enum support.
+  * @note
+  *   [[Gen#Choose]] instances for `java.time` types which are Java enum types are provided by ScalaCheck's general Java
+  *   enum support.
   */
 private[scalacheck] trait JavaTimeChoose {
 
@@ -31,9 +33,9 @@ private[scalacheck] trait JavaTimeChoose {
           case _ =>
             val minSeconds: Long = min.getSeconds
             val maxSeconds: Long = max.getSeconds
-            Gen.choose(minSeconds, maxSeconds).flatMap{seconds =>
+            Gen.choose(minSeconds, maxSeconds).flatMap { seconds =>
               val minNanos: Int =
-                if(seconds == minSeconds) {
+                if (seconds == minSeconds) {
                   min.getNano
                 } else {
                   0
@@ -45,8 +47,7 @@ private[scalacheck] trait JavaTimeChoose {
                   999999999
                 }
               Gen.choose(minNanos, maxNanos).map(nanos =>
-                Duration.ofSeconds(seconds, nanos.toLong)
-              )
+                Duration.ofSeconds(seconds, nanos.toLong))
             }
         }
       }
@@ -61,7 +62,7 @@ private[scalacheck] trait JavaTimeChoose {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
           case _ =>
-            Gen.choose(min.getEpochSecond, max.getEpochSecond).flatMap{epochSecond =>
+            Gen.choose(min.getEpochSecond, max.getEpochSecond).flatMap { epochSecond =>
               val minNano: Int =
                 if (epochSecond == min.getEpochSecond) {
                   min.getNano
@@ -75,8 +76,7 @@ private[scalacheck] trait JavaTimeChoose {
                   999999999
                 }
               Gen.choose(minNano, maxNano).map(nanos =>
-                Instant.ofEpochSecond(epochSecond, nanos.toLong)
-              )
+                Instant.ofEpochSecond(epochSecond, nanos.toLong))
             }
         }
     }
@@ -111,7 +111,7 @@ private[scalacheck] trait JavaTimeChoose {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
           case _ =>
-            Gen.choose(min.getYear, max.getYear).flatMap{year =>
+            Gen.choose(min.getYear, max.getYear).flatMap { year =>
               val minMonth: Month =
                 if (year == min.getYear) {
                   min.getMonth
@@ -124,7 +124,7 @@ private[scalacheck] trait JavaTimeChoose {
                 } else {
                   Month.DECEMBER
                 }
-              Gen.choose(minMonth, maxMonth).flatMap{month =>
+              Gen.choose(minMonth, maxMonth).flatMap { month =>
                 val minDay: Int =
                   if (year == min.getYear && month == minMonth) {
                     min.getDayOfMonth
@@ -140,8 +140,7 @@ private[scalacheck] trait JavaTimeChoose {
                     month.length(Year.isLeap(year.toLong))
                   }
                 Gen.choose(minDay, maxDay).map(day =>
-                  LocalDate.of(year, month, day)
-                )
+                  LocalDate.of(year, month, day))
               }
             }
         }
@@ -153,8 +152,7 @@ private[scalacheck] trait JavaTimeChoose {
     new Choose[LocalTime] {
       override def choose(min: LocalTime, max: LocalTime): Gen[LocalTime] =
         Gen.choose(min.toNanoOfDay, max.toNanoOfDay).map(nano =>
-          LocalTime.ofNanoOfDay(nano)
-        )
+          LocalTime.ofNanoOfDay(nano))
     }
 
   // LocalDateTime
@@ -170,7 +168,7 @@ private[scalacheck] trait JavaTimeChoose {
               min.toLocalDate
             val maxLocalDate: LocalDate =
               max.toLocalDate
-            Gen.choose(minLocalDate, maxLocalDate).flatMap{localDate =>
+            Gen.choose(minLocalDate, maxLocalDate).flatMap { localDate =>
               val minLocalTime: LocalTime =
                 if (localDate == minLocalDate) {
                   min.toLocalTime
@@ -184,8 +182,7 @@ private[scalacheck] trait JavaTimeChoose {
                   LocalTime.MAX
                 }
               Gen.choose(minLocalTime, maxLocalTime).map(localTime =>
-                LocalDateTime.of(localDate, localTime)
-              )
+                LocalDateTime.of(localDate, localTime))
             }
         }
       }
@@ -202,7 +199,7 @@ private[scalacheck] trait JavaTimeChoose {
           case _ =>
             val minMonth: Month = min.getMonth
             val maxMonth: Month = max.getMonth
-            Gen.choose(minMonth, maxMonth).flatMap{month =>
+            Gen.choose(minMonth, maxMonth).flatMap { month =>
               val minDayOfMonth: Int =
                 if (month == minMonth) {
                   min.getDayOfMonth
@@ -216,25 +213,21 @@ private[scalacheck] trait JavaTimeChoose {
                   month.maxLength
                 }
               Gen.choose(minDayOfMonth, maxDayOfMonth).map(dayOfMonth =>
-                MonthDay.of(month, dayOfMonth)
-              )
+                MonthDay.of(month, dayOfMonth))
             }
         }
     }
 
   // ZoneOffset
 
-  /** ZoneOffset values have some unusual semantics when it comes to
-    * ordering. The short explanation is that `(ZoneOffset.MAX <
-    * ZoneOffset.MIN) == true`. This is because for any given `LocalDateTime`,
-    * that time applied to `ZoneOffset.MAX` will be an older moment in time
-    * than that same `LocalDateTime` applied to `ZoneOffset.MIN`.
+  /** ZoneOffset values have some unusual semantics when it comes to ordering. The short explanation is that
+    * `(ZoneOffset.MAX < ZoneOffset.MIN) == true`. This is because for any given `LocalDateTime`, that time applied to
+    * `ZoneOffset.MAX` will be an older moment in time than that same `LocalDateTime` applied to `ZoneOffset.MIN`.
     *
     * From the JavaDoc,
     *
-    * "The offsets are compared in the order that they occur for the same time
-    * of day around the world. Thus, an offset of +10:00 comes before an
-    * offset of +09:00 and so on down to -18:00."
+    * "The offsets are compared in the order that they occur for the same time of day around the world. Thus, an offset
+    * of +10:00 comes before an offset of +09:00 and so on down to -18:00."
     *
     * This has the following implication,
     *
@@ -251,7 +244,8 @@ private[scalacheck] trait JavaTimeChoose {
     *
     * This implementation is consistent with that comparison.
     *
-    * @see [[https://docs.oracle.com/javase/8/docs/api/java/time/ZoneOffset.html#compareTo-java.time.ZoneOffset-]]
+    * @see
+    *   [[https://docs.oracle.com/javase/8/docs/api/java/time/ZoneOffset.html#compareTo-java.time.ZoneOffset-]]
     */
   implicit final lazy val chooseZoneOffset: Choose[ZoneOffset] =
     new Choose[ZoneOffset] {
@@ -291,7 +285,7 @@ private[scalacheck] trait JavaTimeChoose {
       } else {
         rolloverSeconds
       }
-    Gen.choose(0, lub).flatMap{offsetShift =>
+    Gen.choose(0, lub).flatMap { offsetShift =>
       val shifted: OffsetTime = shiftForwardByOffset(min, offsetShift)
       val localShiftMin: Duration = {
         val durationFromMin: Duration = Duration.between(shifted, min)
@@ -300,7 +294,7 @@ private[scalacheck] trait JavaTimeChoose {
         // e.g. Duration.ofHours(-1).compareTo(Duration.ofHours(-2)) > 0. For
         // this calculation we want the Duration with the smallest absolute
         // value, e.g. the one which compares larger.
-        if(durationFromMin.compareTo(durationAfterMidnight) > 0) {
+        if (durationFromMin.compareTo(durationAfterMidnight) > 0) {
           durationFromMin
         } else {
           durationAfterMidnight
@@ -316,8 +310,7 @@ private[scalacheck] trait JavaTimeChoose {
         }
       }
       Gen.choose(localShiftMin, localShiftMax).map(localShift =>
-        shifted.plus(localShift)
-      )
+        shifted.plus(localShift))
     }
   }
 
@@ -328,7 +321,7 @@ private[scalacheck] trait JavaTimeChoose {
           case 0 => Gen.const(min)
           case result if result > 0 => Gen.fail
           case _ =>
-            Gen.choose(Duration.ZERO, Duration.between(min, max)).flatMap{duration =>
+            Gen.choose(Duration.ZERO, Duration.between(min, max)).flatMap { duration =>
               genShiftOffsetTimeForward(min, max, duration)
             }
         }
@@ -345,9 +338,7 @@ private[scalacheck] trait JavaTimeChoose {
           case _ =>
             Gen.choose(min.getOffset, max.getOffset).flatMap(offset =>
               Gen.choose(min.toInstant, max.toInstant).map(instant =>
-                OffsetDateTime.ofInstant(instant, offset)
-              )
-            )
+                OffsetDateTime.ofInstant(instant, offset)))
         }
     }
 
@@ -362,7 +353,7 @@ private[scalacheck] trait JavaTimeChoose {
           case _ =>
             val minYear: Year = Year.of(min.getYear)
             val maxYear: Year = Year.of(max.getYear)
-            Gen.choose(minYear, maxYear).flatMap{year =>
+            Gen.choose(minYear, maxYear).flatMap { year =>
               val minMonth: Month =
                 if (minYear == year) {
                   min.getMonth
@@ -376,8 +367,7 @@ private[scalacheck] trait JavaTimeChoose {
                   Month.DECEMBER
                 }
               Gen.choose(minMonth, maxMonth).map(month =>
-                YearMonth.of(year.getValue, month)
-              )
+                YearMonth.of(year.getValue, month))
             }
         }
     }
@@ -393,9 +383,7 @@ private[scalacheck] trait JavaTimeChoose {
           case _ =>
             Gen.choose(min.getOffset, max.getOffset).flatMap(offset =>
               Gen.choose(min.toInstant, max.toInstant).map(instant =>
-                ZonedDateTime.ofInstant(instant, offset)
-              )
-            )
+                ZonedDateTime.ofInstant(instant, offset)))
         }
     }
 }

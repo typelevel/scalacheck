@@ -9,10 +9,11 @@
 
 package org.scalacheck.util
 
-import scala.collection.{mutable, Map => _, _}
+import scala.collection.mutable
+import scala.collection.{Map => _, _}
 
-trait Buildable[T,C] extends Serializable {
-  def builder: mutable.Builder[T,C]
+trait Buildable[T, C] extends Serializable {
+  def builder: mutable.Builder[T, C]
   def fromIterable(it: Traversable[T]): C = {
     val b = builder
     b ++= it

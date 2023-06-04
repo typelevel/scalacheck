@@ -10,6 +10,7 @@
 package org.scalacheck.time
 
 import org.scalacheck._
+
 import java.time._
 import java.time.temporal._
 
@@ -69,10 +70,11 @@ private[scalacheck] trait JavaTimeCogen {
   // ZoneId
 
   implicit final lazy val cogenZoneId: Cogen[ZoneId] =
-    Cogen[String].contramap(_.toString) // This may seem contrived, and in a
-                                        // way it is, but ZoneId values
-                                        // _without_ offsets are basically
-                                        // just newtypes of String.
+    // This may seem contrived, and in a
+    // way it is, but ZoneId values
+    // _without_ offsets are basically
+    // just newtypes of String.
+    Cogen[String].contramap(_.toString)
 
   // OffsetTime
 

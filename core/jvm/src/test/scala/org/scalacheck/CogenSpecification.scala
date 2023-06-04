@@ -14,15 +14,15 @@ import org.scalacheck.Gen.listOfN
 import org.scalacheck.GenSpecification.arbSeed
 import org.scalacheck.Prop.forAll
 import org.scalacheck.rng.Seed
-import ScalaVersionSpecific._
-
-import scala.collection.immutable.SortedMap
-import scala.collection.immutable.SortedSet
-import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Try
 
 import java.time._
 import java.util.UUID
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
+import ScalaVersionSpecific._
 
 object CogenSpecification extends Properties("Cogen") {
 
@@ -82,7 +82,7 @@ object CogenSpecification extends Properties("Cogen") {
   implicit def arbFunction0[A: Arbitrary]: Arbitrary[() => A] =
     Arbitrary(arbitrary[A].map(() => _))
 
-  implicit def arbCogen[A: Arbitrary : Cogen]: Arbitrary[Cogen[A]] =
+  implicit def arbCogen[A: Arbitrary: Cogen]: Arbitrary[Cogen[A]] =
     Arbitrary(arbitrary[A => A].map(Cogen[A].contramap(_)))
 
   // Cogens should follow these laws.
@@ -94,19 +94,19 @@ object CogenSpecification extends Properties("Cogen") {
     In particular, if the space of the input is larger than the space of the seed (2^256) there is a
     possibility of legitimate collisions, but this is vanishingly small for the sample sizes we are using.
      */
-    def uniqueness[A: Equal : Arbitrary : Cogen]: Prop =
+    def uniqueness[A: Equal: Arbitrary: Cogen]: Prop =
       forAll { (seed: Seed, as: List[A]) =>
         as.map(Cogen[A].perturb(seed, _)).toSet.size == distinct(as).size
       }
 
     // A Cogen should always generate the same output for a given seed and input.
-    def consistency[A: Arbitrary : Cogen]: Prop =
+    def consistency[A: Arbitrary: Cogen]: Prop =
       forAll { (seed: Seed, a: A) =>
         Cogen[A].perturb(seed, a) == Cogen[A].perturb(seed, a)
       }
   }
 
-  def cogenLaws[A: Equal : Arbitrary : Cogen]: Properties =
+  def cogenLaws[A: Equal: Arbitrary: Cogen]: Properties =
     new Properties("cogenLaws") {
       property("uniqueness") = CogenLaws.uniqueness[A]
       property("consistency") = CogenLaws.consistency[A]
@@ -116,16 +116,18 @@ object CogenSpecification extends Properties("Cogen") {
   object ContravariantLaws {
 
     // Contramapping over a Cogen with the identity function should return the Cogen unchanged.
-    def identity[A: Equal : Arbitrary : Cogen]: Prop =
+    def identity[A: Equal: Arbitrary: Cogen]: Prop =
       forAll { (fa: Cogen[A]) =>
         Equal[Cogen[A]].equal(fa.contramap(a => a), fa)
       }
 
     // Contramapping with f and g is the same as contramapping with the composition of f and g.
-    def composition[A, B, C](implicit eq: Equal[Cogen[C]],
-                             arb1: Arbitrary[Cogen[A]],
-                             arb2: Arbitrary[B => A],
-                             arb3: Arbitrary[C => B]): Prop =
+    def composition[A, B, C](implicit
+        eq: Equal[Cogen[C]],
+        arb1: Arbitrary[Cogen[A]],
+        arb2: Arbitrary[B => A],
+        arb3: Arbitrary[C => B]
+    ): Prop =
       forAll { (fa: Cogen[A], f: B => A, g: C => B) =>
         Equal[Cogen[C]].equal(fa.contramap(f).contramap(g), fa.contramap(f compose g))
       }

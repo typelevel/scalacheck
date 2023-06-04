@@ -9,14 +9,17 @@
 
 package org.scalacheck
 
+import org.scalacheck.Prop.AnyOperators
+import org.scalacheck.Prop.forAll
+
 import java.util.HashMap
 import scala.collection.JavaConverters._
 import scala.collection.immutable.IntMap
-import org.scalacheck.Prop.{forAll, AnyOperators}
 
 object IntMapSpec extends org.scalacheck.Properties("IntMap") {
+
   /** Compare a HashMap and an IntMap for equality */
-  private def eqMaps(hm: HashMap[Int,Any], im: IntMap[Any]) = {
+  private def eqMaps(hm: HashMap[Int, Any], im: IntMap[Any]) = {
     im.keys.forall(hm.containsKey) &&
     hm.keySet.containsAll(im.keys.asJavaCollection) &&
     im.keys.forall(k => im(k) == hm.asScala(k))
@@ -24,10 +27,10 @@ object IntMapSpec extends org.scalacheck.Properties("IntMap") {
 
   /** Create an IntMap and a HashMap with the same contents */
   private def createMaps(l: List[Int]) = {
-    val mappings = for(n <- l) yield (n, new Object)
+    val mappings = for (n <- l) yield (n, new Object)
     val im = IntMap(mappings: _*)
     val hm = new HashMap[Int, Any]
-    for((n,x) <- mappings) hm.put(n,x)
+    for ((n, x) <- mappings) hm.put(n, x)
     (hm, im)
   }
 

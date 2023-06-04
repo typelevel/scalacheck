@@ -9,10 +9,10 @@ ThisBuild / homepage := Some(url("http://www.scalacheck.org"))
 ThisBuild / licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Clause"))
 ThisBuild / developers := List(
   Developer(
-    id    = "rickynils",
-    name  = "Rickard Nilsson",
+    id = "rickynils",
+    name = "Rickard Nilsson",
     email = "rickynils@gmail.com",
-    url   = url("https://github.com/rickynils")
+    url = url("https://github.com/rickynils")
   )
 )
 
@@ -40,8 +40,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
           "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
         name = Some("Build examples"))),
     javas = List(Java8),
-    scalas = List((ThisBuild / scalaVersion).value)),
-
+    scalas = List((ThisBuild / scalaVersion).value)
+  ),
   WorkflowJob(
     "bench",
     "Bench",
@@ -50,7 +50,9 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
         List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
         name = Some("Build benchmark suite"))),
     javas = List(Java8),
-    scalas = List((ThisBuild / scalaVersion).value)))
+    scalas = List((ThisBuild / scalaVersion).value)
+  )
+)
 
 ThisBuild / tlBaseVersion := "1.17"
 ThisBuild / tlMimaPreviousVersions ++= Set(
@@ -63,7 +65,7 @@ ThisBuild / tlMimaPreviousVersions ++= Set(
   "1.15.1",
   "1.15.2",
   "1.15.3",
-  "1.15.4",
+  "1.15.4"
 )
 ThisBuild / tlVersionIntroduced := Map("3" -> "1.15.3")
 
@@ -115,6 +117,6 @@ lazy val bench = project.in(file("bench"))
   .dependsOn(core.jvm)
   .settings(
     name := "scalacheck-bench",
-    fork := true,
+    fork := true
   )
   .enablePlugins(NoPublishPlugin, JmhPlugin)

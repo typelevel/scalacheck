@@ -9,15 +9,19 @@
 
 package org.scalacheck
 
-import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.math.BigInteger
 import java.util.UUID
-import rng.Seed
+import scala.annotation.tailrec
+import scala.collection.immutable.BitSet
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import rng.Seed
 
 sealed trait Cogen[T] extends Serializable {
 
@@ -94,7 +98,7 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
       else {
         val (unscaled, scale) = normalize(n.bigDecimal.unscaledValue, n.scale)
         Cogen[(Int, Array[Byte])].perturb(seed, (scale, unscaled.toByteArray))
-    })
+      })
   }
 
   implicit lazy val bitSet: Cogen[BitSet] =
@@ -126,16 +130,14 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
 
   implicit def cogenSet[A: Cogen: Ordering]: Cogen[Set[A]] =
     Cogen[SortedSet[A]].contramap(value =>
-      value.foldLeft(SortedSet.empty[A])(_ + _)
-    )
+      value.foldLeft(SortedSet.empty[A])(_ + _))
 
   implicit def cogenSortedSet[A: Cogen]: Cogen[SortedSet[A]] =
     Cogen.it(_.iterator)
 
   implicit def cogenMap[K: Cogen: Ordering, V: Cogen]: Cogen[Map[K, V]] =
     Cogen[SortedMap[K, V]].contramap(value =>
-      value.foldLeft(SortedMap.empty[K, V])(_ + _)
-    )
+      value.foldLeft(SortedMap.empty[K, V])(_ + _))
 
   implicit def cogenSortedMap[K: Cogen, V: Cogen]: Cogen[SortedMap[K, V]] =
     Cogen.it(_.iterator)
@@ -150,30 +152,31 @@ object Cogen extends CogenArities with CogenLowPriority with CogenVersionSpecifi
     Cogen[String].contramap(_.toString)
 
   implicit def cogenTry[A: Cogen]: Cogen[Try[A]] =
-    Cogen((seed: Seed, x: Try[A]) => x match {
-      case Success(a) => Cogen[A].perturb(seed.next, a)
-      case Failure(e) => Cogen[Throwable].perturb(seed, e)
-    })
+    Cogen((seed: Seed, x: Try[A]) =>
+      x match {
+        case Success(a) => Cogen[A].perturb(seed.next, a)
+        case Failure(e) => Cogen[Throwable].perturb(seed, e)
+      })
 
   implicit val cogenFiniteDuration: Cogen[FiniteDuration] =
     Cogen[Long].contramap(_.toNanos)
 
   implicit val cogenDuration: Cogen[Duration] =
-    Cogen((seed: Seed, x: Duration) => x match {
-      case d: FiniteDuration => Cogen[FiniteDuration].perturb(seed, d)
-      // Undefined -> NaN, Inf -> PositiveInfinity, MinusInf -> NegativeInf
-      // We could just use `toUnit` for finite durations too, but the Long => Double
-      // conversion is lossy, so this approach may be better.
-      case d => Cogen[Double].perturb(seed, d.toUnit(java.util.concurrent.TimeUnit.NANOSECONDS))
-    })
+    Cogen((seed: Seed, x: Duration) =>
+      x match {
+        case d: FiniteDuration => Cogen[FiniteDuration].perturb(seed, d)
+        // Undefined -> NaN, Inf -> PositiveInfinity, MinusInf -> NegativeInf
+        // We could just use `toUnit` for finite durations too, but the Long => Double
+        // conversion is lossy, so this approach may be better.
+        case d => Cogen[Double].perturb(seed, d.toUnit(java.util.concurrent.TimeUnit.NANOSECONDS))
+      })
 
   implicit def cogenPartialFunction[A: Arbitrary, B: Cogen]: Cogen[PartialFunction[A, B]] =
     Cogen[A => Option[B]].contramap(_.lift)
 
   implicit val cogenUUID: Cogen[UUID] =
     Cogen[(Long, Long)].contramap(value =>
-      (value.getLeastSignificantBits, value.getMostSignificantBits)
-    )
+      (value.getLeastSignificantBits, value.getMostSignificantBits))
 
   def perturbPair[A, B](seed: Seed, ab: (A, B))(implicit A: Cogen[A], B: Cogen[B]): Seed =
     B.perturb(A.perturb(seed, ab._1), ab._2)

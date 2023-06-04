@@ -9,80 +9,76 @@
 
 package org.scalacheck
 
-import concurrent.Future
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
+import concurrent.Future
 import util.Buildable
 import util.SerializableCanBuildFroms._
 
-/**
- * Define an arbitrary generator for properties
- *
- * The [[Arbitrary]] module defines implicit generator instances for
- * common types.
- *
- * The implicit definitions of [[Arbitrary]] provide type-directed
- * [[Gen]]s so they are available for properties, generators, or other
- * definitions of [[Arbitrary]].
- *
- * ScalaCheck expects an implicit [[Arbitrary]] instance is in scope
- * for [[Prop]]s that are defined with functions, like [[Prop$.forAll[T1,P](g1*
- * Prop.forAll]] and so on.
- *
- * For instance, the definition for `Arbitrary[Boolean]` is used by
- * `Prop.forAll` to automatically provide a `Gen[Boolean]` when one
- * of the parameters is a `Boolean`:
- *
- *  {{{
- *    Prop.forAll { (b: Boolean) =>
- *      b || !b
- *    }
- *  }}}
- *
- * Thanks to `Arbitrary`, you don't need to provide an explicit
- * `Gen` instance to `Prop.forAll`.  For instance, this is
- * unnecessary:
- *
- *  {{{
- *    val genBool: Gen[Boolean] = Gen.oneOf(true,false)
- *    Prop.forAll(genBool) { (b: Boolean) =>
- *      b || !b
- *    }
- *  }}}
- *
- * Since an arbitrary `Gen` for `Boolean` is defined in `Arbitrary`,
- * it can be summoned with `Arbitrary.arbitrary` in cases where you
- * need to provide one explicitly:
- *
- *  {{{
- *    val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
- *    val genSmallInt: Gen[Int] = Gen.choose(0, 9)
- *    Prop.forAll(genBool, genSmallInt) { (b: Boolean, i: Int) =>
- *      i < 10 && b || !b
- *    }
- *  }}}
- *
- * For a user-defined `MyClass`, writing the following requires that
- * there exists an implicit `Arbitrary[MyClass]` instance:
- *
- *  {{{
- *    Prop.forAll { (myClass: MyClass) =>
- *      ...
- *    }
- *  }}}
- *
- * The implicit definition of `Arbitrary[MyClass]` would look like:
- *
- *  {{{
- *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary {
- *      ...
- *    }
- *  }}}
- *
- *  The factory method `Arbitrary(...)` expects a generator of type
- *  `Gen[MyClass]` then it will return an instance of `Arbitrary[MyClass]`.
- */
+/** Define an arbitrary generator for properties
+  *
+  * The [[Arbitrary]] module defines implicit generator instances for common types.
+  *
+  * The implicit definitions of [[Arbitrary]] provide type-directed [[Gen]]s so they are available for properties,
+  * generators, or other definitions of [[Arbitrary]].
+  *
+  * ScalaCheck expects an implicit [[Arbitrary]] instance is in scope for [[Prop]]s that are defined with functions,
+  * like [[Prop$.forAll[T1,P](g1* Prop.forAll]] and so on.
+  *
+  * For instance, the definition for `Arbitrary[Boolean]` is used by `Prop.forAll` to automatically provide a
+  * `Gen[Boolean]` when one of the parameters is a `Boolean`:
+  *
+  * {{{
+  *    Prop.forAll { (b: Boolean) =>
+  *      b || !b
+  *    }
+  * }}}
+  *
+  * Thanks to `Arbitrary`, you don't need to provide an explicit `Gen` instance to `Prop.forAll`. For instance, this is
+  * unnecessary:
+  *
+  * {{{
+  *    val genBool: Gen[Boolean] = Gen.oneOf(true,false)
+  *    Prop.forAll(genBool) { (b: Boolean) =>
+  *      b || !b
+  *    }
+  * }}}
+  *
+  * Since an arbitrary `Gen` for `Boolean` is defined in `Arbitrary`, it can be summoned with `Arbitrary.arbitrary` in
+  * cases where you need to provide one explicitly:
+  *
+  * {{{
+  *    val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
+  *    val genSmallInt: Gen[Int] = Gen.choose(0, 9)
+  *    Prop.forAll(genBool, genSmallInt) { (b: Boolean, i: Int) =>
+  *      i < 10 && b || !b
+  *    }
+  * }}}
+  *
+  * For a user-defined `MyClass`, writing the following requires that there exists an implicit `Arbitrary[MyClass]`
+  * instance:
+  *
+  * {{{
+  *    Prop.forAll { (myClass: MyClass) =>
+  *      ...
+  *    }
+  * }}}
+  *
+  * The implicit definition of `Arbitrary[MyClass]` would look like:
+  *
+  * {{{
+  *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary {
+  *      ...
+  *    }
+  * }}}
+  *
+  * The factory method `Arbitrary(...)` expects a generator of type `Gen[MyClass]` then it will return an instance of
+  * `Arbitrary[MyClass]`.
+  */
 sealed abstract class Arbitrary[T] extends Serializable {
   def arbitrary: Gen[T]
 }
@@ -91,7 +87,7 @@ object Arbitrary extends ArbitraryLowPriority with ArbitraryArities with time.Ja
 
   /** Arbitrary instance of the Function0 type. */
   implicit def arbFunction0[T](implicit a: Arbitrary[T]): Arbitrary[() => T] =
-  Arbitrary(arbitrary[T].map(() => _))
+    Arbitrary(arbitrary[T].map(() => _))
 }
 
 /** separate trait to have same priority as ArbitraryArities */
@@ -106,12 +102,19 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Returns an arbitrary generator for the type T. */
   def arbitrary[T](implicit a: Arbitrary[T]): Gen[T] = a.arbitrary
 
-  /**** Arbitrary instances for each AnyVal ****/
+  /** ** Arbitrary instances for each AnyVal ***
+    */
 
   /** Arbitrary AnyVal */
   implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
-    arbitrary[Unit], arbitrary[Boolean], arbitrary[Char], arbitrary[Byte],
-    arbitrary[Short], arbitrary[Int], arbitrary[Long], arbitrary[Float],
+    arbitrary[Unit],
+    arbitrary[Boolean],
+    arbitrary[Char],
+    arbitrary[Byte],
+    arbitrary[Short],
+    arbitrary[Int],
+    arbitrary[Long],
+    arbitrary[Float],
     arbitrary[Double]
   ))
 
@@ -153,7 +156,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     //
     // ((0xFFFD + 1) - 0xE000) + ((0xD7FF + 1) - 0x0000) - 1
     choose(0, 63485).map { i =>
-      if (i <= 0xD7FF) i.toChar
+      if (i <= 0xd7ff) i.toChar
       else (i + 2048).toChar
     }
   }
@@ -170,7 +173,8 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbUnit: Arbitrary[Unit] =
     Arbitrary(Gen.const(()))
 
-  /**** Arbitrary instances of other common types ****/
+  /** Arbitrary instances of other common types
+    */
 
   /** Arbitrary instance of String */
   implicit lazy val arbString: Arbitrary[String] =
@@ -224,7 +228,8 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
         BigInt(Long.MaxValue),
         BigInt(Long.MinValue),
         BigInt(Long.MaxValue) + 1,
-        BigInt(Long.MinValue) - 1)
+        BigInt(Long.MinValue) - 1
+      )
 
     Arbitrary(frequency((5, gen0), (5, gen1), (4, gen2), (3, gen3), (2, gen4)))
   }
@@ -260,9 +265,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
       } yield {
         try {
           BigDecimal(n, scale, mc)
-        } catch { case _: ArithmeticException =>
-          // Handle the case where scale/precision conflict
-          BigDecimal(n, scale, UNLIMITED)
+        } catch {
+          case _: ArithmeticException =>
+            // Handle the case where scale/precision conflict
+            BigDecimal(n, scale, UNLIMITED)
         }
       }
 
@@ -284,8 +290,12 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Arbitrary java.lang.Number */
   implicit lazy val arbNumber: Arbitrary[Number] = {
     val gen = Gen.oneOf(
-      arbitrary[Byte], arbitrary[Short], arbitrary[Int], arbitrary[Long],
-      arbitrary[Float], arbitrary[Double]
+      arbitrary[Byte],
+      arbitrary[Short],
+      arbitrary[Int],
+      arbitrary[Long],
+      arbitrary[Float],
+      arbitrary[Double]
     )
     Arbitrary(gen.map(_.asInstanceOf[Number]))
     // XXX TODO - restore BigInt and BigDecimal
@@ -296,12 +306,11 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit lazy val arbFiniteDuration: Arbitrary[FiniteDuration] =
     Arbitrary(Gen.finiteDuration)
 
-  /**
-   * Arbitrary instance of Duration.
-   *
-   * In addition to `FiniteDuration` values, this can generate `Duration.Inf`,
-   * `Duration.MinusInf`, and `Duration.Undefined`.
-   */
+  /** Arbitrary instance of Duration.
+    *
+    * In addition to `FiniteDuration` values, this can generate `Duration.Inf`, `Duration.MinusInf`, and
+    * `Duration.Undefined`.
+    */
   implicit lazy val arbDuration: Arbitrary[Duration] =
     Arbitrary(Gen.duration)
 
@@ -324,19 +333,18 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   /** Arbitrary instance of test parameters */
   implicit lazy val arbTestParameters: Arbitrary[Test.Parameters] =
     Arbitrary(for {
-      _minSuccTests <- choose(10,200)
-      _maxDiscardRatio <- choose(0.2f,10f)
-      _minSize <- choose(0,500)
-      sizeDiff <- choose(0,500)
+      _minSuccTests <- choose(10, 200)
+      _maxDiscardRatio <- choose(0.2f, 10f)
+      _minSize <- choose(0, 500)
+      sizeDiff <- choose(0, 500)
       _maxSize <- choose(_minSize, _minSize + sizeDiff)
-      _workers <- choose(1,4)
+      _workers <- choose(1, 4)
     } yield Test.Parameters.default
-        .withMinSuccessfulTests(_minSuccTests)
-        .withMaxDiscardRatio(_maxDiscardRatio)
-        .withMinSize(_minSize)
-        .withMaxSize(_maxSize)
-        .withWorkers(_workers)
-    )
+      .withMinSuccessfulTests(_minSuccTests)
+      .withMaxDiscardRatio(_maxDiscardRatio)
+      .withMinSize(_minSize)
+      .withMaxSize(_maxSize)
+      .withWorkers(_workers))
 
   /** Arbitrary instance of gen params */
   implicit lazy val arbGenParams: Arbitrary[Gen.Parameters] =
@@ -344,14 +352,12 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
       sz <- arbitrary[Int].suchThat(_ >= 0)
     } yield Gen.Parameters.default.withSize(sz))
 
-
   // Specialised collections //
 
   /** Arbitrary instance of scala.collection.BitSet */
   implicit lazy val arbBitSet: Arbitrary[collection.BitSet] = Arbitrary(
-    buildableOf[collection.BitSet,Int](sized(sz => choose(0,sz)))
+    buildableOf[collection.BitSet, Int](sized(sz => choose(0, sz)))
   )
-
 
   // Higher-order types //
 
@@ -378,19 +384,23 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   implicit def arbTry[T](implicit a: Arbitrary[T]): Arbitrary[Try[T]] =
     Arbitrary(Gen.oneOf(arbitrary[T].map(Success(_)), arbitrary[Throwable].map(Failure(_))))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
-   *  (such as lists, arrays, streams / lazy lists, etc). The maximum size of the container
-   *  depends on the size generation parameter. */
-  implicit def arbContainer[C[_],T](implicit
-    a: Arbitrary[T], b: Buildable[T,C[T]], t: C[T] => Traversable[T]
-  ): Arbitrary[C[T]] = Arbitrary(buildableOf[C[T],T](arbitrary[T]))
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as lists, arrays, streams / lazy
+    * lists, etc). The maximum size of the container depends on the size generation parameter.
+    */
+  implicit def arbContainer[C[_], T](implicit
+      a: Arbitrary[T],
+      b: Buildable[T, C[T]],
+      t: C[T] => Traversable[T]
+  ): Arbitrary[C[T]] = Arbitrary(buildableOf[C[T], T](arbitrary[T]))
 
-  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container
-   *  (such as maps). The maximum size of the container depends on the size
-   *  generation parameter. */
-  implicit def arbContainer2[C[_,_],T,U](implicit
-    a: Arbitrary[(T,U)], b: Buildable[(T,U),C[T,U]], t: C[T,U] => Traversable[(T,U)]
-  ): Arbitrary[C[T,U]] = Arbitrary(buildableOf[C[T,U],(T,U)](arbitrary[(T,U)]))
+  /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as maps). The maximum size of the
+    * container depends on the size generation parameter.
+    */
+  implicit def arbContainer2[C[_, _], T, U](implicit
+      a: Arbitrary[(T, U)],
+      b: Buildable[(T, U), C[T, U]],
+      t: C[T, U] => Traversable[(T, U)]
+  ): Arbitrary[C[T, U]] = Arbitrary(buildableOf[C[T, U], (T, U)](arbitrary[(T, U)]))
 
   implicit def arbEnum[A <: java.lang.Enum[A]](implicit A: reflect.ClassTag[A]): Arbitrary[A] = {
     val values = A.runtimeClass.getEnumConstants.asInstanceOf[Array[A]]

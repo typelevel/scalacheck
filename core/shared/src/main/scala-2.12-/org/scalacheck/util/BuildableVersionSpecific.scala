@@ -16,8 +16,8 @@ import generic.CanBuildFrom
 import scala.collection.mutable.Builder
 
 private[util] trait BuildableVersionSpecific {
-  implicit def buildableCanBuildFrom[T,F,C](implicit c: CanBuildFrom[F,T,C]): Buildable[T,C] =
-    new Buildable[T,C] {
+  implicit def buildableCanBuildFrom[T, F, C](implicit c: CanBuildFrom[F, T, C]): Buildable[T, C] =
+    new Buildable[T, C] {
       def builder = c.apply
     }
 }
@@ -32,10 +32,8 @@ private[util] class ArrayListBuilder[T] extends Builder[T, ArrayList[T]] {
   def result(): ArrayList[T] = al
 }
 
-/**
- * CanBuildFrom instances implementing Serializable, so that the objects capturing those can be
- * serializable too.
- */
+/** CanBuildFrom instances implementing Serializable, so that the objects capturing those can be serializable too.
+  */
 object SerializableCanBuildFroms {
   implicit def listCanBuildFrom[T]: CanBuildFrom[List[T], T, List[T]] =
     new CanBuildFrom[List[T], T, List[T]] with Serializable {

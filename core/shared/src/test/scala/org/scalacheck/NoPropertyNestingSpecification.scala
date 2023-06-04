@@ -23,11 +23,11 @@ object NoPropertyNestingSpecification extends Properties("Properties.no nesting"
     val results = for ((name, prop) <- p.properties) yield prop(Gen.Parameters.default)
     results match {
       case collection.Seq(res) => res.status match {
-        case Prop.Exception(e: IllegalStateException) =>
-          if (e.getMessage.contains("nest")) thrown = true
-          else throw new Exception("exception message did not reference nesting")
-        case _ => throw new Exception("did not get IllegalStateException")
-      }
+          case Prop.Exception(e: IllegalStateException) =>
+            if (e.getMessage.contains("nest")) thrown = true
+            else throw new Exception("exception message did not reference nesting")
+          case _ => throw new Exception("did not get IllegalStateException")
+        }
       case _ => throw new Exception("more than one property, somehow")
     }
 

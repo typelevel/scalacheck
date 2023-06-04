@@ -9,16 +9,17 @@
 
 package org.scalacheck
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+
 import Prop.{forAll, forAllNoShrink, propBoolean}
 import Shrink.shrink
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
-
 object ShrinkSpecification extends Properties("Shrink") {
 
-  def shrinkClosure[T : Shrink](x: T): Stream[T] = {
+  def shrinkClosure[T: Shrink](x: T): Stream[T] = {
     val xs = shrink[T](x)
-    if(xs.isEmpty) xs
+    if (xs.isEmpty) xs
     else xs.append(xs.take(1).map(shrinkClosure[T]).flatten)
   }
 
@@ -71,11 +72,11 @@ object ShrinkSpecification extends Properties("Shrink") {
   }
 
   property("shrink[Float] != 0") = forAll { (n: Float) =>
-    (math.abs(n) > 1E-5f) ==> shrinkClosure(n).contains(0)
+    (math.abs(n) > 1e-5f) ==> shrinkClosure(n).contains(0)
   }
 
   property("shrink[Double] != 0") = forAll { (n: Double) =>
-    (math.abs(n) > 1E-5d) ==> shrinkClosure(n).contains(0)
+    (math.abs(n) > 1e-5d) ==> shrinkClosure(n).contains(0)
   }
 
   property("shrink[FiniteDuration] != 0") = forAll { (n: FiniteDuration) =>
@@ -86,7 +87,7 @@ object ShrinkSpecification extends Properties("Shrink") {
     (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
-  implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A],Vector[A]](Vector(_: _*), _.toList)
+  implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A], Vector[A]](Vector(_: _*), _.toList)
 
   property("shrink[Either]") = forAll { (e: Either[Int, Long]) =>
     !shrink(e).contains(e)
@@ -104,9 +105,9 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   property("suchThat") = {
     implicit def shrinkEvenLength[A]: Shrink[List[A]] =
-      Shrink.shrinkContainer[List,A].suchThat(evenLength(_))
+      Shrink.shrinkContainer[List, A].suchThat(evenLength(_))
     val genEvenLengthLists =
-      Gen.containerOf[List,Int](Arbitrary.arbitrary[Int]).suchThat(evenLength(_))
+      Gen.containerOf[List, Int](Arbitrary.arbitrary[Int]).suchThat(evenLength(_))
     forAll(genEvenLengthLists) { (l: List[Int]) =>
       evenLength(l)
     }
@@ -114,7 +115,7 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   def evenLength(value: List[_]) = value.length % 2 == 0
   def shrinkEvenLength[A]: Shrink[List[A]] =
-    Shrink.shrinkContainer[List,A].suchThat(evenLength(_))
+    Shrink.shrinkContainer[List, A].suchThat(evenLength(_))
 
   property("shrink[List[Int].suchThat") = {
     forAll { (l: List[Int]) =>

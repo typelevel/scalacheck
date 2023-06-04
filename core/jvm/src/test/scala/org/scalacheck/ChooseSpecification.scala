@@ -9,12 +9,14 @@
 
 package org.scalacheck
 
-import Gen._
-
 import java.time._
 import java.time.temporal.ChronoUnit
 import java.util.Date
-import scala.util.{Try, Success, Failure}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import Gen._
 
 object ChooseSpecification extends Properties("Choose") with time.OrderingVersionSpecific {
 
@@ -58,9 +60,8 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
 
   property("choose[ZonedDateTime]") = chooseProp[ZonedDateTime]
 
-  /** Generate a duration which is at least 1 second smaller than the max
-    * duration the type can support. We use this to avoid the incredibly
-    * unlikely event of overflowing in the handle-min-nanos-duration test.
+  /** Generate a duration which is at least 1 second smaller than the max duration the type can support. We use this to
+    * avoid the incredibly unlikely event of overflowing in the handle-min-nanos-duration test.
     */
   lazy val genOneSecondLessThanMaxDuration: Gen[Duration] =
     Gen.choose(Duration.ofSeconds(Long.MinValue), Duration.ofSeconds(Long.MaxValue - 1L, 999999999L))
@@ -78,9 +79,8 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
       checkChoose(min, max)
     }
 
-  /** Generate an Instant which is at least 1 second smaller than the max
-    * Instant the type can support. We use this to avoid the incredibly
-    * unlikely event of overflowing in the handle-min-nanos-instant test.
+  /** Generate an Instant which is at least 1 second smaller than the max Instant the type can support. We use this to
+    * avoid the incredibly unlikely event of overflowing in the handle-min-nanos-instant test.
     */
   lazy val genOneSecondLessThanMaxInstant: Gen[Instant] =
     Gen.choose(Instant.MIN, Instant.MAX.minusSeconds(1L))

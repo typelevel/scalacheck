@@ -11,6 +11,7 @@ package org.scalacheck.util
 
 import org.scalacheck.Prop.Arg
 import org.scalacheck.Test
+
 import scala.annotation.tailrec
 import scala.math.round
 
@@ -41,26 +42,22 @@ object Pretty {
   def pretty[T](t: T)(implicit ev: T => Pretty): String = pretty(t, defaultParams)
 
   private[this] implicit class StrBreak(val s1: String) extends AnyVal {
-    def /(s2: String) = if(s2 == "") s1 else s1+"\n"+s2
+    def /(s2: String) = if (s2 == "") s1 else s1 + "\n" + s2
   }
 
   def pad(s: String, c: Char, length: Int) =
-    if(s.length >= length) s
-    else s + List.fill(length-s.length)(c).mkString
+    if (s.length >= length) s
+    else s + List.fill(length - s.length)(c).mkString
 
-  /**
-   * Break a long string across lines.
-   *
-   * This method will wrap the given string at `length` characters,
-   * inserting newlines and an optional prefix (`lead`) on every line
-   * other than the first.
-   *
-   * All lines in the resulting string are guaranteed to be `length`
-   * or shorter.
-   *
-   * We require `lead.length < length`; otherwise it would be
-   * impossible to legally wrap lines.
-   */
+  /** Break a long string across lines.
+    *
+    * This method will wrap the given string at `length` characters, inserting newlines and an optional prefix (`lead`)
+    * on every line other than the first.
+    *
+    * All lines in the resulting string are guaranteed to be `length` or shorter.
+    *
+    * We require `lead.length < length`; otherwise it would be impossible to legally wrap lines.
+    */
   def break(s: String, lead: String, length: Int): String = {
     require(lead.length < length, s"lead ($lead) should be shorter than length ($length)")
     val step = length - lead.length
@@ -82,7 +79,7 @@ object Pretty {
 
   def format(s: String, lead: String, trail: String, width: Int) =
     // was just `s.lines....`, but on JDK 11 we hit scala/bug#11125
-    Predef.augmentString(s).lines.map(l => break(lead+l+trail, "  ", width)).mkString("\n")
+    Predef.augmentString(s).lines.map(l => break(lead + l + trail, "  ", width)).mkString("\n")
 
   private def toStrOrNull(s: Any) = if (s == null) "null" else s.toString
 
@@ -90,11 +87,11 @@ object Pretty {
     val builder = new StringBuilder
     @annotation.tailrec
     def loop(i: Int): Unit = {
-      if(i < s.length){
+      if (i < s.length) {
         val c = s.codePointAt(i)
-        if(Character.isISOControl(c)){
+        if (Character.isISOControl(c)) {
           builder.append("\\u%04x".format(c))
-        }else{
+        } else {
           builder.append(s.charAt(i))
         }
         loop(i + 1)
@@ -106,78 +103,79 @@ object Pretty {
 
   implicit def prettyAny(t: Any): Pretty = Pretty { _ => toStrOrNull(t) }
 
-  implicit def prettyString(t: String): Pretty = Pretty { _ => "\""++escapeControlChars(t)++"\"" }
+  implicit def prettyString(t: String): Pretty = Pretty { _ => "\"" ++ escapeControlChars(t) ++ "\"" }
 
   implicit def prettyList(l: List[Any]): Pretty = Pretty { _ =>
-    l.map("\""+_+"\"").mkString("List(", ", ", ")")
+    l.map("\"" + _ + "\"").mkString("List(", ", ", ")")
   }
 
   implicit def prettyThrowable(e: Throwable): Pretty = Pretty { prms =>
     val strs = e.getStackTrace.toList.map { st =>
       import st._
-      getClassName+"."+getMethodName + "("+getFileName+":"+getLineNumber+")"
+      getClassName + "." + getMethodName + "(" + getFileName + ":" + getLineNumber + ")"
     }
 
     val strs2 =
-      if(prms.verbosity <= 0) List[String]()
-      else if(prms.verbosity <= 1) strs.take(5)
+      if (prms.verbosity <= 0) List[String]()
+      else if (prms.verbosity <= 1) strs.take(5)
       else strs
 
     e.getClass.getName + ": " + e.getMessage / strs2.mkString("\n")
   }
 
   def prettyArgs(args: Seq[Arg[Any]]): Pretty = Pretty { prms =>
-    if(args.isEmpty) "" else {
-      val labeledValues = for((a,i) <- args.zipWithIndex) yield {
-        val l = "> "+(if(a.label == "") "ARG_"+i else a.label)
+    if (args.isEmpty) ""
+    else {
+      val labeledValues = for ((a, i) <- args.zipWithIndex) yield {
+        val l = "> " + (if (a.label == "") "ARG_" + i else a.label)
         val s =
-          if(a.shrinks == 0) None
-          else Some(l+"_ORIGINAL: "+a.prettyOrigArg(prms))
-        (l+": "+a.prettyArg(prms), s)
+          if (a.shrinks == 0) None
+          else Some(l + "_ORIGINAL: " + a.prettyOrigArg(prms))
+        (l + ": " + a.prettyArg(prms), s)
       }
       labeledValues.map(_._1) ++
-      labeledValues.map(_._2).collect { case Some(s) => s }
+        labeledValues.map(_._2).collect { case Some(s) => s }
     }.mkString("\n")
   }
 
   implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { _ =>
-    if(fm.total == 0) ""
+    if (fm.total == 0) ""
     else {
       "> Collected test data: " / {
         for {
-          (xs,r) <- fm.getRatios
+          (xs, r) <- fm.getRatios
           ys = xs - (())
           if !ys.isEmpty
-        } yield round(r*100).toString + "% " + ys.mkString(", ")
+        } yield round(r * 100).toString + "% " + ys.mkString(", ")
       }.mkString("\n")
     }
   }
 
   implicit def prettyTestRes(res: Test.Result): Pretty = Pretty { prms =>
     def labels(ls: collection.immutable.Set[String]) =
-      if(ls.isEmpty) ""
+      if (ls.isEmpty) ""
       else "> Labels of failing property: " / ls.mkString("\n")
     val s = res.status match {
-      case Test.Proved(_) if(prms.verbosity <= 1) => "OK, proved property."
-      case Test.Proved(args) => "OK, proved property."/prettyArgs(args)(prms)
-      case Test.Passed => "OK, passed "+res.succeeded+" tests."
+      case Test.Proved(_) if (prms.verbosity <= 1) => "OK, proved property."
+      case Test.Proved(args) => "OK, proved property." / prettyArgs(args)(prms)
+      case Test.Passed => "OK, passed " + res.succeeded + " tests."
       case Test.Failed(args, l) =>
-        "Falsified after "+res.succeeded+" passed tests."/labels(l)/prettyArgs(args)(prms)
+        "Falsified after " + res.succeeded + " passed tests." / labels(l) / prettyArgs(args)(prms)
       case Test.Exhausted =>
-        "Gave up after only "+res.succeeded+" passed tests. " +
-        res.discarded+" tests were discarded."
-      case Test.PropException(args,e,l) =>
-        "Exception raised on property evaluation."/labels(l)/prettyArgs(args)(prms)/
-        "> Exception: "+pretty(e,prms)
+        "Gave up after only " + res.succeeded + " passed tests. " +
+          res.discarded + " tests were discarded."
+      case Test.PropException(args, e, l) =>
+        "Exception raised on property evaluation." / labels(l) / prettyArgs(args)(prms) /
+          "> Exception: " + pretty(e, prms)
     }
-    val t = if(prms.verbosity <= 1) "" else "Elapsed time: "+prettyTime(res.time)
-    s/t/pretty(res.freqMap,prms)
+    val t = if (prms.verbosity <= 1) "" else "Elapsed time: " + prettyTime(res.time)
+    s / t / pretty(res.freqMap, prms)
   }
 
   def prettyTime(millis: Long): String = {
-    val min = millis/(60*1000)
-    val sec = (millis-(60*1000*min)) / 1000d
-    if(min <= 0) "%.3f sec ".format(sec)
+    val min = millis / (60 * 1000)
+    val sec = (millis - (60 * 1000 * min)) / 1000d
+    if (min <= 0) "%.3f sec ".format(sec)
     else "%d min %.3f sec ".format(min, sec)
   }
 

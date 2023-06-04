@@ -24,7 +24,7 @@ private[scalacheck] trait CmdLineParser {
   trait StrOpt extends Opt[String]
   trait OpStrOpt extends Opt[Option[String]]
 
-  class OptMap(private val opts: Map[Opt[_],Any] = Map.empty) {
+  class OptMap(private val opts: Map[Opt[_], Any] = Map.empty) {
     def apply(flag: Flag): Boolean = opts.contains(flag)
     def apply[T](opt: Opt[T]): T = opts.get(opt) match {
       case None => opt.default
@@ -36,7 +36,7 @@ private[scalacheck] trait CmdLineParser {
   val opts: Set[Opt[_]]
 
   private def getOpt(s: String) = {
-    if(s == null || s.length == 0 || s.charAt(0) != '-') None
+    if (s == null || s.length == 0 || s.charAt(0) != '-') None
     else opts.find(_.names.contains(s.drop(1)))
   }
 
@@ -53,38 +53,40 @@ private[scalacheck] trait CmdLineParser {
   def printHelp(): Unit = {
     Console.out.println("Available options:")
     opts.foreach { opt =>
-      Console.out.println("  " + opt.names.map("-"+_).mkString(", ") + ": " + opt.help)
+      Console.out.println("  " + opt.names.map("-" + _).mkString(", ") + ": " + opt.help)
     }
   }
 
-  /** Parses a command line and returns a tuple of the parsed options,
-   *  and any unrecognized strings */
+  /** Parses a command line and returns a tuple of the parsed options, and any unrecognized strings
+    */
   def parseArgs[T](args: Array[String]): (OptMap, List[String]) = {
 
     def parse(
-      as: List[String], om: OptMap, us: List[String]
+        as: List[String],
+        om: OptMap,
+        us: List[String]
     ): (OptMap, List[String]) =
       as match {
         case Nil => (om, us)
-        case a::Nil =>
+        case a :: Nil =>
           getOpt(a) match {
             case Some(o: Flag) =>
               parse(Nil, om.set((o, ())), us)
             case _ =>
               (om, us :+ a)
           }
-        case a1::a2::as => getOpt(a1) match {
-          case Some(o: Flag) =>
-            parse(a2 :: as, om.set((o, ())), us)
-          case otherwise =>
-            (otherwise match {
-              case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
-              case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
-              case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
-              case Some(o: OpStrOpt) => getStr(a2).map(v => parse(as, om.set(o -> Option(v)), us))
-              case _ => None
-            }).getOrElse(parse(a2::as, om, us :+ a1))
-        }
+        case a1 :: a2 :: as => getOpt(a1) match {
+            case Some(o: Flag) =>
+              parse(a2 :: as, om.set((o, ())), us)
+            case otherwise =>
+              (otherwise match {
+                case Some(o: IntOpt) => getInt(a2).map(v => parse(as, om.set(o -> v), us))
+                case Some(o: FloatOpt) => getFloat(a2).map(v => parse(as, om.set(o -> v), us))
+                case Some(o: StrOpt) => getStr(a2).map(v => parse(as, om.set(o -> v), us))
+                case Some(o: OpStrOpt) => getStr(a2).map(v => parse(as, om.set(o -> Option(v)), us))
+                case _ => None
+              }).getOrElse(parse(a2 :: as, om, us :+ a1))
+          }
       }
 
     parse(args.toList, new OptMap(), Nil)

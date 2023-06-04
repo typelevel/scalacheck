@@ -13,8 +13,8 @@ import Prop.{forAll, propBoolean}
 import Shrink.shrink
 import ShrinkSpecification.shrinkClosure
 
-/**
-  * @todo should work not only JVM but also Scala.js
+/** @todo
+  *   should work not only JVM but also Scala.js
   */
 object ShrinkSpecificationJVM extends Properties("Shrink JVM") {
 

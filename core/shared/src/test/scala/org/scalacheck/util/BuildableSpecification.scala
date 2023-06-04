@@ -11,12 +11,13 @@ package org.scalacheck
 package util
 
 import scala.collection._
+
 import ScalaVersionSpecific._
 
 object BuildableSpecification {
   def container[C[_]](implicit
-    evb: Buildable[String, C[String]],
-    evt: C[String] => Traversable[String]
+      evb: Buildable[String, C[String]],
+      evt: C[String] => Traversable[String]
   ) = Gen.containerOf[C, String](Gen.alphaStr)
 
   implicit val listGen: Gen[List[String]] = container[List]

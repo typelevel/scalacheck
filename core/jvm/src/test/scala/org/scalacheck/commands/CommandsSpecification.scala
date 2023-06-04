@@ -28,8 +28,8 @@ object CommandsSpecification extends Properties("Commands") {
       val lock = new java.util.concurrent.locks.ReentrantLock
       def inc = { lock.lock; n += 1; lock.unlock; n }
       def dec = { lock.lock; n -= 1; lock.unlock; n }
-      //def inc = { n += 1; n }
-      //def dec = { n -= 1; n }
+      // def inc = { n += 1; n }
+      // def dec = { n -= 1; n }
       def get = n
     }
 
@@ -38,8 +38,7 @@ object CommandsSpecification extends Properties("Commands") {
 
     override def shrinkState: Shrink[Int] = implicitly
 
-    def canCreateNewSut(newState: State, initSuts: Traversable[State],
-      runningSuts: Traversable[Sut]) = true
+    def canCreateNewSut(newState: State, initSuts: Traversable[State], runningSuts: Traversable[Sut]) = true
 
     def newSut(state: State): Sut = Counter(state)
 
@@ -47,7 +46,7 @@ object CommandsSpecification extends Properties("Commands") {
 
     def initialPreCondition(state: State) = true
 
-    val genInitialState = Gen.choose(0,100)
+    val genInitialState = Gen.choose(0, 100)
 
     def genCommand(state: State): Gen[Command] =
       Gen.oneOf(Get, Inc, Dec)
@@ -63,17 +62,17 @@ object CommandsSpecification extends Properties("Commands") {
     case object Inc extends SuccessCommand {
       type Result = Int
       def run(sut: Sut) = sut.inc
-      def nextState(state: State) = state+1
+      def nextState(state: State) = state + 1
       def preCondition(state: State) = true
-      def postCondition(state: State, result: Result) = result == (state+1)
+      def postCondition(state: State, result: Result) = result == (state + 1)
     }
 
     case object Dec extends SuccessCommand {
       type Result = Int
       def run(sut: Sut) = sut.dec
-      def nextState(state: State) = state-1
+      def nextState(state: State) = state - 1
       def preCondition(state: State) = true
-      def postCondition(state: State, result: Result) = result == (state-1)
+      def postCondition(state: State, result: Result) = result == (state - 1)
     }
   }
 

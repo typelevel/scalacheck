@@ -9,20 +9,22 @@
 
 package org.scalacheck
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+
 import util.Buildable
 import util.SerializableCanBuildFroms._
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
 
-  /** Create a new shrink that only produces values satisfying the given
-   *  condition.
-   */
+  /** Create a new shrink that only produces values satisfying the given condition.
+    */
   def suchThat(f: T => Boolean): Shrink[T] = Shrink(v => this.shrink(v).filter(f))
 }
 
 trait ShrinkLowPriority {
+
   /** Default shrink instance */
   implicit def shrinkAny[T]: Shrink[T] = Shrink(_ => Stream.empty)
 }
@@ -34,8 +36,8 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
 
   /** Interleaves two streams */
   private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =
-    if(xs.isEmpty) ys
-    else if(ys.isEmpty) xs
+    if (xs.isEmpty) ys
+    else if (ys.isEmpty) xs
     else cons(xs.head, cons(ys.head, interleave(xs.tail, ys.tail)))
 
   /** Shrink instance factory */
@@ -46,27 +48,31 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
   /** Shrink a value */
   def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
 
-  /** Shrink a value, but also return the original value as the first element in
-   *  the resulting stream */
+  /** Shrink a value, but also return the original value as the first element in the resulting stream
+    */
   def shrinkWithOrig[T](x: T)(implicit s: Shrink[T]): Stream[T] =
     cons(x, s.shrink(x))
 
   /** Shrink instance of container */
-  implicit def shrinkContainer[C[_],T](implicit v: C[T] => Traversable[T], s: Shrink[T],
-    b: Buildable[T,C[T]]
+  implicit def shrinkContainer[C[_], T](implicit
+      v: C[T] => Traversable[T],
+      s: Shrink[T],
+      b: Buildable[T, C[T]]
   ): Shrink[C[T]] = Shrink { (xs: C[T]) =>
     val ys = v(xs)
     val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+    removeChunks(ys.size, zs).append(shrinkOne(zs)).map(b.fromIterable)
   }
 
   /** Shrink instance of container2 */
-  implicit def shrinkContainer2[C[_,_],T,U](implicit v: C[T,U] => Traversable[(T,U)], s: Shrink[(T,U)],
-    b: Buildable[(T,U),C[T,U]]
-  ): Shrink[C[T,U]] = Shrink { (xs: C[T,U]) =>
+  implicit def shrinkContainer2[C[_, _], T, U](implicit
+      v: C[T, U] => Traversable[(T, U)],
+      s: Shrink[(T, U)],
+      b: Buildable[(T, U), C[T, U]]
+  ): Shrink[C[T, U]] = Shrink { (xs: C[T, U]) =>
     val ys = v(xs)
     val zs = ys.toStream
-    removeChunks(ys.size,zs).append(shrinkOne(zs)).map(b.fromIterable)
+    removeChunks(ys.size, zs).append(shrinkOne(zs)).map(b.fromIterable)
   }
 
   private def removeChunks[T](n: Int, xs: Stream[T]): Stream[Stream[T]] =
@@ -85,12 +91,12 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
       cons(xs1, cons(xs2, interleave(xs3, xs4)))
     }
 
-  private def shrinkOne[T : Shrink](zs: Stream[T]): Stream[Stream[T]] =
+  private def shrinkOne[T: Shrink](zs: Stream[T]): Stream[Stream[T]] =
     if (zs.isEmpty) empty
     else {
       val x = zs.head
       val xs = zs.tail
-      shrink(x).map(cons(_,xs)).append(shrinkOne(xs).map(cons(x,_)))
+      shrink(x).map(cons(_, xs)).append(shrinkOne(xs).map(cons(x, _)))
     }
 
   /** Shrink instances for numeric data types */
@@ -103,118 +109,152 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
 
   /** Shrink instance of String */
   implicit lazy val shrinkString: Shrink[String] = Shrink { s =>
-    shrinkContainer[List,Char].shrink(s.toList).map(_.mkString)
+    shrinkContainer[List, Char].shrink(s.toList).map(_.mkString)
   }
 
   /** Shrink instance of Option */
-  implicit def shrinkOption[T : Shrink]: Shrink[Option[T]] = Shrink {
+  implicit def shrinkOption[T: Shrink]: Shrink[Option[T]] = Shrink {
     case None => empty
-    case Some(x) => cons(None, for(y <- shrink(x)) yield Some(y))
+    case Some(x) => cons(None, for (y <- shrink(x)) yield Some(y))
   }
 
   /** Shrink instance of 2-tuple */
   implicit def shrinkTuple2[
-    T1:Shrink, T2:Shrink
-  ]: Shrink[(T1,T2)] =
-    Shrink { case (t1,t2) =>
-      shrink(t1).map((_,t2)) append
-      shrink(t2).map((t1,_))
+      T1: Shrink,
+      T2: Shrink
+  ]: Shrink[(T1, T2)] =
+    Shrink { case (t1, t2) =>
+      shrink(t1).map((_, t2)) append
+        shrink(t2).map((t1, _))
     }
 
   /** Shrink instance of 3-tuple */
   implicit def shrinkTuple3[
-    T1:Shrink, T2:Shrink, T3:Shrink
-  ]: Shrink[(T1,T2,T3)] =
-    Shrink { case (t1,t2,t3) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink
+  ]: Shrink[(T1, T2, T3)] =
+    Shrink { case (t1, t2, t3) =>
       shrink(t1).map((_, t2, t3)) append
-      shrink(t2).map((t1, _, t3)) append
-      shrink(t3).map((t1, t2, _))
+        shrink(t2).map((t1, _, t3)) append
+        shrink(t3).map((t1, t2, _))
     }
 
   /** Shrink instance of 4-tuple */
   implicit def shrinkTuple4[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink
-  ]: Shrink[(T1,T2,T3,T4)] =
-    Shrink { case (t1,t2,t3,t4) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink
+  ]: Shrink[(T1, T2, T3, T4)] =
+    Shrink { case (t1, t2, t3, t4) =>
       shrink(t1).map((_, t2, t3, t4)) append
-      shrink(t2).map((t1, _, t3, t4)) append
-      shrink(t3).map((t1, t2, _, t4)) append
-      shrink(t4).map((t1, t2, t3, _))
+        shrink(t2).map((t1, _, t3, t4)) append
+        shrink(t3).map((t1, t2, _, t4)) append
+        shrink(t4).map((t1, t2, t3, _))
     }
 
   /** Shrink instance of 5-tuple */
   implicit def shrinkTuple5[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink
-  ]: Shrink[(T1,T2,T3,T4,T5)] =
-    Shrink { case (t1,t2,t3,t4,t5) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink,
+      T5: Shrink
+  ]: Shrink[(T1, T2, T3, T4, T5)] =
+    Shrink { case (t1, t2, t3, t4, t5) =>
       shrink(t1).map((_, t2, t3, t4, t5)) append
-      shrink(t2).map((t1, _, t3, t4, t5)) append
-      shrink(t3).map((t1, t2, _, t4, t5)) append
-      shrink(t4).map((t1, t2, t3, _, t5)) append
-      shrink(t5).map((t1, t2, t3, t4, _))
+        shrink(t2).map((t1, _, t3, t4, t5)) append
+        shrink(t3).map((t1, t2, _, t4, t5)) append
+        shrink(t4).map((t1, t2, t3, _, t5)) append
+        shrink(t5).map((t1, t2, t3, t4, _))
     }
 
   /** Shrink instance of 6-tuple */
   implicit def shrinkTuple6[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink
-  ]: Shrink[(T1,T2,T3,T4,T5,T6)] =
-    Shrink { case (t1,t2,t3,t4,t5,t6) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink,
+      T5: Shrink,
+      T6: Shrink
+  ]: Shrink[(T1, T2, T3, T4, T5, T6)] =
+    Shrink { case (t1, t2, t3, t4, t5, t6) =>
       shrink(t1).map((_, t2, t3, t4, t5, t6)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _))
+        shrink(t2).map((t1, _, t3, t4, t5, t6)) append
+        shrink(t3).map((t1, t2, _, t4, t5, t6)) append
+        shrink(t4).map((t1, t2, t3, _, t5, t6)) append
+        shrink(t5).map((t1, t2, t3, t4, _, t6)) append
+        shrink(t6).map((t1, t2, t3, t4, t5, _))
     }
 
   /** Shrink instance of 7-tuple */
   implicit def shrinkTuple7[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink, T7:Shrink
-  ]: Shrink[(T1,T2,T3,T4,T5,T6,T7)] =
-    Shrink { case (t1,t2,t3,t4,t5,t6,t7) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink,
+      T5: Shrink,
+      T6: Shrink,
+      T7: Shrink
+  ]: Shrink[(T1, T2, T3, T4, T5, T6, T7)] =
+    Shrink { case (t1, t2, t3, t4, t5, t6, t7) =>
       shrink(t1).map((_, t2, t3, t4, t5, t6, t7)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7)) append
-      shrink(t7).map((t1, t2, t3, t4, t5, t6, _))
+        shrink(t2).map((t1, _, t3, t4, t5, t6, t7)) append
+        shrink(t3).map((t1, t2, _, t4, t5, t6, t7)) append
+        shrink(t4).map((t1, t2, t3, _, t5, t6, t7)) append
+        shrink(t5).map((t1, t2, t3, t4, _, t6, t7)) append
+        shrink(t6).map((t1, t2, t3, t4, t5, _, t7)) append
+        shrink(t7).map((t1, t2, t3, t4, t5, t6, _))
     }
 
   /** Shrink instance of 8-tuple */
   implicit def shrinkTuple8[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink,
-    T7:Shrink, T8:Shrink
-  ]: Shrink[(T1,T2,T3,T4,T5,T6,T7,T8)] =
-    Shrink { case (t1,t2,t3,t4,t5,t6,t7,t8) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink,
+      T5: Shrink,
+      T6: Shrink,
+      T7: Shrink,
+      T8: Shrink
+  ]: Shrink[(T1, T2, T3, T4, T5, T6, T7, T8)] =
+    Shrink { case (t1, t2, t3, t4, t5, t6, t7, t8) =>
       shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8)) append
-      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8)) append
-      shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _))
+        shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8)) append
+        shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8)) append
+        shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8)) append
+        shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8)) append
+        shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8)) append
+        shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8)) append
+        shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _))
     }
 
   /** Shrink instance of 9-tuple */
   implicit def shrinkTuple9[
-    T1:Shrink, T2:Shrink, T3:Shrink, T4:Shrink, T5:Shrink, T6:Shrink,
-    T7:Shrink, T8:Shrink, T9:Shrink
-  ]: Shrink[(T1,T2,T3,T4,T5,T6,T7,T8,T9)] =
-    Shrink { case (t1,t2,t3,t4,t5,t6,t7,t8,t9) =>
+      T1: Shrink,
+      T2: Shrink,
+      T3: Shrink,
+      T4: Shrink,
+      T5: Shrink,
+      T6: Shrink,
+      T7: Shrink,
+      T8: Shrink,
+      T9: Shrink
+  ]: Shrink[(T1, T2, T3, T4, T5, T6, T7, T8, T9)] =
+    Shrink { case (t1, t2, t3, t4, t5, t6, t7, t8, t9) =>
       shrink(t1).map((_, t2, t3, t4, t5, t6, t7, t8, t9)) append
-      shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8, t9)) append
-      shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8, t9)) append
-      shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8, t9)) append
-      shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8, t9)) append
-      shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8, t9)) append
-      shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8, t9)) append
-      shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _, t9)) append
-      shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
+        shrink(t2).map((t1, _, t3, t4, t5, t6, t7, t8, t9)) append
+        shrink(t3).map((t1, t2, _, t4, t5, t6, t7, t8, t9)) append
+        shrink(t4).map((t1, t2, t3, _, t5, t6, t7, t8, t9)) append
+        shrink(t5).map((t1, t2, t3, t4, _, t6, t7, t8, t9)) append
+        shrink(t6).map((t1, t2, t3, t4, t5, _, t7, t8, t9)) append
+        shrink(t7).map((t1, t2, t3, t4, t5, t6, _, t8, t9)) append
+        shrink(t8).map((t1, t2, t3, t4, t5, t6, t7, _, t9)) append
+        shrink(t9).map((t1, t2, t3, t4, t5, t6, t7, t8, _))
     }
 
-  implicit def shrinkEither[T1:Shrink, T2:Shrink]: Shrink[Either[T1, T2]] =
+  implicit def shrinkEither[T1: Shrink, T2: Shrink]: Shrink[Either[T1, T2]] =
     Shrink { x =>
       x.fold(shrink(_).map(Left(_)), shrink(_).map(Right(_)))
     }
@@ -227,16 +267,16 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
     case _ => Stream.empty
   }
 
-  /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types
-    *  whose relationship is described by the provided transformation functions.
-    *  (exponential functor map) */
+  /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types whose relationship is described by the
+    * provided transformation functions. (exponential functor map)
+    */
   def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { (u: U) =>
     st.shrink(to(u)).map(from)
   }
 }
 
 final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
-  import ev.{ fromInt, gteq, quot, negate, equiv, zero, one }
+  import ev.{fromInt, gteq, quot, negate, equiv, zero, one}
 
   val two = fromInt(2)
 
@@ -259,7 +299,7 @@ final class ShrinkIntegral[T](implicit ev: Integral[T]) extends Shrink[T] {
 }
 
 final class ShrinkFractional[T](implicit ev: Fractional[T]) extends Shrink[T] {
-  import ev.{ fromInt, abs, zero, one, div, lteq, negate, lt }
+  import ev.{fromInt, abs, zero, one, div, lteq, negate, lt}
 
   val two = fromInt(2)
 
