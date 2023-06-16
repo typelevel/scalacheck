@@ -28,14 +28,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.3.0, 2.12.17, 2.13.11]
+        scala: [3.3.0, 2.12.18, 2.13.11]
         java: [temurin@8, temurin@11]
         project: [rootJS, rootJVM, rootNative]
         workers: [1, 4]
         exclude:
           - scala: 3.3.0
             java: temurin@11
-          - scala: 2.12.17
+          - scala: 2.12.18
             java: temurin@11
           - project: rootJS
             java: temurin@11
@@ -226,32 +226,32 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, rootJS, 1)
+      - name: Download target directories (2.12.18, rootJS, 1)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootJS-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.18-rootJS-1
 
-      - name: Inflate target directories (2.12.17, rootJS, 1)
+      - name: Inflate target directories (2.12.18, rootJS, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, rootJVM, 1)
+      - name: Download target directories (2.12.18, rootJVM, 1)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.18-rootJVM-1
 
-      - name: Inflate target directories (2.12.17, rootJVM, 1)
+      - name: Inflate target directories (2.12.18, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, rootNative, 1)
+      - name: Download target directories (2.12.18, rootNative, 1)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootNative-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.18-rootNative-1
 
-      - name: Inflate target directories (2.12.17, rootNative, 1)
+      - name: Inflate target directories (2.12.18, rootNative, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
