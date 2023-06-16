@@ -10,11 +10,30 @@
 package org.scalacheck
 
 import Prop.{
-  forAll, falsified, undecided, exception, passed, proved, all,
-  atLeastOne, sizedProp, someFailing, noneFailing, Undecided, False, True,
-  Exception, Proof, throws, propBoolean, secure, delay, lzy, collect
+  forAll,
+  falsified,
+  undecided,
+  exception,
+  passed,
+  proved,
+  all,
+  atLeastOne,
+  sizedProp,
+  someFailing,
+  noneFailing,
+  Undecided,
+  False,
+  True,
+  Exception,
+  Proof,
+  throws,
+  propBoolean,
+  secure,
+  delay,
+  lzy,
+  collect
 }
-import Gen.{ const, fail, oneOf, listOf, Parameters }
+import Gen.{const, fail, oneOf, listOf, Parameters}
 
 object PropSpecification extends Properties("Prop") {
 
@@ -23,7 +42,7 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("Prop.==> undecided") = forAll { (p1: Prop) =>
-    val g = oneOf(falsified,undecided)
+    val g = oneOf(falsified, undecided)
     forAll(g) { p2 =>
       val p3 = (p2 ==> p1)
       p3 == undecided || (p3 == exception && p1 == exception)
@@ -31,9 +50,9 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("Prop.==> true") = {
-    val g1 = oneOf(proved,falsified,undecided,exception)
-    val g2 = oneOf(passed,proved)
-    forAll(g1, g2) { case (p1,p2) =>
+    val g1 = oneOf(proved, falsified, undecided, exception)
+    val g2 = oneOf(passed, proved)
+    forAll(g1, g2) { case (p1, p2) =>
       val p = p2 ==> p1
       (p == p1) || (p2 == passed && p1 == proved && p == passed)
     }
@@ -55,8 +74,8 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("Prop.&& Commutativity") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 && p2) == (p2 && p1) }
+    val g = oneOf(proved, passed, falsified, undecided, exception)
+    forAll(g, g) { case (p1, p2) => (p1 && p2) == (p2 && p1) }
   }
   property("Prop.&& Exception") = forAll { (p: Prop) =>
     (p && propException()) == exception
@@ -65,7 +84,7 @@ object PropSpecification extends Properties("Prop") {
     (passed && propException()) == exception
   }
   property("Prop.&& Identity") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
+    val g = oneOf(proved, passed, falsified, undecided, exception)
     forAll(g)(p => (p && proved) == p)
   }
   property("Prop.&& False") = forAll { (p: Prop) =>
@@ -73,7 +92,7 @@ object PropSpecification extends Properties("Prop") {
     q == falsified || (q == exception && p == exception)
   }
   property("Prop.&& Undecided") = {
-    val g = oneOf(proved,passed,undecided)
+    val g = oneOf(proved, passed, undecided)
     forAll(g)(p => (p && undecided) == undecided)
   }
   property("Prop.&& Right prio") = forAll { (_: Int, prms: Parameters) =>
@@ -82,42 +101,42 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("Prop.|| Commutativity") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 || p2) == (p2 || p1) }
+    val g = oneOf(proved, passed, falsified, undecided, exception)
+    forAll(g, g) { case (p1, p2) => (p1 || p2) == (p2 || p1) }
   }
   property("Prop.|| Exception") = forAll { (p: Prop) =>
     (p || propException()) == exception
   }
   property("Prop.|| Identity") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
+    val g = oneOf(proved, passed, falsified, undecided, exception)
     forAll(g)(p => (p || falsified) == p)
   }
   property("Prop.|| True") = {
-    val g = oneOf(proved,passed,falsified,undecided)
+    val g = oneOf(proved, passed, falsified, undecided)
     forAll(g)(p => (p || proved) == proved)
   }
   property("Prop.|| Undecided") = {
-    val g = oneOf(falsified,undecided)
+    val g = oneOf(falsified, undecided)
     forAll(g)(p => (p || undecided) == undecided)
   }
 
   property("Prop.++ Commutativity") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
-    forAll(g,g) { case (p1,p2) => (p1 ++ p2) == (p2 ++ p1) }
+    val g = oneOf(proved, passed, falsified, undecided, exception)
+    forAll(g, g) { case (p1, p2) => (p1 ++ p2) == (p2 ++ p1) }
   }
   property("Prop.++ Exception") = forAll { (p: Prop) =>
     (p ++ propException()) == exception
   }
   property("Prop.++ Identity 1") = {
-    val g = oneOf(falsified,passed,proved,exception)
+    val g = oneOf(falsified, passed, proved, exception)
     forAll(g)(p => (p ++ proved) == p)
   }
   property("Prop.++ Identity 2") = {
-    val g = oneOf(proved,passed,falsified,undecided,exception)
+    val g = oneOf(proved, passed, falsified, undecided, exception)
     forAll(g)(p => (p ++ undecided) == p)
   }
   property("Prop.++ False") = {
-    val g = oneOf(falsified,passed,proved,undecided)
+    val g = oneOf(falsified, passed, proved, undecided)
     forAll(g)(p => (p ++ falsified) == falsified)
   }
 
@@ -153,7 +172,7 @@ object PropSpecification extends Properties("Prop") {
   }
 
   property("sizedProp") = {
-    val g = oneOf(passed,falsified,undecided,exception)
+    val g = oneOf(passed, falsified, undecided, exception)
     forAll(g) { p => p == sizedProp(_ => p) }
   }
 
@@ -253,7 +272,7 @@ object PropSpecification extends Properties("Prop") {
     class ExpectedException extends RuntimeException("expected exception")
     class UnexpectedException extends RuntimeException("unexpected exception")
     def throwOn42(n: Int): Int = {
-      if(n == 42)
+      if (n == 42)
         throw new ExpectedException
       else
         throw new UnexpectedException
@@ -275,7 +294,7 @@ object PropSpecification extends Properties("Prop") {
       def split(s: String): Stream[String] = {
         if (s.length == 1) Stream.empty
         else {
-          s.take(s.length / 2) #:: s.drop(s.length / 2)  #:: Stream.empty
+          s.take(s.length / 2) #:: s.drop(s.length / 2) #:: Stream.empty
         }
       }
       split
@@ -296,5 +315,5 @@ object PropSpecification extends Properties("Prop") {
   // make sure the two forAlls are seeing independent values
   property("regression #530: failure to slide seed") =
     forAll((x: Int) => (x >= 0) ==> true) &&
-    forAll((x: Int) => (x < 0) ==> true)
+      forAll((x: Int) => (x < 0) ==> true)
 }

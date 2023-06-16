@@ -1,3 +1,7 @@
-# Header whitespace cleanup
+# Header organizing (PR: #959, #963)
 b8564609df3c849b3a258a411e0de645d4e8c7a0
 0b26b5e6dbcf3e6beeca806297f848f41dde899b
+
+# Code formatting (PR: #950)
+ccd98e22a078e1282dbb2c1acfb40fe3afee01b6
+

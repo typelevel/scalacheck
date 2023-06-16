@@ -9,18 +9,18 @@
 
 package org.scalacheck
 
-import Test._
-
 import scala.annotation.nowarn
 import scala.scalanative.reflect.Reflect
+
+import Test._
 
 private[scalacheck] object Platform {
 
   @nowarn("msg=is never used")
   def runWorkers(
-    params: Parameters,
-    workerFun: Int => Result,
-    stop: () => Unit
+      params: Parameters,
+      workerFun: Int => Result,
+      stop: () => Unit
   ): Result = {
     workerFun(0)
   }

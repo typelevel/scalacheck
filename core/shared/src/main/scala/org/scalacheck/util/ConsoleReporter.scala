@@ -9,26 +9,25 @@
 
 package org.scalacheck.util
 
-import Pretty.{Params, pretty, format}
 import org.scalacheck.Test
 
-/** A [[org.scalacheck.Test.TestCallback]] implementation that prints
- *  test results directly to the console. This is the callback used by
- *  ScalaCheck's command line test runner, and when you run
- *  `org.scalacheck.Prop.check()`.
- */
+import Pretty.{Params, pretty, format}
+
+/** A [[org.scalacheck.Test.TestCallback]] implementation that prints test results directly to the console. This is the
+  * callback used by ScalaCheck's command line test runner, and when you run `org.scalacheck.Prop.check()`.
+  */
 class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
-  extends Test.TestCallback {
+    extends Test.TestCallback {
 
   private val prettyPrms = Params(verbosity)
 
   override def onTestResult(name: String, res: Test.Result): Unit = {
-    if(verbosity > 0) {
-      if(name == "") {
-        val s = (if(res.passed) "+ " else "! ") + pretty(res, prettyPrms)
+    if (verbosity > 0) {
+      if (name == "") {
+        val s = (if (res.passed) "+ " else "! ") + pretty(res, prettyPrms)
         println(format(s, "", "", columnWidth))
       } else {
-        val s = (if(res.passed) "+ " else "! ") + name + ": " +
+        val s = (if (res.passed) "+ " else "! ") + name + ": " +
           pretty(res, prettyPrms)
         println(format(s, "", "", columnWidth))
       }
@@ -39,9 +38,9 @@ class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
 
 object ConsoleReporter {
 
-  /** Factory method, creates a ConsoleReporter with the
-   *  the given verbosity and wraps output at the given column width
-   *  (use 0 for unlimited width). */
+  /** Factory method, creates a ConsoleReporter with the the given verbosity and wraps output at the given column width
+    * (use 0 for unlimited width).
+    */
   def apply(verbosity: Int = 0, columnWidth: Int = 75) =
     new ConsoleReporter(verbosity, columnWidth)
 

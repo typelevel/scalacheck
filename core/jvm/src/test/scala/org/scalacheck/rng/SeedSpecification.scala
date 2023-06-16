@@ -10,9 +10,10 @@
 package org.scalacheck
 package rng
 
+import scala.util.Try
+
 import Prop.forAll
 import Arbitrary.arbitrary
-import scala.util.Try
 
 object SeedSpecification extends Properties("Seed") {
 
@@ -42,7 +43,8 @@ object SeedSpecification extends Properties("Seed") {
       val base = b.value
 
       def countZeros(s0: Seed, i: Int, seen0: Int): Int =
-        if (i <= 0) seen0 else {
+        if (i <= 0) seen0
+        else {
           val (x, s1) = s0.long
           val n = x % base
           val seen = if (n == 0) seen0 + 1 else seen0

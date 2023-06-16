@@ -9,11 +9,17 @@
 
 package org.scalacheck.commands
 
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
+import org.scalacheck.Prop
 import org.scalacheck.Prop.forAll
+import org.scalacheck.Properties
+import org.scalacheck.Shrink
 import org.scalacheck.rng.Seed
-import org.scalacheck.{Arbitrary, Gen, Prop, Properties, Shrink}
+
 import scala.reflect.ClassTag
-import scala.util.{Success, Try}
+import scala.util.Success
+import scala.util.Try
 
 object CommandsShrinkSpecification extends Properties("Commands Shrinking") {
 
@@ -134,9 +140,9 @@ object CommandsShrinkSpecification extends Properties("Commands Shrinking") {
       ).suchThat(_.capacity >= 0)
 
     def canCreateNewSut(
-      newState: State,
-      initSuts: Traversable[State],
-      runningSuts: Traversable[Sut]
+        newState: State,
+        initSuts: Traversable[State],
+        runningSuts: Traversable[Sut]
     ): Boolean =
       true
 

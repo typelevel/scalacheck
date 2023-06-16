@@ -12,8 +12,7 @@ package org.scalacheck.time
 import java.time._
 import java.time.chrono._
 
-/** On Scala <= 2.12 it is used to help the compiler figure out some `Ordering`
-  * instances needed for testing.
+/** On Scala <= 2.12 it is used to help the compiler figure out some `Ordering` instances needed for testing.
   */
 trait OrderingVersionSpecific {
 

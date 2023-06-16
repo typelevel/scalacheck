@@ -10,12 +10,14 @@
 package org.scalacheck.time
 
 import org.scalacheck._
+
 import java.time._
 
 /** [[Arbitrary]] instances for `java.time` types.
   *
-  * @note [[Arbitrary]] instances for `java.time` types which are Java enum
-  *       types are provided by ScalaCheck's general Java enum support.
+  * @note
+  *   [[Arbitrary]] instances for `java.time` types which are Java enum types are provided by ScalaCheck's general Java
+  *   enum support.
   */
 private[scalacheck] trait JavaTimeArbitrary {
 
@@ -73,11 +75,9 @@ private[scalacheck] trait JavaTimeArbitrary {
 
   // ZoneId
 
-  /** ''Technically'' the available zone ids can change at runtime, so we store
-    * an immutable snapshot in time here. We avoid going through the
-    * scala/java collection converters to avoid having to deal with the scala
-    * 2.13 changes and adding a dependency on the collection compatibility
-    * library.
+  /** ''Technically'' the available zone ids can change at runtime, so we store an immutable snapshot in time here. We
+    * avoid going through the scala/java collection converters to avoid having to deal with the scala 2.13 changes and
+    * adding a dependency on the collection compatibility library.
     */
   private final lazy val availableZoneIds: Set[ZoneId] =
     ZoneId.getAvailableZoneIds.toArray(Array.empty[String]).toSet.map((value: String) => ZoneId.of(value))
@@ -120,5 +120,7 @@ private[scalacheck] trait JavaTimeArbitrary {
     // The ZoneOffset's here look flipped but they are
     // not. ZonedDateTime.of(LocalDateTime.MIN, ZoneOffset.MAX) is _older_
     // than ZonedDateTime.of(LocalDateTime, ZoneOffset.MIN).
-    Arbitrary(Gen.choose(ZonedDateTime.of(LocalDateTime.MIN, ZoneOffset.MAX), ZonedDateTime.of(LocalDateTime.MAX, ZoneOffset.MIN)))
+    Arbitrary(Gen.choose(
+      ZonedDateTime.of(LocalDateTime.MIN, ZoneOffset.MAX),
+      ZonedDateTime.of(LocalDateTime.MAX, ZoneOffset.MIN)))
 }

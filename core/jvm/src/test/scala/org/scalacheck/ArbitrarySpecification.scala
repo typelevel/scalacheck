@@ -26,7 +26,7 @@ object ArbitrarySpecification extends Properties("Arbitrary") {
 
   property("arbChar") =
     Prop.forAll { (c: Char) =>
-      0x0000 <= c && c <= 0xD7FF || 0xE000 <= c && c <= 0xFFFD
+      0x0000 <= c && c <= 0xd7ff || 0xe000 <= c && c <= 0xfffd
     }
 
   property("arbString") =

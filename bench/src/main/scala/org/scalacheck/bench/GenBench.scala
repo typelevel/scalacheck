@@ -16,44 +16,31 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.rng.Seed
 
-/**
- * Generator benchmarks
- *
- * Since generators may run very quickly (or very slowly) depending on
- * the seed and size parameter used, we want to make sure these are
- * held constant across runs. Otherwise, we might believe a particular
- * change made a given generator faster (or slower) when in fact we
- * just got lucky (or unlucky).
- *
- * We use `seedCount` to choose how many seeds we will benchmark with.
- * For each seed, we run the given generator. So if `seedCount` is
- * 100, the average time we get is the time to generate values for the
- * 100 seeds we started with.
- *
- * The size parameter also plays a major role in how long generators
- * take. ScalaCheck's default parameters start with 100. You can
- * benchmark additional size parameters to see how changes to this
- * parameter effect generator run time.
- *
- * Finally, a generator's `apply` method may fail to generate a value.
- * This might allow a slow generator that fails 50% of the time to
- * appear faster than other generators that don't fail. Since we
- * expect all generators to be able to succeed, we benchmark using
- * `pureApply`, which will retry up to 100 times before crashing. This
- * way, there's no chance that a flaky generator gets an advantage
- * during benchmarking.
- *
- * In theory, we should do as much work as possible outside the
- * benchmark methods to avoid benchmarking construction time. However,
- * since many generators are constructed inside of `flatMap` calls
- * during generation we do want these constructors to also run as
- * quickly as possible. For that reason, we mostly choose to assemble
- * our generators inside the benchmark methods.
- *
- * Prefer to add new benchmarks instead of modifying existing ones.
- * This will enable us to compare the results for a given benchmark
- * over time.
- */
+/** Generator benchmarks
+  *
+  * Since generators may run very quickly (or very slowly) depending on the seed and size parameter used, we want to
+  * make sure these are held constant across runs. Otherwise, we might believe a particular change made a given
+  * generator faster (or slower) when in fact we just got lucky (or unlucky).
+  *
+  * We use `seedCount` to choose how many seeds we will benchmark with. For each seed, we run the given generator. So if
+  * `seedCount` is 100, the average time we get is the time to generate values for the 100 seeds we started with.
+  *
+  * The size parameter also plays a major role in how long generators take. ScalaCheck's default parameters start with
+  * 100. You can benchmark additional size parameters to see how changes to this parameter effect generator run time.
+  *
+  * Finally, a generator's `apply` method may fail to generate a value. This might allow a slow generator that fails 50%
+  * of the time to appear faster than other generators that don't fail. Since we expect all generators to be able to
+  * succeed, we benchmark using `pureApply`, which will retry up to 100 times before crashing. This way, there's no
+  * chance that a flaky generator gets an advantage during benchmarking.
+  *
+  * In theory, we should do as much work as possible outside the benchmark methods to avoid benchmarking construction
+  * time. However, since many generators are constructed inside of `flatMap` calls during generation we do want these
+  * constructors to also run as quickly as possible. For that reason, we mostly choose to assemble our generators inside
+  * the benchmark methods.
+  *
+  * Prefer to add new benchmarks instead of modifying existing ones. This will enable us to compare the results for a
+  * given benchmark over time.
+  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

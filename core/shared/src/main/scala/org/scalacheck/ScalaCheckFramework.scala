@@ -9,11 +9,11 @@
 
 package org.scalacheck
 
-import sbt.testing._
-import java.util.concurrent.atomic.AtomicInteger
-
 import org.scalacheck.Test.Parameters
 import org.scalacheck.Test.matchPropFilter
+import sbt.testing._
+
+import java.util.concurrent.atomic.AtomicInteger
 
 private abstract class ScalaCheckRunner extends Runner {
 
@@ -29,7 +29,7 @@ private abstract class ScalaCheckRunner extends Runner {
   def deserializeTask(task: String, deserializer: String => TaskDef): BaseTask = {
     val taskDef = deserializer(task)
     val countTestSelectors = taskDef.selectors().toSeq.count {
-      case _:TestSelector => true
+      case _: TestSelector => true
       case _ => false
     }
     if (countTestSelectors == 0) rootTask(taskDef)
@@ -52,8 +52,8 @@ private abstract class ScalaCheckRunner extends Runner {
 
     val loaded: Either[Prop, Properties] = {
       val fp = taskDef.fingerprint().asInstanceOf[SubclassFingerprint]
-      val obj = if (fp.isModule()) Platform.loadModule(taskDef.fullyQualifiedName(),loader)
-                else Platform.newInstance(taskDef.fullyQualifiedName(), loader, Seq())(Seq())
+      val obj = if (fp.isModule()) Platform.loadModule(taskDef.fullyQualifiedName(), loader)
+      else Platform.newInstance(taskDef.fullyQualifiedName(), loader, Seq())(Seq())
       obj match {
         case props: Properties => Right(props)
         case prop: Prop => Left(prop)
@@ -80,22 +80,25 @@ private abstract class ScalaCheckRunner extends Runner {
     def log(loggers: Array[Logger], ok: Boolean, msg: String) =
       loggers foreach { l =>
         val logstr =
-          if(!l.ansiCodesSupported()) msg
+          if (!l.ansiCodesSupported()) msg
           else s"${if (ok) Console.GREEN else Console.RED}$msg${Console.RESET}"
         l.info(logstr)
       }
 
-    def execute(handler: EventHandler, loggers: Array[Logger],
-      continuation: Array[Task] => Unit
-    ): Unit  = continuation(execute(handler,loggers))
+    def execute(handler: EventHandler, loggers: Array[Logger], continuation: Array[Task] => Unit): Unit =
+      continuation(execute(handler, loggers))
   }
 
   def rootTask(td: TaskDef): BaseTask = new BaseTask(td) {
     def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
       props.map(_._1).toSet.toArray map { name =>
-        checkPropTask(new TaskDef(td.fullyQualifiedName(), td.fingerprint(),
-          td.explicitlySpecified(), Array(new TestSelector(name)))
-        , single = true)
+        checkPropTask(
+          new TaskDef(
+            td.fullyQualifiedName(),
+            td.fingerprint(),
+            td.explicitlySpecified(),
+            Array(new TestSelector(name))),
+          single = true)
       }
   }
 
@@ -122,7 +125,13 @@ private abstract class ScalaCheckRunner extends Runner {
       Array.empty[Task]
     }
 
-    def executeInternal(prop: Prop, name: String, handler: EventHandler, loggers: Array[Logger], propertyFilter: Option[scala.util.matching.Regex]): Unit = {
+    def executeInternal(
+        prop: Prop,
+        name: String,
+        handler: EventHandler,
+        loggers: Array[Logger],
+        propertyFilter: Option[scala.util.matching.Regex]
+    ): Unit = {
       if (propertyFilter.isEmpty || propertyFilter.exists(matchPropFilter(name, _))) {
 
         import util.Pretty.{pretty, Params}
@@ -139,8 +148,8 @@ private abstract class ScalaCheckRunner extends Runner {
           val throwable = result.status match {
             case Test.PropException(_, e, _) => new OptionalThrowable(e)
             case _: Test.Failed => new OptionalThrowable(
-              new Exception(pretty(result, Params(0)))
-            )
+                new Exception(pretty(result, Params(0)))
+              )
             case _ => new OptionalThrowable()
           }
           val fullyQualifiedName = self.taskDef.fullyQualifiedName()
@@ -192,44 +201,47 @@ final class ScalaCheckFramework extends Framework {
     mkFP(true, "org.scalacheck.Prop")
   )
 
-  override def runner(_args: Array[String], _remoteArgs: Array[String],
-    _loader: ClassLoader
-  ): Runner = new ScalaCheckRunner {
+  override def runner(_args: Array[String], _remoteArgs: Array[String], _loader: ClassLoader): Runner =
+    new ScalaCheckRunner {
 
-    val args = _args
-    val remoteArgs = _remoteArgs
-    val loader = _loader
-    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
-    val applyCmdParams = prms.andThen(sbtSetup(loader))
+      val args = _args
+      val remoteArgs = _remoteArgs
+      val loader = _loader
+      val (prms, unknownArgs) = Test.CmdLineParser.parseParams(args)
+      val applyCmdParams = prms.andThen(sbtSetup(loader))
 
-    def receiveMessage(msg: String): Option[String] = msg(0) match {
-      case 'd' =>
-        val Array(t,s,f,e) = msg.tail.split(',')
-        testCount.addAndGet(t.toInt)
-        successCount.addAndGet(s.toInt)
-        failureCount.addAndGet(f.toInt)
-        errorCount.addAndGet(e.toInt)
-        None
+      def receiveMessage(msg: String): Option[String] = msg(0) match {
+        case 'd' =>
+          val Array(t, s, f, e) = msg.tail.split(',')
+          testCount.addAndGet(t.toInt)
+          successCount.addAndGet(s.toInt)
+          failureCount.addAndGet(f.toInt)
+          errorCount.addAndGet(e.toInt)
+          None
+      }
+
+      override def done() = if (testCount.get > 0) {
+        val heading = if (testCount.get == successCount.get) "Passed" else "Failed"
+        s"$heading: Total $testCount, " +
+          s"Failed $failureCount, Errors $errorCount, Passed $successCount" +
+          (if (unknownArgs.isEmpty) ""
+           else
+             s"\nWarning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
+      } else ""
+
     }
 
-    override def done() = if (testCount.get > 0) {
-      val heading = if (testCount.get == successCount.get) "Passed" else "Failed"
-      s"$heading: Total $testCount, " +
-      s"Failed $failureCount, Errors $errorCount, Passed $successCount" +
-      (if(unknownArgs.isEmpty) "" else
-      s"\nWarning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")
-    } else ""
-
-  }
-
-  def slaveRunner(_args: Array[String], _remoteArgs: Array[String],
-    _loader: ClassLoader, send: String => Unit
+  def slaveRunner(
+      _args: Array[String],
+      _remoteArgs: Array[String],
+      _loader: ClassLoader,
+      send: String => Unit
   ): _root_.sbt.testing.Runner = new ScalaCheckRunner {
     val args = _args
     val remoteArgs = _remoteArgs
     val loader = _loader
 
-    val (prms,unknownArgs) = Test.CmdLineParser.parseParams(args)
+    val (prms, unknownArgs) = Test.CmdLineParser.parseParams(args)
 
     if (unknownArgs.nonEmpty) {
       println(s"Warning: Unknown ScalaCheck args provided: ${unknownArgs.mkString(" ")}")

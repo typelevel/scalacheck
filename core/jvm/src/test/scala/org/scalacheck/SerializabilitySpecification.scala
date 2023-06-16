@@ -10,6 +10,7 @@
 package org.scalacheck
 
 import org.apache.commons.lang3.SerializationUtils
+
 import java.io.Serializable
 
 import util.SerializableCanBuildFroms._
@@ -58,9 +59,31 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableArbitrary[Boolean]("Boolean")
   serializableArbitrary[Int => Int]("Int => Int")
   serializableArbitrary[List[Int]]("List[Int]")
-  serializableArbitrary[(String,Int)]("(String,Int)")
-  serializableArbitrary[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int]")
-  serializableArbitrary[List[(String,Int)]]("List[(String,Int)]")
+  serializableArbitrary[(String, Int)]("(String,Int)")
+  serializableArbitrary[(
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int)]("Tuple22[Int]")
+  serializableArbitrary[List[(String, Int)]]("List[(String,Int)]")
 
   serializableGen("Gen.identifier", Gen.identifier)
   serializableGen("Gen.oneOf", Gen.oneOf(true, false))
@@ -74,9 +97,31 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableCogen[Boolean]("Boolean")
   serializableCogen[Int => Int]("Int => Int")
   serializableCogen[List[Int]]("List[Int]")
-  serializableCogen[(String,Int)]("(String,Int)")
-  serializableCogen[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int]")
-  serializableCogen[List[(String,Int)]]("List[(String,Int)]")
+  serializableCogen[(String, Int)]("(String,Int)")
+  serializableCogen[(
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int)]("Tuple22[Int]")
+  serializableCogen[List[(String, Int)]]("List[(String,Int)]")
 
   serializableShrink[String]("String")
   serializableShrink[Int]("Int")
@@ -84,9 +129,31 @@ object SerializabilitySpecification extends Properties("Serializability") {
   serializableShrink[Boolean]("Boolean")
   serializableShrink[Int => Int]("Int => Int")
   serializableShrink[List[Int]]("List[Int]")
-  serializableShrink[(String,Int)]("(String,Int)")
-  serializableShrink[(Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int,Int)]("Tuple22[Int])")
-  serializableShrink[List[(String,Int)]]("List[(String,Int)]")
+  serializableShrink[(String, Int)]("(String,Int)")
+  serializableShrink[(
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int,
+      Int)]("Tuple22[Int])")
+  serializableShrink[List[(String, Int)]]("List[(String,Int)]")
 
   property("Seed(1L)") = {
     serializable(rng.Seed(1L))
