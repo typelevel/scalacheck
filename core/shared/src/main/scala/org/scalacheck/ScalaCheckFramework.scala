@@ -47,13 +47,15 @@ private abstract class ScalaCheckRunner extends Runner {
   protected def sbtSetup(loader: ClassLoader): Parameters => Parameters =
     _.withTestCallback(new Test.TestCallback {}).withCustomClassLoader(Some(loader))
 
-  abstract class BaseTask(override val taskDef: TaskDef) extends Task {
-    val tags: Array[String] = Array()
+  abstract class BaseTask(_taskDef: TaskDef) extends Task {
+    def taskDef() = _taskDef
+
+    def tags(): Array[String] = Array.empty
 
     val loaded: Either[Prop, Properties] = {
-      val fp = taskDef.fingerprint().asInstanceOf[SubclassFingerprint]
-      val obj = if (fp.isModule()) Platform.loadModule(taskDef.fullyQualifiedName(), loader)
-      else Platform.newInstance(taskDef.fullyQualifiedName(), loader, Seq())(Seq())
+      val fp = taskDef().fingerprint().asInstanceOf[SubclassFingerprint]
+      val obj = if (fp.isModule()) Platform.loadModule(taskDef().fullyQualifiedName(), loader)
+      else Platform.newInstance(taskDef().fullyQualifiedName(), loader, Seq())(Seq())
       obj match {
         case props: Properties => Right(props)
         case prop: Prop => Left(prop)
@@ -108,7 +110,7 @@ private abstract class ScalaCheckRunner extends Runner {
 
       if (single) {
         val mprops: Map[String, Prop] = props.toMap
-        self.taskDef.selectors().foreach {
+        self.taskDef().selectors().foreach {
           case ts: TestSelector =>
             val name = ts.testName()
             mprops.get(name).foreach { prop =>
@@ -138,29 +140,29 @@ private abstract class ScalaCheckRunner extends Runner {
         val result = Test.check(params, prop)
 
         val event = new Event {
-          val status = result.status match {
+          def status() = result.status match {
             case Test.Passed => Status.Success
             case _: Test.Proved => Status.Success
             case _: Test.Failed => Status.Failure
             case Test.Exhausted => Status.Failure
             case _: Test.PropException => Status.Error
           }
-          val throwable = result.status match {
+          def throwable() = result.status match {
             case Test.PropException(_, e, _) => new OptionalThrowable(e)
             case _: Test.Failed => new OptionalThrowable(
                 new Exception(pretty(result, Params(0)))
               )
             case _ => new OptionalThrowable()
           }
-          val fullyQualifiedName = self.taskDef.fullyQualifiedName()
-          val selector = new TestSelector(name)
-          val fingerprint = self.taskDef.fingerprint()
-          val duration = -1L
+          def fullyQualifiedName() = self.taskDef().fullyQualifiedName()
+          def selector() = new TestSelector(name)
+          def fingerprint() = self.taskDef().fingerprint()
+          def duration() = -1L
         }
 
         handler.handle(event)
 
-        event.status match {
+        event.status() match {
           case Status.Success => successCount.incrementAndGet()
           case Status.Error => errorCount.incrementAndGet()
           case Status.Skipped => errorCount.incrementAndGet()
@@ -175,7 +177,7 @@ private abstract class ScalaCheckRunner extends Runner {
           args.grouped(2).filter(twos => verbosityOpts(twos.head))
             .toSeq.headOption.map(_.last).map(_.toInt).getOrElse(0)
         val s = if (result.passed) "+" else "!"
-        val n = if (name.isEmpty) self.taskDef.fullyQualifiedName() else name
+        val n = if (name.isEmpty) self.taskDef().fullyQualifiedName() else name
         val logMsg = s"$s $n: ${pretty(result, Params(verbosity))}"
         log(loggers, result.passed, logMsg)
       }
@@ -188,11 +190,11 @@ final class ScalaCheckFramework extends Framework {
   private def mkFP(mod: Boolean, cname: String, noArgCons: Boolean = true) =
     new SubclassFingerprint {
       def superclassName(): String = cname
-      val isModule = mod
+      def isModule() = mod
       def requireNoArgConstructor(): Boolean = noArgCons
     }
 
-  override val name: String = "ScalaCheck"
+  override def name(): String = "ScalaCheck"
 
   override def fingerprints(): Array[Fingerprint] = Array(
     mkFP(false, "org.scalacheck.Properties"),
@@ -205,7 +207,7 @@ final class ScalaCheckFramework extends Framework {
     new ScalaCheckRunner {
 
       val args = _args
-      val remoteArgs = _remoteArgs
+      def remoteArgs() = _remoteArgs
       val loader = _loader
       val (prms, unknownArgs) = Test.CmdLineParser.parseParams(args)
       val applyCmdParams = prms.andThen(sbtSetup(loader))
@@ -238,7 +240,7 @@ final class ScalaCheckFramework extends Framework {
       send: String => Unit
   ): _root_.sbt.testing.Runner = new ScalaCheckRunner {
     val args = _args
-    val remoteArgs = _remoteArgs
+    def remoteArgs() = _remoteArgs
     val loader = _loader
 
     val (prms, unknownArgs) = Test.CmdLineParser.parseParams(args)
