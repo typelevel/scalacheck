@@ -8,7 +8,6 @@ import org.fusesource.leveldbjni.JniDBFactory._
 import scala.util.{Try, Success}
 import scala.collection.immutable.Map
 
-
 object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 
   property("leveldbspec") = LevelDBSpec.property()
@@ -18,28 +17,26 @@ object CommandsLevelDB extends org.scalacheck.Properties("CommandsLevelDB") {
 object LevelDBSpec extends Commands {
 
   case class State(
-    open: Boolean,
-    name: String,
-    contents: Map[List[Byte],List[Byte]]
+      open: Boolean,
+      name: String,
+      contents: Map[List[Byte], List[Byte]]
   )
 
   case class Sut(
-    var name: String,
-    var db: DB
+      var name: String,
+      var db: DB
   ) {
     def path = s"db_$name"
   }
 
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]
-  ) = {
+  def canCreateNewSut(newState: State, initSuts: Traversable[State], runningSuts: Traversable[Sut]) = {
     !initSuts.exists(_.name == newState.name) &&
     !runningSuts.exists(_.name == newState.name)
   }
 
   def newSut(state: State): Sut = Sut(state.name, null)
 
-  def destroySut(sut: Sut) = if(sut.db != null) sut.db.close
+  def destroySut(sut: Sut) = if (sut.db != null) sut.db.close
 
   def initialPreCondition(state: State) = !state.open
 
@@ -57,13 +54,12 @@ object LevelDBSpec extends Commands {
       genGetExisting(state)
     )
 
-  val genPut: Gen[Put] = Gen.resultOf(Put(_,_))
+  val genPut: Gen[Put] = Gen.resultOf(Put(_, _))
 
   def genPutExisting(state: State): Gen[Put] = for {
     key <- Gen.oneOf(state.contents.keys.toSeq)
-    value <- Gen.oneOf(arbitrary[List[Byte]],
-                       Gen.const(state.contents(key)))
-  } yield Put(key,value)
+    value <- Gen.oneOf(arbitrary[List[Byte]], Gen.const(state.contents(key)))
+  } yield Put(key, value)
 
   val genGet: Gen[Get] = Gen.resultOf(Get(_))
 
