@@ -1,6 +1,5 @@
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{someOf, oneOf, const, nonEmptyListOf,
-  identifier, frequency}
+import org.scalacheck.Gen.{someOf, oneOf, const, nonEmptyListOf, identifier, frequency}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.commands.Commands
 
@@ -9,7 +8,6 @@ import scala.collection.immutable.Map
 import scala.collection.Seq
 
 import com.redis.RedisClient
-
 
 object CommandsRedis extends org.scalacheck.Properties("CommandsRedis") {
 
@@ -21,15 +19,13 @@ object RedisSpec extends Commands {
 
   type Sut = RedisClient
 
-  case class State (
-    contents: collection.immutable.Map[String,String],
-    deleted: collection.immutable.Set[String],
-    connected: Boolean
+  case class State(
+      contents: collection.immutable.Map[String, String],
+      deleted: collection.immutable.Set[String],
+      connected: Boolean
   )
 
-  def canCreateNewSut(newState: State, initSuts: Traversable[State],
-    runningSuts: Traversable[Sut]
-  ): Boolean = {
+  def canCreateNewSut(newState: State, initSuts: Traversable[State], runningSuts: Traversable[Sut]): Boolean = {
     initSuts.isEmpty && runningSuts.isEmpty
   }
 
@@ -55,7 +51,7 @@ object RedisSpec extends Commands {
   )
 
   def genCommand(state: State): Gen[Command] = {
-    if(!state.connected) ToggleConnected
+    if (!state.connected) ToggleConnected
     else
       frequency(
         (20, genDel),
@@ -66,13 +62,13 @@ object RedisSpec extends Commands {
         (20, genGetExisting(state)),
         (20, genGetDeleted(state)),
         (20, const(DBSize)),
-        ( 1, const(FlushDB)),
-        ( 3, const(ToggleConnected))
+        (1, const(FlushDB)),
+        (3, const(ToggleConnected))
       )
   }
 
-  //val genKey = arbitrary[String]
-  //val genVal = arbitrary[String]
+  // val genKey = arbitrary[String]
+  // val genVal = arbitrary[String]
   val genKey = identifier
   val genVal = identifier
 
@@ -82,29 +78,31 @@ object RedisSpec extends Commands {
   } yield Set(key, value)
 
   def genDelExisting(state: State): Gen[Del] =
-    if(state.contents.isEmpty) genDel
+    if (state.contents.isEmpty) genDel
     else someOf(state.contents.keys.toSeq).map(Del.apply)
 
   def genSetExisting(state: State): Gen[Set] =
-    if(state.contents.isEmpty) genSet else for {
+    if (state.contents.isEmpty) genSet
+    else for {
       key <- oneOf(state.contents.keys.toSeq)
       value <- oneOf(genVal, const(state.contents(key)))
-    } yield Set(key,value)
+    } yield Set(key, value)
 
   val genGet: Gen[Get] = genKey.map(Get.apply)
 
   val genDel: Gen[Del] = nonEmptyListOf(genKey).map(Del.apply)
 
   def genGetExisting(state: State): Gen[Get] =
-    if(state.contents.isEmpty) genGet else for {
+    if (state.contents.isEmpty) genGet
+    else for {
       key <- oneOf(state.contents.keys.toSeq)
     } yield Get(key)
 
   def genGetDeleted(state: State): Gen[Get] =
-    if(state.deleted.isEmpty) genGet else for {
+    if (state.deleted.isEmpty) genGet
+    else for {
       key <- oneOf(state.deleted.toSeq)
     } yield Get(key)
-
 
   case object DBSize extends Command {
     type Result = Option[Long]
@@ -130,7 +128,7 @@ object RedisSpec extends Commands {
   case class Del(keys: Seq[String]) extends Command {
     type Result = Option[Long]
     def run(sut: Sut) =
-      if(keys.isEmpty) Some(0)
+      if (keys.isEmpty) Some(0)
       else sut.del(keys.head, keys.tail.toSeq: _*)
     def preCondition(state: State) = state.connected
     def nextState(state: State) = state.copy(
@@ -155,7 +153,7 @@ object RedisSpec extends Commands {
   case object ToggleConnected extends Command {
     type Result = Boolean
     def run(sut: Sut) = {
-      if(sut.connected) sut.quit
+      if (sut.connected) sut.quit
       else sut.connect
     }
     def preCondition(state: State) = true
