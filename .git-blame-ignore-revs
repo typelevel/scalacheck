@@ -5,3 +5,6 @@ b8564609df3c849b3a258a411e0de645d4e8c7a0
 # Code formatting (PR: #950)
 ccd98e22a078e1282dbb2c1acfb40fe3afee01b6
 
+
+# Scala Steward: Reformat with scalafmt 3.7.6
+79da8216cac0c6ec8b2d6340c1980674fdd273aa
