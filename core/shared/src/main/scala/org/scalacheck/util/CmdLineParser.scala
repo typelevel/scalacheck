@@ -23,6 +23,9 @@ private[scalacheck] trait CmdLineParser {
   trait FloatOpt extends Opt[Float]
   trait StrOpt extends Opt[String]
   trait OpStrOpt extends Opt[Option[String]]
+  private[scalacheck] abstract class OpStrOptCompat extends OpStrOpt {
+    val default: Option[String] = None
+  }
 
   class OptMap(private val opts: Map[Opt[_], Any] = Map.empty) {
     def apply(flag: Flag): Boolean = opts.contains(flag)

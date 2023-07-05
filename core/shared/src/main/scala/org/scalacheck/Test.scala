@@ -313,12 +313,12 @@ object Test {
   private[scalacheck] object CmdLineParser extends CmdLineParser {
     object OptMinSuccess extends IntOpt {
       val default = Parameters.default.minSuccessfulTests
-      val names = Set("minSuccessfulTests", "s")
+      val names: Set[String] = Set("minSuccessfulTests", "s")
       val help = "Number of tests that must succeed in order to pass a property"
     }
     object OptMaxDiscardRatio extends FloatOpt {
       val default = Parameters.default.maxDiscardRatio
-      val names = Set("maxDiscardRatio", "r")
+      val names: Set[String] = Set("maxDiscardRatio", "r")
       val help =
         "The maximum ratio between discarded and succeeded tests " +
           "allowed before ScalaCheck stops testing a property. At " +
@@ -326,46 +326,46 @@ object Test {
     }
     object OptMinSize extends IntOpt {
       val default = Parameters.default.minSize
-      val names = Set("minSize", "n")
+      val names: Set[String] = Set("minSize", "n")
       val help = "Minimum data generation size"
     }
     object OptMaxSize extends IntOpt {
       val default = Parameters.default.maxSize
-      val names = Set("maxSize", "x")
+      val names: Set[String] = Set("maxSize", "x")
       val help = "Maximum data generation size"
     }
     object OptWorkers extends IntOpt {
       val default = Parameters.default.workers
-      val names = Set("workers", "w")
+      val names: Set[String] = Set("workers", "w")
       val help = "Number of threads to execute in parallel for testing"
     }
     object OptVerbosity extends IntOpt {
       val default = 1
-      val names = Set("verbosity", "v")
+      val names: Set[String] = Set("verbosity", "v")
       val help = "Verbosity level"
     }
 
-    object OptPropFilter extends OpStrOpt {
-      val default = Parameters.default.propFilter
-      val names = Set("propFilter", "f")
+    object OptPropFilter extends OpStrOptCompat {
+      override val default = Parameters.default.propFilter
+      val names: Set[String] = Set("propFilter", "f")
       val help = "Regular expression to filter properties on"
     }
 
-    object OptInitialSeed extends OpStrOpt {
-      val default = None
-      val names = Set("initialSeed")
+    object OptInitialSeed extends OpStrOptCompat {
+      override val default: None.type = None
+      val names: Set[String] = Set("initialSeed")
       val help = "Use Base-64 seed for all properties"
     }
 
     object OptDisableLegacyShrinking extends Flag {
       val default = ()
-      val names = Set("disableLegacyShrinking")
+      val names: Set[String] = Set("disableLegacyShrinking")
       val help = "Disable legacy shrinking using Shrink instances"
     }
 
     object OptMaxRNGSpins extends IntOpt {
       val default = 1
-      val names = Set("maxRNGSpins")
+      val names: Set[String] = Set("maxRNGSpins")
       val help = "Maximum number of RNG spins to perform between checks"
     }
 
