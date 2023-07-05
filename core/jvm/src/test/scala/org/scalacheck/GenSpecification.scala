@@ -582,7 +582,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
         seed = s1
       }
       val avg = sum / n
-      s"average = $avg" |: avg >= 0.49 && avg <= 0.51
+      (avg >= 0.49 && avg <= 0.51).labelImpl2(s"average = $avg")
     }
 
   property("uniform long #209") = {
@@ -598,7 +598,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
         seed = s1
       }
       val avg = sum / n
-      s"average = $avg" |: avg >= 0.49 && avg <= 0.51
+      (avg >= 0.49 && avg <= 0.51).labelImpl2(s"average = $avg")
     }
   }
   ////
@@ -651,7 +651,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     val s0 = (1 to 30).map(_ => g(params0, Seed.random())).toSet
     val s1 = (1 to 30).map(_ => g(params1, Seed.random())).toSet
     val s2 = (1 to 30).map(_ => g(params0, seed)).toSet
-    (s"$s0" |: s0.size > 1) && (s"$s1" |: s1.size == 1) && (s"$s2" |: s2.size == 1)
+    (s0.size > 1).labelImpl2(s"$s0") && (s1.size == 1).labelImpl2(s"$s1") && (s2.size == 1).labelImpl2(s"$s2")
   }
 
   property("arbitrary[Boolean] is deterministic") =

@@ -43,7 +43,7 @@ object PropertyFilterSpecification extends Properties("PropertyFilter") {
 
     def props = actualNames.forall(expectedNames.contains)
 
-    (lengthProp && props) :| diff(filter, actualNames, expectedNames)
+    (lengthProp && props).labelImpl2(diff(filter, actualNames, expectedNames))
   }
 
   property("filter properties by predicate") =

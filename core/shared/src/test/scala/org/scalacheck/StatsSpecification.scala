@@ -87,7 +87,7 @@ object StatsSpecification extends Properties("Stats") {
 
   case class Bounds(min: Double, max: Double) {
     def contains(x: Double): Prop =
-      Prop(min <= x && x <= max) :| s"($min <= $x <= $max) was false"
+      Prop(min <= x && x <= max).labelImpl2(s"($min <= $x <= $max) was false")
   }
 
   implicit class MakeBounds(val n: Double) extends AnyVal {

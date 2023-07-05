@@ -218,7 +218,7 @@ object PropSpecification extends Properties("Prop") {
       val params = Gen.Parameters.default.withInitialSeed(999L)
       val x = p(params).success
       val set = (1 to 10).map(_ => p(params).success).toSet
-      Prop(set == Set(x)).label(s"$set == Set($x)")
+      Prop(set == Set(x)).labelImpl2(s"$set == Set($x)")
     }
 
   property("prop.useSeed is deterministic") =
@@ -227,7 +227,7 @@ object PropSpecification extends Properties("Prop") {
       val p = p0.useSeed(rng.Seed(n))
       val x = p(params).success
       val set = (1 to 10).map(_ => p(params).success).toSet
-      Prop(set == Set(x)).label(s"$set == Set($x)")
+      Prop(set == Set(x)).labelImpl2(s"$set == Set($x)")
     }
 
   property("prop.useSeed is deterministic (pt. 2)") =
@@ -237,7 +237,7 @@ object PropSpecification extends Properties("Prop") {
       val p = p0.useSeed(rng.Seed(n))
       val r1 = p(params).success
       val r2 = p(params).success
-      Prop(r1 == r2).label(s"$r1 == $r2")
+      Prop(r1 == r2).labelImpl2(s"$r1 == $r2")
     }
 
   property("disabling shrinking works") = {

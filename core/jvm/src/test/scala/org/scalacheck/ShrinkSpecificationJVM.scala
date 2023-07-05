@@ -25,14 +25,14 @@ object ShrinkSpecificationJVM extends Properties("Shrink JVM") {
   property("non-empty list") = forAll { (l: List[Int]) =>
     (!l.isEmpty && l != List(0)) ==> {
       val ls = shrinkClosure(l)
-      ls.toList.toString |: (ls.contains(Nil) && ls.contains(List(0)))
+      (ls.contains(Nil) && ls.contains(List(0))).labelImpl2(ls.toList.toString)
     }
   }
 
   property("xmap vector from list") = forAll { (v: Vector[Int]) =>
     (!v.isEmpty && v != Vector(0)) ==> {
       val vs = shrinkClosure(v)
-      Vector(vs: _*).toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
+      (vs.contains(Vector.empty) && vs.contains(Vector(0))).labelImpl2(Vector(vs: _*).toString)
     }
   }
 

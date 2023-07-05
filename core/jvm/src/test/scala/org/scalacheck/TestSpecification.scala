@@ -53,11 +53,13 @@ object TestSpecification extends Properties("Test") {
   private def resultInvariant(f: (Test.Parameters, Test.Result) => Boolean): Prop =
     forAll { (prms: Test.Parameters, p: Prop) =>
       val r = Test.check(prms, p)
-      s"${r.status}, s=${r.succeeded}, d=${r.discarded}, " +
-        s"minSuccessful=${prms.minSuccessfulTests}, " +
-        s"maxDiscardRatio=${prms.maxDiscardRatio}, " +
-        s"actualDiscardRatio=${r.discarded.toFloat / r.succeeded}, " +
-        s"workers=${prms.workers}" |: f(prms, r)
+      f(prms, r).labelImpl2(
+        s"${r.status}, s=${r.succeeded}, d=${r.discarded}, " +
+          s"minSuccessful=${prms.minSuccessfulTests}, " +
+          s"maxDiscardRatio=${prms.maxDiscardRatio}, " +
+          s"actualDiscardRatio=${r.discarded.toFloat / r.succeeded}, " +
+          s"workers=${prms.workers}"
+      )
     }
 
   property("stopCondition") = resultInvariant { (prms, r) =>
@@ -110,8 +112,8 @@ object TestSpecification extends Properties("Test") {
 
   property("propGenException") = forAll { (prms: Test.Parameters) =>
     Test.check(prms, genException).status match {
-      case x: PropException => true :| x.toString
-      case x => false :| x.toString
+      case x: PropException => true.labelImpl2(x.toString)
+      case x => false.labelImpl2(x.toString)
     }
   }
 
@@ -185,8 +187,8 @@ object TestSpecification extends Properties("Test") {
     val res = Test.check(prms, prop)
     val n = xs.size
     val unique = xs.toSet
-    val p0 = Prop(unique(expected)) :| s"did not see $expected in $unique"
-    val p1 = Prop(unique.size > 1) :| s"saw $n duplicate values: $unique"
+    val p0 = Prop(unique(expected)).labelImpl2(s"did not see $expected in $unique")
+    val p1 = Prop(unique.size > 1).labelImpl2(s"saw $n duplicate values: $unique")
     p0 && p1
   }
 
@@ -209,8 +211,8 @@ object TestSpecification extends Properties("Test") {
     Test.check_(prms, prop)
     val n = xs.size
     val unique = xs.toSet
-    val p0 = Prop(unique(expected)) :| s"did not see $expected in $unique"
-    val p1 = Prop(unique.size > 1) :| s"saw $n duplicate values: $unique"
+    val p0 = Prop(unique(expected)).labelImpl2(s"did not see $expected in $unique")
+    val p1 = Prop(unique.size > 1).labelImpl2(s"saw $n duplicate values: $unique")
     p0 && p1
   }
 }

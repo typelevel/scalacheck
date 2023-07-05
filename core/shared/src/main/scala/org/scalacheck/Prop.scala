@@ -23,7 +23,7 @@ sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
 @Platform.EnableReflectiveInstantiation
 sealed abstract class Prop extends Serializable { self =>
 
-  import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
+  import Prop.{Exception, Proof, Result, True, False, Undecided, provedToTrue, mergeRes}
 
   def apply(prms: Gen.Parameters): Result
 
@@ -148,21 +148,44 @@ sealed abstract class Prop extends Serializable { self =>
 
   override def toString = "Prop"
 
-  /** Put a label on the property to make test reports clearer */
-  def label(l: String) = map(_.label(l))
+  private[scalacheck] def labelImpl1(l: String) = map(_.label(l))
 
   /** Put a label on the property to make test reports clearer */
-  def :|(l: String) = label(l)
+  private[scalacheck] def label(l: String) = labelImpl1(l)
 
   /** Put a label on the property to make test reports clearer */
-  def |:(l: String) = label(l)
+  private[scalacheck] def :|(l: String) = labelImpl1(l)
 
   /** Put a label on the property to make test reports clearer */
-  def :|(l: Symbol) = label(l.name)
+  private[scalacheck] def |:(l: String) = labelImpl1(l)
 
   /** Put a label on the property to make test reports clearer */
-  def |:(l: Symbol) = label(l.name)
+  private[scalacheck] def :|(l: Symbol) = labelImpl1(l.name)
 
+  /** Put a label on the property to make test reports clearer */
+  private[scalacheck] def |:(l: Symbol) = labelImpl1(l.name)
+
+  private[scalacheck] def labelImpl2(l: => String) =
+    map(r =>
+      r.status match {
+        case False | Exception(_) => r.label(l)
+        case Proof | True | Undecided => r
+      })
+
+  /** Put a label on the property to make test reports clearer */
+  def label(l: => String) = labelImpl2(l)
+
+  /** Put a label on the property to make test reports clearer */
+  def :|(l: => String) = labelImpl2(l)
+
+  /** Put a label on the property to make test reports clearer */
+  def |:(l: => String) = labelImpl2(l)
+
+  /** Put a label on the property to make test reports clearer */
+  def :|(l: => Symbol)(implicit d: DummyImplicit) = labelImpl2(l.name)
+
+  /** Put a label on the property to make test reports clearer */
+  def |:(l: => Symbol)(implicit d: DummyImplicit) = labelImpl2(l.name)
 }
 
 object Prop {
@@ -341,16 +364,16 @@ object Prop {
     def ==>(p: => Prop) = Prop(b) ==> p
 
     /** See the documentation for [[org.scalacheck.Prop]] */
-    def :|(l: String) = Prop(b) :| l
+    def :|(l: String) = Prop(b).labelImpl1(l)
 
     /** See the documentation for [[org.scalacheck.Prop]] */
-    def |:(l: String) = l |: Prop(b)
+    def |:(l: String) = Prop(b).labelImpl1(l)
 
     /** See the documentation for [[org.scalacheck.Prop]] */
-    def :|(l: Symbol) = Prop(b) :| l
+    def :|(l: Symbol) = Prop(b).labelImpl1(l.name)
 
     /** See the documentation for [[org.scalacheck.Prop]] */
-    def |:(l: Symbol) = l |: Prop(b)
+    def |:(l: Symbol) = Prop(b).labelImpl1(l.name)
   }
 
   /** Implicit method that makes a number of property operators on values of type `Any` available in the current scope.
@@ -399,7 +422,7 @@ object Prop {
     */
   def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop =
     if (x == y) proved
-    else falsified :| {
+    else falsified.labelImpl2 {
       val exp = Pretty.pretty[T](y, Pretty.Params(0))
       val act = Pretty.pretty[T](x, Pretty.Params(0))
       "Expected " + exp + " but got " + act
