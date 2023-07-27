@@ -25,7 +25,7 @@ import util.ConsoleReporter
   * }}}
   */
 @Platform.EnableReflectiveInstantiation
-class Properties(val name: String) {
+open class Properties(val name: String) {
 
   private val props = new scala.collection.mutable.ListBuffer[(String, Prop)]
   private var frozen = false
