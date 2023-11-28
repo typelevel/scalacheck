@@ -9,11 +9,16 @@
 
 package org.scalacheck.util
 
-import java.util.ArrayList
+import java.util.{ArrayList, HashMap}
 import scala.collection.mutable.Builder
 import scala.collection.{Map => _, _}
 
 private[util] trait BuildableVersionSpecific {
+  import scala.jdk.CollectionConverters._
+
+  implicit def wrapArrayList[T](xs: ArrayList[T]): Iterable[T] = xs.asScala
+  implicit def wrapHashMap[K, V](xs: HashMap[K, V]): Iterable[(K, V)] = xs.asScala
+
   implicit def buildableFactory[T, C](implicit f: Factory[T, C]): Buildable[T, C] =
     new Buildable[T, C] {
       def builder = f.newBuilder
@@ -28,6 +33,17 @@ private[util] class ArrayListBuilder[T] extends Builder[T, ArrayList[T]] {
   }
   def clear(): Unit = al.clear()
   def result(): ArrayList[T] = al
+}
+
+private[util] class HashMapBuilder[K, V] extends Builder[(K, V), HashMap[K, V]] {
+  private val hm = new HashMap[K, V]
+  def addOne(x: (K, V)): this.type = {
+    val (k, v) = x
+    hm.put(k, v)
+    this
+  }
+  def clear(): Unit = hm.clear()
+  def result(): HashMap[K, V] = hm
 }
 
 /** Factory instances implementing Serializable, so that the objects capturing those can be serializable too.

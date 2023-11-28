@@ -12,6 +12,7 @@ package util
 
 import scala.collection._
 
+import Buildable._
 import ScalaVersionSpecific._
 
 object BuildableSpecification {
@@ -47,4 +48,15 @@ object BuildableSpecification {
   implicit val iterableGen: Gen[immutable.Iterable[String]] = container[immutable.Iterable]
 
   implicit val trieIteratorGen: Gen[immutable.Queue[String]] = container[immutable.Queue]
+
+  implicit val arrayListGen: Gen[java.util.ArrayList[String]] = container[java.util.ArrayList]
+
+  def buildable[C[_, _]](implicit
+      evb: Buildable[(String, Long), C[String, Long]],
+      evt: C[String, Long] => Traversable[(String, Long)]
+  ) = Gen.buildableOf[C[String, Long], (String, Long)](for (str <- Gen.alphaStr; lng <- Gen.long) yield (str, lng))
+
+  implicit val mapGen: Gen[Map[String, Long]] = buildable[Map]
+
+  implicit val hashMapGen: Gen[java.util.HashMap[String, Long]] = buildable[java.util.HashMap]
 }
