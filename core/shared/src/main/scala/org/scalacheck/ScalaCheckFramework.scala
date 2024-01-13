@@ -155,7 +155,7 @@ private abstract class ScalaCheckRunner extends Runner {
             case _ => new OptionalThrowable()
           }
           def fullyQualifiedName() = self.taskDef().fullyQualifiedName()
-          def selector() = new TestSelector(name)
+          def selector(): Selector = new TestSelector(name)
           def fingerprint() = self.taskDef().fingerprint()
           def duration() = -1L
         }
@@ -251,7 +251,7 @@ final class ScalaCheckFramework extends Framework {
 
     val applyCmdParams = prms.andThen(sbtSetup(loader))
 
-    def receiveMessage(msg: String) = None
+    def receiveMessage(msg: String): Option[String] = None
 
     override def done() = {
       send(s"d$testCount,$successCount,$failureCount,$errorCount")

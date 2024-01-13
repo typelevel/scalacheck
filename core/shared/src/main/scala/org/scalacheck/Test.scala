@@ -224,7 +224,7 @@ object Test {
       val testCallback: TestCallback = new TestCallback {}
       val maxDiscardRatio: Float = 5
       val customClassLoader: Option[ClassLoader] = None
-      val propFilter = None
+      val propFilter: Option[String] = None
       val initialSeed: Option[rng.Seed] = None
     }
 
@@ -369,7 +369,7 @@ object Test {
       val help = "Maximum number of RNG spins to perform between checks"
     }
 
-    val opts = Set[Opt[_]](
+    val opts: collection.Set[Opt[_]] = Set[Opt[_]](
       OptMinSuccess,
       OptMaxDiscardRatio,
       OptMinSize,

@@ -25,7 +25,7 @@ object Buildable extends BuildableVersionSpecific {
   import java.util.ArrayList
   implicit def buildableArrayList[T]: Buildable[T, ArrayList[T]] =
     new Buildable[T, ArrayList[T]] {
-      def builder = new ArrayListBuilder[T]
+      def builder: mutable.Builder[T, ArrayList[T]] = new ArrayListBuilder[T]
     }
 
   def buildableSeq[T]: Buildable[T, Seq[T]] =
