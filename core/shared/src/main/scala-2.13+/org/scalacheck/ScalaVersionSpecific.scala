@@ -32,8 +32,6 @@ private[scalacheck] trait GenVersionSpecific {
   }
 }
 
-private[scalacheck] trait GenSpecificationVersionSpecific
-
 private[scalacheck] trait CogenVersionSpecific {
   implicit def cogenLazyList[A: Cogen]: Cogen[LazyList[A]] =
     Cogen.it(_.iterator)
