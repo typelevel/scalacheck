@@ -20,65 +20,65 @@ import util.Buildable
 import util.SerializableCanBuildFroms._
 
 /** Define an arbitrary generator for properties
-  *
-  * The [[Arbitrary]] module defines implicit generator instances for common types.
-  *
-  * The implicit definitions of [[Arbitrary]] provide type-directed [[Gen]]s so they are available for properties,
-  * generators, or other definitions of [[Arbitrary]].
-  *
-  * ScalaCheck expects an implicit [[Arbitrary]] instance is in scope for [[Prop]]s that are defined with functions,
-  * like [[Prop$.forAll[T1,P](g1* Prop.forAll]] and so on.
-  *
-  * For instance, the definition for `Arbitrary[Boolean]` is used by `Prop.forAll` to automatically provide a
-  * `Gen[Boolean]` when one of the parameters is a `Boolean`:
-  *
-  * {{{
-  *    Prop.forAll { (b: Boolean) =>
-  *      b || !b
-  *    }
-  * }}}
-  *
-  * Thanks to `Arbitrary`, you don't need to provide an explicit `Gen` instance to `Prop.forAll`. For instance, this is
-  * unnecessary:
-  *
-  * {{{
-  *    val genBool: Gen[Boolean] = Gen.oneOf(true,false)
-  *    Prop.forAll(genBool) { (b: Boolean) =>
-  *      b || !b
-  *    }
-  * }}}
-  *
-  * Since an arbitrary `Gen` for `Boolean` is defined in `Arbitrary`, it can be summoned with `Arbitrary.arbitrary` in
-  * cases where you need to provide one explicitly:
-  *
-  * {{{
-  *    val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
-  *    val genSmallInt: Gen[Int] = Gen.choose(0, 9)
-  *    Prop.forAll(genBool, genSmallInt) { (b: Boolean, i: Int) =>
-  *      i < 10 && b || !b
-  *    }
-  * }}}
-  *
-  * For a user-defined `MyClass`, writing the following requires that there exists an implicit `Arbitrary[MyClass]`
-  * instance:
-  *
-  * {{{
-  *    Prop.forAll { (myClass: MyClass) =>
-  *      ...
-  *    }
-  * }}}
-  *
-  * The implicit definition of `Arbitrary[MyClass]` would look like:
-  *
-  * {{{
-  *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary {
-  *      ...
-  *    }
-  * }}}
-  *
-  * The factory method `Arbitrary(...)` expects a generator of type `Gen[MyClass]` then it will return an instance of
-  * `Arbitrary[MyClass]`.
-  */
+ *
+ *  The [[Arbitrary]] module defines implicit generator instances for common types.
+ *
+ *  The implicit definitions of [[Arbitrary]] provide type-directed [[Gen]]s so they are available for properties,
+ *  generators, or other definitions of [[Arbitrary]].
+ *
+ *  ScalaCheck expects an implicit [[Arbitrary]] instance is in scope for [[Prop]]s that are defined with functions,
+ *  like [[Prop$.forAll[T1,P](g1* Prop.forAll]] and so on.
+ *
+ *  For instance, the definition for `Arbitrary[Boolean]` is used by `Prop.forAll` to automatically provide a
+ *  `Gen[Boolean]` when one of the parameters is a `Boolean`:
+ *
+ *  {{{
+ *    Prop.forAll { (b: Boolean) =>
+ *      b || !b
+ *    }
+ *  }}}
+ *
+ *  Thanks to `Arbitrary`, you don't need to provide an explicit `Gen` instance to `Prop.forAll`. For instance, this is
+ *  unnecessary:
+ *
+ *  {{{
+ *    val genBool: Gen[Boolean] = Gen.oneOf(true,false)
+ *    Prop.forAll(genBool) { (b: Boolean) =>
+ *      b || !b
+ *    }
+ *  }}}
+ *
+ *  Since an arbitrary `Gen` for `Boolean` is defined in `Arbitrary`, it can be summoned with `Arbitrary.arbitrary` in
+ *  cases where you need to provide one explicitly:
+ *
+ *  {{{
+ *    val genBool: Gen[Boolean] = Arbitrary.arbitrary[Boolean]
+ *    val genSmallInt: Gen[Int] = Gen.choose(0, 9)
+ *    Prop.forAll(genBool, genSmallInt) { (b: Boolean, i: Int) =>
+ *      i < 10 && b || !b
+ *    }
+ *  }}}
+ *
+ *  For a user-defined `MyClass`, writing the following requires that there exists an implicit `Arbitrary[MyClass]`
+ *  instance:
+ *
+ *  {{{
+ *    Prop.forAll { (myClass: MyClass) =>
+ *      ...
+ *    }
+ *  }}}
+ *
+ *  The implicit definition of `Arbitrary[MyClass]` would look like:
+ *
+ *  {{{
+ *    implicit val arbMyClass: Arbitrary[MyClass] = Arbitrary {
+ *      ...
+ *    }
+ *  }}}
+ *
+ *  The factory method `Arbitrary(...)` expects a generator of type `Gen[MyClass]` then it will return an instance of
+ *  `Arbitrary[MyClass]`.
+ */
 sealed abstract class Arbitrary[T] extends Serializable {
   def arbitrary: Gen[T]
 }
@@ -103,7 +103,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   def arbitrary[T](implicit a: Arbitrary[T]): Gen[T] = a.arbitrary
 
   /** ** Arbitrary instances for each AnyVal ***
-    */
+   */
 
   /** Arbitrary AnyVal */
   implicit lazy val arbAnyVal: Arbitrary[AnyVal] = Arbitrary(oneOf(
@@ -174,7 +174,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     Arbitrary(Gen.const(()))
 
   /** Arbitrary instances of other common types
-    */
+   */
 
   /** Arbitrary instance of String */
   implicit lazy val arbString: Arbitrary[String] =
@@ -307,10 +307,10 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     Arbitrary(Gen.finiteDuration)
 
   /** Arbitrary instance of Duration.
-    *
-    * In addition to `FiniteDuration` values, this can generate `Duration.Inf`, `Duration.MinusInf`, and
-    * `Duration.Undefined`.
-    */
+   *
+   *  In addition to `FiniteDuration` values, this can generate `Duration.Inf`, `Duration.MinusInf`, and
+   *  `Duration.Undefined`.
+   */
   implicit lazy val arbDuration: Arbitrary[Duration] =
     Arbitrary(Gen.duration)
 
@@ -385,8 +385,8 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
     Arbitrary(Gen.oneOf(arbitrary[T].map(Success(_)), arbitrary[Throwable].map(Failure(_))))
 
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as lists, arrays, streams / lazy
-    * lists, etc). The maximum size of the container depends on the size generation parameter.
-    */
+   *  lists, etc). The maximum size of the container depends on the size generation parameter.
+   */
   implicit def arbContainer[C[_], T](implicit
       a: Arbitrary[T],
       b: Buildable[T, C[T]],
@@ -394,8 +394,8 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
   ): Arbitrary[C[T]] = Arbitrary(buildableOf[C[T], T](arbitrary[T]))
 
   /** Arbitrary instance of any [[org.scalacheck.util.Buildable]] container (such as maps). The maximum size of the
-    * container depends on the size generation parameter.
-    */
+   *  container depends on the size generation parameter.
+   */
   implicit def arbContainer2[C[_, _], T, U](implicit
       a: Arbitrary[(T, U)],
       b: Buildable[(T, U), C[T, U]],

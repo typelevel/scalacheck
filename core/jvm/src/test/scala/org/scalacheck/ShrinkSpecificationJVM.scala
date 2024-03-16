@@ -14,8 +14,8 @@ import Shrink.shrink
 import ShrinkSpecification.shrinkClosure
 
 /** @todo
-  *   should work not only JVM but also Scala.js
-  */
+ *    should work not only JVM but also Scala.js
+ */
 object ShrinkSpecificationJVM extends Properties("Shrink JVM") {
 
   property("list") = forAll { (l: List[Int]) =>

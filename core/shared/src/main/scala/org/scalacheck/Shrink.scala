@@ -19,7 +19,7 @@ sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
 
   /** Create a new shrink that only produces values satisfying the given condition.
-    */
+   */
   def suchThat(f: T => Boolean): Shrink[T] = Shrink(v => this.shrink(v).filter(f))
 }
 
@@ -49,7 +49,7 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
   def shrink[T](x: T)(implicit s: Shrink[T]): Stream[T] = s.shrink(x)
 
   /** Shrink a value, but also return the original value as the first element in the resulting stream
-    */
+   */
   def shrinkWithOrig[T](x: T)(implicit s: Shrink[T]): Stream[T] =
     cons(x, s.shrink(x))
 
@@ -268,8 +268,8 @@ object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.Jav
   }
 
   /** Transform a Shrink[T] to a Shrink[U] where T and U are two isomorphic types whose relationship is described by the
-    * provided transformation functions. (exponential functor map)
-    */
+   *  provided transformation functions. (exponential functor map)
+   */
   def xmap[T, U](from: T => U, to: U => T)(implicit st: Shrink[T]): Shrink[U] = Shrink[U] { (u: U) =>
     st.shrink(to(u)).map(from)
   }

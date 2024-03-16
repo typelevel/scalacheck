@@ -50,14 +50,14 @@ object Pretty {
     else s + List.fill(length - s.length)(c).mkString
 
   /** Break a long string across lines.
-    *
-    * This method will wrap the given string at `length` characters, inserting newlines and an optional prefix (`lead`)
-    * on every line other than the first.
-    *
-    * All lines in the resulting string are guaranteed to be `length` or shorter.
-    *
-    * We require `lead.length < length`; otherwise it would be impossible to legally wrap lines.
-    */
+   *
+   *  This method will wrap the given string at `length` characters, inserting newlines and an optional prefix (`lead`)
+   *  on every line other than the first.
+   *
+   *  All lines in the resulting string are guaranteed to be `length` or shorter.
+   *
+   *  We require `lead.length < length`; otherwise it would be impossible to legally wrap lines.
+   */
   def break(s: String, lead: String, length: Int): String = {
     require(lead.length < length, s"lead ($lead) should be shorter than length ($length)")
     val step = length - lead.length

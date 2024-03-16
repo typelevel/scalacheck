@@ -15,7 +15,7 @@ import rng.Seed
 import util.{Pretty, ConsoleReporter}
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly, use `Prop.apply` instead.
-  */
+ */
 sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
   def apply(prms: Gen.Parameters) = f(prms)
 }
@@ -64,8 +64,8 @@ sealed abstract class Prop extends Serializable { self =>
     for (r1 <- this; r2 <- p) yield f(r1, r2)
 
   /** Convenience method that checks this property with the given parameters and reports the result on the console.
-    * Should only be used when running tests interactively within the Scala REPL.
-    */
+   *  Should only be used when running tests interactively within the Scala REPL.
+   */
   def check(prms: Test.Parameters): Unit = Test.check_(
     if (prms.testCallback.isInstanceOf[ConsoleReporter]) prms
     else prms.withTestCallback(prms.testCallback.chain(ConsoleReporter(1))),
@@ -73,34 +73,34 @@ sealed abstract class Prop extends Serializable { self =>
   )
 
   /** Convenience method that checks this property and reports the result on the console. Should only be used when
-    * running tests interactively within the Scala REPL.
-    *
-    * The default test parameters ([[Test.Parameters.default]]) are used for the check.
-    */
+   *  running tests interactively within the Scala REPL.
+   *
+   *  The default test parameters ([[Test.Parameters.default]]) are used for the check.
+   */
   def check(): Unit = check(Test.Parameters.default)
 
   /** Convenience method that checks this property and reports the result on the console. Should only be used when
-    * running tests interactively within the Scala REPL.
-    *
-    * The provided argument should be a function that takes the default test parameters ([[Test.Parameters.default]]) as
-    * input and outputs a modified [[Test.Parameters]] instance that Example use:
-    *
-    * {{{
-    *  p.check(_.withMinSuccessfulTests(500))
-    *
-    *  p.check { _.
-    *    withMinSuccessfulTests(80000).
-    *    withWorkers(4)
-    *  }
-    * }}}
-    */
+   *  running tests interactively within the Scala REPL.
+   *
+   *  The provided argument should be a function that takes the default test parameters ([[Test.Parameters.default]]) as
+   *  input and outputs a modified [[Test.Parameters]] instance that Example use:
+   *
+   *  {{{
+   *  p.check(_.withMinSuccessfulTests(500))
+   *
+   *  p.check { _.
+   *    withMinSuccessfulTests(80000).
+   *    withWorkers(4)
+   *  }
+   *  }}}
+   */
   def check(paramFun: Test.Parameters => Test.Parameters): Unit = check(
     paramFun(Test.Parameters.default)
   )
 
   /** Convenience method that makes it possible to use this property as an application that checks itself on execution.
-    * Calls `System.exit` with a non-zero exit code if the property check fails.
-    */
+   *  Calls `System.exit` with a non-zero exit code if the property check fails.
+   */
   def main(args: Array[String]): Unit = {
     val ret = Test.CmdLineParser.parseParams(args) match {
       case (applyCmdParams, Nil) =>
@@ -116,17 +116,17 @@ sealed abstract class Prop extends Serializable { self =>
   }
 
   /** Returns a new property that holds if and only if both this and the given property hold. If one of the properties
-    * doesn't generate a result, the new property will generate false.
-    */
+   *  doesn't generate a result, the new property will generate false.
+   */
   def &&(p: => Prop) = combine(p)(_ && _)
 
   /** Returns a new property that holds if either this or the given property (or both) hold.
-    */
+   */
   def ||(p: => Prop) = combine(p)(_ || _)
 
   /** Returns a new property that holds if and only if both this and the given property hold. If one of the properties
-    * doesn't generate a result, the new property will generate the same result as the other property.
-    */
+   *  doesn't generate a result, the new property will generate the same result as the other property.
+   */
   def ++(p: => Prop): Prop = combine(p)(_ ++ _)
 
   /** Combines two properties through implication */
@@ -137,9 +137,9 @@ sealed abstract class Prop extends Serializable { self =>
   }
 
   /** Returns a new property that holds if and only if both this and the given property generates a result with the
-    * exact same status. Note that this means that if one of the properties is proved, and the other one passed, then
-    * the resulting property will fail.
-    */
+   *  exact same status. Note that this means that if one of the properties is proved, and the other one passed, then
+   *  the resulting property will fail.
+   */
   def ==(p: => Prop) = this.flatMap { r1 =>
     p.map { r2 =>
       mergeRes(r1, r2, if (r1.status == r2.status) True else False)
@@ -316,7 +316,7 @@ object Prop {
   // Implicits
 
   /** A collection of property operators on `Any` values. Import [[Prop.AnyOperators]] to make the operators available.
-    */
+   */
   class ExtendedAny[T](x: => T)(implicit ev: T => Pretty) {
 
     /** See [[Prop.imply]] */
@@ -333,8 +333,8 @@ object Prop {
   }
 
   /** A collection of property operators on `Boolean` values. Import [[Prop.propBoolean]] to make the operators
-    * available. The availability of this class as an implicit via `BooleanOperators` was removed in 1.15.0.
-    */
+   *  available. The availability of this class as an implicit via `BooleanOperators` was removed in 1.15.0.
+   */
   class ExtendedBoolean(b: => Boolean) {
 
     /** See the documentation for [[org.scalacheck.Prop]] */
@@ -354,13 +354,13 @@ object Prop {
   }
 
   /** Implicit method that makes a number of property operators on values of type `Any` available in the current scope.
-    * See [[Prop.ExtendedAny]] for documentation on the operators.
-    */
+   *  See [[Prop.ExtendedAny]] for documentation on the operators.
+   */
   implicit def AnyOperators[T](x: => T)(implicit ev: T => Pretty): ExtendedAny[T] = new ExtendedAny[T](x)
 
   /** Implicit method that makes a number of property operators on boolean values available in the current scope. See
-    * [[Prop.ExtendedBoolean]] for documentation on the operators.
-    */
+   *  [[Prop.ExtendedBoolean]] for documentation on the operators.
+   */
   @deprecated("Please import Prop.propBoolean instead", since = "1.14.1")
   def BooleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
 
@@ -395,8 +395,8 @@ object Prop {
   lazy val exception: Prop = exception(null)
 
   /** Create a property that compares two values. If the values aren't equal, the property will fail and report that
-    * first value doesn't match the expected (second) value.
-    */
+   *  first value doesn't match the expected (second) value.
+   */
   def ?=[T](x: T, y: T)(implicit pp: T => Pretty): Prop =
     if (x == y) proved
     else falsified :| {
@@ -406,8 +406,8 @@ object Prop {
     }
 
   /** Create a property that compares two values. If the values aren't equal, the property will fail and report that
-    * second value doesn't match the expected (first) value.
-    */
+   *  second value doesn't match the expected (first) value.
+   */
   def =?[T](x: T, y: T)(implicit pp: T => Pretty): Prop = ?=(y, x)
 
   /** A property that depends on the generator size */
@@ -424,35 +424,35 @@ object Prop {
   }
 
   /** Property holds only if the given partial function is defined at `x`, and returns a property that holds
-    */
+   */
   def iff[T](x: T, f: PartialFunction[T, Prop]): Prop = secure {
     if (f.isDefinedAt(x)) f(x) else falsified
   }
 
   /** Combines properties into one, which is true if and only if all the properties are true
-    */
+   */
   def all(ps: Prop*) =
     if (ps.isEmpty) proved
     else Prop(prms => ps.map(p => p(prms)).reduceLeft(_ && _))
 
   /** Combines properties into one, which is true if at least one of the properties is true
-    */
+   */
   def atLeastOne(ps: Prop*) =
     if (ps.isEmpty) falsified
     else Prop(prms => ps.map(p => p(prms)).reduceLeft(_ || _))
 
   /** A property that holds if at least one of the given generators fails generating a value
-    */
+   */
   def someFailing[T](gs: Seq[Gen[T]]): Prop =
     atLeastOne(gs.map(_ == Gen.fail): _*)
 
   /** A property that holds iff none of the given generators fails generating a value
-    */
+   */
   def noneFailing[T](gs: Seq[Gen[T]]): Prop =
     all(gs.map(_ !== Gen.fail): _*)
 
   /** Returns true if the given statement throws an exception of the specified type
-    */
+   */
   def throws[T <: Throwable](c: Class[T])(x: => Any): Boolean =
     try { x; false }
     catch { case e if c.isInstance(e) => true }
@@ -479,27 +479,27 @@ object Prop {
     if (c) collect(ifTrue)(prop) else collect(ifFalse)(prop)
 
   /** Wraps and protects a property, turning exceptions thrown by the property into test failures.
-    */
+   */
   def secure[P](p: => P)(implicit ev: P => Prop): Prop =
     try ev(p)
     catch { case e: Throwable => exception(e) }
 
   /** Wraps a property to delay its evaluation. The given parameter is evaluated each time the wrapper property is
-    * evaluated.
-    */
+   *  evaluated.
+   */
   def delay(p: => Prop): Prop =
     Prop(params => p(params))
 
   /** Wraps a property lazily. The given parameter is only evaluated once, and not until the wrapper property is
-    * evaluated.
-    */
+   *  evaluated.
+   */
   def lzy(p: => Prop): Prop = {
     lazy val q = p
     Prop(params => q(params))
   }
 
   /** Wraps and protects a property, delaying its evaluation and turning exceptions into test failures.
-    */
+   */
   def protect(p: => Prop): Prop =
     delay(secure(p))
 
@@ -511,14 +511,14 @@ object Prop {
   ): Prop = exists(aa.arbitrary)(f)
 
   /** This handles situations where we have a starting seed in our parameters.
-    *
-    * If we do, then we remove it from parameters and return it. If not, we create a new random seed. The new parameters
-    * from this method should be used with all the generation that this prop needs itself.
-    *
-    * Note that if this Prop needs to evaluate other Props (e.g. in forAll), you should make sure *not* to use the
-    * parameters returned from this method. We need for all Props evaluated by this one to behave deterministically if
-    * this Prop was given a seed. In that case you should use `slideSeed` to update the parameters.
-    */
+   *
+   *  If we do, then we remove it from parameters and return it. If not, we create a new random seed. The new parameters
+   *  from this method should be used with all the generation that this prop needs itself.
+   *
+   *  Note that if this Prop needs to evaluate other Props (e.g. in forAll), you should make sure *not* to use the
+   *  parameters returned from this method. We need for all Props evaluated by this one to behave deterministically if
+   *  this Prop was given a seed. In that case you should use `slideSeed` to update the parameters.
+   */
   def startSeed(prms: Gen.Parameters): (Gen.Parameters, Seed) =
     prms.initialSeed match {
       case Some(seed) => (prms.withNoInitialSeed, seed)
@@ -554,7 +554,7 @@ object Prop {
   }
 
   /** Universal quantifier for an explicit generator. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, P](
       g1: Gen[T1]
   )(
@@ -575,7 +575,7 @@ object Prop {
   }
 
   /** Universal quantifier for two explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, P](
       g1: Gen[T1],
       g2: Gen[T2]
@@ -588,7 +588,7 @@ object Prop {
   ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2)(f(t, _: T2)))
 
   /** Universal quantifier for three explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -603,7 +603,7 @@ object Prop {
   ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2, g3)(f(t, _: T2, _: T3)))
 
   /** Universal quantifier for four explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, T4, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -620,7 +620,7 @@ object Prop {
   ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2, g3, g4)(f(t, _: T2, _: T3, _: T4)))
 
   /** Universal quantifier for five explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, T4, T5, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -639,7 +639,7 @@ object Prop {
   ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2, g3, g4, g5)(f(t, _: T2, _: T3, _: T4, _: T5)))
 
   /** Universal quantifier for six explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, T4, T5, T6, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -660,7 +660,7 @@ object Prop {
   ): Prop = forAllNoShrink(g1)(t => forAllNoShrink(g2, g3, g4, g5, g6)(f(t, _: T2, _: T3, _: T4, _: T5, _: T6)))
 
   /** Universal quantifier for seven explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, T4, T5, T6, T7, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -684,7 +684,7 @@ object Prop {
     forAllNoShrink(g1)(t => forAllNoShrink(g2, g3, g4, g5, g6, g7)(f(t, _: T2, _: T3, _: T4, _: T5, _: T6, _: T7)))
 
   /** Universal quantifier for eight explicit generators. Does not shrink failed test cases.
-    */
+   */
   def forAllNoShrink[T1, T2, T3, T4, T5, T6, T7, T8, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -857,7 +857,7 @@ object Prop {
   }
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments with the given shrink function
-    */
+   */
   def forAllShrink[T, P](g: Gen[T], shrink: T => Stream[T])(f: T => P)(implicit pv: P => Prop, pp: T => Pretty): Prop =
     Prop { prms0 =>
       val (prms, seed) = startSeed(prms0)
@@ -920,8 +920,8 @@ object Prop {
     }
 
   /** Universal quantifier for an explicit generator. Shrinks failed arguments with the default shrink function for the
-    * type
-    */
+   *  type
+   */
   def forAll[T1, P](
       g1: Gen[T1]
   )(
@@ -933,8 +933,8 @@ object Prop {
   ): Prop = forAllShrink[T1, P](g1, s1.shrink)(f)
 
   /** Universal quantifier for two explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, P](
       g1: Gen[T1],
       g2: Gen[T2]
@@ -949,8 +949,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2)(f(t, _: T2)))
 
   /** Universal quantifier for three explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -968,8 +968,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2, g3)(f(t, _: T2, _: T3)))
 
   /** Universal quantifier for four explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, T4, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -990,8 +990,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2, g3, g4)(f(t, _: T2, _: T3, _: T4)))
 
   /** Universal quantifier for five explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, T4, T5, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -1015,8 +1015,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2, g3, g4, g5)(f(t, _: T2, _: T3, _: T4, _: T5)))
 
   /** Universal quantifier for six explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, T4, T5, T6, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -1043,8 +1043,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2, g3, g4, g5, g6)(f(t, _: T2, _: T3, _: T4, _: T5, _: T6)))
 
   /** Universal quantifier for seven explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, T4, T5, T6, T7, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -1074,8 +1074,8 @@ object Prop {
   ): Prop = forAll(g1)(t => forAll(g2, g3, g4, g5, g6, g7)(f(t, _: T2, _: T3, _: T4, _: T5, _: T6, _: T7)))
 
   /** Universal quantifier for eight explicit generators. Shrinks failed arguments with the default shrink function for
-    * the type
-    */
+   *  the type
+   */
   def forAll[T1, T2, T3, T4, T5, T6, T7, T8, P](
       g1: Gen[T1],
       g2: Gen[T2],
@@ -1272,7 +1272,7 @@ object Prop {
   ): Prop = forAll((a: A1) => forAll(f(a, _: A2, _: A3, _: A4, _: A5, _: A6, _: A7, _: A8)))
 
   /** Ensures that the property expression passed in completes within the given space of time.
-    */
+   */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = {
     @tailrec def attempt(prms: Gen.Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
