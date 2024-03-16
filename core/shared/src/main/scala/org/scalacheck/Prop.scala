@@ -9,22 +9,23 @@
 
 package org.scalacheck
 
-import scala.annotation.tailrec
-
 import rng.Seed
 import util.{Pretty, ConsoleReporter}
 
 /** Helper class to satisfy ScalaJS compilation. Do not use this directly, use `Prop.apply` instead.
   */
 sealed class PropFromFun(f: Gen.Parameters => Prop.Result) extends Prop {
+
+  /** Evaluate this property by applying the function. */
   def apply(prms: Gen.Parameters) = f(prms)
 }
 
 @Platform.EnableReflectiveInstantiation
-sealed abstract class Prop extends Serializable { self =>
+sealed abstract class Prop extends Serializable {
 
   import Prop.{Result, True, False, Undecided, provedToTrue, mergeRes}
 
+  /** Evaluate this property. */
   def apply(prms: Gen.Parameters): Result
 
   def viewSeed(name: String): Prop =
@@ -36,7 +37,7 @@ sealed abstract class Prop extends Serializable { self =>
           val sd = Seed.random()
           (prms0.withInitialSeed(sd), sd)
       }
-      val res = self(prms)
+      val res = apply(prms)
       if (res.failure) println(s"failing seed for $name is ${seed.toBase64}")
       res
     }
@@ -46,7 +47,7 @@ sealed abstract class Prop extends Serializable { self =>
     useSeed(seed)
 
   def useSeed(seed: Seed): Prop =
-    Prop(prms0 => self(prms0.withInitialSeed(seed)))
+    Prop(prms0 => apply(prms0.withInitialSeed(seed)))
 
   def contramap(f: Gen.Parameters => Gen.Parameters): Prop =
     new PropFromFun(params => apply(f(params)))
@@ -197,14 +198,12 @@ object Prop {
       labels: Set[String] = Set.empty
   ) {
     def success = status match {
-      case True => true
-      case Proof => true
+      case True | Proof => true
       case _ => false
     }
 
     def failure = status match {
-      case False => true
-      case Exception(_) => true
+      case False | Exception(_) => true
       case _ => false
     }
 
@@ -276,6 +275,10 @@ object Prop {
       case (Proof, _) => mergeRes(this, r, r.status)
       case (True, _) => mergeRes(this, r, r.status)
     }
+
+    def flatMap(f: Result => Result): Result = if (success) f(this) else this
+
+    def recover(f: Result => Result): Result = if (failure) f(this) else this
   }
 
   sealed trait Status
@@ -1274,14 +1277,12 @@ object Prop {
   /** Ensures that the property expression passed in completes within the given space of time.
     */
   def within(maximumMs: Long)(wrappedProp: => Prop): Prop = {
-    @tailrec def attempt(prms: Gen.Parameters, endTime: Long): Result = {
+    def attempt(prms: Gen.Parameters, endTime: Long): Result = {
       val result = wrappedProp.apply(prms)
-      if (System.currentTimeMillis > endTime) {
-        (if (result.failure) result else Result(status = False)).label("Timeout")
-      } else {
-        if (result.success) result
-        else attempt(prms, endTime)
-      }
+      if (System.currentTimeMillis > endTime)
+        result.flatMap(_ => Result(status = False)).label("Timeout")
+      else
+        result.recover(_ => attempt(prms, endTime))
     }
     Prop.apply(prms => attempt(prms, System.currentTimeMillis + maximumMs))
   }
