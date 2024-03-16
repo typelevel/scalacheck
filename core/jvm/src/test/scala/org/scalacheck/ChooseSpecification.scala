@@ -61,8 +61,8 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
   property("choose[ZonedDateTime]") = chooseProp[ZonedDateTime]
 
   /** Generate a duration which is at least 1 second smaller than the max duration the type can support. We use this to
-    * avoid the incredibly unlikely event of overflowing in the handle-min-nanos-duration test.
-    */
+   *  avoid the incredibly unlikely event of overflowing in the handle-min-nanos-duration test.
+   */
   lazy val genOneSecondLessThanMaxDuration: Gen[Duration] =
     Gen.choose(Duration.ofSeconds(Long.MinValue), Duration.ofSeconds(Long.MaxValue - 1L, 999999999L))
 
@@ -80,8 +80,8 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
     }
 
   /** Generate an Instant which is at least 1 second smaller than the max Instant the type can support. We use this to
-    * avoid the incredibly unlikely event of overflowing in the handle-min-nanos-instant test.
-    */
+   *  avoid the incredibly unlikely event of overflowing in the handle-min-nanos-instant test.
+   */
   lazy val genOneSecondLessThanMaxInstant: Gen[Instant] =
     Gen.choose(Instant.MIN, Instant.MAX.minusSeconds(1L))
 

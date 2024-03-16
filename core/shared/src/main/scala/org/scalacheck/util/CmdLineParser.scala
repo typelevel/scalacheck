@@ -61,7 +61,7 @@ private[scalacheck] trait CmdLineParser {
   }
 
   /** Parses a command line and returns a tuple of the parsed options, and any unrecognized strings
-    */
+   */
   def parseArgs[T](args: Array[String]): (OptMap, List[String]) = {
 
     def parse(

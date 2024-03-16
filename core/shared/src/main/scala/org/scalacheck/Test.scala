@@ -23,16 +23,16 @@ import Prop.Arg
 object Test {
 
   /** Test parameters used by the check methods. Default parameters are defined by [[Test.Parameters.default]].
-    */
+   */
   sealed abstract class Parameters { outer =>
 
     /** The minimum number of tests that must succeed for ScalaCheck to consider a property passed.
-      */
+     */
     val minSuccessfulTests: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.minSuccessfulTests]] set to the
-      * specified value.
-      */
+     *  specified value.
+     */
     def withMinSuccessfulTests(minSuccessfulTests: Int): Parameters =
       cpy(minSuccessfulTests0 = minSuccessfulTests)
 
@@ -40,7 +40,7 @@ object Test {
     val minSize: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.minSize]] set to the specified value.
-      */
+     */
     def withMinSize(minSize: Int): Parameters =
       cpy(minSize0 = minSize)
 
@@ -48,7 +48,7 @@ object Test {
     val maxSize: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.maxSize]] set to the specified value.
-      */
+     */
     def withMaxSize(maxSize: Int): Parameters =
       cpy(maxSize0 = maxSize)
 
@@ -56,7 +56,7 @@ object Test {
     val workers: Int
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.workers]] set to the specified value.
-      */
+     */
     def withWorkers(workers: Int): Parameters =
       cpy(workers0 = workers)
 
@@ -64,21 +64,21 @@ object Test {
     val testCallback: TestCallback
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.testCallback]] set to the specified
-      * value.
-      */
+     *  value.
+     */
     def withTestCallback(testCallback: TestCallback): Parameters =
       cpy(testCallback0 = testCallback)
 
     /** The maximum ratio between discarded and passed tests allowed before ScalaCheck gives up and discards the whole
-      * property (with status [[Test.Exhausted]]). Additionally, ScalaCheck will always allow at least
-      * `minSuccessfulTests * maxDiscardRatio` discarded tests, so the resulting discard ratio might be higher than
-      * `maxDiscardRatio`.
-      */
+     *  property (with status [[Test.Exhausted]]). Additionally, ScalaCheck will always allow at least
+     *  `minSuccessfulTests * maxDiscardRatio` discarded tests, so the resulting discard ratio might be higher than
+     *  `maxDiscardRatio`.
+     */
     val maxDiscardRatio: Float
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.maxDiscardRatio]] set to the specified
-      * value.
-      */
+     *  value.
+     */
     def withMaxDiscardRatio(maxDiscardRatio: Float): Parameters =
       cpy(maxDiscardRatio0 = maxDiscardRatio)
 
@@ -86,8 +86,8 @@ object Test {
     val customClassLoader: Option[ClassLoader]
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.customClassLoader]] set to the
-      * specified value.
-      */
+     *  specified value.
+     */
     def withCustomClassLoader(customClassLoader: Option[ClassLoader]): Parameters =
       cpy(customClassLoader0 = customClassLoader)
 
@@ -95,8 +95,8 @@ object Test {
     val propFilter: Option[String]
 
     /** Create a copy of this [[Test.Parameters]] instance with [[Test.Parameters.propFilter]] set to the specified
-      * regular expression filter.
-      */
+     *  regular expression filter.
+     */
     def withPropFilter(propFilter: Option[String]): Parameters =
       cpy(propFilter0 = propFilter)
 
@@ -135,9 +135,9 @@ object Test {
       cpy(useLegacyShrinking0 = b)
 
     /** Maximum number of spins of the RNG to perform between checks. Greater values will reduce reuse of values (with
-      * dimimishing returns) for a given number of arguments to Prop.forAll tests. Greater values will also generally
-      * lead to slower tests, so be careful.
-      */
+     *  dimimishing returns) for a given number of arguments to Prop.forAll tests. Greater values will also generally
+     *  lead to slower tests, so be careful.
+     */
     val maxRNGSpins: Int = 1
 
     /** Set maximum RNG spins between checks */
@@ -205,17 +205,17 @@ object Test {
   }
 
   /** Test parameters used by the check methods. Default parameters are defined by [[Test.Parameters.default]].
-    */
+   */
   object Parameters {
 
     /** Default test parameters. Can be overridden if you need to tweak the parameters:
-      *
-      * {{{
-      *  val myParams = Parameters.default
-      *    .withMinSuccessfulTests(600)
-      *    .withMaxDiscardRatio(8)
-      * }}}
-      */
+     *
+     *  {{{
+     *  val myParams = Parameters.default
+     *    .withMinSuccessfulTests(600)
+     *    .withMaxDiscardRatio(8)
+     *  }}}
+     */
     val default: Parameters = new Parameters {
       val minSuccessfulTests: Int = 100
       val minSize: Int = 0
@@ -251,8 +251,8 @@ object Test {
   sealed trait Status
 
   /** ScalaCheck found enough cases for which the property holds, so the property is considered correct. (It is not
-    * proved correct, though).
-    */
+   *  proved correct, though).
+   */
   case object Passed extends Status
 
   /** ScalaCheck managed to prove the property correct */
@@ -262,13 +262,13 @@ object Test {
   sealed case class Failed(args: List[Arg[Any]], labels: Set[String]) extends Status
 
   /** The property test was exhausted, it wasn't possible to generate enough concrete arguments satisfying the
-    * preconditions to get enough passing property evaluations.
-    */
+   *  preconditions to get enough passing property evaluations.
+   */
   case object Exhausted extends Status
 
   /** An exception was raised when trying to evaluate the property with the given concrete arguments. If an exception
-    * was raised before or during argument generation, the argument list will be empty.
-    */
+   *  was raised before or during argument generation, the argument list will be empty.
+   */
   sealed case class PropException(args: List[Arg[Any]], e: Throwable, labels: Set[String]) extends Status
 
   trait TestCallback { self =>
@@ -421,20 +421,20 @@ object Test {
   }
 
   /** Tests a property with parameters that are calculated by applying the provided function to
-    * [[Test.Parameters.default]]. Example use:
-    *
-    * {{{
-    *  Test.check(p) { _.
-    *    withMinSuccessfulTests(80000).
-    *    withWorkers(4)
-    *  }
-    * }}}
-    */
+   *  [[Test.Parameters.default]]. Example use:
+   *
+   *  {{{
+   *  Test.check(p) { _.
+   *    withMinSuccessfulTests(80000).
+   *    withWorkers(4)
+   *  }
+   *  }}}
+   */
   def check(p: Prop)(f: Parameters => Parameters): Result =
     check(f(Parameters.default), p)
 
   /** Tests a property with the given testing parameters, and returns the test results.
-    */
+   */
   def check(params: Parameters, p: Prop): Result = {
     assertParams(params)
 
@@ -523,23 +523,23 @@ object Test {
   }
 
   /** As `check`, but discards the result. Useful for when you just want to read the console output.
-    */
+   */
   def check_(params: Parameters, p: Prop): Unit = { check(params, p); () }
 
   /** As `check`, but discards the result. Useful for when you just want to read the console output.
-    */
+   */
   def check_(p: Prop)(f: Parameters => Parameters): Unit =
     check_(f(Parameters.default), p)
 
   /** Returns the result of filtering a property name by a supplied regular expression.
-    *
-    * @param propertyName
-    *   The name of the property to be filtered.
-    * @param regex
-    *   The regular expression to filter the property name by.
-    * @return
-    *   true if the regular expression matches the property name, false if not.
-    */
+   *
+   *  @param propertyName
+   *    The name of the property to be filtered.
+   *  @param regex
+   *    The regular expression to filter the property name by.
+   *  @return
+   *    true if the regular expression matches the property name, false if not.
+   */
   def matchPropFilter(propertyName: String, regex: Regex): Boolean = {
     regex.findFirstIn(propertyName).isDefined
   }
@@ -574,7 +574,7 @@ object Test {
   }
 
   /** As `checkProperties`, but discards the result. Useful for when you just want to observe the results on the
-    * console.
-    */
+   *  console.
+   */
   def checkProperties_(prms: Parameters, ps: Properties): Unit = { checkProperties(prms, ps); () }
 }

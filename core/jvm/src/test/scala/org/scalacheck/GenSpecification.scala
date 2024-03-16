@@ -273,13 +273,13 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   /** Expect:
-    * {{{
-    * 25% 1, 2, 3
-    * 25% 1, 2, 4
-    * 25% 1, 4, 3
-    * 25% 4, 2, 3
-    * }}}
-    */
+   *  {{{
+   *  25% 1, 2, 3
+   *  25% 1, 2, 4
+   *  25% 1, 4, 3
+   *  25% 4, 2, 3
+   *  }}}
+   */
   property("distributed pick") = {
     val lst = (1 to 4).toIterable
     val n = 3
@@ -640,10 +640,10 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   /** Ensure that the given generator runs deterministically with the same initialSeed parameter or the same seed.
-    *
-    * This test should be run with a generator that can produce multiple values, and where the odds of 30 trials coming
-    * back with the same result is low enough that the test won't produce many false positives.
-    */
+   *
+   *  This test should be run with a generator that can produce multiple values, and where the odds of 30 trials coming
+   *  back with the same result is low enough that the test won't produce many false positives.
+   */
   def testDeterministicGen[A](g: Gen[A]): Prop = {
     val params0 = Gen.Parameters.default
     val params1 = params0.withInitialSeed(1248163264L)

@@ -31,7 +31,7 @@ private[util] class ArrayListBuilder[T] extends Builder[T, ArrayList[T]] {
 }
 
 /** Factory instances implementing Serializable, so that the objects capturing those can be serializable too.
-  */
+ */
 // Named `...CanBuildFroms` for 2.12 source compatibility (`import SerializableCanBuildFroms._`)
 // Can be renamed to `SerializableFactories` in a major release.
 object SerializableCanBuildFroms {

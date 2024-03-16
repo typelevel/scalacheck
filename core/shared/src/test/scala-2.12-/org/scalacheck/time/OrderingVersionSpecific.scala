@@ -13,7 +13,7 @@ import java.time._
 import java.time.chrono._
 
 /** On Scala <= 2.12 it is used to help the compiler figure out some `Ordering` instances needed for testing.
-  */
+ */
 trait OrderingVersionSpecific {
 
   implicit final lazy val localDateOrdering: Ordering[LocalDate] =
