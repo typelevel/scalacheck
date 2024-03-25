@@ -16,12 +16,6 @@ import generic.CanBuildFrom
 import scala.collection.mutable.Builder
 
 private[util] trait BuildableVersionSpecific {
-  import scala.collection.JavaConverters._
-  import scala.language.implicitConversions
-
-  implicit def wrapArrayList[T](xs: ArrayList[T]): Traversable[T] = xs.asScala
-  implicit def wrapHashMap[K, V](xs: HashMap[K, V]): Traversable[(K, V)] = xs.asScala
-
   implicit def buildableCanBuildFrom[T, F, C](implicit c: CanBuildFrom[F, T, C]): Buildable[T, C] =
     new Buildable[T, C] {
       def builder = c.apply

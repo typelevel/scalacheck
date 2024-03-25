@@ -14,10 +14,6 @@ import scala.collection.mutable.Builder
 import scala.collection.{Map => _, _}
 
 private[util] trait BuildableVersionSpecific {
-  import scala.jdk.CollectionConverters._
-
-  implicit def wrapArrayList[T](xs: ArrayList[T]): Iterable[T] = xs.asScala
-  implicit def wrapHashMap[K, V](xs: HashMap[K, V]): Iterable[(K, V)] = xs.asScala
 
   implicit def buildableFactory[T, C](implicit f: Factory[T, C]): Buildable[T, C] =
     new Buildable[T, C] {

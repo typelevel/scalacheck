@@ -21,6 +21,11 @@ object BuildableSpecification {
       evt: C[String] => Traversable[String]
   ) = Gen.containerOf[C, String](Gen.alphaStr)
 
+  def buildable[C[_, _]](implicit
+      evb: Buildable[(String, Long), C[String, Long]],
+      evt: C[String, Long] => Traversable[(String, Long)]
+  ) = Gen.buildableOf[C[String, Long], (String, Long)](Gen.zip(Gen.alphaStr, Gen.long))
+
   implicit val listGen: Gen[List[String]] = container[List]
 
   implicit val streamGen: Gen[Stream[String]] = container[Stream]
@@ -49,14 +54,16 @@ object BuildableSpecification {
 
   implicit val trieIteratorGen: Gen[immutable.Queue[String]] = container[immutable.Queue]
 
-  implicit val arrayListGen: Gen[java.util.ArrayList[String]] = container[java.util.ArrayList]
-
-  def buildable[C[_, _]](implicit
-      evb: Buildable[(String, Long), C[String, Long]],
-      evt: C[String, Long] => Traversable[(String, Long)]
-  ) = Gen.buildableOf[C[String, Long], (String, Long)](for (str <- Gen.alphaStr; lng <- Gen.long) yield (str, lng))
-
   implicit val mapGen: Gen[Map[String, Long]] = buildable[Map]
 
-  implicit val hashMapGen: Gen[java.util.HashMap[String, Long]] = buildable[java.util.HashMap]
+  Gen.buildableOf[Map[String, Int], (String, Int)](Gen.zip(Gen.alphaStr, Gen.choose(0, 100)))
+
+  // java containers
+  {
+    import scala.collection.convert.ImplicitConversionsToScala._
+
+    implicit val arrayListGen: Gen[java.util.ArrayList[String]] = container[java.util.ArrayList]
+
+    implicit val hashMapGen: Gen[java.util.HashMap[String, Long]] = buildable[java.util.HashMap]
+  }
 }
