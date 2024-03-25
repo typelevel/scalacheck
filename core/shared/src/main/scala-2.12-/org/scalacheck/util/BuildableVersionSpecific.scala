@@ -9,7 +9,7 @@
 
 package org.scalacheck.util
 
-import java.util.ArrayList
+import java.util.{ArrayList, HashMap}
 
 import collection.{Map => _, _}
 import generic.CanBuildFrom
@@ -30,6 +30,18 @@ private[util] class ArrayListBuilder[T] extends Builder[T, ArrayList[T]] {
   }
   def clear(): Unit = al.clear()
   def result(): ArrayList[T] = al
+}
+
+private[util] class HashMapBuilder[K, V] extends Builder[(K, V), HashMap[K, V]] {
+  private val hm = new HashMap[K, V]
+
+  def +=(x: (K, V)): this.type = {
+    val (k, v) = x
+    hm.put(k, v)
+    this
+  }
+  def clear(): Unit = hm.clear()
+  def result(): HashMap[K, V] = hm
 }
 
 /** CanBuildFrom instances implementing Serializable, so that the objects capturing those can be serializable too.
