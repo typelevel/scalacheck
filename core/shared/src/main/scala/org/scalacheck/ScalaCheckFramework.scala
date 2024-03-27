@@ -92,8 +92,14 @@ private abstract class ScalaCheckRunner extends Runner {
   }
 
   def rootTask(td: TaskDef): BaseTask = new BaseTask(td) {
-    def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
-      props.map(_._1).toSet.toArray map { name =>
+    def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] = {
+      // If the task contains only `TestSelector`s, then run only these props instead of the whole suite.
+      val propFilter: String => Boolean =
+        if (td.selectors().forall(_.isInstanceOf[TestSelector]))
+          td.selectors().collect { case ts: TestSelector => ts.testName() }.toSet
+        else
+          Function.const(true)
+      props.map(_._1).toSet.filter(propFilter).toArray map { name =>
         checkPropTask(
           new TaskDef(
             td.fullyQualifiedName(),
@@ -102,6 +108,7 @@ private abstract class ScalaCheckRunner extends Runner {
             Array(new TestSelector(name))),
           single = true)
       }
+    }
   }
 
   def checkPropTask(taskDef: TaskDef, single: Boolean): BaseTask = new BaseTask(taskDef) { self =>
