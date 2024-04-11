@@ -364,13 +364,13 @@ trait Commands {
     try {
       val (p1, s, rs1) = runSeqCmds(sut, as.s, as.seqCmds)
       val l1 = s"Initial State:\n  ${as.s}\nSequential Commands:\n${prettyCmdsRes(as.seqCmds zip rs1, maxLength)}"
-      if (as.parCmds.isEmpty) p1 :| l1
+      if (as.parCmds.isEmpty) p1.labelImpl2(l1)
       else propAnd(
-        p1.flatMap { r => if (!r.success) finalize; Prop(_ => r) } :| l1, {
+        p1.flatMap { r => if (!r.success) finalize; Prop(_ => r) }.labelImpl2(l1), {
           try {
             val (p2, rs2) = runParCmds(sut, s, as.parCmds)
             val l2 = rs2.map(prettyCmdsRes(_, maxLength)).mkString("\n\n")
-            p2 :| l1 :| s"Parallel Commands (starting in state = ${s})\n$l2"
+            p2.labelImpl2(l1).labelImpl2(s"Parallel Commands (starting in state = ${s})\n$l2")
           } finally finalize
         }
       )

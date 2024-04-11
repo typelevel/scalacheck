@@ -16,9 +16,6 @@ import scala.collection.TraversableOnce
 private[scalacheck] object ScalaVersionSpecific {
   def toLazyList[T](i: TraversableOnce[T]) = i.toStream
 
-  type LazyList[+A] = Stream[A]
-  val LazyList = Stream
-
   implicit class StreamExt[+A](val s: Stream[A]) extends AnyVal {
     def lazyAppendedAll[B >: A](rest: => TraversableOnce[B]): Stream[B] = s.append(rest)
   }
@@ -32,10 +29,5 @@ private[scalacheck] object ScalaVersionSpecific {
 
 private[scalacheck] trait GenVersionSpecific
 private[scalacheck] trait CogenVersionSpecific
-
-// Used in tests
-private[scalacheck] trait GenSpecificationVersionSpecific {
-  def infiniteLazyList[T](g: => Gen[T]): Gen[Stream[T]] = Gen.infiniteStream(g)
-}
 
 private[scalacheck] trait ShrinkVersionSpecific
