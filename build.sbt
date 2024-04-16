@@ -109,8 +109,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.scala-native" %%% "test-interface" % nativeVersion
     ),
-    tlVersionIntroduced ++=
-      List("2.12", "2.13").map(_ -> "1.15.2").toMap ++ Map("3" -> "1.16.0")
+    tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "1.17.1").toMap
   )
 
 lazy val bench = project.in(file("bench"))
