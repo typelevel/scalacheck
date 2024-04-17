@@ -33,7 +33,7 @@ private[util] class ArrayListBuilder[T] extends Builder[T, ArrayList[T]] {
 }
 
 /** CanBuildFrom instances implementing Serializable, so that the objects capturing those can be serializable too.
-  */
+ */
 object SerializableCanBuildFroms {
   implicit def listCanBuildFrom[T]: CanBuildFrom[List[T], T, List[T]] =
     new CanBuildFrom[List[T], T, List[T]] with Serializable {
