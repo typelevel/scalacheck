@@ -14,8 +14,8 @@ import org.scalacheck.Test
 import Pretty.{Params, pretty, format}
 
 /** A [[org.scalacheck.Test.TestCallback]] implementation that prints test results directly to the console. This is the
-  * callback used by ScalaCheck's command line test runner, and when you run `org.scalacheck.Prop.check()`.
-  */
+ *  callback used by ScalaCheck's command line test runner, and when you run `org.scalacheck.Prop.check()`.
+ */
 class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
     extends Test.TestCallback {
 
@@ -39,8 +39,8 @@ class ConsoleReporter(val verbosity: Int, val columnWidth: Int)
 object ConsoleReporter {
 
   /** Factory method, creates a ConsoleReporter with the the given verbosity and wraps output at the given column width
-    * (use 0 for unlimited width).
-    */
+   *  (use 0 for unlimited width).
+   */
   def apply(verbosity: Int = 0, columnWidth: Int = 75) =
     new ConsoleReporter(verbosity, columnWidth)
 

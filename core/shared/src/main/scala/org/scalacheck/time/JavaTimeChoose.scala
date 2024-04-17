@@ -15,11 +15,11 @@ import org.scalacheck._
 import java.time._
 
 /** [[Gen#Choose]] instances for `java.time` types.
-  *
-  * @note
-  *   [[Gen#Choose]] instances for `java.time` types which are Java enum types are provided by ScalaCheck's general Java
-  *   enum support.
-  */
+ *
+ *  @note
+ *    [[Gen#Choose]] instances for `java.time` types which are Java enum types are provided by ScalaCheck's general Java
+ *    enum support.
+ */
 private[scalacheck] trait JavaTimeChoose {
 
   // Duration
@@ -221,32 +221,32 @@ private[scalacheck] trait JavaTimeChoose {
   // ZoneOffset
 
   /** ZoneOffset values have some unusual semantics when it comes to ordering. The short explanation is that
-    * `(ZoneOffset.MAX < ZoneOffset.MIN) == true`. This is because for any given `LocalDateTime`, that time applied to
-    * `ZoneOffset.MAX` will be an older moment in time than that same `LocalDateTime` applied to `ZoneOffset.MIN`.
-    *
-    * From the JavaDoc,
-    *
-    * "The offsets are compared in the order that they occur for the same time of day around the world. Thus, an offset
-    * of +10:00 comes before an offset of +09:00 and so on down to -18:00."
-    *
-    * This has the following implication,
-    *
-    * {{{
-    *  scala> ZoneOffset.MIN
-    * val res0: java.time.ZoneOffset = -18:00
-    *
-    * scala> ZoneOffset.MAX
-    * val res1: java.time.ZoneOffset = +18:00
-    *
-    * scala> ZoneOffset.MIN.compareTo(ZoneOffset.MAX)
-    * val res3: Int = 129600
-    * }}}
-    *
-    * This implementation is consistent with that comparison.
-    *
-    * @see
-    *   [[https://docs.oracle.com/javase/8/docs/api/java/time/ZoneOffset.html#compareTo-java.time.ZoneOffset-]]
-    */
+   *  `(ZoneOffset.MAX < ZoneOffset.MIN) == true`. This is because for any given `LocalDateTime`, that time applied to
+   *  `ZoneOffset.MAX` will be an older moment in time than that same `LocalDateTime` applied to `ZoneOffset.MIN`.
+   *
+   *  From the JavaDoc,
+   *
+   *  "The offsets are compared in the order that they occur for the same time of day around the world. Thus, an offset
+   *  of +10:00 comes before an offset of +09:00 and so on down to -18:00."
+   *
+   *  This has the following implication,
+   *
+   *  {{{
+   *   scala> ZoneOffset.MIN
+   *  val res0: java.time.ZoneOffset = -18:00
+   *
+   *  scala> ZoneOffset.MAX
+   *  val res1: java.time.ZoneOffset = +18:00
+   *
+   *  scala> ZoneOffset.MIN.compareTo(ZoneOffset.MAX)
+   *  val res3: Int = 129600
+   *  }}}
+   *
+   *  This implementation is consistent with that comparison.
+   *
+   *  @see
+   *    [[https://docs.oracle.com/javase/8/docs/api/java/time/ZoneOffset.html#compareTo-java.time.ZoneOffset-]]
+   */
   implicit final lazy val chooseZoneOffset: Choose[ZoneOffset] =
     new Choose[ZoneOffset] {
       override def choose(min: ZoneOffset, max: ZoneOffset): Gen[ZoneOffset] =

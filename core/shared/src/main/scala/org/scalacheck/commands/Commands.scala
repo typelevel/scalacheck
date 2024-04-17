@@ -16,105 +16,105 @@ import scala.util.Success
 import scala.util.Try
 
 /** An API for stateful testing in ScalaCheck.
-  *
-  * For an implementation overview, see the examples in ScalaCheck's source tree.
-  *
-  * @since 1.12.0
-  */
+ *
+ *  For an implementation overview, see the examples in ScalaCheck's source tree.
+ *
+ *  @since 1.12.0
+ */
 trait Commands {
 
   /** The abstract state type. Must be immutable. The [[State]] type should model the state of the system under test
-    * (SUT). It should only contain details needed for specifying our pre- and post-conditions, and for creating [[Sut]]
-    * instances.
-    */
+   *  (SUT). It should only contain details needed for specifying our pre- and post-conditions, and for creating [[Sut]]
+   *  instances.
+   */
   type State
 
   /** A type representing one instance of the system under test (SUT). The [[Sut]] type should be a proxy to the actual
-    * system under test and is therefore, by definition, a mutable type. It is used by the [[Command.run]] method to
-    * execute commands in the system under test. It should be possible to have any number of co-existing instances of
-    * the [[Sut]] type, as long as [[canCreateNewSut]] isn't violated, and each [[Sut]] instance should be a proxy to a
-    * distinct SUT instance. There should be no dependencies between the [[Sut]] instances, as they might be used in
-    * parallel by ScalaCheck. [[Sut]] instances are created by [[newSut]] and destroyed by [[destroySut]]. [[newSut]]
-    * and [[destroySut]] might be called at any time by ScalaCheck, as long as [[canCreateNewSut]] isn't violated.
-    */
+   *  system under test and is therefore, by definition, a mutable type. It is used by the [[Command.run]] method to
+   *  execute commands in the system under test. It should be possible to have any number of co-existing instances of
+   *  the [[Sut]] type, as long as [[canCreateNewSut]] isn't violated, and each [[Sut]] instance should be a proxy to a
+   *  distinct SUT instance. There should be no dependencies between the [[Sut]] instances, as they might be used in
+   *  parallel by ScalaCheck. [[Sut]] instances are created by [[newSut]] and destroyed by [[destroySut]]. [[newSut]]
+   *  and [[destroySut]] might be called at any time by ScalaCheck, as long as [[canCreateNewSut]] isn't violated.
+   */
   type Sut
 
   /** Decides if [[newSut]] should be allowed to be called with the specified state instance. This can be used to limit
-    * the number of co-existing [[Sut]] instances. The list of existing states represents the initial states (not the
-    * current states) for all [[Sut]] instances that are active for the moment. If this method is implemented
-    * incorrectly, for example if it returns false even if the list of existing states is empty, ScalaCheck might hang.
-    *
-    * If you want to allow only one [[Sut]] instance to exist at any given time (a singleton [[Sut]]), implement this
-    * method the following way:
-    *
-    * {{{
-    *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
-    *    runningSuts: Traversable[Sut]
-    *  ) = {
-    *    initSuts.isEmpty && runningSuts.isEmpty
-    *  }
-    * }}}
-    */
+   *  the number of co-existing [[Sut]] instances. The list of existing states represents the initial states (not the
+   *  current states) for all [[Sut]] instances that are active for the moment. If this method is implemented
+   *  incorrectly, for example if it returns false even if the list of existing states is empty, ScalaCheck might hang.
+   *
+   *  If you want to allow only one [[Sut]] instance to exist at any given time (a singleton [[Sut]]), implement this
+   *  method the following way:
+   *
+   *  {{{
+   *  def canCreateNewSut(newState: State, initSuts: Traversable[State]
+   *    runningSuts: Traversable[Sut]
+   *  ) = {
+   *    initSuts.isEmpty && runningSuts.isEmpty
+   *  }
+   *  }}}
+   */
   def canCreateNewSut(newState: State, initSuts: Traversable[State], runningSuts: Traversable[Sut]): Boolean
 
   /** Create a new [[Sut]] instance with an internal state that corresponds to the provided abstract state instance. The
-    * provided state is guaranteed to fulfill [[initialPreCondition]], and [[newSut]] will never be called if
-    * [[canCreateNewSut]] is not true for the given state.
-    */
+   *  provided state is guaranteed to fulfill [[initialPreCondition]], and [[newSut]] will never be called if
+   *  [[canCreateNewSut]] is not true for the given state.
+   */
   def newSut(state: State): Sut
 
   /** Destroy the system represented by the given [[Sut]] instance, and release any resources related to it.
-    */
+   */
   def destroySut(sut: Sut): Unit
 
   /** The precondition for the initial state, when no commands yet have run. This is used by ScalaCheck when command
-    * sequences are shrunk and the first state might differ from what is returned from [[genInitialState]].
-    */
+   *  sequences are shrunk and the first state might differ from what is returned from [[genInitialState]].
+   */
   def initialPreCondition(state: State): Boolean
 
   /** A generator that should produce an initial [[State]] instance that is usable by [[newSut]] to create a new system
-    * under test. The state returned by this generator is always checked with the [[initialPreCondition]] method before
-    * it is used.
-    */
+   *  under test. The state returned by this generator is always checked with the [[initialPreCondition]] method before
+   *  it is used.
+   */
   def genInitialState: Gen[State]
 
   /** A generator that, given the current abstract state, should produce a suitable Command instance.
-    */
+   */
   def genCommand(state: State): Gen[Command]
 
   /** A type representing the commands that can run in the system under test. This type should be immutable and
-    * implement the equality operator properly.
-    */
+   *  implement the equality operator properly.
+   */
   trait Command {
 
     /** An abstract representation of the result of running this command in the system under test. The [[Result]] type
-      * should be immutable and it should encode everything about the command run that is necessary to know in order to
-      * correctly implement the [[[Command!.postCondition* postCondition]]] method.
-      */
+     *  should be immutable and it should encode everything about the command run that is necessary to know in order to
+     *  correctly implement the [[[Command!.postCondition* postCondition]]] method.
+     */
     type Result
 
     /** Executes the command in the system under test, and returns a representation of the result of the command run.
-      * The result value is later used for verifying that the command behaved according to the specification, by the
-      * [[Command!.postCondition* postCondition]] method.
-      */
+     *  The result value is later used for verifying that the command behaved according to the specification, by the
+     *  [[Command!.postCondition* postCondition]] method.
+     */
     def run(sut: Sut): Result
 
     /** Returns a new [[State]] instance that represents the state of the system after this command has run, given the
-      * system was in the provided state before the run.
-      */
+     *  system was in the provided state before the run.
+     */
     def nextState(state: State): State
 
     /** Precondition that decides if this command is allowed to run when the system under test is in the provided state.
-      */
+     */
     def preCondition(state: State): Boolean
 
     /** Postcondition that decides if this command produced the correct result or not, given the system was in the
-      * provided state before the command ran.
-      */
+     *  provided state before the command ran.
+     */
     def postCondition(state: State, result: Try[Result]): Prop
 
     /** Wraps the run and postCondition methods in order not to leak the dependent Result type.
-      */
+     */
     private[Commands] def runPC(sut: Sut): (Try[String], State => Prop) = {
       import Prop.propBoolean
       val r = Try(run(sut))
@@ -150,10 +150,10 @@ trait Commands {
   }
 
   /** A command that runs a sequence of other commands. All commands (and their post conditions) are executed even if
-    * some command fails. Note that you probably can't use this method if you're testing in parallel (`threadCount`
-    * larger than 1). This is because ScalaCheck regards each command as atomic, even if the command is a sequence of
-    * other commands.
-    */
+   *  some command fails. Note that you probably can't use this method if you're testing in parallel (`threadCount`
+   *  larger than 1). This is because ScalaCheck regards each command as atomic, even if the command is a sequence of
+   *  other commands.
+   */
   def commandSequence(head: Command, snd: Command, rest: Command*): Command =
     new CommandSequence(head, snd, rest: _*)
 
@@ -179,20 +179,20 @@ trait Commands {
   }
 
   /** A property that can be used to test this [[Commands]] specification.
-    *
-    * The parameter `threadCount` specifies the number of commands that might be executed in parallel. Defaults to one,
-    * which means the commands will only be run serially for the same [[Sut]] instance. Distinct [[Sut]] instances might
-    * still receive commands in parallel, if the [[Test.Parameters.workers]] parameter is larger than one. Setting
-    * `threadCount` higher than one enables ScalaCheck to reveal thread-related issues in your system under test.
-    *
-    * When setting `threadCount` larger than one, ScalaCheck must evaluate all possible command interleavings (and the
-    * end [[State]] instances they produce), since parallel command execution is non-deterministic. ScalaCheck tries out
-    * all possible end states with the [[Command.postCondition]] function of the very last command executed (there is
-    * always exactly one command executed after all parallel command executions). If it fails to find an end state that
-    * satisfies the postcondition, the test fails. However, the number of possible end states grows rapidly with
-    * increasing values of `threadCount`. Therefore, the lengths of the parallel command sequences are limited so that
-    * the number of possible end states don't exceed `maxParComb`. The default value of `maxParComb` is 1000000.
-    */
+   *
+   *  The parameter `threadCount` specifies the number of commands that might be executed in parallel. Defaults to one,
+   *  which means the commands will only be run serially for the same [[Sut]] instance. Distinct [[Sut]] instances might
+   *  still receive commands in parallel, if the [[Test.Parameters.workers]] parameter is larger than one. Setting
+   *  `threadCount` higher than one enables ScalaCheck to reveal thread-related issues in your system under test.
+   *
+   *  When setting `threadCount` larger than one, ScalaCheck must evaluate all possible command interleavings (and the
+   *  end [[State]] instances they produce), since parallel command execution is non-deterministic. ScalaCheck tries out
+   *  all possible end states with the [[Command.postCondition]] function of the very last command executed (there is
+   *  always exactly one command executed after all parallel command executions). If it fails to find an end state that
+   *  satisfies the postcondition, the test fails. However, the number of possible end states grows rapidly with
+   *  increasing values of `threadCount`. Therefore, the lengths of the parallel command sequences are limited so that
+   *  the number of possible end states don't exceed `maxParComb`. The default value of `maxParComb` is 1000000.
+   */
   final def property(threadCount: Int = 1, maxParComb: Int = 1000000): Prop = {
     val suts = collection.mutable.Map.empty[AnyRef, (State, Option[Sut])]
 
@@ -241,8 +241,8 @@ trait Commands {
   }
 
   /** Override this to provide a custom Shrinker for your internal [[State]]. By default no shrinking is done for
-    * [[State]].
-    */
+   *  [[State]].
+   */
   def shrinkState: Shrink[State] = implicitly
 
   // Private methods //
