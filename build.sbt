@@ -54,7 +54,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-ThisBuild / tlBaseVersion := "1.17"
+ThisBuild / tlBaseVersion := "1.18"
 ThisBuild / tlMimaPreviousVersions ++= Set(
   // manually added because tags are not v-prefixed
   "1.14.0",
@@ -109,7 +109,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.scala-native" %%% "test-interface" % nativeVersion
     ),
-    tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "1.17.2").toMap
+    tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "1.18.0").toMap
   )
 
 lazy val bench = project.in(file("bench"))
