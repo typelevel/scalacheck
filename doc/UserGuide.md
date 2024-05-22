@@ -478,14 +478,13 @@ They take another generator as argument, that is responsible for generating the 
 You can use it in the following way:
 
 ```scala
-implicit genInt: Gen[Int] = Gen.oneOf(1, 3, 5)
-val genIntList            = Gen.containerOf[List, Int]
-
+val genInt: Gen[Int]  = Gen.oneOf(1, 3, 5)
+val genIntList        = Gen.containerOf[List, Int](genInt)
 val genStringLazyList = Gen.containerOf[LazyList, String](Gen.alphaStr)
 val genBoolArray      = Gen.containerOf[Array, Boolean](Gen.const(true))
 
-implicit getTuple: Gen[(String, Int)] = Gen.zip(Gen.alphaStr, Gen.choose(0, 100))
-val genMap                            = Gen.buildableOf[Map[String, Int], (String, Int)]
+val genTuple: Gen[(String, Int)] = Gen.zip(Gen.alphaStr, Gen.choose(0, 100))
+val genMap                       = Gen.buildableOf[Map[String, Int], (String, Int)](genTuple)
 ```
 
 By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
