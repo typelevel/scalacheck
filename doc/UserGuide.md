@@ -468,32 +468,38 @@ value ultimately reported as failing might not satisfy the condition given to
 case that does. To avoid confusion, the corresponding shrink for the type can
 use `suchThat` method too.
 
-#### Generating Containers
+#### Generating Buildables and Containers
 
-There is a special generator, `Gen.containerOf`, that generates containers such
-as lists and arrays. They take another generator as argument, that is
-responsible for generating the individual items. You can use it in the
-following way:
+There are special generators
+* `Gen.buildableOf`, that generates any buildable collection
+* `Gen.containerOf`, a convenience method for single parameter buildable like lists and arrays
+
+They take another generator as argument, that is responsible for generating the individual items.
+You can use it in the following way:
 
 ```scala
-val genIntList        = Gen.containerOf[List,Int](Gen.oneOf(1, 3, 5))
+val genInt: Gen[Int]  = Gen.oneOf(1, 3, 5)
+val genIntList        = Gen.containerOf[List, Int](genInt)
+val genStringLazyList = Gen.containerOf[LazyList, String](Gen.alphaStr)
+val genBoolArray      = Gen.containerOf[Array, Boolean](Gen.const(true))
 
-val genStringLazyList = Gen.containerOf[LazyList,String](Gen.alphaStr)
-
-val genBoolArray      = Gen.containerOf[Array,Boolean](true)
+val genTuple: Gen[(String, Int)] = Gen.zip(Gen.alphaStr, Gen.choose(0, 100))
+val genMap                       = Gen.buildableOf[Map[String, Int], (String, Int)](genTuple)
 ```
 
 By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
-2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array`, and
-`ArrayList` (from `java.util`). You can add support for additional containers
-by adding implicit `Buildable` instances. See `Buildable.scala` for examples.
+2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array` and `Map`.
+Additionally, ScalaCheck can generate `java.util.ArrayList` and `java.util.HashMap` when an implicit 
+`Traversable` conversion evidence is in scope.
+
+You can add support for additional containers by adding implicit `Buildable` instances.
+See `Buildable.scala` for examples.
 
 There is also `Gen.nonEmptyContainerOf` for generating non-empty containers, and
 `Gen.containerOfN` for generating containers of a given size.
 
 To generate a container by picking an arbitrary number of elements use
-`Gen.someOf`, or by picking one or more elements with
-`Gen.atLeastOne`.
+`Gen.someOf`, or by picking one or more elements with `Gen.atLeastOne`.
 
 ```scala
 val zeroOrMoreDigits = Gen.someOf(1 to 9)
