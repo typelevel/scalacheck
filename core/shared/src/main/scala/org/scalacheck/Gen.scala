@@ -1014,8 +1014,7 @@ object Gen extends GenArities with GenVersionSpecific {
    */
   def nonEmptyListOf[T](g: => Gen[T]) = nonEmptyBuildableOf[List[T], T](g)
 
-  /** Generates a list with at most the given number of elements. This method is equal to calling
-   *  `containerOfN[List,T](n,g)`.
+  /** Generates a list with the given number of elements. This method is equal to calling `containerOfN[List,T](n,g)`.
    */
   def listOfN[T](n: Int, g: Gen[T]) = buildableOfN[List[T], T](n, g)
 
