@@ -37,6 +37,13 @@ object codegen {
         s"$g.flatMap(($t: $T) => $acc)"
     }
 
+  def flatMappedGeneratorsWithFun(i: Int, f: String, s: Seq[(String, String)]): String =
+    s.init.foldRight(s"${s.last._2}.map { ${s.last._1} => $f(${vals(i)}) }") {
+      case ((t, g), acc) =>
+        val T = t.toUpperCase
+        s"$g.flatMap(($t: $T) => $acc)"
+    }
+
   def vals(i: Int) = csv(idents("t", i))
 
   def coImplicits(i: Int) = (1 to i).map(n => s"co$n: Cogen[T$n]").mkString(",")
@@ -102,6 +109,20 @@ object codegen {
        |  def zip[${types(i)}](
        |    ${wrappedArgs("Gen", i)}
        |  ): Gen[(${types(i)})] =
+       |    $gens
+       |""".stripMargin
+  }
+
+  def zipWith(i: Int) = {
+    val gens = flatMappedGeneratorsWithFun(i, "f", idents("t", i) zip idents("g", i))
+    s"""
+       |  /** Combines the given generators into a new generator of the given result type
+       |   *  with help of the given mapping function. */
+       |  def zipWith[${types(i)},R](
+       |    ${wrappedArgs("Gen", i)}
+       |  )(
+       |    f: (${types(i)}) => R
+       |  ): Gen[R] =
        |    $gens
        |""".stripMargin
   }
@@ -195,6 +216,9 @@ object codegen {
          |
          |  // zip //
          |${1 to 22 map zip mkString ""}
+         |
+         |  // zipWith //
+         |${(2 to 22).map(zipWith).mkString("")}
          |
          |  // resultOf //
          |  import Arbitrary.arbitrary
