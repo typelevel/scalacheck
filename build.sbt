@@ -96,7 +96,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "org.apache.commons" % "commons-lang3" % "3.14.0" % Test,
+      "org.apache.commons" % "commons-lang3" % "3.15.0" % Test,
       "org.scala-sbt" % "test-interface" % "1.0"
     )
   )
