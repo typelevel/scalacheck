@@ -583,6 +583,8 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
       }
       val avg = sum / n
       s"average = $avg" |: avg >= 0.49 && avg <= 0.51
+      s"average = $avg".ensuring(false, "eager evaluation") =|= avg >= 0.49 && avg <= 0.51
+      avg >= 0.49 && avg <= 0.51 =|= s"average = $avg"
     }
 
   property("uniform long #209") = {
