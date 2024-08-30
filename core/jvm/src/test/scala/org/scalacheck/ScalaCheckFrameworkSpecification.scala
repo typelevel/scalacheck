@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import org.scalacheck.Prop.proved
+import org.scalacheck.Prop.{all, proved}
 import sbt.testing.{Selector, SuiteSelector, TaskDef, TestSelector}
 
 object ScalaCheckFrameworkSpecification extends Properties("ScalaCheckFramework") {
@@ -18,26 +18,26 @@ object ScalaCheckFrameworkSpecification extends Properties("ScalaCheckFramework"
   private val secondProp = "ScalaCheckFrameworkHelper.second prop"
   private val thirdProp = "ScalaCheckFrameworkHelper.third prop"
 
-  property("all props with SuiteSelector") = {
-    getPropNamesForSelectors(List(new SuiteSelector)) == List(firstProp, secondProp, thirdProp)
+  property("all props with SuiteSelector") = all(
+    getPropNamesForSelectors(List(new SuiteSelector)) == List(firstProp, secondProp, thirdProp),
     getPropNamesForSelectors(List(new SuiteSelector, new TestSelector(firstProp))) == List(
       firstProp,
       secondProp,
-      thirdProp)
+      thirdProp),
     getPropNamesForSelectors(List(new SuiteSelector, new TestSelector("no matches"))) == List(
       firstProp,
       secondProp,
       thirdProp)
-  }
+  )
 
-  property("only matching props with TestSelector") = {
-    getPropNamesForSelectors(List(new TestSelector(firstProp))) == List(firstProp)
-    getPropNamesForSelectors(List(new TestSelector(secondProp))) == List(secondProp)
+  property("only matching props with TestSelector") = all(
+    getPropNamesForSelectors(List(new TestSelector(firstProp))) == List(firstProp),
+    getPropNamesForSelectors(List(new TestSelector(secondProp))) == List(secondProp),
     getPropNamesForSelectors(List(new TestSelector(firstProp), new TestSelector(thirdProp))) == List(
       firstProp,
-      thirdProp)
+      thirdProp),
     getPropNamesForSelectors(List(new TestSelector("no matches"))) == Nil
-  }
+  )
 
   private def getPropNamesForSelectors(selectors: List[Selector]): List[String] = {
     val framework = new ScalaCheckFramework()
