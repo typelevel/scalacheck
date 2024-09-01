@@ -9,7 +9,7 @@
 
 package org.scalacheck.example
 
-import org.scalacheck._
+import org.scalacheck.*
 
 object StringUtils extends Properties("Examples.StringUtils") {
 

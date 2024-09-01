@@ -15,14 +15,14 @@ import org.scalacheck.GenSpecification.arbSeed
 import org.scalacheck.Prop.forAll
 import org.scalacheck.rng.Seed
 
-import java.time._
+import java.time.*
 import java.util.UUID
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
-import ScalaVersionSpecific._
+import ScalaVersionSpecific.*
 
 object CogenSpecification extends Properties("Cogen") {
 

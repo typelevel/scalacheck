@@ -14,10 +14,10 @@ import scala.util.Success
 import scala.util.Try
 
 import rng.Seed
-import Gen._
+import Gen.*
 import Prop.{forAll, forAllNoShrink, someFailing, noneFailing, sizedProp, secure, propBoolean}
-import Arbitrary._
-import Shrink._
+import Arbitrary.*
+import Shrink.*
 
 object GenSpecification extends Properties("Gen") with GenSpecificationVersionSpecific {
 
@@ -56,7 +56,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   }
 
   property("frequency 3") = forAll(choose(1, 100000)) { n =>
-    forAll(frequency(List.fill(n)((1, const(0))): _*)) { _ == 0 }
+    forAll(frequency(List.fill(n)((1, const(0)))*)) { _ == 0 }
   }
 
   property("frequency 4") =
@@ -263,7 +263,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     val lst = x :: y :: rest
     forAll(choose(-1, 2 * lst.length)) { n =>
       val gs = rest.map(Gen.const)
-      Try(pick(n, Gen.const(x), Gen.const(y), gs: _*)) match {
+      Try(pick(n, Gen.const(x), Gen.const(y), gs*)) match {
         case Success(g) =>
           forAll(g) { m => m.length == n && m.forall(lst.contains) }
         case Failure(_) =>

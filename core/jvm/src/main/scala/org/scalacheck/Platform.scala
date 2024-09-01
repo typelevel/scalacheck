@@ -11,7 +11,7 @@ package org.scalacheck
 
 import scala.annotation.nowarn
 
-import Test._
+import Test.*
 
 private[scalacheck] object Platform {
 
@@ -22,7 +22,7 @@ private[scalacheck] object Platform {
       workerFun: Int => Result,
       stop: () => Unit
   ): Result = {
-    import params._
+    import params.*
 
     def mergeResults(r1: Result, r2: Result): Result = {
       val Result(st1, s1, d1, fm1, _) = r1
@@ -41,7 +41,7 @@ private[scalacheck] object Platform {
 
     if (workers < 2) workerFun(0)
     else {
-      import concurrent._
+      import concurrent.*
       val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
       try {
@@ -65,7 +65,7 @@ private[scalacheck] object Platform {
   }
 
   @nowarn("msg=is never used")
-  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef =
+  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[?]])(args: Seq[AnyRef]): AnyRef =
     if (args.nonEmpty) ???
     else Class.forName(name, true, loader).getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]
 

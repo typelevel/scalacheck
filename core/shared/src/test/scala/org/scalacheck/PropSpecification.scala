@@ -158,12 +158,12 @@ object PropSpecification extends Properties("Prop") {
 
   property("all") = {
     val props: List[Prop] = List.fill(1000000)(proved)
-    all(props: _*)
+    all(props*)
   }
 
   property("atLeastOne") = {
     val props: List[Prop] = List.fill(1000000)(proved)
-    atLeastOne(props: _*)
+    atLeastOne(props*)
   }
 
   property("throws") = throws(classOf[java.lang.Exception]) {

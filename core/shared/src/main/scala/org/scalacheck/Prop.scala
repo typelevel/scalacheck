@@ -444,12 +444,12 @@ object Prop {
   /** A property that holds if at least one of the given generators fails generating a value
    */
   def someFailing[T](gs: Seq[Gen[T]]): Prop =
-    atLeastOne(gs.map(_ == Gen.fail): _*)
+    atLeastOne(gs.map(_ == Gen.fail)*)
 
   /** A property that holds iff none of the given generators fails generating a value
    */
   def noneFailing[T](gs: Seq[Gen[T]]): Prop =
-    all(gs.map(_ !== Gen.fail): _*)
+    all(gs.map(_ !== Gen.fail)*)
 
   /** Returns true if the given statement throws an exception of the specified type
    */
@@ -874,7 +874,7 @@ object Prop {
        */
       def getFirstFailure(
           xs: Stream[T],
-          exceptionFilter: Option[Class[_ <: Throwable]]
+          exceptionFilter: Option[Class[? <: Throwable]]
       ): Either[(T, Result), (T, Result)] = {
         assert(!xs.isEmpty, "Stream cannot be empty")
         val results = xs.map(x => (x, result(x)))

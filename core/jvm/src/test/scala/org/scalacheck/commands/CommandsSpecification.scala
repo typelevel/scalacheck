@@ -9,7 +9,7 @@
 
 package org.scalacheck.commands
 
-import org.scalacheck._
+import org.scalacheck.*
 
 object CommandsSpecification extends Properties("Commands") {
 

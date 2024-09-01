@@ -9,9 +9,9 @@
 
 package org.scalacheck.time
 
-import org.scalacheck._
+import org.scalacheck.*
 
-import java.time._
+import java.time.*
 
 /** [[Arbitrary]] instances for `java.time` types.
  *

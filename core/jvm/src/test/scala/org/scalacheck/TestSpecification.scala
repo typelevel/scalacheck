@@ -9,10 +9,10 @@
 
 package org.scalacheck
 
-import Gen._
-import Prop._
-import Test._
-import Arbitrary._
+import Gen.*
+import Prop.*
+import Test.*
+import Arbitrary.*
 
 object TestSpecification extends Properties("Test") {
 

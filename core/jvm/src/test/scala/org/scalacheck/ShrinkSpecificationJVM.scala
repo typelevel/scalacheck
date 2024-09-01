@@ -32,7 +32,7 @@ object ShrinkSpecificationJVM extends Properties("Shrink JVM") {
   property("xmap vector from list") = forAll { (v: Vector[Int]) =>
     (!v.isEmpty && v != Vector(0)) ==> {
       val vs = shrinkClosure(v)
-      Vector(vs: _*).toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
+      Vector(vs*).toString |: (vs.contains(Vector.empty) && vs.contains(Vector(0)))
     }
   }
 

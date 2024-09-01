@@ -87,7 +87,7 @@ object ShrinkSpecification extends Properties("Shrink") {
     (n.isFinite && n != Duration.Zero) ==> shrinkClosure(n).contains(Duration.Zero)
   }
 
-  implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A], Vector[A]](Vector(_: _*), _.toList)
+  implicit def vectorShrink[A: Shrink]: Shrink[Vector[A]] = Shrink.xmap[List[A], Vector[A]](Vector(_*), _.toList)
 
   property("shrink[Either]") = forAll { (e: Either[Int, Long]) =>
     !shrink(e).contains(e)
@@ -113,7 +113,7 @@ object ShrinkSpecification extends Properties("Shrink") {
     }
   }
 
-  def evenLength(value: List[_]) = value.length % 2 == 0
+  def evenLength(value: List[?]) = value.length % 2 == 0
   def shrinkEvenLength[A]: Shrink[List[A]] =
     Shrink.shrinkContainer[List, A].suchThat(evenLength(_))
 

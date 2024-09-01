@@ -10,7 +10,7 @@
 package org.scalacheck.bench
 
 import java.util.concurrent.TimeUnit
-import org.openjdk.jmh.annotations._
+import org.openjdk.jmh.annotations.*
 
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen

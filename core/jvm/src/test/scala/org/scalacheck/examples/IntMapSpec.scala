@@ -13,7 +13,7 @@ import org.scalacheck.Prop.AnyOperators
 import org.scalacheck.Prop.forAll
 
 import java.util.HashMap
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 import scala.collection.immutable.IntMap
 
 object IntMapSpec extends org.scalacheck.Properties("IntMap") {
@@ -28,7 +28,7 @@ object IntMapSpec extends org.scalacheck.Properties("IntMap") {
   /** Create an IntMap and a HashMap with the same contents */
   private def createMaps(l: List[Int]) = {
     val mappings = for (n <- l) yield (n, new Object)
-    val im = IntMap(mappings: _*)
+    val im = IntMap(mappings*)
     val hm = new HashMap[Int, Any]
     for ((n, x) <- mappings) hm.put(n, x)
     (hm, im)

@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import java.math.BigInteger
-import java.math.{BigDecimal => JavaDecimal}
+import java.math.{BigDecimal as JavaDecimal}
 import java.util.Calendar
 import java.util.UUID
 import scala.annotation.tailrec
@@ -21,8 +21,8 @@ import scala.concurrent.duration.FiniteDuration
 
 import rng.Seed
 import util.Buildable
-import util.SerializableCanBuildFroms._
-import ScalaVersionSpecific._
+import util.SerializableCanBuildFroms.*
+import ScalaVersionSpecific.*
 
 /** A generator produces values for [[Prop]]s
  *
@@ -1061,7 +1061,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** A generator that picks a random number of elements from a list */
   def someOf[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
-    choose(0, gs.length + 2).flatMap(pick(_, g1, g2, gs: _*))
+    choose(0, gs.length + 2).flatMap(pick(_, g1, g2, gs*))
 
   /** A generator that picks at least one element from a list */
   def atLeastOne[T](l: Iterable[T]) = {
@@ -1071,7 +1071,7 @@ object Gen extends GenArities with GenVersionSpecific {
 
   /** A generator that picks at least one element from a list */
   def atLeastOne[T](g1: Gen[T], g2: Gen[T], gs: Gen[T]*) =
-    choose(1, gs.length + 2).flatMap(pick(_, g1, g2, gs: _*))
+    choose(1, gs.length + 2).flatMap(pick(_, g1, g2, gs*))
 
   /** A generator that randomly picks a given number of elements from a list
    *
@@ -1385,9 +1385,9 @@ object Gen extends GenArities with GenVersionSpecific {
   /** Generates positive numbers of uniform distribution, with an upper bound of the generation size parameter.
    */
   def posNum[T](implicit num: Numeric[T], c: Choose[T]): Gen[T] = {
-    import num._
+    import num.*
     num match {
-      case _: Fractional[_] => sized(n => c.choose(zero, max(fromInt(n), one)).suchThat(_ != zero))
+      case _: Fractional[?] => sized(n => c.choose(zero, max(fromInt(n), one)).suchThat(_ != zero))
       case _ => sized(n => c.choose(one, max(fromInt(n), one)))
     }
   }
@@ -1405,14 +1405,14 @@ object Gen extends GenArities with GenVersionSpecific {
       num: Numeric[T],
       c: Choose[T]
   ): Gen[T] = {
-    import num._
+    import num.*
     val basics = List(minT, maxT, zero, one, -one)
     val basicsAndSpecials = for {
       t <- specials ++ basics if t >= minT && t <= maxT
     } yield (1, const(t))
     val other = (basicsAndSpecials.length, c.choose(minT, maxT))
     val allGens = basicsAndSpecials :+ other
-    frequency(allGens: _*)
+    frequency(allGens*)
   }
 
   //// Misc Generators ////
@@ -1428,7 +1428,7 @@ object Gen extends GenArities with GenVersionSpecific {
     )
 
   lazy val calendar: Gen[Calendar] = { // FIXME: Remove lazy
-    import Calendar._
+    import Calendar.*
 
     def adjust(c: Calendar)(f: Calendar => Unit): Calendar = { f(c); c }
 

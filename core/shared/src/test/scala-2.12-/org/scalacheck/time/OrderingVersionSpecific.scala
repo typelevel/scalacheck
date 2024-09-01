@@ -9,8 +9,8 @@
 
 package org.scalacheck.time
 
-import java.time._
-import java.time.chrono._
+import java.time.*
+import java.time.chrono.*
 
 /** On Scala <= 2.12 it is used to help the compiler figure out some `Ordering` instances needed for testing.
  */
@@ -20,8 +20,8 @@ trait OrderingVersionSpecific {
     Ordering.by((ld: LocalDate) => (ld: ChronoLocalDate))
 
   implicit final lazy val localDateTimeOrdering: Ordering[LocalDateTime] =
-    Ordering.by((ldt: LocalDateTime) => (ldt: ChronoLocalDateTime[_]))
+    Ordering.by((ldt: LocalDateTime) => (ldt: ChronoLocalDateTime[?]))
 
   implicit final lazy val zonedDateTimeOrdering: Ordering[ZonedDateTime] =
-    Ordering.by((zdt: ZonedDateTime) => (zdt: ChronoZonedDateTime[_]))
+    Ordering.by((zdt: ZonedDateTime) => (zdt: ChronoZonedDateTime[?]))
 }

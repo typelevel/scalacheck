@@ -16,7 +16,7 @@ import org.scalacheck.Properties
 object StringSpecification extends Properties("scala.String") {
 
   property("mkString") = { // Issue #721
-    import scala.collection.JavaConverters._
+    import scala.collection.JavaConverters.*
     val listOfGens: List[Gen[Char]] = "".toList.map(Gen.const(_))
     val g1: Gen[String] = Gen.sequence(listOfGens).map(_.asScala.mkString)
     val g2: Gen[String] = Gen.sequence(List(Gen.listOf(' ').map(_.mkString))).map(_.asScala.mkString)

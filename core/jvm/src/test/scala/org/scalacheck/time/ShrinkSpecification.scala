@@ -9,11 +9,11 @@
 
 package org.scalacheck.time
 
-import org.scalacheck.Prop._
-import org.scalacheck.Shrink._
-import org.scalacheck._
+import org.scalacheck.Prop.*
+import org.scalacheck.Shrink.*
+import org.scalacheck.*
 
-import java.time._
+import java.time.*
 
 object ShrinkSpecification extends Properties("time.Shrink") {
   property("shrink[Duration]") = forAll { (n: Duration) =>
