@@ -369,7 +369,7 @@ object Test {
       val help = "Maximum number of RNG spins to perform between checks"
     }
 
-    val opts: collection.Set[Opt[_]] = Set[Opt[_]](
+    val opts: collection.Set[Opt[?]] = Set[Opt[?]](
       OptMinSuccess,
       OptMaxDiscardRatio,
       OptMinSize,

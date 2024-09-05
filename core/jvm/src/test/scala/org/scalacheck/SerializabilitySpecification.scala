@@ -13,7 +13,7 @@ import org.apache.commons.lang3.SerializationUtils
 
 import java.io.Serializable
 
-import util.SerializableCanBuildFroms._
+import util.SerializableCanBuildFroms.*
 
 object SerializabilitySpecification extends Properties("Serializability") {
 

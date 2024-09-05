@@ -9,14 +9,14 @@
 
 package org.scalacheck
 
-import java.time._
+import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import Gen._
+import Gen.*
 
 object ChooseSpecification extends Properties("Choose") with time.OrderingVersionSpecific {
 
@@ -29,7 +29,7 @@ object ChooseSpecification extends Properties("Choose") with time.OrderingVersio
     import O.mkOrderingOps
     Try(choose(l, h)) match {
       case Success(g) => Prop.forAll(g) { x => l <= x && x <= h }
-      case Failure(_: Choose.IllegalBoundsError[_]) => l > h
+      case Failure(_: Choose.IllegalBoundsError[?]) => l > h
       case Failure(e) => throw e
     }
   }

@@ -10,7 +10,7 @@
 package org.scalacheck.util
 
 import scala.collection.mutable
-import scala.collection.{Map => _, _}
+import scala.collection.{Map as _, *}
 
 trait Buildable[T, C] extends Serializable {
   def builder: mutable.Builder[T, C]

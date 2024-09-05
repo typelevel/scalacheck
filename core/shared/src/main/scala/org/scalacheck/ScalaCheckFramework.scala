@@ -11,7 +11,7 @@ package org.scalacheck
 
 import org.scalacheck.Test.Parameters
 import org.scalacheck.Test.matchPropFilter
-import sbt.testing._
+import sbt.testing.*
 
 import java.util.concurrent.atomic.AtomicInteger
 

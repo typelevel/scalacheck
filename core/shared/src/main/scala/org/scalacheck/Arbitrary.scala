@@ -17,7 +17,7 @@ import scala.util.Try
 
 import concurrent.Future
 import util.Buildable
-import util.SerializableCanBuildFroms._
+import util.SerializableCanBuildFroms.*
 
 /** Define an arbitrary generator for properties
  *
@@ -236,7 +236,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /** Arbitrary BigDecimal */
   implicit lazy val arbBigDecimal: Arbitrary[BigDecimal] = {
-    import java.math.MathContext, MathContext._
+    import java.math.MathContext, MathContext.*
 
     val genMathContext0: Gen[MathContext] =
       oneOf(DECIMAL32, DECIMAL64, DECIMAL128)
@@ -316,7 +316,7 @@ private[scalacheck] sealed trait ArbitraryLowPriority {
 
   /** Generates an arbitrary property */
   implicit lazy val arbProp: Arbitrary[Prop] = {
-    import Prop._
+    import Prop.*
     val undecidedOrPassed = forAll { (b: Boolean) =>
       b ==> true
     }

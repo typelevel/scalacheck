@@ -12,7 +12,7 @@ package org.scalacheck
 import scala.annotation.nowarn
 import scala.scalajs.reflect.Reflect
 
-import Test._
+import Test.*
 
 private[scalacheck] object Platform {
 
@@ -35,13 +35,13 @@ private[scalacheck] object Platform {
   }
 
   @nowarn("msg=is never used")
-  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[_]])(args: Seq[AnyRef]): AnyRef = {
+  def newInstance(name: String, loader: ClassLoader, paramTypes: Seq[Class[?]])(args: Seq[AnyRef]): AnyRef = {
     Reflect
       .lookupInstantiatableClass(name)
       .getOrElse(throw new ClassNotFoundException(name))
-      .getConstructor(paramTypes: _*)
+      .getConstructor(paramTypes*)
       .getOrElse(throw new NoSuchMethodError(paramTypes.mkString("<init>(", ",", ")")))
-      .newInstance(args: _*)
+      .newInstance(args*)
       .asInstanceOf[AnyRef]
   }
 

@@ -11,7 +11,7 @@ package org.scalacheck.util
 
 import java.util.{ArrayList, HashMap}
 import scala.collection.mutable.Builder
-import scala.collection.{Map => _, _}
+import scala.collection.{Map as _, *}
 
 private[util] trait BuildableVersionSpecific {
 

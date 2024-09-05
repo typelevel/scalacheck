@@ -27,7 +27,7 @@ private[scalacheck] trait CmdLineParser {
     val default: Option[String] = None
   }
 
-  class OptMap(private val opts: Map[Opt[_], Any] = Map.empty) {
+  class OptMap(private val opts: Map[Opt[?], Any] = Map.empty) {
     def apply(flag: Flag): Boolean = opts.contains(flag)
     def apply[T](opt: Opt[T]): T = opts.get(opt) match {
       case None => opt.default
@@ -36,7 +36,7 @@ private[scalacheck] trait CmdLineParser {
     def set[T](o: (Opt[T], T)) = new OptMap(opts + o)
   }
 
-  val opts: Set[Opt[_]]
+  val opts: Set[Opt[?]]
 
   private def getOpt(s: String) = {
     if (s == null || s.length == 0 || s.charAt(0) != '-') None

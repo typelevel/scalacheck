@@ -11,7 +11,7 @@ package org.scalacheck.util
 
 import java.util.{ArrayList, HashMap}
 
-import collection.{Map => _, _}
+import collection.{Map as _, *}
 import generic.CanBuildFrom
 import scala.collection.mutable.Builder
 

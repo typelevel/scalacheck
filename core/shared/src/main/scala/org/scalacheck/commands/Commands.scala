@@ -9,7 +9,7 @@
 
 package org.scalacheck.commands
 
-import org.scalacheck._
+import org.scalacheck.*
 
 import scala.util.Failure
 import scala.util.Success
@@ -155,14 +155,14 @@ trait Commands {
    *  other commands.
    */
   def commandSequence(head: Command, snd: Command, rest: Command*): Command =
-    new CommandSequence(head, snd, rest: _*)
+    new CommandSequence(head, snd, rest*)
 
   /** A command that runs a sequence of other commands */
   private final class CommandSequence(val head: Command, snd: Command, rest: Command*)
       extends SuccessCommand {
     /* The tail of the command sequence */
     val tail: Command =
-      if (rest.isEmpty) snd else new CommandSequence(snd, rest.head, rest.tail: _*)
+      if (rest.isEmpty) snd else new CommandSequence(snd, rest.head, rest.tail*)
 
     type Result = (Try[head.Result], Try[tail.Result])
 
@@ -299,7 +299,7 @@ trait Commands {
     }
 
   private def runParCmds(sut: Sut, s: State, pcmds: List[Commands]): (Prop, List[List[(Command, Try[String])]]) = {
-    import concurrent._
+    import concurrent.*
     val tp = java.util.concurrent.Executors.newFixedThreadPool(pcmds.size)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
     val memo = collection.mutable.Map.empty[(State, List[Commands]), List[State]]
@@ -326,14 +326,14 @@ trait Commands {
       else blocking {
         val rs = cs.init.map(_.runPC(sut)._1)
         val (r, pf) = cs.last.runPC(sut)
-        (Prop.atLeastOne(endStates.map(pf): _*), cs.zip(rs :+ r))
+        (Prop.atLeastOne(endStates.map(pf)*), cs.zip(rs :+ r))
       }
     }
 
     try {
       val res = Future.traverse(pcmds)(run(endStates(s -> pcmds), _)) map { l =>
         val (ps, rs) = l.unzip
-        (Prop.atLeastOne(ps: _*), rs)
+        (Prop.atLeastOne(ps*), rs)
       }
       Await.result(res, concurrent.duration.Duration.Inf)
     } finally { tp.shutdown() }

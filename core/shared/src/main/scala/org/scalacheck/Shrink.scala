@@ -13,7 +13,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 
 import util.Buildable
-import util.SerializableCanBuildFroms._
+import util.SerializableCanBuildFroms.*
 
 sealed abstract class Shrink[T] extends Serializable {
   def shrink(x: T): Stream[T]
@@ -32,7 +32,7 @@ trait ShrinkLowPriority {
 object Shrink extends ShrinkLowPriority with ShrinkVersionSpecific with time.JavaTimeShrink {
 
   import Stream.{cons, empty}
-  import scala.collection._
+  import scala.collection.*
 
   /** Interleaves two streams */
   private def interleave[T](xs: Stream[T], ys: Stream[T]): Stream[T] =

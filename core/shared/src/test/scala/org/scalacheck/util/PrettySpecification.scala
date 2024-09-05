@@ -11,7 +11,7 @@ package org.scalacheck
 package util
 
 import org.scalacheck.{Gen, Prop, Properties}
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 
 object PrettySpecification extends Properties("Pretty") {
 

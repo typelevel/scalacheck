@@ -10,10 +10,10 @@
 package org.scalacheck
 package util
 
-import scala.collection._
+import scala.collection.*
 
-import Buildable._
-import ScalaVersionSpecific._
+import Buildable.*
+import ScalaVersionSpecific.*
 
 object BuildableSpecification {
   def container[C[_]](implicit
@@ -60,7 +60,7 @@ object BuildableSpecification {
 
   // java containers
   {
-    import scala.collection.convert.ImplicitConversionsToScala._
+    import scala.collection.convert.ImplicitConversionsToScala.*
 
     implicit val arrayListGen: Gen[java.util.ArrayList[String]] = container[java.util.ArrayList]
 

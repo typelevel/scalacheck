@@ -10,9 +10,9 @@
 package org.scalacheck.time
 
 import org.scalacheck.Gen.Choose
-import org.scalacheck._
+import org.scalacheck.*
 
-import java.time._
+import java.time.*
 
 /** [[Gen#Choose]] instances for `java.time` types.
  *
