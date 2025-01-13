@@ -1,6 +1,6 @@
 package example
 
-import org.scalacheck._
+import org.scalacheck.*
 
 object ScalaJSExampleSpec extends Properties("ScalaCheck-scalajs") {
 
