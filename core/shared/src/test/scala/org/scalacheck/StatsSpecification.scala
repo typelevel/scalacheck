@@ -9,7 +9,7 @@
 
 package org.scalacheck
 
-import Prop.{forAllNoShrink as forAll}
+import Prop.forAllNoShrink as forAll
 
 object StatsSpecification extends Properties("Stats") {
 
