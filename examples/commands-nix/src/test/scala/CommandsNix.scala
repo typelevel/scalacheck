@@ -14,7 +14,7 @@ object MachineSpec extends Commands {
   val con = new org.libvirt.Connect("qemu:///session")
 
   def runSshCmd(ip: String, cmd: String): Either[String, String] = {
-    import scala.sys.process._
+    import scala.sys.process.*
     val err = new StringBuffer()
     val logger = ProcessLogger(err.append(_))
 
@@ -59,7 +59,7 @@ object MachineSpec extends Commands {
   """
 
   def toLibvirtXMLs(machines: State): Map[String, String] = {
-    import scala.sys.process._
+    import scala.sys.process.*
     import java.io.ByteArrayInputStream
 
     val out = new StringBuffer()
@@ -70,7 +70,7 @@ object MachineSpec extends Commands {
     // Run nix-build and capture stdout and stderr
     "nix-build --no-out-link -" #< is ! logger
 
-    val xmlFiles = Map(machines.map(m => m.id -> s"${out.toString.trim}/${m.id}.xml"): _*)
+    val xmlFiles = Map(machines.map(m => m.id -> s"${out.toString.trim}/${m.id}.xml")*)
 
     // Check that all expected output files can be read
     xmlFiles.values foreach { f =>

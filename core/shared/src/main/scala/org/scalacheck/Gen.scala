@@ -10,7 +10,7 @@
 package org.scalacheck
 
 import java.math.BigInteger
-import java.math.{BigDecimal as JavaDecimal}
+import java.math.BigDecimal as JavaDecimal
 import java.util.Calendar
 import java.util.UUID
 import scala.annotation.tailrec

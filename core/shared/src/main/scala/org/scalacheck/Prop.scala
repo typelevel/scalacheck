@@ -167,7 +167,7 @@ sealed abstract class Prop extends Serializable { self =>
 
 object Prop {
 
-  import Arbitrary.{arbitrary}
+  import Arbitrary.arbitrary
 
   // Types
 

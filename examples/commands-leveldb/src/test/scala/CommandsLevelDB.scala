@@ -2,8 +2,8 @@ import org.scalacheck.Gen
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.commands.Commands
 
-import org.iq80.leveldb._
-import org.fusesource.leveldbjni.JniDBFactory._
+import org.iq80.leveldb.*
+import org.fusesource.leveldbjni.JniDBFactory.*
 
 import scala.util.{Try, Success}
 import scala.collection.immutable.Map
