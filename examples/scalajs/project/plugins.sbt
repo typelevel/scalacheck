@@ -1,1 +1,1 @@
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.18.1")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.18.2")
