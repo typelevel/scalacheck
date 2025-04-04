@@ -73,4 +73,6 @@ private[scalacheck] object Platform {
     Class.forName(name + "$", true, loader).getField("MODULE$").get(null)
 
   class EnableReflectiveInstantiation extends scala.annotation.Annotation
+
+  def getClassLoader: ClassLoader = getClass.getClassLoader
 }
