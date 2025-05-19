@@ -92,8 +92,23 @@ private abstract class ScalaCheckRunner extends Runner {
   }
 
   def rootTask(td: TaskDef): BaseTask = new BaseTask(td) {
-    def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] =
-      props.map(_._1).toSet.toArray map { name =>
+    def execute(handler: EventHandler, loggers: Array[Logger]): Array[Task] = {
+      val isTestsOnly: Boolean = td.selectors().forall(selector =>
+        selector.isInstanceOf[TestSelector] ||
+          selector.isInstanceOf[TestWildcardSelector])
+
+      def isIncluded(name: String): Boolean = !isTestsOnly || td.selectors().exists {
+        case s: TestWildcardSelector => name.contains(s.testWildcard())
+        // For TestSelector, exact comparison with both the full name and the name with
+        // the suite prefix (properties.name) stripped off works for non-nested suite,
+        // but results in a false negative for nested suites: test "A.B.test" can not be
+        // selected by its short name "test";
+        // instead, selected test name is matched using `endsWith`.
+        case s: TestSelector => name.endsWith(s.testName())
+        case _ => false
+      }
+
+      props.map(_._1).toSet.filter(isIncluded).toArray map { name =>
         checkPropTask(
           new TaskDef(
             td.fullyQualifiedName(),
@@ -102,6 +117,7 @@ private abstract class ScalaCheckRunner extends Runner {
             Array(new TestSelector(name))),
           single = true)
       }
+    }
   }
 
   def checkPropTask(taskDef: TaskDef, single: Boolean): BaseTask = new BaseTask(taskDef) { self =>
