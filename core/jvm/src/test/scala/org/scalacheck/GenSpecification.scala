@@ -511,7 +511,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     // format: off
     val ts = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)
     def fun(
-      t1: Int, t2 : Int, t3: Int, t4: Int, t5: Int, t6: Int, t7: Int, t8: Int, t9: Int, t10: Int, t11: Int,
+      t1: Int, t2: Int, t3: Int, t4: Int, t5: Int, t6: Int, t7: Int, t8: Int, t9: Int, t10: Int, t11: Int,
       t12: Int, t13: Int, t14: Int, t15: Int, t16: Int, t17: Int, t18: Int, t19: Int, t20: Int, t21: Int, t22: Int
     ) =
       (t1, t2,t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22)
