@@ -46,4 +46,6 @@ private[scalacheck] object Platform {
   }
 
   type EnableReflectiveInstantiation = scala.scalajs.reflect.annotation.EnableReflectiveInstantiation
+
+  def getClassLoader: ClassLoader = null
 }
