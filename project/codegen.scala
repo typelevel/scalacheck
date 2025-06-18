@@ -106,6 +106,36 @@ object codegen {
        |""".stripMargin
   }
 
+  def zipWith(i: Int) = {
+    val f = "f"
+    val tR = "R"
+    val ts = idents("t", i) // Seq(t1, ... ti)
+    val tTs = idents("T", i) // Seq(T1, ..., Ti)
+    val gs = idents("g", i) // Seq(g1, ..., gi)
+    val tTsCsv = csv(tTs) // "T1, ..., Ti"
+    val tsCsv = csv(ts) // "t1, ..., ti"
+    val tTts = tTs.zip(ts) // Seq((T1, t1), ..., (Ti, ti))
+    val tTtgs = tTts.zip(gs) // Seq(((T1, t1), g1), ..., ((Ti, ti), gi))
+
+    val ((_, ti), gi) = tTtgs.last
+    val gens =
+      tTtgs.init.foldRight(s"$gi.map { $ti => $f($tsCsv) }") {
+        case (((tT, t), g), acc) =>
+          s"$g.flatMap(($t: $tT) => $acc)"
+      }
+
+    s"""
+       |  /** Combines the given generators into a new generator of the given result type
+       |   *  with help of the given mapping function. */
+       |  def zipWith[$tTsCsv, $tR](
+       |    ${wrappedArgs("Gen", i)}
+       |  )(
+       |    $f: ($tTsCsv) => $tR
+       |  ): Gen[R] =
+       |    $gens
+       |""".stripMargin
+  }
+
   def resultOf(i: Int) = {
     def delegate = idents("T", i).drop(1).map("_:" + _).mkString(",")
     s"""
@@ -195,6 +225,9 @@ object codegen {
          |
          |  // zip //
          |${1 to 22 map zip mkString ""}
+         |
+         |  // zipWith //
+         |${(2 to 22).map(zipWith).mkString("")}
          |
          |  // resultOf //
          |  import Arbitrary.arbitrary

@@ -491,6 +491,41 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     _ == ((1, 2, 3, 4, 5, 6, 7, 8, 9))
   }
 
+  property("zipWith2") = {
+    val ts = (1.toShort, 2.toInt)
+    def fun(t1: Short, t2: Int) = (t1, t2)
+
+    forAll(zipWith(const(ts._1), const(ts._2))(fun)) {
+      _ == ts
+    }
+  }
+  property("zipWith3") = {
+    val ts = (1.toShort, 2.toInt, 3.toLong)
+    def fun(t1: Short, t2: Int, t3: Long) = (t1, t2, t3)
+
+    forAll(zipWith(const(ts._1), const(ts._2), const(ts._3))(fun)) {
+      _ == ts
+    }
+  }
+  property("zipWith22") = {
+    // format: off
+    val ts = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22)
+    def fun(
+      t1: Int, t2: Int, t3: Int, t4: Int, t5: Int, t6: Int, t7: Int, t8: Int, t9: Int, t10: Int, t11: Int,
+      t12: Int, t13: Int, t14: Int, t15: Int, t16: Int, t17: Int, t18: Int, t19: Int, t20: Int, t21: Int, t22: Int
+    ) =
+      (t1, t2,t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22)
+
+    forAll(zipWith(
+      const(ts._1), const(ts._2), const(ts._3), const(ts._4), const(ts._5), const(ts._6), const(ts._7), const(ts._8),
+      const(ts._9), const(ts._10), const(ts._11), const(ts._12), const(ts._13), const(ts._14), const(ts._15),
+      const(ts._16), const(ts._17), const(ts._18), const(ts._19), const(ts._20), const(ts._21), const(ts._22)
+    )(fun)) {
+      _ == ts
+    }
+    // format: on
+  }
+
   //// See https://github.com/typelevel/scalacheck/issues/79
   property("issue #79") = {
     val g = oneOf(const(0).suchThat(_ => true), const("0").suchThat(_ => true))
