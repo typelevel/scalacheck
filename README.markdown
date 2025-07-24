@@ -23,4 +23,6 @@ ScalaCheck is used by several prominent Scala projects, for example the [Scala
 compiler](http://www.scala-lang.org/) and the [Akka](http://akka.io/)
 concurrency framework.
 
+ScalaCheck is supported by the [Gradle plugin for Scala.js and Scala Native](https://github.com/dubinsky/scalajs-gradle).
+
 **For more information and downloads, please visit http://www.scalacheck.org**
