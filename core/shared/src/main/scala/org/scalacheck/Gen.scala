@@ -1092,7 +1092,7 @@ object Gen extends GenArities with GenVersionSpecific {
           buf += t
         } else {
           val (x, s) = seed.long
-          val i = (x & Long.MaxValue % count).toInt
+          val i = ((x & Long.MaxValue) % count).toInt
           if (i < n) buf(i) = t
           seed = s
         }

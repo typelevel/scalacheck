@@ -291,6 +291,18 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
     }
   }
 
+  property("pick produces enough distinct combinations") = {
+    val (n, nElements, nCombinations) = (3, 5, 10)
+
+    val genPick = pick(n, 1 to nElements)
+      // not interested in different permutations, only in distinct combinations
+      .map(_.toList.sorted)
+
+    forAllNoShrink(listOfN(100, genPick).map(_.distinct)) { distinctCombinations =>
+      distinctCombinations.size == nCombinations
+    }
+  }
+
   property("numChar") = forAll(numChar)(_.isDigit)
 
   property("calendar") = forAll(calendar) { cal =>
