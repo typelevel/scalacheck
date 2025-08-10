@@ -293,12 +293,18 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
   property("pick produces enough distinct combinations") = {
     val (n, nElements, nCombinations) = (3, 5, 10)
+    // The number of samples to produce with Gen.pick, that is enough to assert
+    // that every possible combination appears at least once. It depends on
+    // nSamples, but there is no specific math behind it. Rather, it's just an
+    // empirically chosen value, that has yielded no failures over thousands of
+    // test cycles.
+    val nSamples = 200
 
     val genPick = pick(n, 1 to nElements)
       // not interested in different permutations, only in distinct combinations
       .map(_.sorted)
 
-    forAllNoShrink(listOfN(100, genPick).map(_.distinct)) { distinctCombinations =>
+    forAllNoShrink(listOfN(nSamples, genPick).map(_.distinct)) { distinctCombinations =>
       distinctCombinations.size == nCombinations
     }
   }
