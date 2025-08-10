@@ -296,7 +296,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
 
     val genPick = pick(n, 1 to nElements)
       // not interested in different permutations, only in distinct combinations
-      .map(_.toList.sorted)
+      .map(_.sorted)
 
     forAllNoShrink(listOfN(100, genPick).map(_.distinct)) { distinctCombinations =>
       distinctCombinations.size == nCombinations
