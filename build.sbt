@@ -54,7 +54,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-ThisBuild / tlBaseVersion := "1.18"
+ThisBuild / tlBaseVersion := "1.19"
 ThisBuild / tlMimaPreviousVersions ++= Set(
   // manually added because tags are not v-prefixed
   "1.14.0",
