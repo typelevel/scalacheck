@@ -25,6 +25,24 @@ concurrency framework.
 
 ## News
 
+ * 2025-09-06: [ScalaCheck 1.19.0](\$repoUrl\$/releases/tag/v1.19.0) is released.
+   New `Gen.zipWith` combinator. Bug fixes for `Gen.pick` and `ScalaCheckFramework`.
+
+ * 2024-09-15: [ScalaCheck 1.18.1](\$repoUrl\$/releases/tag/v1.18.1) is released.
+   Maintenance release.
+
+ * 2024-04-17: [ScalaCheck 1.18.0](\$repoUrl\$/releases/tag/v1.18.0) is released.
+   Support for Scala Native v0.5.
+ 
+ * 2024-04-16: [ScalaCheck 1.17.1](\$repoUrl\$/releases/tag/v1.17.1) is released.
+   Several bug fixes. New `Gen.nonEmptyStringOf` combinator.
+ 
+ * 2022-09-15: [ScalaCheck 1.17.0](\$repoUrl\$/releases/tag/v1.17.0) is released.
+   Several bug fixes and improvements.
+
+ * 2022-04-07: [ScalaCheck 1.16.0](\$repoUrl\$/releases/tag/v1.16.0) is released.
+   Support for `java.time` types. Several bug fixes.
+
  * 2021-05-14: Scala 3.0 artifacts were published for ScalaCheck 1.15.4
    and 1.15.3
  
