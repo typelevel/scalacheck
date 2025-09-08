@@ -8,13 +8,13 @@ let
     attrNames getAttr concatStringsSep mapAttrsToList concatMapStrings flatten;
 
   env = {
-    repoUrl = "https://github.com/rickynils/scalacheck";
+    repoUrl = "https://github.com/typelevel/scalacheck";
     scalaVer = "2.11";
     allVersions = concatStringsSep "," (attrNames versions);
     scalaVersions = concatStringsSep "," (mapAttrsToList (v: sc:
       "${v}=${concatStringsSep ":" (attrNames sc.scalaVersions)}") versions
     );
-    currentVer = "1.14.1";
+    currentVer = "1.19.0";
   };
 
   sclib = callPackage ./scalacheck.nix {};
