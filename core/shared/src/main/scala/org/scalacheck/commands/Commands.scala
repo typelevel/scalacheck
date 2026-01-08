@@ -259,7 +259,7 @@ trait Commands {
       Shrink.shrink(as.seqCmds).map(cs => as.copy(seqCmds = cs)) append
         Shrink.shrink(as.parCmds).map(cs => as.copy(parCmds = cs))
 
-    Shrink.shrinkWithOrig[State](as.s)(shrinkState) flatMap { state =>
+    Shrink.shrinkWithOrig[State](as.s)(using shrinkState) flatMap { state =>
       shrinkedCmds.map(_.copy(s = state))
     } map { as => ensurePreconditions(as) }
   }
