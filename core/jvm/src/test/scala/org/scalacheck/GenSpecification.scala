@@ -28,7 +28,7 @@ object GenSpecification extends Properties("Gen") with GenSpecificationVersionSp
   property("pureApply #300") = {
     def testCase[A](gen: Gen[A]): Prop =
       sizedProp { sz =>
-        val g = Gen.function1(gen)(Cogen[Int])
+        val g = Gen.function1(gen)(using Cogen[Int])
         if (sz > 0) forAll(g) { f => f(999); true } else Prop(true)
       }
     val p0 = testCase(arbitrary[Int].suchThat(_ != 0))

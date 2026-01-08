@@ -119,7 +119,7 @@ object ShrinkSpecification extends Properties("Shrink") {
 
   property("shrink[List[Int].suchThat") = {
     forAll { (l: List[Int]) =>
-      shrink(l)(shrinkEvenLength).forall(evenLength(_))
+      shrink(l)(using shrinkEvenLength).forall(evenLength(_))
     }
   }
 
