@@ -45,13 +45,14 @@ private[scalacheck] object Platform {
       val tp = java.util.concurrent.Executors.newFixedThreadPool(workers)
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(tp)
       try {
-        val fs = List.range(0, workers) map (idx =>
-          Future {
-            params.customClassLoader.foreach(
-              Thread.currentThread.setContextClassLoader(_)
-            )
-            blocking { workerFun(idx) }
-          })
+        val fs = List.range(0, workers) map
+          (idx =>
+            Future {
+              params.customClassLoader.foreach(
+                Thread.currentThread.setContextClassLoader(_)
+              )
+              blocking { workerFun(idx) }
+            })
         val zeroRes = Result(Passed, 0, 0, FreqMap.empty[Set[Any]])
         val res =
           if (fs.isEmpty) Future.successful(zeroRes)
