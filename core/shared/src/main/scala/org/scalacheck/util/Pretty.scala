@@ -141,13 +141,14 @@ object Pretty {
   implicit def prettyFreqMap(fm: FreqMap[Set[Any]]): Pretty = Pretty { _ =>
     if (fm.total == 0) ""
     else {
-      "> Collected test data: " / {
-        for {
-          (xs, r) <- fm.getRatios
-          ys = xs - (())
-          if !ys.isEmpty
-        } yield round(r * 100).toString + "% " + ys.mkString(", ")
-      }.mkString("\n")
+      "> Collected test data: " /
+        {
+          for {
+            (xs, r) <- fm.getRatios
+            ys = xs - (())
+            if !ys.isEmpty
+          } yield round(r * 100).toString + "% " + ys.mkString(", ")
+        }.mkString("\n")
     }
   }
 

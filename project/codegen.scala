@@ -43,8 +43,7 @@ object codegen {
 
   def fnArgs(i: Int) = (1 to i).map(n => s"t$n: T$n").mkString(",")
 
-  def nestedPerturbs(i: Int) =
-    (1 to i).foldLeft("seed0") { (s, n) => s"co$n.perturb($s, t$n)" }
+  def nestedPerturbs(i: Int) = (1 to i).foldLeft("seed0") { (s, n) => s"co$n.perturb($s, t$n)" }
 
   def fntype(i: Int) =
     s"(${types(i)}) => Z"
