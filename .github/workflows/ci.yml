@@ -28,14 +28,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        scala: [3, 2.12, 2.13]
+        scala: [3.3.7, 2.12.21, 3.8.1]
         java: [temurin@8, temurin@11]
         project: [rootJS, rootJVM, rootNative]
         workers: [1, 4]
         exclude:
-          - scala: 3
+          - scala: 3.3.7
             java: temurin@11
-          - scala: 2.12
+          - scala: 2.12.21
             java: temurin@11
           - project: rootJS
             java: temurin@11
@@ -167,92 +167,92 @@ jobs:
         if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
         run: sbt +update
 
-      - name: Download target directories (3, rootJS, 1)
+      - name: Download target directories (3.3.7, rootJS, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJS-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.3.7-rootJS-1
 
-      - name: Inflate target directories (3, rootJS, 1)
+      - name: Inflate target directories (3.3.7, rootJS, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3, rootJVM, 1)
+      - name: Download target directories (3.3.7, rootJVM, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.3.7-rootJVM-1
 
-      - name: Inflate target directories (3, rootJVM, 1)
+      - name: Inflate target directories (3.3.7, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3, rootNative, 1)
+      - name: Download target directories (3.3.7, rootNative, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootNative-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.3.7-rootNative-1
 
-      - name: Inflate target directories (3, rootNative, 1)
+      - name: Inflate target directories (3.3.7, rootNative, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12, rootJS, 1)
+      - name: Download target directories (2.12.21, rootJS, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJS-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.21-rootJS-1
 
-      - name: Inflate target directories (2.12, rootJS, 1)
+      - name: Inflate target directories (2.12.21, rootJS, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12, rootJVM, 1)
+      - name: Download target directories (2.12.21, rootJVM, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.21-rootJVM-1
 
-      - name: Inflate target directories (2.12, rootJVM, 1)
+      - name: Inflate target directories (2.12.21, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12, rootNative, 1)
+      - name: Download target directories (2.12.21, rootNative, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootNative-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.21-rootNative-1
 
-      - name: Inflate target directories (2.12, rootNative, 1)
+      - name: Inflate target directories (2.12.21, rootNative, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13, rootJS, 1)
+      - name: Download target directories (3.8.1, rootJS, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootJS-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.8.1-rootJS-1
 
-      - name: Inflate target directories (2.13, rootJS, 1)
+      - name: Inflate target directories (3.8.1, rootJS, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13, rootJVM, 1)
+      - name: Download target directories (3.8.1, rootJVM, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootJVM-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.8.1-rootJVM-1
 
-      - name: Inflate target directories (2.13, rootJVM, 1)
+      - name: Inflate target directories (3.8.1, rootJVM, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13, rootNative, 1)
+      - name: Download target directories (3.8.1, rootNative, 1)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootNative-1
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3.8.1-rootNative-1
 
-      - name: Inflate target directories (2.13, rootNative, 1)
+      - name: Inflate target directories (3.8.1, rootNative, 1)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -327,7 +327,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: rootjs_3 rootjs_2.12 rootjs_2.13 rootjvm_3 rootjvm_2.12 rootjvm_2.13 rootnative_3 rootnative_2.12 rootnative_2.13 scalacheck-bench_3 scalacheck-bench_2.12 scalacheck-bench_2.13
+          modules-ignore: rootjs_3 rootjs_2.12 rootjs_3 rootjvm_3 rootjvm_2.12 rootjvm_3 rootnative_3 rootnative_2.12 rootnative_3 scalacheck-bench_3 scalacheck-bench_2.12 scalacheck-bench_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   examples:
