@@ -15,7 +15,7 @@ request](\$repoUrl\$/pulls)!).
 ## API Documentation
 
 The API documentation for the latest ScalaCheck release is available both
-[online](https://javadoc.io/doc/org.scalacheck/scalacheck_\$scalaVer\$/\$currentVer$/org/scalacheck/index.html) and packaged for [download](/download.html#api).
+[online](https://javadoc.io/doc/org.scalacheck/scalacheck_2.13/latest/index.html) and packaged for [download](/download.html#api).
 You can find documentation for other ScalaCheck releases
 [here](/releases.html).
 
@@ -35,6 +35,8 @@ You can find documentation for other ScalaCheck releases
 
 ## Other resources
 
+* [ScalaCheck on GitHub](https://github.com/typelevel/scalacheck)
+* [ScalaCheck on Discord](https://discord.com/channels/632277896739946517/841617753513263144)
 * [\@scalacheck on Twitter](https://twitter.com/scalacheck)
 * [The ScalaCheck Mailing List](https://groups.google.com/forum/#!forum/scalacheck)
 * [ScalaCheck on StackOverflow](http://stackoverflow.com/questions/tagged/scalacheck)
