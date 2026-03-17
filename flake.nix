@@ -2,7 +2,7 @@
   description = "scalacheck.org";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-21.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
   };
 
   outputs = { self, nixpkgs }:
