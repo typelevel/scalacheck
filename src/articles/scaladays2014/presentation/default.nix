@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, substituteAll, unzip }:
+{ stdenv, fetchurl, replaceVars, unzip }:
 
 let
 
@@ -17,8 +17,7 @@ let
     '';
   };
 
-  index = substituteAll {
-    src = ./index.html;
+  index = replaceVars ./index.html {
     body = builtins.readFile ./presentation.markdown;
     style = builtins.readFile ./style.css;
   };
