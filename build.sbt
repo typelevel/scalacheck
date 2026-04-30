@@ -69,6 +69,114 @@ ThisBuild / tlMimaPreviousVersions ++= Set(
 )
 ThisBuild / tlVersionIntroduced := Map("3" -> "1.15.3")
 
+// publish website from this branch
+ThisBuild / tlSitePublishBranch := Some("main")
+
+import laika.config.{LinkConfig, MessageFilters, SyntaxHighlighting, TargetDefinition, Version, Versions}
+import laika.helium.Helium
+import laika.helium.config.{Favicon, HeliumIcon, IconLink, LinkPanel, ReleaseInfo, Teaser, TextLink}
+import laika.ast.Path.Root
+import laika.ast.Image
+import laika.format.Markdown
+import laika.theme.config.Color
+
+val scalaCheckRepo = "https://github.com/typelevel/scalacheck"
+val latestVersion = "1.19.0"
+
+lazy val docs = project.in(file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .settings(
+    laikaExtensions ++= Seq(
+      Markdown.GitHubFlavor,
+      SyntaxHighlighting
+    ),
+    laikaTheme :=
+      Helium.defaults
+        .site.landingPage(
+          logo = Some(Image.internal(Root / "images/logo_forall_transparent.png")),
+          title = Some("ScalaCheck"),
+          subtitle = Some("Property Based Testing for Scala"),
+          latestReleases = Seq(
+            Some(ReleaseInfo("Latest Stable Release", tlBaseVersion.value)),
+            tlLatestPreReleaseVersion.value.map(s => ReleaseInfo("Latest Milestone Release", s))
+          ).flatten,
+          linkPanel = Some(LinkPanel(
+            "Documentation",
+            TextLink.internal(Root / "main.md", "Introduction"),
+            TextLink.internal(Root / "resources.md", "Resources"),
+            TextLink.internal(Root / "download.md", "Download"),
+            TextLink.internal(Root / "userguide.md", "User Guide"),
+            TextLink.internal(Root / "sources.md", "Sources"),
+            TextLink.internal(Root / "api.md", "API"),
+            TextLink.internal(Root / "old_releases.md", "Old Releases")
+          )),
+          projectLinks = Seq(
+            TextLink.external("https://github.com/typelevel/scalacheck", "Source on Github"),
+            TextLink.external(
+              "https://discord.com/channels/632277896739946517/841617753513263144",
+              "Discussions on Discord"),
+            TextLink.external("https://github.com/typelevel/scalacheck/discussions", "Discussions on GitHub"),
+            TextLink.external("https://github.com/typelevel/scalacheck/issues", "Issues on GitHub")
+          ),
+          license = Some("BSD-3-Clause"),
+          teasers = Seq(
+            Teaser(
+              "Thorough",
+              "Write a single property and let ScalaCheck execute it hundreds or thousands of times. Instead of a handful of examples, you explore a wide space of possible inputs automatically. This gives you confidence that your code behaves correctly beyond the obvious cases."
+            ),
+            Teaser(
+              "Generative",
+              "Stop hand-crafting test data and let ScalaCheck generate it for you. From simple values to complex domain objects, generators produce diverse scenarios effortlessly. Your tests evolve from examples into full explorations of behavior."
+            ),
+            Teaser(
+              "Exploratory",
+              "ScalaCheck helps you uncover edge cases you didn’t know existed. By exploring random and structured inputs, it reveals hidden assumptions in your code. Many bugs surface not because you expected them, but because ScalaCheck went looking."
+            ),
+            Teaser(
+              "Minimal",
+              "When a test fails, ScalaCheck doesn’t just stop, it shrinks the input. It searches for the smallest, simplest example that still reproduces the failure. Debugging becomes faster because you’re working with minimal, focused data."
+            ),
+            Teaser(
+              "Expressive",
+              "Tests read like laws or truths about your system. Instead of imperative scripts, you write clear statements of intent. This makes your test suite easier to understand and communicate."
+            )
+          )
+        )
+        .site.themeColors(
+          primary = Color.hex("818589"),
+          primaryLight = Color.hex("FFF6CC"),
+          primaryMedium = Color.hex("8A7A3B"),
+          secondary = Color.hex("2B2B2B"),
+          text = Color.hex("818589"),
+          background = Color.hex("FFFDF5"),
+          bgGradient = (Color.hex("FFFDF5"), Color.hex("FFF3BF"))
+        )
+        .site.favIcons(
+          Favicon.internal(Root / "images/favicon.ico", sizes = "32x32")
+        )
+        .site.topNavigationBar(
+          homeLink = IconLink.internal(Root / "main.md", HeliumIcon.home)
+        )
+        .site.footer(Image.internal(Root / "images/logo_forall_h30.png"))
+        .build,
+
+    laikaConfig := {
+
+      LaikaConfig
+        .defaults
+        .withMessageFilters(MessageFilters.forVisualDebugging)
+        .withConfigValue(
+          LinkConfig.empty.addTargets(
+            TargetDefinition.external("ScalaCheck Repository", scalaCheckRepo),
+            TargetDefinition.external("ScalaCheck Bug Reports", s"$scalaCheckRepo/issues"),
+            TargetDefinition.external("ScalaCheck Discussions on GitHub", s"$scalaCheckRepo/discussions"),
+            TargetDefinition.external("report an issue", s"$scalaCheckRepo/issues"),
+            TargetDefinition.external("submit a pull request", s"$scalaCheckRepo/pull")
+          )
+        )
+    }
+  )
+
 lazy val root = tlCrossRootProject.aggregate(core, bench)
   .settings(
     Compile / headerSources ++= Seq(
