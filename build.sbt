@@ -107,7 +107,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .nativeSettings(
     libraryDependencies ++= Seq(
-      "org.scala-native" %%% "test-interface" % nativeVersion
+      "org.scala-native" %%% "test-interface-sbt-defs" % nativeVersion
     ),
     tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "1.18.0").toMap
   )
