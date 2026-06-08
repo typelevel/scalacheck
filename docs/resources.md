@@ -17,7 +17,7 @@ The API documentation for the latest ScalaCheck release is available [here](api.
 
 * [Testing the Hard Stuff and Staying Sane](http://www.infoq.com/presentations/testing-techniques-case-study) - John Hughes on property-based testing using Quviq QuickCheck.
 
-* [Testing Stateful Systems with ScalaCheck](http://parleys.com/play/53a7d2d0e4b0543940d9e566) - Rickard Nilsson at ScalaDays 2014 (slides available [here](files/index.html)).
+* [Testing Stateful Systems with ScalaCheck](http://parleys.com/play/53a7d2d0e4b0543940d9e566) - Rickard Nilsson at ScalaDays 2014 (slides available [here](https://scalacheck.org/files/scaladays2014/index.html#1)).
 
 
 ## Other resources
