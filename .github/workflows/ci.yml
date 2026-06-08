@@ -327,7 +327,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: rootjs_3 rootjs_2.12 rootjs_2.13 rootjvm_3 rootjvm_2.12 rootjvm_2.13 rootnative_3 rootnative_2.12 rootnative_2.13 scalacheck-bench_3 scalacheck-bench_2.12 scalacheck-bench_2.13
+          modules-ignore: rootjs_3 rootjs_2.12 rootjs_2.13 docs_3 docs_2.12 docs_2.13 rootjvm_3 rootjvm_2.12 rootjvm_2.13 rootnative_3 rootnative_2.12 rootnative_2.13 scalacheck-bench_3 scalacheck-bench_2.12 scalacheck-bench_2.13
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   examples:
@@ -421,3 +421,56 @@ jobs:
 
       - name: Build benchmark suite
         run: 'sbt ''++ ${{ matrix.scala }}'' ''bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench'''
+
+  site:
+    name: Generate Site
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        java: [temurin@11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup Java (temurin@8)
+        id: setup-java-temurin-8
+        if: matrix.java == 'temurin@8'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 8
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Generate site
+        run: sbt docs/tlSite
+
+      - name: Publish site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site/target/docs/site
+          keep_files: true
