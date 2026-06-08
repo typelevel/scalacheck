@@ -159,8 +159,8 @@ lazy val docs = project.in(file("site"))
 
     laikaConfig := {
       val scalaCheckRepoUrl = scmInfo.value
-          .map(_.browseUrl.toString)
-          .getOrElse(sys.error("No SCM info found"))
+        .map(_.browseUrl.toString)
+        .getOrElse(sys.error("No SCM info found"))
       LaikaConfig
         .defaults
         .withMessageFilters(MessageFilters.forVisualDebugging)
