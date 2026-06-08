@@ -72,16 +72,13 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "1.15.3")
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")
 
-import laika.config.{LinkConfig, MessageFilters, SyntaxHighlighting, TargetDefinition, Version, Versions}
-import laika.helium.Helium
-import laika.helium.config.{Favicon, HeliumIcon, IconLink, LinkPanel, ReleaseInfo, Teaser, TextLink}
-import laika.ast.Path.Root
 import laika.ast.Image
+import laika.ast.Path.Root
+import laika.config.{LinkConfig, MessageFilters, SyntaxHighlighting, TargetDefinition}
 import laika.format.Markdown
+import laika.helium.Helium
+import laika.helium.config.*
 import laika.theme.config.Color
-
-val scalaCheckRepo = "https://github.com/typelevel/scalacheck"
-val latestVersion = "1.19.0"
 
 lazy val docs = project.in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
@@ -161,17 +158,19 @@ lazy val docs = project.in(file("site"))
         .build,
 
     laikaConfig := {
-
+      val scalaCheckRepoUrl = scmInfo.value
+          .map(_.browseUrl.toString)
+          .getOrElse(sys.error("No SCM info found"))
       LaikaConfig
         .defaults
         .withMessageFilters(MessageFilters.forVisualDebugging)
         .withConfigValue(
           LinkConfig.empty.addTargets(
-            TargetDefinition.external("ScalaCheck Repository", scalaCheckRepo),
-            TargetDefinition.external("ScalaCheck Bug Reports", s"$scalaCheckRepo/issues"),
-            TargetDefinition.external("ScalaCheck Discussions on GitHub", s"$scalaCheckRepo/discussions"),
-            TargetDefinition.external("report an issue", s"$scalaCheckRepo/issues"),
-            TargetDefinition.external("submit a pull request", s"$scalaCheckRepo/pull")
+            TargetDefinition.external("ScalaCheck Repository", scalaCheckRepoUrl),
+            TargetDefinition.external("ScalaCheck Bug Reports", s"$scalaCheckRepoUrl/issues"),
+            TargetDefinition.external("ScalaCheck Discussions on GitHub", s"$scalaCheckRepoUrl/discussions"),
+            TargetDefinition.external("report an issue", s"$scalaCheckRepoUrl/issues"),
+            TargetDefinition.external("submit a pull request", s"$scalaCheckRepoUrl/pull")
           )
         )
     }
