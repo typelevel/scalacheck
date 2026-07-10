@@ -1,4 +1,4 @@
-# ScalaCheck User Guide
+# User Guide
 
 ## What is ScalaCheck?
 
@@ -489,7 +489,7 @@ val genMap                       = Gen.buildableOf[Map[String, Int], (String, In
 
 By default, ScalaCheck supports generation of `List`, `Stream` (Scala 2.10 -
 2.12, deprecated in 2.13), `LazyList` (Scala 2.13), `Set`, `Array` and `Map`.
-Additionally, ScalaCheck can generate `java.util.ArrayList` and `java.util.HashMap` when an implicit 
+Additionally, ScalaCheck can generate `java.util.ArrayList` and `java.util.HashMap` when an implicit
 `Traversable` conversion evidence is in scope.
 
 You can add support for additional containers by adding implicit `Buildable` instances.
