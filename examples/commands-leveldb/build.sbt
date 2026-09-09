@@ -1,6 +1,6 @@
 name := "commands-leveldb"
 
-scalaVersion := "3.1.0"
+scalaVersion := "3.1.3"
 
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.15.4" % Test,
