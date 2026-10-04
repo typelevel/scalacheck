@@ -309,7 +309,7 @@ There seems to be some problem getting sbt to properly print exception stack
 traces, so I recommend that you run your first test run in the following way:
 
 ```
-sbt "test:runMain CommandsNix" \
+sbt "Test/runMain CommandsNix" \
   -minSuccessfulTests 1 -minSize 5 -maxSize 10 \
   -verbosity 2
 ```

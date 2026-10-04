@@ -400,7 +400,7 @@ jobs:
       - name: Build examples
         run: |
           cd examples
-          for d in */ ; do cd "$d" && sbt test:compile && cd ../ ; done
+          for d in */ ; do cd "$d" && sbt Test/compile && cd ../ ; done
 
   bench:
     name: Bench
@@ -445,4 +445,4 @@ jobs:
         run: sbt +update
 
       - name: Build benchmark suite
-        run: 'sbt ''++ ${{ matrix.scala }}'' ''bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench'''
+        run: sbt '++ ${{ matrix.scala }}' 'bench/Jmh/run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench'

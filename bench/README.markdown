@@ -3,7 +3,7 @@
 To run ScalaCheck's benchmarks, run the following command from SBT:
 
 ```
-bench/jmh:run -wi 5 -i 5 -f1 -t1 org.scalacheck.bench.GenBench.*
+bench/Jmh/run -wi 5 -i 5 -f1 -t1 org.scalacheck.bench.GenBench.*
 ```
 
 The required parameters are:
