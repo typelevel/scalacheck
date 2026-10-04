@@ -1,6 +1,6 @@
 name := "commands-nix"
 
-scalaVersion := "3.1.3"
+scalaVersion := "3.3.8"
 
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.15.4" % Test,
