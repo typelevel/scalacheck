@@ -37,7 +37,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
       WorkflowStep.Run(
         List(
           "cd examples",
-          "for d in */ ; do cd \"$d\" && sbt test:compile && cd ../ ; done"),
+          "for d in */ ; do cd \"$d\" && sbt Test/compile && cd ../ ; done"),
         name = Some("Build examples"))),
     javas = List(Java8),
     scalas = Nil
@@ -47,7 +47,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     "Bench",
     githubWorkflowJobSetup.value.toList ::: List(
       WorkflowStep.Sbt(
-        List("bench/jmh:run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
+        List("bench/Jmh/run -p genSize=0 -p seedCount=0 -bs 1 -wi 0 -i 1 -f 0 -t 1 -r 0 org.scalacheck.bench.GenBench"),
         name = Some("Build benchmark suite"))),
     javas = List(Java8),
     scalas = Nil
