@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, ProblemFilters}
+
 val Scala212 = "2.12.21"
 val Scala213 = "2.13.18"
 val Scala3 = "3.3.8"
@@ -20,7 +22,7 @@ ThisBuild / tlCiReleaseBranches := Seq("main")
 
 ThisBuild / crossScalaVersions := Seq(Scala3, Scala212, Scala213)
 val Java8 = JavaSpec.temurin("8")
-ThisBuild / githubWorkflowJavaVersions := Seq(Java8, JavaSpec.temurin("11"))
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
 ThisBuild / githubWorkflowBuildMatrixAdditions += "workers" -> List("1", "4")
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
@@ -95,6 +97,32 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .jvmSettings(
     Test / fork := true,
+    mimaBinaryIssueFilters ++= {
+      if (scalaBinaryVersion.value == "3") {
+        Seq(
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Arbitrary.<clinit>"),
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Cogen.<clinit>"),
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Gen.<clinit>"),
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Gen#Choose.<clinit>"),
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Prop.<clinit>"),
+          ProblemFilters.exclude[DirectMissingMethodProblem]("org.scalacheck.Shrink.<clinit>")
+        )
+      } else {
+        Nil
+      }
+    },
+    scalacOptions ++= {
+      if (scalaVersion.value.startsWith("3.3.")) {
+        Seq("-Yfuture-lazy-vals", "-release:11")
+      } else {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, _)) =>
+            Seq("-release:8")
+          case _ =>
+            Nil
+        }
+      }
+    },
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-lang3" % "3.21.0" % Test,
       "org.scala-sbt" % "test-interface" % "1.0"
