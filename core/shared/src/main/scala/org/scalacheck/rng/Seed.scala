@@ -64,8 +64,8 @@ sealed abstract class Seed extends Serializable {
 
   /** Reseed the RNG using the given Long value. */
   def reseed(n: Long): Seed = {
-    val n0 = ((n >>> 32) & 0xffffffff)
-    val n1 = (n & 0xffffffff)
+    val n0 = ((n >>> 32) & 0xffffffff.toLong)
+    val n1 = (n & 0xffffffff.toLong)
     var i = 0
     var seed: Seed = Seed.apply(a ^ n0, b ^ n1, c, d)
     while (i < 16) { seed = seed.next; i += 1 }
@@ -105,7 +105,7 @@ object Seed {
   /** Generate a deterministic seed. */
   def apply(s: Long): Seed = {
     var i = 0
-    var seed: Seed = Seed.apply(0xf1ea5eed, s, s, s)
+    var seed: Seed = Seed.apply(0xf1ea5eed.toLong, s, s, s)
     while (i < 20) { seed = seed.next; i += 1 }
     seed
   }
