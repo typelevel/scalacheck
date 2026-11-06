@@ -64,6 +64,7 @@ sealed abstract class Seed extends Serializable {
 
   /** Reseed the RNG using the given Long value. */
   def reseed(n: Long): Seed = {
+    // `.toLong` sign-extends the Int literal on every Scala version. See `Seed.apply(Long)`.
     val n0 = ((n >>> 32) & 0xffffffff.toLong)
     val n1 = (n & 0xffffffff.toLong)
     var i = 0
@@ -105,6 +106,8 @@ object Seed {
   /** Generate a deterministic seed. */
   def apply(s: Long): Seed = {
     var i = 0
+    // Scala 2 sign-extends an Int hex literal in a Long position, but a Scala 3 compiler bug
+    // turns it into an unsigned Long literal (scala/scala3#27119). `.toLong` keeps the Scala 2 value.
     var seed: Seed = Seed.apply(0xf1ea5eed.toLong, s, s, s)
     while (i < 20) { seed = seed.next; i += 1 }
     seed

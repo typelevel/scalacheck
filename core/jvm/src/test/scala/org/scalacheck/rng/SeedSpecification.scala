@@ -70,8 +70,6 @@ object SeedSpecification extends Properties("Seed") {
       s.reseed(n) != s
     }
 
-  // Hex literals such as 0xf1ea5eed are Int values widened to Long. Scala 2 and Scala 3.3 widen them
-  // differently, so these fixed values guard against seeds that change with the Scala version.
   property("apply(Long) is stable across Scala versions") =
     Prop.?=(Seed(123L).toBase64, "TY08VxWT5n_56uBWJg4agp08XFOPEuEozf3rwlHQMFI=")
 
