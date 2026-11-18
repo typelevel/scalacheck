@@ -649,10 +649,14 @@ Check the property, and watch the statistics printed by ScalaCheck:
 scala> myProp.check
 + OK, passed 100 tests.
 > Collected test data:
-78% large
-16% small, ordered
-6% small
+78% (78) large
+16% (16) small, ordered
+6% (6) small
 ```
+
+Each line shows the share of tests in that class, followed by the number of
+tests in brackets. A class that is hit only rarely is shown as `<1%` rather
+than being rounded down to `0%`.
 
 Here ScalaCheck tells us that the property hasn't been tested with any large
 and ordered list (which is no surprise, since the lists are randomised).
@@ -675,16 +679,16 @@ val dummyProp = forAll(Gen.choose(1,10)) { n =>
 scala> dummyProp.check
 + OK, passed 100 tests.
 > Collected test data:
-13% 7
-13% 5
-12% 1
-12% 6
-11% 2
-9% 9
-9% 3
-8% 10
-7% 8
-6% 4
+13% (13) 7
+13% (13) 5
+12% (12) 1
+12% (12) 6
+11% (11) 2
+9% (9) 9
+9% (9) 3
+8% (8) 10
+7% (7) 8
+6% (6) 4
 ```
 
 As we can see, the frequency for each number is around 10%, which seems

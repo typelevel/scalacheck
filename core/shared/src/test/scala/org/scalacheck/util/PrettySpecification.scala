@@ -58,4 +58,29 @@ object PrettySpecification extends Properties("Pretty") {
         }.mkString == input)
       }
     }
+
+  // Counts at the edges (0, 1, total - 1, total) are where rounding used to mislead, so generate them often.
+  private val totalAndCount: Gen[(Int, Int)] =
+    for {
+      total <- Gen.choose(1, 100000)
+      count <- Gen.oneOf(Gen.const(0), Gen.const(1), Gen.const(total - 1), Gen.const(total), Gen.choose(0, total))
+    } yield (total, count)
+
+  property("percentage shows 0% and 100% only for exact counts") =
+    Prop.forAll(totalAndCount) { case (total, count) =>
+      val p = Pretty.percentage(count, total)
+      if (count == 0) p ?= "0%"
+      else if (count == total) p ?= "100%"
+      else Prop(p == "<1%" || p == ">99%" || (1 to 99).exists(n => p == s"$n%")) :| s"percentage: $p"
+    }
+
+  property("prettyFreqMap shows counts and keeps rare classes visible") = {
+    val fm = (1 to 999).foldLeft(FreqMap.empty[Set[Any]] + Set("rare"))((m, _) => m + Set("common"))
+    Pretty.pretty(fm) ?= "> Collected test data: \n>99% (999) common\n<1% (1) rare"
+  }
+
+  property("prettyFreqMap skips data without a class") = {
+    val fm = FreqMap.empty[Set[Any]] + Set("a") + Set(()) + Set("a") + Set(())
+    Pretty.pretty(fm) ?= "> Collected test data: \n50% (2) a"
+  }
 }
