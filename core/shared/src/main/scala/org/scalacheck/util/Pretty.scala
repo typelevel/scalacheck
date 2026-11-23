@@ -144,12 +144,22 @@ object Pretty {
       "> Collected test data: " /
         {
           for {
-            (xs, r) <- fm.getRatios
+            (xs, count) <- fm.getCounts
             ys = xs - (())
             if !ys.isEmpty
-          } yield round(r * 100).toString + "% " + ys.mkString(", ")
+          } yield percentage(count, fm.total) + " (" + count + ") " + ys.mkString(", ")
         }.mkString("\n")
     }
+  }
+
+  /** Formats `count / total` as a whole percentage. Rounding never hides a class: a non-zero count that would round to
+   *  0% is shown as "<1%", and a count short of `total` that would round to 100% is shown as ">99%".
+   */
+  private[util] def percentage(count: Int, total: Int): String = {
+    val p = round(count.toFloat / total * 100)
+    if (p == 0 && count > 0) "<1%"
+    else if (p == 100 && count < total) ">99%"
+    else p.toString + "%"
   }
 
   implicit def prettyTestRes(res: Test.Result): Pretty = Pretty { prms =>
