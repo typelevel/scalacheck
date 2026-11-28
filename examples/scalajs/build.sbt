@@ -6,4 +6,4 @@ version := "0.1-SNAPSHOT"
 
 scalaVersion := "3.3.8"
 
-libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.15.4" % Test
+libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.20.0" % Test
